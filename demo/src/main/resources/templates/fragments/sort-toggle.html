@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<body>
+
+<div th:fragment="sortToggle" class="sort-toggle-wrapper">
+
+    <style>
+        .sort-toggle-wrapper { display: inline-flex; flex-shrink: 0; }
+        .sort-toggle-group {
+            display: inline-flex;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 40px; padding: 3px; gap: 2px;
+        }
+        .sort-option {
+            background: transparent; border: none; color: #94a3b8;
+            font-family: inherit; font-size: 0.78rem; font-weight: 500;
+            padding: 0.32rem 0.85rem; border-radius: 40px;
+            cursor: pointer; transition: 0.2s; white-space: nowrap; line-height: 1;
+        }
+        .sort-option:hover { color: #c4b5fd; }
+        .sort-option.active {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(139, 92, 246, 0.22));
+            color: #e0e7ff;
+            box-shadow: 0 2px 10px rgba(99, 102, 241, 0.18);
+        }
+        @media (max-width: 640px) {
+            .sort-option { font-size: 0.72rem; padding: 0.28rem 0.7rem; }
+        }
+    </style>
+
+    <div class="sort-toggle-group" id="sortToggleGroup">
+        <button type="button" class="sort-option" data-order="desc"
+                onclick="setHistorySortOrder('desc')">Сначала новые
+        </button>
+        <button type="button" class="sort-option" data-order="asc"
+                onclick="setHistorySortOrder('asc')">Сначала старые
+        </button>
+    </div>
+
+    <script>
+        (function () {
+            var BASE_KEY = 'cinemaHistorySortOrder';
+            var currentOrder = 'desc';
+
+            function getStorageKey() {
+                return BASE_KEY + '_' + window.location.pathname;
+            }
+
+            function getSortableRoots() {
+                var roots = [];
+
+                var history = document.querySelector('.history-container');
+                if (history) {
+                    roots.push({
+                        root: history,
+                        groupSelector: ':scope > .history-day-group',
+                        itemSelector: ':scope > .history-item'
+                    });
+                }
+
+                var reviews = document.getElementById('reviewsList');
+                if (reviews) {
+                    roots.push({
+                        root: reviews,
+                        groupSelector: null,
+                        itemSelector: ':scope > .review-card'
+                    });
+                }
+
+                var library = document.querySelector('.library-container');
+                if (library) {
+                    roots.push({
+                        root: library,
+                        groupSelector: null,
+                        itemSelector: ':scope > .library-card'
+                    });
+                }
+
+                return roots;
+            }
+
+            function sortByAttr(items, attr, order) {
+                var hasData = items.some(function (el) {
+                    return (el.getAttribute(attr) || '').trim() !== '';
+                });
+                if (!hasData) return;
+
+                items.sort(function (a, b) {
+                    var da = (a.getAttribute(attr) || '').trim();
+                    var db = (b.getAttribute(attr) || '').trim();
+                    if (da === db) return 0;
+                    if (da === '') return 1;
+                    if (db === '') return -1;
+                    return order === 'asc' ? da.localeCompare(db) : db.localeCompare(da);
+                });
+            }
+
+            function applyOrder(order) {
+                getSortableRoots().forEach(function (config) {
+                    var root = config.root;
+
+                    if (config.groupSelector) {
+                        var groups = Array.prototype.slice.call(
+                            root.querySelectorAll(config.groupSelector)
+                        );
+                        sortByAttr(groups, 'data-date', order);
+                        groups.forEach(function (g) { root.appendChild(g); });
+
+                        root.querySelectorAll('.history-day-group').forEach(function (group) {
+                            var items = Array.prototype.slice.call(
+                                group.querySelectorAll(':scope > .history-item')
+                            );
+                            items.sort(function (a, b) {
+                                var ta = ((a.querySelector('.history-item-time span:last-child') || {}).textContent || '').trim();
+                                var tb = ((b.querySelector('.history-item-time span:last-child') || {}).textContent || '').trim();
+                                return order === 'asc' ? ta.localeCompare(tb) : tb.localeCompare(ta);
+                            });
+                            items.forEach(function (i) { group.appendChild(i); });
+                        });
+                    } else {
+                        var items = Array.prototype.slice.call(
+                            root.querySelectorAll(config.itemSelector)
+                        );
+                        sortByAttr(items, 'data-date', order);
+                        items.forEach(function (i) { root.appendChild(i); });
+                    }
+                });
+            }
+
+            function updateActiveButton(order) {
+                var group = document.getElementById('sortToggleGroup');
+                if (!group) return;
+                group.querySelectorAll('.sort-option').forEach(function (btn) {
+                    btn.classList.toggle('active', btn.getAttribute('data-order') === order);
+                });
+            }
+
+            window.setHistorySortOrder = function (order) {
+                if (order !== 'asc' && order !== 'desc') return;
+                if (currentOrder === order) {
+                    updateActiveButton(order);
+                    return;
+                }
+                currentOrder = order;
+                try { localStorage.setItem(getStorageKey(), order); } catch (e) {}
+                applyOrder(order);
+                updateActiveButton(order);
+            };
+
+            window.__initSortToggle = function () {
+                var saved = 'desc';
+                try { saved = localStorage.getItem(getStorageKey()) || 'desc'; } catch (e) {}
+                currentOrder = saved;
+                applyOrder(saved);
+                updateActiveButton(saved);
+            };
+        })();
+    </script>
+</div>
+
+</body>
+</html>

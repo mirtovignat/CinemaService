@@ -31,6 +31,10 @@ public abstract class AbstractLinkedCollectionService<
         return linkedCollectionRepository.countByUserId(userId);
     }
 
+    public Long getNormalizedCount(Long userId){
+        return userId == null ? 0 : getCount(userId);
+    }
+
     @Transactional(readOnly = true)
     public Set<Long> getMovieIds(Long userId) {
         return new LinkedHashSet<>(linkedCollectionRepository
@@ -45,7 +49,7 @@ public abstract class AbstractLinkedCollectionService<
     }
 
     @Transactional
-    public void add(Long movieId, Long userId){
+    public void add(Long movieId, Long userId) {
         User user = userRepository.findByIdOrThrow(userId);
         Movie movie = movieRepository.findByIdOrThrow(movieId);
         if (shouldSkipIfPurchased() && purchasedMovieRepository

@@ -1,13 +1,21 @@
 package com.example.demo.service.user;
 
-import com.example.demo.dto.response.UserResponse;
-import com.example.demo.dto.user.ProfileSettingsDTO;
+import com.example.demo.dto.movie.MovieCardViewDTO;
+import com.example.demo.dto.response.PersonalAccountResponse;
 import com.example.demo.dto.user.UserForOwnerViewDTO;
 import com.example.demo.dto.wallet.WalletForOwnerViewDTO;
 import com.example.demo.mapper.entity.UserMapper;
 import com.example.demo.model.entity.User;
+import com.example.demo.repository.entity.CartItemRepository;
+import com.example.demo.repository.entity.FavouriteMovieRepository;
+import com.example.demo.repository.entity.PurchasedMovieRepository;
 import com.example.demo.repository.entity.UserRepository;
+import com.example.demo.service.movie.MovieRecommendationService;
+import com.example.demo.service.movie.MovieService;
+import com.example.demo.service.rated.RatedQueryService;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,15 +27,34 @@ public class UserQueryService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PurchasedMovieRepository purchasedMovieRepository;
+    private final RatedQueryService ratedQueryService;
+    private final FavouriteMovieRepository favouriteMovieRepository;
+    private final CartItemRepository cartItemRepository;
+    private final MovieRecommendationService movieRecommendationService;
+    private final MovieService movieService;
+
+    private static final int RECOMMENDATIONS_PAGE_SIZE = 8;
 
     @Transactional(readOnly = true)
-    public UserResponse buildUserPage(UserForOwnerViewDTO userForOwner) {
+    public PersonalAccountResponse buildUserPage(UserForOwnerViewDTO userForOwner) {
         Long userId = userForOwner.id();
-        long purchasedCounts = getPurchasesCount(userId);
-        long ratingsCount = getRatingsCount(userId);
-        return UserResponse.builder().userForOwner(userForOwner)
-                .purchasesCount(purchasedCounts)
-                .ratingsCount(ratingsCount).build();
+
+        Slice<MovieCardViewDTO> firstPage = movieRecommendationService.getRecommendedMoviesSlice(
+                userId,
+                PageRequest.of(0, RECOMMENDATIONS_PAGE_SIZE)
+        );
+
+        return PersonalAccountResponse.builder()
+                .userForOwner(userForOwner)
+                .purchasesCount(purchasedMovieRepository.countByUserId(userId))
+                .ratingsCount(ratedQueryService.countByUserId(userId))
+                .favouritesCount(favouriteMovieRepository.countByUserId(userId))
+                .cartCount(cartItemRepository.countByUserId(userId))
+                .topThreeRatedMovies(ratedQueryService.getTopNRatedMovies(userId))
+                .recommendedMovies(firstPage.getContent())
+                .genres(movieService.getAllGenres())
+                .build();
     }
 
     public BigDecimal getBalance(Long userId) {
@@ -36,16 +63,6 @@ public class UserQueryService {
 
     public User getUser(Long userId) {
         return userRepository.findByIdOrThrow(userId);
-    }
-
-    @Transactional(readOnly = true)
-    public long getPurchasesCount(Long userId) {
-        return userRepository.countPurchasesByUserId(userId);
-    }
-
-    @Transactional(readOnly = true)
-    public long getRatingsCount(Long userId) {
-        return userRepository.countRatingsByUserId(userId);
     }
 
     public String getUsername(Long userId) {
@@ -59,9 +76,4 @@ public class UserQueryService {
     public UserForOwnerViewDTO getUserForOwner(Long userId) {
         return userMapper.toOwnerView(getUser(userId));
     }
-
-    public ProfileSettingsDTO getProfileSettings(Long userId) {
-        return userMapper.toSettingsForm(getUser(userId));
-    }
-
 }

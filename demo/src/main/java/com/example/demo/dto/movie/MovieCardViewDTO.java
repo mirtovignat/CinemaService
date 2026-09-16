@@ -1,22 +1,15 @@
 package com.example.demo.dto.movie;
 
-import com.example.demo.dto.base.Identifiable;
-import com.example.demo.dto.base.Purchasable;
-import com.example.demo.dto.base.Ratable;
-import com.example.demo.dto.base.Titled;
-
-import java.math.BigDecimal;
+import com.example.demo.dto.base.*;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
 public record MovieCardViewDTO(
-        Long id,
-        String title,
-        BigDecimal price,
-        String genre,
-        String posterUrl,
-        BigDecimal rating,
-        Integer releaseYear,
-        Long ratingsCount,
-        String director,
-        String formattedDuration
-) implements Identifiable, Titled, Ratable, Purchasable {
+        @JsonUnwrapped MovieIdentity id,
+        @JsonUnwrapped MovieTitled title,
+        @JsonUnwrapped MoviePricing price,
+        @JsonUnwrapped MovieMedia media,
+        @JsonUnwrapped MovieRating rating,
+        @JsonUnwrapped MovieRelease release,
+        @JsonUnwrapped MovieMeta meta
+) {
 }

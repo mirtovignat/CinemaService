@@ -1,193 +1,398 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ru">
 <head>
-    <title>📜 История покупок — Cinema Service</title>
+    <title>История покупок — CinemaService</title>
     <th:block th:replace="~{fragments/head :: head}"></th:block>
     <style>
-        html {
-            height: auto !important;
-            min-height: 100%;
-            overflow-y: scroll !important;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; margin: 0; padding: 0; }
         body {
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            background-color: #0b0f19;
-            color: #f8fafc;
-            display: flex;
-            flex-direction: column;
-            overflow-x: hidden;
+            background: #0b0e14;
+            display: flex; flex-direction: column;
+            height: 100vh; font-family: 'Inter', system-ui, sans-serif;
+            color: #eef2ff; overflow: hidden;
         }
-        main.catalog-wrapper {
-            display: block;
-            padding: 1.5rem 2rem 4rem 2rem;
-            box-sizing: border-box;
-            width: 100%;
-            max-width: 1600px;
-            margin: 0 auto;
-            min-height: calc(100vh - 120px);
+        .header-wrapper { flex-shrink: 0; z-index: 50; }
+        .profile-wrapper {
+            flex: 1; width: 100%; margin: 0; padding: 0;
+            position: relative; overflow: hidden; min-height: 0;
+            display: flex; flex-direction: column;
         }
-        .catalog-header {
-            text-align: center;
-            padding: 0.5rem 0 1.5rem 0;
-            width: 100%;
+        .profile-grid {
+            display: grid; grid-template-columns: 240px 1fr;
+            gap: 0; align-items: stretch; flex: 1; min-height: 0;
+            transition: grid-template-columns .4s ease;
+        }
+        .profile-card {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(8px);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            height: 100%; max-height: 100%; overflow: hidden;
+            display: flex; flex-direction: column;
+            padding: 1.25rem .75rem; position: relative;
+            min-width: 0; flex: 1 1 0; transition: all .4s ease;
+        }
+        .sidebar-toggle {
+            position: absolute; top: 12px; right: 12px; z-index: 10;
+            border: none; background: transparent; color: #94a3b8;
+            font-size: 1.4rem; cursor: pointer; transition: .2s;
+            user-select: none; padding: 0; width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 8px;
+        }
+        .sidebar-toggle:hover { color: #fff; background: rgba(255, 255, 255, 0.06); }
+        .profile-grid.sidebar-collapsed { grid-template-columns: 56px 1fr; }
+        .profile-grid.sidebar-collapsed .profile-card {
+            padding: .75rem .5rem; min-width: 56px; width: 56px; overflow: hidden;
+        }
+        .profile-grid.sidebar-collapsed .sidebar-toggle {
+            right: 4px; top: 4px; font-size: 1.2rem;
+        }
+        .sidebar-content {
+            opacity: 1; transition: opacity .3s ease .1s;
+            overflow: hidden; flex: 1; display: flex; flex-direction: column;
+            height: 100%; min-height: 0;
+        }
+        .profile-grid.sidebar-collapsed .sidebar-content {
+            opacity: 0; pointer-events: none; max-height: 0;
+            overflow: hidden; flex: 0;
+        }
+        @media (max-width: 1024px) {
+            .profile-grid.sidebar-collapsed { grid-template-columns: 1fr; }
+            .profile-grid.sidebar-collapsed .profile-card {
+                padding: 1rem; width: 100%; min-width: auto; max-height: 80px;
+            }
+            .profile-grid.sidebar-collapsed .sidebar-content {
+                opacity: 1; pointer-events: auto; max-height: none; flex: 1;
+            }
+        }
+        .sidebar-profile {
+            display: flex; flex-direction: column; align-items: center;
+            padding: .75rem .5rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            margin-bottom: .75rem; flex-shrink: 0;
+        }
+        .sidebar-avatar {
+            width: 56px; height: 56px; border-radius: 50%;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 1.4rem; color: #fff;
+            border: 2px solid #6366f1; margin-bottom: .5rem;
+            flex-shrink: 0; text-transform: uppercase;
+        }
+        .sidebar-profile-name { font-weight: 600; font-size: .95rem; color: #f1f5f9; }
+        .sidebar-profile-phone { font-size: .75rem; color: #94a3b8; margin-top: .1rem; }
+        .sidebar-profile-email { font-size: .7rem; color: #64748b; margin-top: .1rem; }
+        .nav-menu {
+            display: flex; flex-direction: column; gap: 2px;
+            flex: 1; overflow-y: auto; min-height: 0; padding-right: 6px;
+        }
+        .nav-menu::-webkit-scrollbar { width: 8px; }
+        .nav-menu::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.06); border-radius: 6px; margin: 2px 0;
+        }
+        .nav-menu::-webkit-scrollbar-thumb {
+            background: #6b7280; border-radius: 6px;
+            border: 2px solid transparent; background-clip: padding-box;
+            min-height: 30px;
+        }
+        .nav-menu::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+        .nav-link {
+            display: flex; align-items: center; gap: .6rem;
+            padding: .5rem .75rem; border-radius: 10px;
+            text-decoration: none; color: #94a3b8;
+            transition: .2s; cursor: pointer; font-size: .85rem;
+            font-weight: 400; border: none; background: transparent;
+            width: 100%; text-align: left; position: relative;
+        }
+        .nav-link:hover { background: rgba(255, 255, 255, 0.06); color: #f1f5f9; }
+        .nav-link.active { background: rgba(99, 102, 241, 0.15); color: #a78bfa; }
+        .nav-link .nav-badge {
+            margin-left: auto; background: #6366f1; color: #fff;
+            border-radius: 40px; min-width: 18px; height: 18px;
+            font-size: .55rem; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            padding: 0 5px; flex-shrink: 0;
+        }
+        .nav-divider {
+            height: 1px; background: rgba(255, 255, 255, 0.06);
+            margin: .4rem .75rem; flex-shrink: 0;
+        }
+        .delete-account-btn {
+            width: 100%; padding: .4rem; background: transparent;
+            border: 1px solid #f43f5e; color: #f43f5e;
+            border-radius: 60px; font-weight: 600; font-size: .7rem;
+            cursor: pointer; transition: .2s; text-align: center;
+            flex-shrink: 0; margin-top: .4rem;
+            display: flex; align-items: center; justify-content: center;
+            gap: .3rem;
+        }
+        .delete-account-btn:hover { background: #f43f5e; color: #fff; }
+        .delete-account-btn svg { width: 14px; height: 14px; }
+        .profile-right {
+            display: flex; flex-direction: column;
+            padding: 1.5rem 2.5rem; gap: 1.5rem;
+            height: 100%; overflow-y: auto;
+            background: #0f131a; position: relative;
+        }
+        .profile-right::-webkit-scrollbar { width: 8px; }
+        .profile-right::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.06); border-radius: 6px; margin: 2px 0;
+        }
+        .profile-right::-webkit-scrollbar-thumb {
+            background: #6b7280; border-radius: 6px;
+            border: 2px solid transparent; background-clip: padding-box;
+            min-height: 30px;
+        }
+        .profile-right::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+        .page-header-row {
             display: flex;
             align-items: center;
-            justify-content: center;
             gap: 1rem;
+            width: 100%;
+            flex-shrink: 0;
+            flex-wrap: nowrap;
         }
-        .catalog-header h1 {
+
+        .page-header-row .profile-right-header {
+            flex: 0 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.25rem;
+        }
+
+        .page-header-row .profile-right-header h1 {
             font-size: 1.8rem;
             font-weight: 700;
-            background: linear-gradient(135deg, #e0e7ff, #a78bfa);
+            background: linear-gradient(135deg, #e0e7ff, #c084fc);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
             margin: 0;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            white-space: nowrap;
         }
-        .catalog-count {
-            background: rgba(255, 255, 255, 0.08);
-            padding: 0.3rem 1rem;
-            border-radius: 60px;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            color: #cbd5e1;
-            font-size: 0.85rem;
+
+        .page-header-row .profile-right-header h1 svg {
+            width: 26px; height: 26px; stroke: #34d399;
         }
+
+        .page-header-row .sort-toggle-wrapper {
+            margin-left: auto;
+            flex: 0 0 auto;
+        }
+
+        .page-header-row .catalog-search {
+            position: static !important;
+            top: auto !important;
+            right: auto !important;
+            left: auto !important;
+            margin: 0 !important;
+            flex: 0 0 auto;
+            width: 340px !important;
+            max-width: 340px !important;
+        }
+
+        .page-header-row .catalog-search form,
+        .page-header-row .catalog-search .catalog-search-input-wrapper {
+            width: 100% !important;
+        }
+
+        @media (max-width: 1200px) {
+            .page-header-row {
+                flex-wrap: wrap;
+                row-gap: 0.75rem;
+            }
+            .page-header-row .profile-right-header {
+                flex: 1 1 auto;
+            }
+            .page-header-row .sort-toggle-wrapper {
+                margin-left: 0;
+            }
+        }
+
         .history-container {
-            width: 100%;
-            max-width: 1100px;
-            display: flex;
-            flex-direction: column;
-            gap: 0.4rem;
-            margin: 0 auto;
+            display: flex; flex-direction: column; gap: .5rem;
+            width: 100%; flex: 1; overflow-y: auto; padding-right: 4px;
         }
-        .history-row {
-            background: rgba(15, 23, 42, 0.75);
-            border: 1px solid rgba(52, 211, 153, 0.2);
-            border-radius: 10px;
-            padding: 0.45rem 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            backdrop-filter: blur(12px);
-            box-sizing: border-box;
-            transition: border-color 0.2s, background 0.2s;
+        .history-container::-webkit-scrollbar { width: 6px; }
+        .history-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.04); border-radius: 6px;
         }
-        .history-row:hover {
-            border-color: rgba(52, 211, 153, 0.5);
-            background: rgba(15, 23, 42, 0.9);
+        .history-container::-webkit-scrollbar-thumb {
+            background: #6b7280; border-radius: 6px;
+            border: 2px solid transparent; background-clip: padding-box;
         }
-        .history-main {
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
+        .history-container::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+        .history-day-group {
+            display: flex; flex-direction: column;
+            gap: .1rem; padding-bottom: .2rem;
         }
-        .history-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
+        .history-day-label {
+            font-size: 1rem; font-weight: 600; color: #f1f5f9;
+            padding: .4rem .2rem .2rem;
+            display: flex; align-items: center; gap: .5rem;
+        }
+        .history-day-label svg {
+            width: 18px; height: 18px; stroke: #94a3b8; opacity: .6;
+        }
+        .history-item {
+            display: flex; align-items: center; gap: 1rem;
+            padding: .6rem .5rem; border-radius: 14px;
+            background: rgba(255, 255, 255, 0.02);
+            transition: background .25s ease, border-color .25s ease;
+            cursor: pointer; position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .history-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(52, 211, 153, 0.2);
+        }
+        .history-item-icon {
+            width: 40px; height: 40px; border-radius: 50%;
             background: rgba(16, 185, 129, 0.15);
             border: 1px solid rgba(16, 185, 129, 0.3);
             color: #34d399;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.9rem;
-            font-weight: bold;
-            flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; flex-shrink: 0;
         }
-        .history-info {
-            display: flex;
-            flex-direction: column;
-            gap: 0.1rem;
+        .history-item-info {
+            flex: 1; display: flex; flex-direction: column;
+            gap: .1rem; min-width: 0;
         }
-        .history-title {
-            font-weight: 600;
-            color: #f8fafc;
-            text-decoration: none;
-            font-size: 0.9rem;
+        .history-item-title {
+            font-size: 1rem; font-weight: 600; color: #f8fafc;
+            text-decoration: none; transition: color .2s;
         }
-        .history-title:hover {
-            color: #34d399;
+        .history-item-title:hover { color: #34d399; }
+        .history-item-meta {
+            display: flex; align-items: center; gap: .4rem;
+            font-size: .8rem; color: #94a3b8; flex-wrap: wrap;
         }
-        .history-date {
-            font-size: 0.75rem;
-            color: #64748b;
+        .history-item-time {
+            display: flex; align-items: center; gap: .3rem;
+            font-size: .75rem; color: #64748b; flex-shrink: 0;
+        }
+        .history-item-time svg {
+            width: 14px; height: 14px; stroke: currentColor;
         }
         .history-amount {
-            font-family: monospace, sans-serif;
-            font-weight: 700;
-            font-size: 0.9rem;
-            color: #f8fafc;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 0.25rem 0.6rem;
-            border-radius: 6px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-family: monospace, sans-serif; font-weight: 700;
+            font-size: .9rem; color: #34d399;
+            background: rgba(16, 185, 129, 0.1);
+            padding: .25rem .6rem; border-radius: 6px;
+            border: 1px solid rgba(16, 185, 129, 0.15);
         }
         .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            color: #94a3b8;
+            text-align: center; padding: 4rem 2rem; color: #94a3b8;
         }
-        .empty-state p {
-            font-size: 1.2rem;
-            margin-bottom: 1.5rem;
+        .empty-state p { font-size: 1.2rem; margin-bottom: 1.5rem; }
+        .watch-btn-empty {
+            display: inline-block; padding: .75rem 2rem;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: #fff; border-radius: 60px;
+            text-decoration: none; font-weight: 600;
+            transition: background .2s;
         }
-        .watch-btn {
-            display: inline-block;
-            padding: 0.75rem 2rem;
-            background: #34d399;
-            color: #0b0f19;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: background 0.2s;
+        .watch-btn-empty:hover { background: #818cf8; transform: translateY(-2px); }
+        @media (max-width: 1024px) {
+            .profile-grid { grid-template-columns: 1fr; }
+            .profile-card {
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+                padding: 1rem; max-height: 260px; overflow-y: auto;
+            }
+            .profile-right { padding: 1rem; height: auto; min-height: 400px; }
         }
-        .watch-btn:hover {
-            background: #6ee7b7;
+        @media (max-width: 640px) {
+            .page-header-row .profile-right-header h1 { font-size: 1.3rem; }
+            .page-header-row .catalog-search {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            .profile-right { padding: .75rem; }
         }
     </style>
 </head>
 <body>
-
-<th:block th:replace="~{fragments/header :: header}"></th:block>
+<div class="header-wrapper">
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+</div>
 <th:block th:replace="~{fragments/flash-messages :: flashMessages}"></th:block>
+<div id="authStatus" th:data-authenticated="${session.sessionUser != null}" style="display:none;"></div>
+<main class="profile-wrapper">
+    <div class="profile-grid">
+        <th:block
+                th:replace="~{fragments/sidebar :: sidebar(currentPage='history', userForOwner=${groupedResponse.userForOwner})}"></th:block>
+        <div class="profile-right">
 
-<main class="catalog-wrapper">
-    <div class="catalog-header">
-        <h1>📜 История покупок</h1>
-        <div class="catalog-count" th:if="${items != null}">
-            Всего: <strong th:text="${#lists.size(items)}">0</strong>
-        </div>
-    </div>
+            <div class="page-header-row">
+                <div class="profile-right-header">
+                    <h1>
+                        <th:block th:replace="~{fragments/icons :: icon-clock}"></th:block>
+                        История покупок
+                    </h1>
+                </div>
+                <th:block th:replace="~{fragments/sort-toggle :: sortToggle}"></th:block>
+                <th:block th:replace="~{fragments/catalog-search :: catalogSearch}"></th:block>
+            </div>
 
-    <div th:if="${items != null and not #lists.isEmpty(items)}" class="history-container">
-        <div th:each="item : ${items}" class="history-row">
-            <div class="history-main">
-                <div class="history-icon">✓</div>
-                <div class="history-info">
-                    <a th:href="@{/movies/{id}(id=${item.id})}" class="history-title" th:text="${item.title}">Название
-                        фильма</a>
-                    <div class="history-date" th:if="${item.addedAt != null}"
-                         th:text="${#temporals.format(item.addedAt, 'dd MMM yyyy, HH:mm')}">01 янв 2026, 15:30
+            <div th:if="${groupedResponse != null and groupedResponse.groupedItems != null and not groupedResponse.groupedItems.isEmpty()}"
+                 class="history-container">
+                <div th:each="entry : ${groupedResponse.groupedItems}"
+                     class="history-day-group"
+                     th:attr="data-date=${entry.key}">
+                    <div class="history-day-label">
+                        <th:block th:replace="~{fragments/icons :: icon-calendar}"></th:block>
+                        <span class="day-label" th:text="${#temporals.format(entry.key, 'dd MMMM yyyy')}"></span>
+                    </div>
+                    <div th:each="item : ${entry.value}" class="history-item"
+                         th:data-movie-id="${item.id.id}"
+                         onclick="window.location.href='/movies/' + ${item.id.id}">
+                        <div class="history-item-icon">✓</div>
+                        <div class="history-item-info">
+                            <a th:href="@{/movies/{id}(id=${item.id.id})}" class="history-item-title"
+                               th:text="${item.title.title}">Название</a>
+                            <div class="history-item-meta">
+                                <span class="history-item-time" th:if="${item.addedAt != null}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                         stroke-width="1.5" stroke="currentColor">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <polyline points="12 6 12 12 16 14"/>
+                                    </svg>
+                                    <span th:text="${#temporals.format(item.addedAt, 'HH:mm')}">15:30</span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="history-amount">
+                            <span th:if="${item.priceSnapshot != null}" th:text="${'- ' + item.priceSnapshot + ' ₽'}">- 329 ₽</span>
+                            <span style="color:#64748b;" th:if="${item.priceSnapshot == null}">—</span>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="history-amount">
-                <span th:if="${item.priceSnapshot != null}" th:text="${'- ' + item.priceSnapshot + ' ₽'}">- 329 ₽</span>
-                <span style="color: #64748b;" th:if="${item.priceSnapshot == null}">—</span>
+            <div th:if="${groupedResponse == null or groupedResponse.groupedItems == null or groupedResponse.groupedItems.isEmpty()}"
+                 class="empty-state">
+                <p>У вас пока нет покупок</p>
+                <a href="/" class="watch-btn-empty">Перейти в каталог</a>
             </div>
         </div>
     </div>
-
-    <div th:if="${items == null or #lists.isEmpty(items)}" class="empty-state">
-        <p>У вас пока нет покупок</p>
-        <a href="/" class="watch-btn">Перейти в каталог</a>
-    </div>
 </main>
-
+<script th:src="@{/js/date-formatter.js}" defer></script>
 <script th:src="@{/js/main.js}" defer></script>
+<script th:src="@{/js/catalog-search.js}" defer></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof window.__initSortToggle === 'function') {
+            window.__initSortToggle();
+        }
+    });
+</script>
 <th:block th:replace="~{fragments/footer :: footer}"></th:block>
 </body>
 </html>

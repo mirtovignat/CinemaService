@@ -1,7 +1,7 @@
 package com.example.demo.service.linked_collection;
 
 import com.example.demo.dto.badges.BadgeCountsDTO;
-import com.example.demo.dto.catalog.CartMovieForOwnerViewDTO;
+import com.example.demo.dto.catalog.CartItemViewDTO;
 import com.example.demo.exception.ErrorCode;
 import com.example.demo.mapper.entity.CartItemMapper;
 import com.example.demo.model.base.AbstractCatalogItem;
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class CartService extends AbstractLinkedCollectionService<CartItem,
-        CartMovieForOwnerViewDTO> {
+        CartItemViewDTO> {
 
     private final CartItemMapper cartItemMapper;
     private final CartPresenceService cartPresenceService;
@@ -58,7 +58,7 @@ public class CartService extends AbstractLinkedCollectionService<CartItem,
     }
 
     @Override
-    protected CartMovieForOwnerViewDTO mapToDto(CartItem cartItem) {
+    protected CartItemViewDTO mapToDto(CartItem cartItem) {
         return cartItemMapper.toOwnerView(cartItem, cartPresenceService);
     }
 

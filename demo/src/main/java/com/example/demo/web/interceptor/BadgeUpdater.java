@@ -25,9 +25,14 @@ public class BadgeUpdater implements HandlerInterceptor {
                            @NotNull HttpServletResponse httpServletResponse,
                            @NotNull Object handler,
                            ModelAndView modelAndView) {
-        if (modelAndView == null || isRedirectView(modelAndView) || isAjax(httpServletRequest)) {
+
+        if (modelAndView == null ||
+                isRedirectView(modelAndView) ||
+                isAjax(httpServletRequest) ||
+                "POST".equalsIgnoreCase(httpServletRequest.getMethod())) {
             return;
         }
+
         String uri = httpServletRequest.getRequestURI();
         Object errorAttr = httpServletRequest.getAttribute("jakarta.servlet.error.request_uri");
         if (uri.startsWith("/error") || errorAttr != null) {
@@ -58,7 +63,9 @@ public class BadgeUpdater implements HandlerInterceptor {
     }
 
     private boolean isAjax(HttpServletRequest request) {
-        return "XMLHttpRequest".equals(request.getHeader("X-Requested-With"));
+        return "XMLHttpRequest".equals(request.getHeader("X-Requested-With")) ||
+                "application/json".equals(request.getHeader("Accept")) ||
+                "application/json".equals(request.getHeader("Content-Type"));
     }
 
     private Long getUserIdFromSession(HttpSession httpSession) {

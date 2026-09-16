@@ -12,8 +12,8 @@ import java.util.Optional;
 import static jakarta.persistence.LockModeType.PESSIMISTIC_WRITE;
 
 @NoRepositoryBean
-public interface AbstractLinkedCollectionRepository<T extends AbstractCatalogItem>
-        extends JpaRepository<T, AbstractCatalogItemId> {
+public interface AbstractLinkedCollectionRepository<Entity extends AbstractCatalogItem>
+        extends JpaRepository<Entity, AbstractCatalogItemId> {
 
     @EntityGraph(attributePaths = {"movie", "user"})
     @Query("""
@@ -21,7 +21,7 @@ public interface AbstractLinkedCollectionRepository<T extends AbstractCatalogIte
             FROM #{#entityName} item
             WHERE item.id.userId = :userId
             """)
-    List<T> findAllByUserId(@Param("userId") Long userId);
+    List<Entity> findAllByUserId(@Param("userId") Long userId);
 
     @Query("""
             SELECT COUNT(item) > 0
@@ -69,6 +69,6 @@ public interface AbstractLinkedCollectionRepository<T extends AbstractCatalogIte
             WHERE item.id.movieId = :movieId
             AND item.id.userId = :userId
             """)
-    Optional<T> findByMovieIdAndUserIdWithLock(@Param("movieId") Long movieId,
-                                               @Param("userId") Long userId);
+    Optional<Entity> findByMovieIdAndUserIdWithLock(@Param("movieId") Long movieId,
+                                                    @Param("userId") Long userId);
 }

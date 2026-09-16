@@ -1,17 +1,16 @@
 package com.example.demo.dto.catalog;
 
-import com.example.demo.dto.base.Ownable;
+import com.example.demo.dto.base.UserOwnership;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import lombok.Builder;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 @Builder
 public record ReviewViewDTO(
+        @JsonUnwrapped UserOwnership ownership,
         String username,
-        LocalDateTime addedAt,
         BigDecimal ratingValue,
-        String reviewText,
-        boolean own
-) implements Ownable {
+        String reviewText
+) {
 }

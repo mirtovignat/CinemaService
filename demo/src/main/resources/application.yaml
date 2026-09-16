@@ -33,6 +33,13 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     show-sql: true
     open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          lob:
+            non_contextual_creation: true
+        type:
+          preferred_enum_type: STRING
 
 server:
   port: 8080
@@ -51,3 +58,7 @@ tmdb:
   api-url: https://api.themoviedb.org/3
   image-url: https://image.tmdb.org/t/p
   access-token: ${TMDB_ACCESS_TOKEN}
+
+app:
+  rating:
+    top-limit: 4

@@ -1,14 +1,18 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.authorize.Identifier;
 import com.example.demo.dto.response.ApiResponse;
-import com.example.demo.dto.response.UserResponse;
+import com.example.demo.dto.response.PersonalAccountResponse;
 import com.example.demo.dto.user.PasswordChangingDTO;
-import com.example.demo.dto.user.ProfileSettingsDTO;
+import com.example.demo.dto.user.ProfileFieldUpdateDTO;
 import com.example.demo.dto.user.SessionUser;
 import com.example.demo.dto.user.UserForOwnerViewDTO;
 import com.example.demo.exception.SuccessCode;
+import com.example.demo.service.catalog.WatchedHistoryService;
+import com.example.demo.service.movie.MovieService;
 import com.example.demo.service.user.UserCommandService;
 import com.example.demo.service.user.UserQueryService;
+import com.example.demo.util.MessageUtils;
 import com.example.demo.web.util.ReturnUrlHelper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -29,129 +33,130 @@ public class PersonalAccountController {
 
     private final UserCommandService userCommandService;
     private final UserQueryService userQueryService;
+    private final MessageUtils messageUtils;
+    private final WatchedHistoryService watchHistoryService;
+    private final MovieService movieService;
 
     @GetMapping("/personal-account")
-    public String getPersonalAccount(@SessionAttribute SessionUser sessionUser, Model model) {
+    public String getPersonalAccount(
+            @SessionAttribute SessionUser sessionUser,
+            Model model
+    ) {
         Long userId = sessionUser.id();
-        UserForOwnerViewDTO updatedUser = userQueryService.getUserForOwner(userId);
-        UserResponse response = userQueryService.buildUserPage(updatedUser);
+        UserForOwnerViewDTO userForOwnerViewDTO = userQueryService.getUserForOwner(userId);
+        PersonalAccountResponse response = userQueryService.buildUserPage(userForOwnerViewDTO);
         model.addAttribute("response", response);
+        model.addAttribute("genres", movieService.getAllGenres());
         return "personal-account";
     }
 
-    @GetMapping("/profile/settings")
-    public String getSettingsForm(@SessionAttribute SessionUser sessionUser,
-                                  HttpServletRequest request,
-                                  HttpSession session,
-                                  ReturnUrlHelper returnUrlHelper,
-                                  Model model) {
+    @GetMapping("/profile/edit")
+    public String editProfile(
+            @SessionAttribute SessionUser sessionUser,
+            Model model
+    ) {
         Long userId = sessionUser.id();
-        String referer = request.getHeader("Referer");
-        if (referer != null && !referer.isBlank()) {
-            returnUrlHelper.saveReturnUrl(session, referer);
-        }
+        UserForOwnerViewDTO updatedUser = userQueryService.getUserForOwner(userId);
+        PersonalAccountResponse response = userQueryService.buildUserPage(updatedUser);
+        model.addAttribute("response", response);
+        return "profile";
+    }
 
-        if (!model.containsAttribute("profileSettingsDTO")) {
-            model.addAttribute("profileSettingsDTO", userQueryService.getProfileSettings(userId));
-        }
-        model.addAttribute("wallet", userQueryService.getWalletForOwner(userId));
+    @GetMapping("/settings")
+    public String getSettings(
+            @SessionAttribute SessionUser sessionUser,
+            Model model
+    ) {
+        Long userId = sessionUser.id();
+        model.addAttribute("saveHistory", watchHistoryService.isHistorySaved(userId));
         return "settings";
     }
 
-    @PostMapping("/profile/settings/change")
-    public String changeProfileForm(@Valid @ModelAttribute("profileSettingsDTO") ProfileSettingsDTO profileSettingsDTO,
-                                    BindingResult bindingResult,
-                                    RedirectAttributes redirectAttributes,
-                                    @SessionAttribute SessionUser sessionUser,
-                                    HttpSession httpSession,
-                                    ReturnUrlHelper returnUrlHelper) {
+    @PatchMapping("/settings/change/field")
+    public ResponseEntity<ApiResponse> updateField(
+            @Valid @RequestBody ProfileFieldUpdateDTO profileFieldUpdateDTO,
+            @SessionAttribute SessionUser sessionUser,
+            HttpSession httpSession
+    ) {
         Long userId = sessionUser.id();
-        if (bindingResult.hasErrors()) {
-            return "settings";
+        ProfileFieldUpdateDTO validatedDto = userCommandService.prepareAndValidateField(profileFieldUpdateDTO, userId);
+        userCommandService.updateField(userId, validatedDto);
+        SessionUser updatedSessionUser = sessionUser;
+        if (validatedDto.identifier() == Identifier.USERNAME) {
+            updatedSessionUser = sessionUser.withUsername(validatedDto.field());
+            httpSession.setAttribute("sessionUser", updatedSessionUser);
         }
-        ProfileSettingsDTO normalizedDto = userCommandService.prepareAndValidateProfile(profileSettingsDTO, userId);
-        userCommandService.saveProfile(normalizedDto, userId);
-        SessionUser updatedSessionUser = sessionUser.withFirstLetter(normalizedDto.username());
-        httpSession.setAttribute("sessionUser", updatedSessionUser);
-        redirectAttributes.addFlashAttribute("successMessage",
-                SuccessCode.PROFILE_HAS_BEEN_CHANGED.getMessage());
-
-        String redirectUrl = returnUrlHelper.getReturnUrlOrDefault(httpSession, "/profile/settings");
-        return "redirect:" + redirectUrl;
-    }
-
-    @PostMapping(value = "/profile/settings/change-ajax", consumes = "application/json")
-    @ResponseBody
-    public ResponseEntity<ApiResponse> changeProfileAjax(@Valid @RequestBody ProfileSettingsDTO profileSettingsDTO,
-                                                         @SessionAttribute SessionUser sessionUser,
-                                                         HttpSession httpSession) {
-        Long userId = sessionUser.id();
-        ProfileSettingsDTO normalizedDto = userCommandService.prepareAndValidateProfile(profileSettingsDTO, userId);
-        userCommandService.saveProfile(normalizedDto, userId);
-        SessionUser updatedSessionUser = sessionUser.withFirstLetter(normalizedDto.username());
-        httpSession.setAttribute("sessionUser", updatedSessionUser);
+        UserForOwnerViewDTO updatedUser = userQueryService.getUserForOwner(userId);
+        String message = messageUtils.getSuccess(SuccessCode.UPDATED);
         return ResponseEntity.ok(ApiResponse.builder()
-                .message(SuccessCode.PROFILE_HAS_BEEN_CHANGED.getMessage())
+                .code(SuccessCode.UPDATED.name())
+                .message(message)
                 .data(Map.of(
-                        "newUsername", profileSettingsDTO.username(),
-                        "newEmail", profileSettingsDTO.email(),
-                        "newPhone", profileSettingsDTO.phone() == null ? "" : profileSettingsDTO.phone()
+                        "user", updatedUser,
+                        "sessionUser", updatedSessionUser
                 ))
                 .build());
     }
 
-    @GetMapping("/profile/settings/delete/phone")
+    @GetMapping("/settings/delete/phone")
     @ResponseBody
     public ResponseEntity<ApiResponse> deletePhone(@SessionAttribute SessionUser sessionUser) {
         Long userId = sessionUser.id();
         userCommandService.deletePhone(userId);
-        return ResponseEntity.ok(ApiResponse.response(
-                SuccessCode.PHONE_HAS_BEEN_REMOVED));
+        String message = messageUtils.getSuccess(SuccessCode.PHONE_HAS_BEEN_REMOVED);
+        return ResponseEntity.ok(ApiResponse.builder()
+                .code(SuccessCode.PHONE_HAS_BEEN_REMOVED.name())
+                .message(message)
+                .data(Map.of())
+                .build());
     }
 
-    @GetMapping("/profile/settings/change/pwd")
-    public String getChangePasswordForm(HttpServletRequest request,
-                                        HttpSession session,
-                                        ReturnUrlHelper returnUrlHelper,
-                                        Model model) {
-        String referer = request.getHeader("Referer");
-        if (referer != null && !referer.isBlank()) {
-            returnUrlHelper.saveReturnUrl(session, referer);
-        }
+    @GetMapping("/settings/change/pwd")
+    public String getChangePasswordForm(
+            HttpServletRequest httpServletRequest,
+            HttpSession httpSession,
+            ReturnUrlHelper returnUrlHelper,
+            Model model
+    ) {
+        returnUrlHelper.saveReturnUrlIfNotExists(httpSession, httpServletRequest, "/settings/change/pwd");
         if (!model.containsAttribute("passwordChangingDTO")) {
             model.addAttribute("passwordChangingDTO", PasswordChangingDTO.builder().build());
         }
         return "change-password";
     }
 
-    @PostMapping("/profile/settings/change/pwd")
-    public String changePassword(@Valid @ModelAttribute("passwordChangingDTO") PasswordChangingDTO passwordChangingDTO,
-                                 BindingResult bindingResult,
-                                 @SessionAttribute SessionUser sessionUser,
-                                 RedirectAttributes redirectAttributes,
-                                 HttpSession httpSession,
-                                 ReturnUrlHelper returnUrlHelper) {
+    @PostMapping("/settings/change/pwd")
+    public String changePassword(
+            @Valid @ModelAttribute("passwordChangingDTO") PasswordChangingDTO passwordChangingDTO,
+            BindingResult bindingResult,
+            @SessionAttribute SessionUser sessionUser,
+            RedirectAttributes redirectAttributes,
+            HttpSession httpSession,
+            ReturnUrlHelper returnUrlHelper
+    ) {
         Long userId = sessionUser.id();
         if (bindingResult.hasErrors()) {
             return "change-password";
         }
         String newPasswordHash = userCommandService.prepareAndValidatePassword(passwordChangingDTO, userId);
         userCommandService.updatePassword(newPasswordHash, userId);
-        redirectAttributes.addFlashAttribute("successMessage",
-                SuccessCode.PASSWORD_HAS_BEEN_CHANGED.getMessage());
-        String redirectUrl = returnUrlHelper.getReturnUrlOrDefault(httpSession, "/profile/settings/change/pwd");
+        String message = messageUtils.getSuccess(SuccessCode.PASSWORD_HAS_BEEN_CHANGED);
+        redirectAttributes.addFlashAttribute("successMessage", message);
+        String redirectUrl = returnUrlHelper.getReturnUrlOrDefault(httpSession, "/personal-account");
         return "redirect:" + redirectUrl;
     }
 
     @PostMapping("/profile/delete")
-    public String deleteAccount(@SessionAttribute SessionUser sessionUser,
-                                HttpSession httpSession,
-                                RedirectAttributes redirectAttributes) {
+    public String deleteAccount(
+            @SessionAttribute SessionUser sessionUser,
+            HttpSession httpSession,
+            RedirectAttributes redirectAttributes
+    ) {
         Long userId = sessionUser.id();
         userCommandService.deleteAccount(userId);
         httpSession.invalidate();
-        redirectAttributes.addFlashAttribute("successMessage",
-                SuccessCode.ACCOUNT_HAS_BEEN_REMOVED.getMessage());
+        String message = messageUtils.getSuccess(SuccessCode.ACCOUNT_HAS_BEEN_REMOVED);
+        redirectAttributes.addFlashAttribute("successMessage", message);
         return "redirect:/login";
     }
 }

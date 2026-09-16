@@ -1,252 +1,412 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ru">
 <head>
-    <title>⭐ История оценок — Cinema Service</title>
+    <title>История оценок — CinemaService</title>
     <th:block th:replace="~{fragments/head :: head}"></th:block>
     <style>
-        html {
-            height: auto !important;
-            min-height: 100%;
-            overflow-y: scroll !important;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; margin: 0; padding: 0; }
         body {
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            background-color: #0b0f19;
-            color: #f8fafc;
-            display: flex;
-            flex-direction: column;
-            overflow-x: hidden;
+            background: #0b0e14;
+            display: flex; flex-direction: column;
+            height: 100vh; font-family: 'Inter', system-ui, sans-serif;
+            color: #eef2ff; overflow: hidden;
         }
-        main.catalog-wrapper {
-            display: block;
-            padding: 1.5rem 2rem 4rem 2rem;
-            box-sizing: border-box;
-            width: 100%;
-            max-width: 1600px;
-            margin: 0 auto;
-            min-height: calc(100vh - 120px);
+        .header-wrapper { flex-shrink: 0; z-index: 50; }
+        .profile-wrapper {
+            flex: 1; width: 100%; margin: 0; padding: 0;
+            position: relative; overflow: hidden; min-height: 0;
+            display: flex; flex-direction: column;
         }
-        .catalog-header {
-            text-align: center;
-            padding: 0.5rem 0 1.5rem 0;
-            width: 100%;
+        .profile-grid {
+            display: grid; grid-template-columns: 240px 1fr;
+            gap: 0; align-items: stretch; flex: 1; min-height: 0;
+            transition: grid-template-columns 0.4s ease;
+        }
+        .profile-card {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(8px);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            height: 100%; max-height: 100%; overflow: hidden;
+            display: flex; flex-direction: column;
+            padding: 1.25rem 0.75rem; position: relative;
+            min-width: 0; flex: 1 1 0; transition: all 0.4s ease;
+        }
+        .sidebar-toggle {
+            position: absolute; top: 12px; right: 12px; z-index: 10;
+            border: none; background: transparent; color: #94a3b8;
+            font-size: 1.4rem; cursor: pointer; transition: 0.2s;
+            user-select: none; padding: 0; width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 8px;
+        }
+        .sidebar-toggle:hover { color: #fff; background: rgba(255, 255, 255, 0.06); }
+        .profile-grid.sidebar-collapsed { grid-template-columns: 56px 1fr; }
+        .profile-grid.sidebar-collapsed .profile-card {
+            padding: 0.75rem 0.5rem; min-width: 56px; width: 56px; overflow: hidden;
+        }
+        .profile-grid.sidebar-collapsed .sidebar-toggle {
+            right: 4px; top: 4px; font-size: 1.2rem;
+        }
+        .sidebar-content {
+            opacity: 1; transition: opacity 0.3s ease 0.1s;
+            overflow: hidden; flex: 1; display: flex; flex-direction: column;
+            height: 100%; min-height: 0;
+        }
+        .profile-grid.sidebar-collapsed .sidebar-content {
+            opacity: 0; pointer-events: none; max-height: 0;
+            overflow: hidden; flex: 0;
+        }
+        @media (max-width: 1024px) {
+            .profile-grid.sidebar-collapsed { grid-template-columns: 1fr; }
+            .profile-grid.sidebar-collapsed .profile-card {
+                padding: 1rem; width: 100%; min-width: auto; max-height: 80px;
+            }
+            .profile-grid.sidebar-collapsed .sidebar-content {
+                opacity: 1; pointer-events: auto; max-height: none; flex: 1;
+            }
+        }
+        .sidebar-profile {
+            display: flex; flex-direction: column; align-items: center;
+            padding: 0.75rem 0.5rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            margin-bottom: 0.75rem; flex-shrink: 0;
+        }
+        .sidebar-avatar {
+            width: 56px; height: 56px; border-radius: 50%;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 1.4rem; color: #fff;
+            border: 2px solid #6366f1; margin-bottom: 0.5rem;
+            flex-shrink: 0; text-transform: uppercase;
+        }
+        .sidebar-profile-name { font-weight: 600; font-size: 0.95rem; color: #f1f5f9; }
+        .sidebar-profile-phone { font-size: 0.75rem; color: #94a3b8; margin-top: 0.1rem; }
+        .sidebar-profile-email { font-size: 0.7rem; color: #64748b; margin-top: 0.1rem; }
+        .nav-menu {
+            display: flex; flex-direction: column; gap: 2px;
+            flex: 1; overflow-y: auto; min-height: 0; padding-right: 6px;
+        }
+        .nav-menu::-webkit-scrollbar { width: 8px; }
+        .nav-menu::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.06); border-radius: 6px; margin: 2px 0;
+        }
+        .nav-menu::-webkit-scrollbar-thumb {
+            background: #6b7280; border-radius: 6px;
+            border: 2px solid transparent; background-clip: padding-box;
+            min-height: 30px;
+        }
+        .nav-menu::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+        .nav-link {
+            display: flex; align-items: center; gap: 0.6rem;
+            padding: 0.5rem 0.75rem; border-radius: 10px;
+            text-decoration: none; color: #94a3b8;
+            transition: 0.2s; cursor: pointer; font-size: 0.85rem;
+            font-weight: 400; border: none; background: transparent;
+            width: 100%; text-align: left; position: relative;
+        }
+        .nav-link:hover { background: rgba(255, 255, 255, 0.06); color: #f1f5f9; }
+        .nav-link.active { background: rgba(99, 102, 241, 0.15); color: #a78bfa; }
+        .nav-link .nav-badge {
+            margin-left: auto; background: #6366f1; color: #fff;
+            border-radius: 40px; min-width: 18px; height: 18px;
+            font-size: 0.55rem; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            padding: 0 5px; flex-shrink: 0;
+        }
+        .nav-divider {
+            height: 1px; background: rgba(255, 255, 255, 0.06);
+            margin: 0.4rem 0.75rem; flex-shrink: 0;
+        }
+        .delete-account-btn {
+            width: 100%; padding: 0.4rem; background: transparent;
+            border: 1px solid #f43f5e; color: #f43f5e;
+            border-radius: 60px; font-weight: 600; font-size: 0.7rem;
+            cursor: pointer; transition: 0.2s; text-align: center;
+            flex-shrink: 0; margin-top: 0.4rem;
+            display: flex; align-items: center; justify-content: center;
+            gap: 0.3rem;
+        }
+        .delete-account-btn:hover { background: #f43f5e; color: #fff; }
+        .delete-account-btn svg { width: 14px; height: 14px; }
+        .profile-right {
+            display: flex; flex-direction: column;
+            padding: 1.5rem 2.5rem; gap: 1.5rem;
+            height: 100%; overflow-y: auto;
+            background: #0f131a; position: relative;
+        }
+        .profile-right::-webkit-scrollbar { width: 8px; }
+        .profile-right::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.06); border-radius: 6px; margin: 2px 0;
+        }
+        .profile-right::-webkit-scrollbar-thumb {
+            background: #6b7280; border-radius: 6px;
+            border: 2px solid transparent; background-clip: padding-box;
+            min-height: 30px;
+        }
+        .profile-right::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+        .page-header-row {
             display: flex;
             align-items: center;
-            justify-content: center;
             gap: 1rem;
+            width: 100%;
+            flex-shrink: 0;
+            flex-wrap: nowrap;
         }
-        .catalog-header h1 {
+
+        .page-header-row .profile-right-header {
+            flex: 0 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.25rem;
+        }
+
+        .page-header-row .profile-right-header h1 {
             font-size: 1.8rem;
             font-weight: 700;
-            background: linear-gradient(135deg, #e0e7ff, #a78bfa);
+            background: linear-gradient(135deg, #e0e7ff, #c084fc);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
             margin: 0;
-        }
-        .catalog-count {
-            background: rgba(255, 255, 255, 0.08);
-            padding: 0.3rem 1rem;
-            border-radius: 60px;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            color: #cbd5e1;
-            font-size: 0.85rem;
-        }
-        .rated-container {
-            width: 100%;
-            max-width: 1100px;
             display: flex;
-            flex-direction: column;
+            align-items: center;
             gap: 0.5rem;
-            margin: 0 auto;
+            white-space: nowrap;
         }
-        .rated-card {
-            background: rgba(15, 23, 42, 0.75);
-            border: 1px solid rgba(250, 204, 21, 0.2);
-            border-radius: 12px;
-            padding: 0.5rem 0.9rem;
-            display: flex;
-            gap: 1rem;
-            backdrop-filter: blur(12px);
-            align-items: center;
-            box-sizing: border-box;
-            transition: border-color 0.2s, transform 0.2s;
+
+        .page-header-row .profile-right-header h1 svg {
+            width: 26px; height: 26px; stroke: #a78bfa;
         }
-        .rated-card:hover {
-            border-color: rgba(250, 204, 21, 0.5);
-            transform: translateY(-2px);
+
+        .page-header-row .sort-toggle-wrapper {
+            margin-left: auto;
+            flex: 0 0 auto;
         }
-        .rated-poster {
-            width: 50px;
-            height: 72px;
-            border-radius: 6px;
-            overflow: hidden;
-            background: #0f172a;
-            flex-shrink: 0;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+
+        .page-header-row .catalog-search {
+            position: static !important;
+            top: auto !important;
+            right: auto !important;
+            left: auto !important;
+            margin: 0 !important;
+            flex: 0 0 auto;
+            width: 340px !important;
+            max-width: 340px !important;
         }
-        .rated-poster img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+
+        .page-header-row .catalog-search form,
+        .page-header-row .catalog-search .catalog-search-input-wrapper {
+            width: 100% !important;
         }
-        .rated-content {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 0.2rem;
-            min-width: 0;
+
+        @media (max-width: 1200px) {
+            .page-header-row {
+                flex-wrap: wrap;
+                row-gap: 0.75rem;
+            }
+            .page-header-row .profile-right-header {
+                flex: 1 1 auto;
+            }
+            .page-header-row .sort-toggle-wrapper {
+                margin-left: 0;
+            }
         }
-        .rated-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 1rem;
+
+        .history-container {
+            display: flex; flex-direction: column; gap: 0.5rem;
+            width: 100%; flex: 1; overflow-y: auto; padding-right: 4px;
         }
-        .rated-title {
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: #f8fafc;
-            text-decoration: none;
-            transition: color 0.2s;
+        .history-container::-webkit-scrollbar { width: 6px; }
+        .history-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.04); border-radius: 6px;
         }
-        .rated-title:hover {
-            color: #facc15;
+        .history-container::-webkit-scrollbar-thumb {
+            background: #6b7280; border-radius: 6px;
+            border: 2px solid transparent; background-clip: padding-box;
         }
-        .rated-details {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            font-size: 0.75rem;
-            color: #94a3b8;
+        .history-container::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+        .history-day-group {
+            display: flex; flex-direction: column;
+            gap: 0.1rem; padding-bottom: 0.2rem;
         }
-        .user-score-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 3px;
-            background: rgba(250, 204, 21, 0.15);
-            border: 1px solid rgba(250, 204, 21, 0.3);
-            color: #fde047;
-            font-weight: 700;
-            padding: 0.2rem 0.5rem;
-            border-radius: 14px;
-            font-size: 0.8rem;
-            flex-shrink: 0;
+        .history-day-label {
+            font-size: 1rem; font-weight: 600; color: #f1f5f9;
+            padding: 0.4rem 0.2rem 0.2rem;
+            display: flex; align-items: center; gap: 0.5rem;
         }
-        .rated-review-box {
-            background: rgba(30, 41, 59, 0.5);
-            border-left: 3px solid #facc15;
-            padding: 0.3rem 0.6rem;
-            font-size: 0.75rem;
-            color: #e2e8f0;
-            line-height: 1.25;
-            border-radius: 0 6px 6px 0;
-            display: -webkit-box;
-            -webkit-line-clamp: 1;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
+        .history-day-label svg {
+            width: 18px; height: 18px; stroke: #94a3b8; opacity: 0.6;
         }
-        .rated-date {
-            font-size: 0.7rem;
-            color: #64748b;
+        .history-item {
+            display: flex; align-items: center; gap: 1rem;
+            padding: 0.6rem 0.5rem; border-radius: 14px;
+            background: rgba(255, 255, 255, 0.02);
+            transition: background 0.25s ease, border-color 0.25s ease;
+            cursor: pointer; position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.06);
         }
-        .movie-poster-placeholder {
-            width: 100%;
-            height: 100%;
-            background: #1e293b;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #64748b;
-            font-size: 0.65rem;
+        .history-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(167, 139, 250, 0.2);
+        }
+        .history-item-icon {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(167, 139, 250, 0.08);
+            border: 1px solid rgba(167, 139, 250, 0.12);
+            color: #a78bfa;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; flex-shrink: 0;
+        }
+        .history-item-info {
+            flex: 1; display: flex; flex-direction: column;
+            gap: 0.1rem; min-width: 0;
+        }
+        .history-item-title {
+            font-size: 1rem; font-weight: 600; color: #f8fafc;
+            text-decoration: none; transition: color 0.2s;
+        }
+        .history-item-title:hover { color: #a78bfa; }
+        .history-item-meta {
+            display: flex; align-items: center; gap: 0.4rem;
+            font-size: 0.8rem; color: #94a3b8; flex-wrap: wrap;
+        }
+        .history-item-rating {
+            display: flex; align-items: center; gap: 0.3rem;
+            font-size: 0.85rem; color: #cbd5e1; flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.04);
+            padding: 0.2rem 0.6rem; border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .history-item-rating svg {
+            width: 14px; height: 14px; stroke: #fbbf24; fill: #fbbf24;
+        }
+        .history-item-time {
+            display: flex; align-items: center; gap: 0.3rem;
+            font-size: 0.75rem; color: #94a3b8; flex-shrink: 0;
+        }
+        .history-item-time svg {
+            width: 18px; height: 18px; stroke: #94a3b8; flex-shrink: 0;
+        }
+        .history-review {
+            font-size: 0.75rem; color: #94a3b8;
+            padding: 0.1rem 0.6rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 6px; border-left: 2px solid #a78bfa;
         }
         .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            color: #94a3b8;
+            text-align: center; padding: 4rem 2rem; color: #94a3b8;
         }
-        .empty-state p {
-            font-size: 1.2rem;
-            margin-bottom: 1.5rem;
-        }
-        .watch-btn {
-            display: inline-block;
-            padding: 0.75rem 2rem;
-            background: #facc15;
-            color: #0b0f19;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
+        .empty-state p { font-size: 1.2rem; margin-bottom: 1.5rem; }
+        .watch-btn-empty {
+            display: inline-block; padding: 0.75rem 2rem;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: #fff; border-radius: 60px;
+            text-decoration: none; font-weight: 600;
             transition: background 0.2s;
         }
-        .watch-btn:hover {
-            background: #fde047;
+        .watch-btn-empty:hover { background: #818cf8; transform: translateY(-2px); }
+        @media (max-width: 1024px) {
+            .profile-grid { grid-template-columns: 1fr; }
+            .profile-card {
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+                padding: 1rem; max-height: 260px; overflow-y: auto;
+            }
+            .profile-right { padding: 1rem; height: auto; min-height: 400px; }
+        }
+        @media (max-width: 640px) {
+            .page-header-row .profile-right-header h1 { font-size: 1.3rem; }
+            .page-header-row .catalog-search {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            .profile-right { padding: 0.75rem; }
         }
     </style>
 </head>
 <body>
-
-<th:block th:replace="~{fragments/header :: header}"></th:block>
+<div class="header-wrapper">
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+</div>
 <th:block th:replace="~{fragments/flash-messages :: flashMessages}"></th:block>
+<div id="authStatus" th:data-authenticated="${session.sessionUser != null}" style="display:none;"></div>
+<main class="profile-wrapper">
+    <div class="profile-grid">
+        <th:block
+                th:replace="~{fragments/sidebar :: sidebar(currentPage='rated', userForOwner=${groupedResponse.userForOwner})}"></th:block>
+        <div class="profile-right">
 
-<main class="catalog-wrapper">
-    <div class="catalog-header">
-        <h1>⭐ История оценок</h1>
-        <div class="catalog-count" th:if="${items != null}">
-            Всего: <strong th:text="${#lists.size(items)}">0</strong>
-        </div>
-    </div>
-
-    <div th:if="${items != null and not #lists.isEmpty(items)}" class="rated-container">
-        <div th:each="item : ${items}" class="rated-card">
-            <div class="rated-poster">
-                <img th:if="${item.posterUrl != null and !item.posterUrl.isEmpty()}"
-                     th:src="${item.posterUrl}" alt="Постер"/>
-                <div th:unless="${item.posterUrl != null and !item.posterUrl.isEmpty()}"
-                     class="movie-poster-placeholder">Нет фото
+            <div class="page-header-row">
+                <div class="profile-right-header">
+                    <h1>
+                        <th:block th:replace="~{fragments/icons :: icon-star}"></th:block>
+                        История оценок
+                    </h1>
                 </div>
+                <th:block th:replace="~{fragments/sort-toggle :: sortToggle}"></th:block>
+                <th:block th:replace="~{fragments/catalog-search :: catalogSearch}"></th:block>
             </div>
 
-            <div class="rated-content">
-                <div class="rated-header">
-                    <a th:href="@{/movies/{id}(id=${item.id})}" class="rated-title" th:text="${item.title}">Название
-                        фильма</a>
-                    <div class="user-score-badge">
-                        <span>★</span>
-                        <span th:text="${item.ratingValue}">9</span>/10
+            <div th:if="${groupedResponse != null and groupedResponse.groupedItems != null and not groupedResponse.groupedItems.isEmpty()}"
+                 class="history-container">
+                <div th:each="entry : ${groupedResponse.groupedItems}"
+                     class="history-day-group"
+                     th:attr="data-date=${entry.key}">
+                    <div class="history-day-label">
+                        <th:block th:replace="~{fragments/icons :: icon-calendar}"></th:block>
+                        <span class="day-label" th:text="${#temporals.format(entry.key, 'dd MMMM yyyy')}"></span>
+                    </div>
+                    <div th:each="item : ${entry.value}" class="history-item"
+                         th:data-movie-id="${item.id.id}"
+                         onclick="window.location.href='/movies/' + ${item.id.id}">
+                        <div class="history-item-icon">✦</div>
+                        <div class="history-item-info">
+                            <a th:href="@{/movies/{id}(id=${item.id.id})}" class="history-item-title"
+                               th:text="${item.title.title}">Название</a>
+                            <div class="history-item-meta">
+                                <span th:if="${item.media.genre != null}" th:text="${item.media.genre}">Жанр</span>
+                                <span class="history-item-rating" th:if="${item.ratingValue != null}">
+                                    <th:block th:replace="~{fragments/icons :: icon-star}"></th:block>
+                                    <span th:text="${item.ratingValue}">9</span>/10
+                                </span>
+                            </div>
+                            <div class="history-review"
+                                 th:if="${item.review != null and !#strings.isEmpty(item.review)}">
+                                <span th:text="${item.review}">Отличный фильм!</span>
+                            </div>
+                        </div>
+                        <div class="history-item-time">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                 stroke-width="1.5" stroke="currentColor">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                            <span th:if="${item.addedAt != null}" th:text="${#temporals.format(item.addedAt, 'HH:mm')}">18:30</span>
+                        </div>
                     </div>
                 </div>
-
-                <div class="rated-details">
-                    <span th:text="${item.genre != null ? item.genre : '—'}">Жанр</span> •
-                    <span th:text="${item.releaseDate != null ? item.releaseDate.year : '—'}">2026</span> •
-                    <span>Общий рейтинг: <strong style="color: #f8fafc;"
-                                                 th:text="${item.rating != null ? #numbers.formatDecimal(item.rating, 1, 1) : '—'}">8.5</strong></span>
-                </div>
-
-                <div class="rated-review-box" th:if="${item.review != null and !#strings.isEmpty(item.review)}">
-                    <span th:text="${item.review}">Отличный фильм!</span>
-                </div>
-                <div style="font-size: 0.7rem; color: #64748b; font-style: italic;"
-                     th:if="${item.review == null or #strings.isEmpty(item.review)}">
-                    без текстового отзыва
-                </div>
-
-                <div class="rated-date" th:if="${item.addedAt != null}">
-                    Оценено: <span th:text="${#temporals.format(item.addedAt, 'dd MMMM yyyy')}">15 марта 2026</span>
-                </div>
+            </div>
+            <div th:if="${groupedResponse == null or groupedResponse.groupedItems == null or groupedResponse.groupedItems.isEmpty()}"
+                 class="empty-state">
+                <p>Вы не оценили ни один фильм</p>
+                <a href="/" class="watch-btn-empty">Перейти в каталог</a>
             </div>
         </div>
     </div>
-
-    <div th:if="${items == null or #lists.isEmpty(items)}" class="empty-state">
-        <p>Вы не оценили ни один фильм</p>
-        <a href="/" class="watch-btn">Перейти в каталог</a>
-    </div>
 </main>
-
-<script th:src="@{/js/main.js}" defer></script><th:block th:replace="~{fragments/footer :: footer}"></th:block>
+<script th:src="@{/js/date-formatter.js}" defer></script>
+<script th:src="@{/js/main.js}" defer></script>
+<script th:src="@{/js/catalog-search.js}" defer></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof window.__initSortToggle === 'function') {
+            window.__initSortToggle();
+        }
+    });
+</script>
+<th:block th:replace="~{fragments/footer :: footer}"></th:block>
 </body>
 </html>

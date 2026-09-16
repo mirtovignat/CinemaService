@@ -1,17 +1,16 @@
 package com.example.demo.model.entity;
 
 import com.example.demo.model.base.AbstractCatalogItem;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.example.demo.model.base.WatchHistoryItem;
+import jakarta.persistence.*;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 @Getter
 @Setter
@@ -25,4 +24,27 @@ public class PurchasedMovie extends AbstractCatalogItem {
 
     @Column(name = "price_snapshot", nullable = false)
     private BigDecimal priceSnapshot;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "purchasedMovie", fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<WatchHistoryItem> watchedHistory = new ArrayList<>();
+
+    public void addWatchHistory(LocalDateTime time) {
+        if (getUser() != null && !getUser().isSaveHistory()) {
+            return;
+        }
+        watchedHistory.add(WatchHistoryItem.of(this, time));
+    }
+
+    public void clearHistory() {
+        this.watchedHistory.clear();
+    }
+
+    public List<LocalDateTime> getWatchTimes() {
+        return watchedHistory.stream()
+                .map(WatchHistoryItem::getWatchedAt)
+                .sorted(Comparator.reverseOrder())
+                .toList();
+    }
 }

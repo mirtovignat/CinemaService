@@ -1,11 +1,9 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ru">
 <body>
-
 <div th:fragment="buyModal" id="buyModal" class="modal">
     <div class="modal-content">
-        <div class="modal-header">
-            <h2>Подтверждение покупки</h2>
+        <div class="modal-header"><h2>Подтверждение покупки</h2>
             <button class="modal-x" onclick="hideBuyModal()">✕</button>
         </div>
         <p>Вы уверены, что хотите купить фильм:</p>
@@ -17,73 +15,59 @@
         </div>
     </div>
 </div>
-
 <div th:fragment="ratingModal" id="ratingModal" class="modal">
     <div class="modal-content">
-        <div class="modal-header">
-            <h2>Оценить фильм</h2>
+        <div class="modal-header"><h2>Оценить фильм</h2>
             <button class="modal-x" onclick="hideRatingModal()">✕</button>
         </div>
         <p style="font-weight:600; color:#3b82f6;" id="ratingModalMovieTitle"></p>
-        <form id="ratingForm" method="post">
-            <input type="hidden" name="id" id="ratingFormTitle" value="">
-
-            <div class="rating-input">
-                <label for="ratingValue" style="display:block; margin-bottom:4px; font-weight:500; color:#e2e8f0;">Оценка (0.0–10.0):</label>
-                <div class="rating-input-with-stepper">
-                    <input type="number" id="ratingValue" name="rating" step="0.1" min="0" max="10" value="5.0" required>
+        <form id="ratingForm" method="post"><input type="hidden" name="id" id="ratingFormTitle" value="">
+            <div class="rating-input"><label for="ratingValue"
+                                             style="display:block; margin-bottom:4px; font-weight:500; color:#e2e8f0;">
+                Оценка (0.0–10.0): </label>
+                <div class="rating-input-with-stepper"><input type="number" id="ratingValue" name="rating" step="0.1"
+                                                              min="0" max="10" value="5.0" required>
                     <div class="stepper-buttons">
-                        <button type="button" class="stepper-btn up"
-                                onmousedown="startStepping(0.1, this)"
-                                onmouseup="stopStepping(this)"
-                                onmouseleave="stopStepping(this)"
-                                ontouchstart="startStepping(0.1, this)"
-                                ontouchend="stopStepping(this)"
-                                title="Увеличить на 0.1 (удерживайте для авто)">
-                            ▲
+                        <button type="button" class="stepper-btn up" onmousedown="startStepping(0.1, this)"
+                                onmouseup="stopStepping(this)" onmouseleave="stopStepping(this)"
+                                ontouchstart="startStepping(0.1, this)" ontouchend="stopStepping(this)"
+                                title="Увеличить на 0.1 (удерживайте для авто)"> ▲
                         </button>
-                        <button type="button" class="stepper-btn down"
-                                onmousedown="startStepping(-0.1, this)"
-                                onmouseup="stopStepping(this)"
-                                onmouseleave="stopStepping(this)"
-                                ontouchstart="startStepping(-0.1, this)"
-                                ontouchend="stopStepping(this)"
-                                title="Уменьшить на 0.1 (удерживайте для авто)">
-                            ▼
+                        <button type="button" class="stepper-btn down" onmousedown="startStepping(-0.1, this)"
+                                onmouseup="stopStepping(this)" onmouseleave="stopStepping(this)"
+                                ontouchstart="startStepping(-0.1, this)" ontouchend="stopStepping(this)"
+                                title="Уменьшить на 0.1 (удерживайте для авто)"> ▼
                         </button>
                     </div>
                 </div>
             </div>
-
-            <div class="comment-input">
-                <label for="ratingComment" style="display:block; margin-bottom:4px; font-weight:500; color:#e2e8f0;">Комментарий (необязательно):</label>
-                <textarea id="ratingComment" name="review" rows="3" placeholder="Ваш отзыв..." maxlength="2000"></textarea>
+            <div class="comment-input"><label for="ratingComment"
+                                              style="display:block; margin-bottom:4px; font-weight:500; color:#e2e8f0;">
+                Комментарий (необязательно): </label> <textarea id="ratingComment" name="review" rows="3"
+                                                                placeholder="Ваш отзыв..." maxlength="2000"></textarea>
             </div>
-
             <div id="ratingModalError" class="modal-error" style="display:none;"></div>
-
             <div class="modal-buttons">
-                <button type="button" class="modal-cancel-btn" onclick="hideRatingModal()">Отмена</button>
-                <button type="button" class="modal-confirm-btn" onclick="submitRating()">Отправить</button>
+                <button type="button" class="modal-cancel-btn" onclick="hideRatingModal()"> Отмена</button>
+                <button type="button" class="modal-confirm-btn" onclick="submitRating()"> Отправить</button>
             </div>
         </form>
     </div>
 </div>
-
 <div th:fragment="confirmDeleteModal" id="confirmDeleteModal" class="modal">
     <div class="modal-content">
-        <div class="modal-header">
-            <h2>Удаление отзыва</h2>
-            <button class="modal-x" onclick="hideConfirmDeleteModal()">✕</button>
+        <div class="modal-header"><h2>Удаление отзыва</h2>
+            <button class="modal-x" onclick="hideConfirmDeleteModal()"> ✕</button>
         </div>
         <p>Вы уверены, что хотите удалить свой отзыв?</p>
-        <p style="color:#94a3b8; font-size:0.9rem;">Это действие нельзя отменить.</p>
+        <p style="color:#94a3b8; font-size:0.9rem;"> Это действие нельзя отменить. </p>
         <div class="modal-buttons">
-            <button class="modal-cancel-btn" onclick="hideConfirmDeleteModal()">Отмена</button>
-            <button class="modal-confirm-btn" id="confirmDeleteBtn" style="background:#ef4444; color:#fff;" onclick="executeDelete()">Удалить</button>
+            <button class="modal-cancel-btn" onclick="hideConfirmDeleteModal()"> Отмена</button>
+            <button class="modal-confirm-btn" id="confirmDeleteBtn" style="background:#ef4444; color:#fff;"
+                    onclick="executeDelete()"> Удалить
+            </button>
         </div>
     </div>
 </div>
-
 </body>
 </html>

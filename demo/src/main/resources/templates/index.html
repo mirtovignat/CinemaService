@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ru">
 <head>
-    <title th:text="${response.isSearch()} ? 'Результаты поиска — Cinema Service' : 'Каталог — Cinema Service'">Каталог — Cinema Service</title>
+    <title th:text="${response.isSearch()} ? 'Результаты поиска — CinemaService' : 'Каталог — CinemaService'">Каталог — CinemaService</title>
     <th:block th:replace="~{fragments/head :: head}"></th:block>
     <style>
         html, body {
@@ -22,7 +22,6 @@
             padding: 0.1rem 0.5rem 0.2rem;
             box-sizing: border-box;
         }
-
         .poster-rating-badge {
             position: absolute;
             top: 10px;
@@ -64,6 +63,7 @@
             max-width: 1340px;
             justify-content: center;
             align-items: stretch;
+            grid-auto-rows: 1fr;
         }
         @media (max-width: 1350px) {
             .movies-grid {
@@ -82,10 +82,11 @@
             box-sizing: border-box;
             margin: 0 auto;
             position: relative;
+            height: 100%;
+            align-self: stretch;
         }
-
         .movie-card-content .badges {
-             flex-grow: 1;
+            flex-grow: 1;
         }
         .movie-poster-link {
             width: 100%;
@@ -131,7 +132,6 @@
             word-break: break-word;
             line-height: 1.3;
         }
-
         .movie-card-title a {
             color: #fff;
             text-decoration: none;
@@ -151,6 +151,15 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             color: #cbd5e1;
             white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .badge svg {
+            width: 12px;
+            height: 12px;
+            flex-shrink: 0;
+            vertical-align: middle;
         }
         .price {
             font-size: 0.95rem;
@@ -160,6 +169,15 @@
             margin-top: auto;
             margin-bottom: 0.2rem;
             min-height: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .price svg {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+            color: #c084fc;
         }
         .movie-actions {
             display: flex;
@@ -169,7 +187,6 @@
             margin-top: 0.2rem;
             margin-bottom: 0.2rem;
         }
-
         .icon-btn {
             width: 39px;
             height: 39px;
@@ -186,7 +203,40 @@
             text-decoration: none;
             flex-shrink: 0;
         }
-
+        .icon-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+        .rating-btn svg {
+            color: #fcd34d;
+            stroke: #fcd34d;
+            stroke-width: 2;
+        }
+        .rating-btn svg * {
+            color: #fcd34d;
+            stroke: #fcd34d;
+        }
+        .rating-btn:hover {
+            border-color: #fcd34d;
+            color: #fcd34d;
+        }
+        .icon-btn.favourite-btn:not(.active) svg {
+            color: #ffffff;
+            stroke: currentColor;
+            stroke-width: 1.5;
+            fill: none;
+        }
+        .icon-btn.favourite-btn.active svg {
+            color: #ffffff;
+            stroke: #ffffff;
+            stroke-width: 1.5;
+            fill: #ffffff;
+        }
+        .icon-btn.favourite-btn,
+        .icon-btn.favourite-btn.active {
+            border-color: rgba(72, 187, 255, 0.25);
+            background: rgba(255, 255, 255, 0.05);
+        }
         .movie-actions {
             min-height: 44px;
         }
@@ -199,7 +249,6 @@
             min-height: 72px;
             justify-content: flex-end;
         }
-
         .cart-button,
         .buy-now-btn,
         .bought-btn {
@@ -220,7 +269,6 @@
             height: 32px;
             line-height: 1;
         }
-
         .to-cart-btn-details {
             background: linear-gradient(135deg, #3b82f6, #1d4ed8);
             color: white;
@@ -248,174 +296,158 @@
             padding-top: 0 !important;
             padding-bottom: 0 !important;
         }
+        .comment-btn .reviews-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #3b82f6;
+            color: #fff;
+            border-radius: 50%;
+            font-size: 0.65rem;
+            font-weight: 700;
+            min-width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+            box-sizing: border-box;
+            line-height: 1;
+        }
+        .empty-catalog {
+            text-align: center;
+            padding: 2rem 0;
+        }
+        .browse-movies-btn {
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+        }
+        .browse-movies-btn:hover {
+            transform: scale(1.05);
+        }
+        .pagination-wrapper {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
     </style>
 </head>
 <body>
-
 <th:block th:replace="~{fragments/header :: header}"></th:block>
 <th:block th:replace="~{fragments/flash-messages :: flashMessages}"></th:block>
-
-<div id="authStatus"
-     th:data-authenticated="${session.sessionUser != null}"
-     style="display:none;"></div>
-
-<main class="catalog-wrapper">
+<div id="authStatus" th:data-authenticated="${session.sessionUser != null}" style="display:none;"></div>
+<main class="catalog-wrapper" id="catalogMain">
     <div class="catalog-header">
-        <h1 th:if="${response.isSearch()}" style="color: #a78bfa;">🔎 Результаты поиска</h1>
-        <h1 th:unless="${response.isSearch()}">Каталог фильмов</h1>
+        <h1 th:if="${response.isSearch()}" style="color: #a78bfa; text-align: center;">Результаты поиска</h1>
+        <h1 th:unless="${response.isSearch()}" style="text-align: center;">Лучшие фильмы и сериалы СПЕЦИАЛЬНО ДЛЯ ВАС!</h1>
     </div>
-
-    <div class="movies-grid" th:if="${response.cardsPage() != null and !response.cardsPage().empty}">
-        <div class="movie-card" th:each="card : ${response.cardsPage().content}" th:data-movie-id="${card.movie.id}">
-            <a class="movie-poster-link" th:href="@{/movies/{id}(id=${card.movie.id})}">
-
-                <span class="poster-rating-badge js-rating-badge"
-                      th:data-movie-id="${card.movie.id}"
-                      th:text="${card.movie.rating != null ? '★ ' + #numbers.formatDecimal(card.movie.rating, 1, 1) : '★ —'}">★ 3.0</span>
-
-                <img th:if="${card.movie.posterUrl != null and !card.movie.posterUrl.isEmpty()}"
-                     th:src="@{${card.movie.posterUrl}}"
-                     alt="Постер"
-                     class="movie-poster-img"
-                     onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';"
-                     src=""/>
-                <div class="movie-poster-placeholder"
-                     th:style="${card.movie.posterUrl != null and !card.movie.posterUrl.isEmpty()} ? 'display:none;' : ''">
-                    <span>📽️ Постер</span>
-                </div>
-            </a>
-
-            <div class="movie-card-content">
-                <h3 class="movie-card-title">
-                    <a th:href="@{/movies/{id}(id=${card.movie.id})}"
-                       th:text="${card.movie.title}">Название</a>
-                </h3>
-
-                <div class="badges">
-                    <span class="badge year"
-                          th:if="${card.movie.releaseYear != null}"
-                          th:text="'📅 Год: ' + ${card.movie.releaseYear}">📅 Год: 2024</span>
-
-                    <span class="badge genre"
-                          th:if="${card.movie.genre != null and !card.movie.genre.isEmpty()}"
-                          th:text="'🎭 Жанр: ' + ${card.movie.genre}">🎭 Жанр: Комедия</span>
-
-                    <span class="badge director"
-                          th:if="${card.movie.director != null and !card.movie.director.isEmpty()}"
-                          th:text="'🎬 Реж. ' + ${card.movie.director}">🎬 Реж. Гай Ричи</span>
-
-                    <span class="badge duration"
-                          th:if="${card.movie.formattedDuration != null and !card.movie.formattedDuration.isEmpty()}"
-                          th:text="'⏱ Время: ' + ${card.movie.formattedDuration}">⏱ Время: 1:40:00</span>
-                </div>
-
-                <div class="price" th:text="'Цена: ' + ${card.movie.price} + ' ₽'">Цена: 0 ₽</div>
-
-                <div class="movie-actions">
-                    <button class="icon-btn favourite-btn"
-                            th:classappend="${card.status.inFavourites} ? 'active' : ''"
-                            th:data-movie-id="${card.movie.id}"
-                            th:data-action="${card.status.inFavourites} ? 'remove' : 'add'"
-                            onclick="toggleFavourite(this)"
-                            title="Избранное">
-                        <span th:text="${card.status.inFavourites} ? '♥' : '♡'"></span>
-                    </button>
-
-                    <button class="icon-btn rating-btn"
-                            th:data-movie-id="${card.movie.id}"
-                            th:data-movie-title="${card.movie.title}"
-                            onclick="showRatingModal(this.getAttribute('data-movie-id'), this.getAttribute('data-movie-title'))"
-                            title="Оценить">☆
-                    </button>
-
-                    <a th:href="@{/rated/{id}/reviews(id=${card.movie.id})}"
-                       class="icon-btn comment-btn"
-                       title="Отзывы">
-                        💬
-                        <span class="reviews-badge js-reviews-count"
-                              th:data-movie-id="${card.movie.id}"
-                              th:text="${card.movie.ratingsCount}"
-                              th:style="${card.movie.ratingsCount > 0} ? '' : 'display:none'">
-                        </span>
-                    </a>
-                </div>
-
-                <div class="purchase-buttons">
-                    <th:block th:if="${session.sessionUser != null}">
-                        <button type="button"
-                                th:if="${!card.status.bought and !card.status.inCart}"
-                                class="cart-button to-cart-btn-details"
-                                th:data-movie-id="${card.movie.id}"
-                                onclick="addToCart(this)">В корзину
-                        </button>
-                        <a th:if="${card.status.inCart}"
-                           href="/cart"
-                           class="cart-button in-cart-btn-details">В корзине → Перейти</a>
-                        <button th:if="${!card.status.bought}"
-                                class="buy-now-btn"
-                                th:data-movie-id="${card.movie.id}"
-                                th:data-movie-price="${card.movie.price}"
-                                th:data-movie-title="${card.movie.title}"
-                                onclick="showBuyModal(this)">Купить сейчас
-                        </button>
-                        <a th:if="${card.status.bought}"
-                           th:href="@{/library(highlight=${card.movie.id})}"
-                           class="bought-btn">Куплено → В библиотеку</a>
-                    </th:block>
-
-                    <th:block th:unless="${session.sessionUser != null}">
-                        <button class="cart-button to-cart-btn-details"
-                                onclick="addToCart(this)"
-                                th:data-movie-id="${card.movie.id}">
-                            В корзину
-                        </button>
-                        <button class="buy-now-btn"
-                                onclick="showBuyModal(this)"
-                                th:data-movie-id="${card.movie.id}"
-                                th:data-movie-price="${card.movie.price}"
-                                th:data-movie-title="${card.movie.title}">
-                            Купить сейчас
-                        </button>
-                    </th:block>
-                </div>
-            </div>
-        </div>
+    <div id="catalogContent">
+        <th:block th:replace="~{fragments/movie-grid :: grid(response=${response})}"></th:block>
     </div>
-
-    <div class="empty-catalog" th:unless="${response.cardsPage() != null and !response.cardsPage().empty}">
-        <h2 th:if="${response.isSearch()}" style="color: #a78bfa; text-align: center;">По вашему запросу ничего не найдено</h2>
-        <h2 th:unless="${response.isSearch()}" style="color: #94a3b8; text-align: center;">Фильмы не найдены</h2>
-        <p class="text-muted text-center" th:if="${response.isSearch()}">Попробуйте изменить параметры поиска.</p>
-        <a th:if="${response.isSearch()}" href="/" class="browse-movies-btn"
-           style="display: block; width: fit-content; margin: 1.5rem auto;">Вернуться в каталог</a>
+    <div class="pagination-wrapper" id="paginationWrapper">
+        <th:block th:replace="~{fragments/pagination :: pager(page=${response.cardsPage()}, url='/movies')}"></th:block>
     </div>
-
-    <th:block th:replace="~{fragments/pagination :: pager(page=${response.cardsPage()}, url='/search')}"></th:block>
 </main>
-
 <th:block th:replace="~{fragments/modals :: buyModal}"></th:block>
 <th:block th:replace="~{fragments/modals :: ratingModal}"></th:block>
-
 <script th:src="@{/js/main.js}" defer></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.js-reviews-count[data-movie-id]').forEach(el => {
-            const id = el.getAttribute('data-movie-id');
-            if (id) updateReviewsCount(id);
+        document.querySelectorAll('.reviews-badge[data-movie-id]').forEach(function(el) {
+            var id = el.getAttribute('data-movie-id');
+            if (id) {
+                updateReviewsCount(id);
+            }
         });
     });
-
     window.addEventListener('pageshow', function(event) {
         if (event.persisted) {
-            document.querySelectorAll('.js-reviews-count[data-movie-id]').forEach(el => {
-                const id = el.getAttribute('data-movie-id');
-                if (id) updateReviewsCount(id);
+            document.querySelectorAll('.reviews-badge[data-movie-id]').forEach(function(el) {
+                var id = el.getAttribute('data-movie-id');
+                if (id) {
+                    updateReviewsCount(id);
+                }
             });
         }
     });
+    document.addEventListener('click', function(e) {
+        var link = e.target.closest('.page-nav');
+        if (!link) {
+            return;
+        }
+        if (link.classList.contains('active')) {
+            e.preventDefault();
+            return;
+        }
+        var href = link.getAttribute('href');
+        if (!href || href === '#') {
+            return;
+        }
+        e.preventDefault();
+        var pagination = document.querySelector('.pagination');
+        if (pagination) {
+            pagination.classList.add('pagination-loading');
+        }
+        fetch(href, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(function(response) {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.text();
+        })
+        .then(function(html) {
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(html, 'text/html');
+            var newContent = doc.querySelector('#catalogContent');
+            var newPagination = doc.querySelector('.pagination-wrapper');
+            if (newContent) {
+                var oldContent = document.querySelector('#catalogContent');
+                if (oldContent) {
+                    oldContent.innerHTML = newContent.innerHTML;
+                }
+            }
+            if (newPagination) {
+                var oldPagination = document.querySelector('.pagination-wrapper');
+                if (oldPagination) {
+                    oldPagination.innerHTML = newPagination.innerHTML;
+                }
+            }
+            history.pushState({}, '', href);
+            document.querySelectorAll('.reviews-badge[data-movie-id]').forEach(function(el) {
+                var id = el.getAttribute('data-movie-id');
+                if (id) {
+                    updateReviewsCount(id);
+                }
+            });
+            document.querySelectorAll('.js-rating-badge[data-movie-id]').forEach(function(el) {
+                var id = el.getAttribute('data-movie-id');
+                if (id) {
+                    updateMovieRating(id);
+                }
+            });
+            if (pagination) {
+                pagination.classList.remove('pagination-loading');
+            }
+        })
+        .catch(function(error) {
+            console.error('Error loading page:', error);
+            if (pagination) {
+                pagination.classList.remove('pagination-loading');
+            }
+            window.location.href = href;
+        });
+    });
 </script>
-
 <th:block th:replace="~{fragments/footer :: footer}"></th:block>
-
 </body>
 </html>

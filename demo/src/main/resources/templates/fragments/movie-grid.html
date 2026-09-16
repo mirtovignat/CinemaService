@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="">
+<body>
+
+<div th:fragment="grid(response)">
+    <div class="movies-grid" th:if="${response.cardsPage() != null and !response.cardsPage().empty}">
+        <div class="movie-card" th:each="movie : ${response.cardsPage().content}"
+             th:data-movie-id="${movie.movie.id.id}">
+            <a class="movie-poster-link" th:href="@{/movies/{id}(id=${movie.movie.id.id})}">
+                <span class="poster-rating-badge js-rating-badge"
+                      th:data-movie-id="${movie.movie.id.id}"
+                      th:text="${movie.movie.rating.rating != null ? '★ ' + #numbers.formatDecimal(movie.movie.rating.rating, 1, 1) : '★ —'}">★ 3.0</span>
+                <img th:if="${movie.movie.media.posterUrl != null and !movie.movie.media.posterUrl.isEmpty()}"
+                     th:src="${movie.movie.media.posterUrl}"
+                     alt="Постер"
+                     class="movie-poster-img"
+                     onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                     src=""/>
+                <div class="movie-poster-placeholder"
+                     th:style="${movie.movie.media.posterUrl != null and !movie.movie.media.posterUrl.isEmpty()} ? 'display:none;' : ''">
+                    <span>Постер</span>
+                </div>
+            </a>
+            <div class="movie-card-content">
+                <h3 class="movie-card-title">
+                    <a th:href="@{/movies/{id}(id=${movie.movie.id.id})}"
+                       th:text="${movie.movie.title.title}">Название</a>
+                </h3>
+                <div class="badges">
+                    <span class="badge year"
+                          th:if="${movie.movie.release != null and movie.movie.release.releaseDate != null}">
+                        <th:block th:replace="~{fragments/icons :: icon-calendar}"></th:block>
+                        <span th:text="${movie.movie.release.releaseDate.year}">2024</span>
+                    </span>
+                    <span class="badge genre"
+                          th:if="${movie.movie.media.genre != null and !movie.movie.media.genre.isEmpty()}">
+                        <th:block th:replace="~{fragments/icons :: icon-tag}"></th:block>
+                        <span th:text="${movie.movie.media.genre}">Комедия</span>
+                    </span>
+                    <span class="badge director"
+                          th:if="${movie.movie.meta.director != null and !movie.movie.meta.director.isEmpty()}">
+                        <th:block th:replace="~{fragments/icons :: icon-video}"></th:block>
+                        <span th:text="${movie.movie.meta.director}">Гай Ричи</span>
+                    </span>
+                    <span class="badge duration"
+                          th:if="${movie.movie.meta.formattedDuration != null and !movie.movie.meta.formattedDuration.isEmpty()}">
+                        <th:block th:replace="~{fragments/icons :: icon-clock}"></th:block>
+                        <span th:text="${movie.movie.meta.formattedDuration}">1:40:00</span>
+                    </span>
+                </div>
+                <div class="price">
+                    <th:block th:replace="~{fragments/icons :: icon-money}"></th:block>
+                    <span>Цена:</span>
+                    <span th:text="${movie.movie.price.price} + ' ₽'">100 ₽</span>
+                </div>
+                <div class="movie-actions">
+                    <button class="icon-btn favourite-btn"
+                            th:classappend="${movie.status.inFavourites} ? 'active' : ''"
+                            th:data-movie-id="${movie.movie.id.id}"
+                            th:data-action="${movie.status.inFavourites} ? 'remove' : 'add'"
+                            onclick="toggleFavourite(this)"
+                            title="Избранное">
+                        <th:block th:replace="~{fragments/icons :: icon-heart}"></th:block>
+                    </button>
+                    <button class="icon-btn rating-btn"
+                            th:data-movie-id="${movie.movie.id.id}"
+                            th:data-movie-title="${movie.movie.title.title}"
+                            onclick="showRatingModal(this.getAttribute('data-movie-id'), this.getAttribute('data-movie-title'))"
+                            title="Оценить">
+                        <th:block th:replace="~{fragments/icons :: icon-star}"></th:block>
+                    </button>
+                    <a th:href="@{/rated/{id}/reviews(id=${movie.movie.id.id})}"
+                       class="icon-btn comment-btn"
+                       title="Отзывы">
+                        <th:block th:replace="~{fragments/icons :: icon-comments}"></th:block>
+                        <span class="reviews-badge"
+                              th:data-movie-id="${movie.movie.id.id}"
+                              th:text="${movie.movie.meta.ratingsCount}"
+                              th:style="${movie.movie.meta.ratingsCount > 0} ? '' : 'display:none'">
+                        </span>
+                    </a>
+                </div>
+                <div class="purchase-buttons">
+                    <th:block th:if="${session.sessionUser != null}">
+                        <button type="button"
+                                th:if="${!movie.status.bought and !movie.status.inCart}"
+                                class="cart-button to-cart-btn-details"
+                                th:data-movie-id="${movie.movie.id.id}"
+                                onclick="addToCart(this)">В корзину
+                        </button>
+                        <a th:if="${movie.status.inCart}"
+                           href="/cart"
+                           class="cart-button in-cart-btn-details">В корзине → Перейти</a>
+                        <button th:if="${!movie.status.bought}"
+                                class="buy-now-btn"
+                                th:data-movie-id="${movie.movie.id.id}"
+                                th:data-movie-price="${movie.movie.price.price}"
+                                th:data-movie-title="${movie.movie.title.title}"
+                                onclick="showBuyModal(this)">Купить сейчас
+                        </button>
+                        <a th:if="${movie.status.bought}"
+                           th:href="@{/library(highlight=${movie.movie.id.id})}"
+                           class="bought-btn">Куплено → К коллекции</a>
+                    </th:block>
+                    <th:block th:unless="${session.sessionUser != null}">
+                        <button class="cart-button to-cart-btn-details"
+                                onclick="addToCart(this)"
+                                th:data-movie-id="${movie.movie.id.id}">
+                            В корзину
+                        </button>
+                        <button class="buy-now-btn"
+                                onclick="showBuyModal(this)"
+                                th:data-movie-id="${movie.movie.id.id}"
+                                th:data-movie-price="${movie.movie.price.price}"
+                                th:data-movie-title="${movie.movie.title.title}">
+                            Купить сейчас
+                        </button>
+                    </th:block>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="empty-catalog" th:unless="${response.cardsPage() != null and !response.cardsPage().empty}">
+        <h2 th:if="${response.isSearch()}" style="color: #a78bfa; text-align: center;">По вашему запросу ничего не
+            найдено</h2>
+        <h2 th:unless="${response.isSearch()}" style="color: #94a3b8; text-align: center;">Фильмы не найдены</h2>
+        <p class="text-muted text-center" th:if="${response.isSearch()}">Попробуйте изменить параметры поиска.</p>
+        <a th:if="${response.isSearch()}" href="/" class="browse-movies-btn"
+           style="display: block; width: fit-content; margin: 1.5rem auto;">Вернуться в каталог</a>
+    </div>
+</div>
+
+</body>
+</html>

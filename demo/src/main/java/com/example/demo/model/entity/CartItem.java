@@ -21,4 +21,5 @@ public class CartItem extends AbstractCatalogItem {
     @Builder.Default
     @Column(name = "quantity", nullable = false)
     private Short quantity = 1;
+
 }

@@ -3,8 +3,8 @@ package com.example.demo.controller.auth;
 import com.example.demo.dto.authorize.RegisterFormDTO;
 import com.example.demo.dto.badges.BadgeCountsDTO;
 import com.example.demo.dto.user.SessionUser;
-import com.example.demo.dto.user.UserForOwnerViewDTO;
 import com.example.demo.service.user.AuthorizeService;
+import com.example.demo.web.util.ReturnUrlHelper;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -21,15 +21,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class RegistrationController {
 
     private final AuthorizeService authorizeService;
+    private final ReturnUrlHelper returnUrlHelper;
 
     @GetMapping
     public String getRegisterForm(HttpSession httpSession, Model model) {
         if (httpSession.getAttribute("sessionUser") != null) {
             return "redirect:/";
         }
-        model.addAttribute("registerForm", RegisterFormDTO.builder()
-                .currencyCode("RUB")
-                .build());
+        model.addAttribute("registerForm", RegisterFormDTO.getForm());
         return "register";
     }
 
@@ -37,10 +36,10 @@ public class RegistrationController {
     public String register(@Valid @ModelAttribute("registerForm") RegisterFormDTO registerFormDTO,
                            HttpSession httpSession) {
         authorizeService.validateRegister(registerFormDTO);
-        UserForOwnerViewDTO fullUser = authorizeService.register(registerFormDTO);
-        SessionUser sessionUser = SessionUser.from(fullUser);
+        SessionUser sessionUser = authorizeService.register(registerFormDTO);
         httpSession.setAttribute("sessionUser", sessionUser);
         httpSession.setAttribute("badges", BadgeCountsDTO.builder().build());
-        return "redirect:/";
+        String redirectUrl = returnUrlHelper.getReturnUrlOrDefault(httpSession, "/");
+        return "redirect:" + redirectUrl;
     }
 }

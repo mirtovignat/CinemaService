@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+    <title>Политика — CinemaService</title>
+    <th:block th:replace="~{fragments/head :: head}"></th:block>
+    <style>
+        body {
+            background: var(--bg-primary, #0b0e14);
+            color: var(--text-light, #f1f5f9);
+            font-family: system-ui, -apple-system, sans-serif;
+            line-height: 1.7;
+            padding: 0;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .header-wrapper { flex-shrink: 0; z-index: 50; }
+        .policy-wrapper {
+            flex: 1;
+            max-width: 820px;
+            margin: 2rem auto;
+            padding: 0 1.5rem 3rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .policy-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 24px;
+            padding: 2.5rem 3rem;
+            backdrop-filter: blur(4px);
+        }
+        .policy-card h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #e0e7ff, #c084fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin: 0 0 0.25rem 0;
+        }
+        .policy-card .last-updated {
+            color: var(--text-muted, #94a3b8);
+            font-size: 0.85rem;
+            margin-bottom: 2rem;
+            display: block;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 0.75rem;
+        }
+        .policy-card h2 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #c084fc;
+            margin-top: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        .policy-card h2:first-of-type { margin-top: 0; }
+        .policy-card p {
+            color: rgba(241, 245, 249, 0.85);
+            margin-bottom: 0.75rem;
+        }
+        .policy-card ul {
+            padding-left: 1.5rem;
+            color: rgba(241, 245, 249, 0.8);
+        }
+        .policy-card ul li { margin-bottom: 0.4rem; }
+        .policy-card .highlight-box {
+            background: rgba(99, 102, 241, 0.06);
+            border-left: 3px solid #6366f1;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0 12px 12px 0;
+            margin: 1rem 0;
+            color: rgba(241, 245, 249, 0.8);
+            font-size: 0.95rem;
+        }
+        .policy-card .highlight-box strong { color: #c084fc; }
+        .policy-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-top: 2rem;
+            color: var(--text-muted, #94a3b8);
+            text-decoration: none;
+            transition: 0.2s;
+            font-size: 0.9rem;
+        }
+        .policy-back:hover { color: #c084fc; }
+        @media (max-width: 640px) {
+            .policy-card { padding: 1.5rem; }
+            .policy-card h1 { font-size: 1.6rem; }
+            .policy-wrapper { padding: 0 1rem 2rem; margin: 1rem auto; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header-wrapper">
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+</div>
+
+<main class="policy-wrapper">
+    <div class="policy-card">
+
+        <h1>Политика</h1>
+        <span class="last-updated">Последнее обновление: 21 августа 2026 г.</span>
+
+        <p>
+            CinemaService (далее — «Сервис», «мы», «наш») уважает вашу конфиденциальность.
+            Настоящая Политика описывает, какие данные мы собираем, как их используем и защищаем.
+        </p>
+
+        <h2>1. Какие данные мы собираем</h2>
+        <ul>
+            <li><strong>Имя пользователя</strong> — для идентификации в Сервисе.</li>
+            <li><strong>Email</strong> — для входа, уведомлений и восстановления доступа.</li>
+            <li><strong>Номер телефона</strong> (опционально) — для дополнительной связи.</li>
+            <li><strong>История покупок и оценок</strong> — для формирования коллекции и рекомендаций.</li>
+            <li><strong>IP-адрес и данные сессии</strong> — для безопасности и аналитики.</li>
+        </ul>
+
+        <h2>2. Как мы используем данные</h2>
+        <ul>
+            <li>Обеспечение работы личного кабинета и покупок.</li>
+            <li>Улучшение пользовательского опыта и рекомендаций.</li>
+            <li>Обратная связь и поддержка пользователей.</li>
+            <li>Предотвращение мошенничества и защита аккаунтов.</li>
+        </ul>
+
+        <div class="highlight-box">
+            <strong>Важно:</strong> Мы <strong>не передаём</strong> ваши данные третьим лицам,
+            за исключением случаев, предусмотренных законодательством РФ.
+        </div>
+
+        <h2>3. Хранение и защита данных</h2>
+        <p>
+            Все данные хранятся на защищённых серверах с использованием современных стандартов шифрования.
+            Доступ к ним имеют только авторизованные сотрудники в рамках служебных обязанностей.
+        </p>
+
+        <h2>4. Ваши права</h2>
+        <ul>
+            <li>Запросить копию ваших данных.</li>
+            <li>Изменить или удалить свои данные через личный кабинет.</li>
+            <li>Отозвать согласие на обработку данных.</li>
+            <li>Удалить аккаунт полностью (необратимо).</li>
+        </ul>
+
+        <h2>5. Cookies и аналитика</h2>
+        <p>
+            Мы используем cookies для авторизации и улучшения работы Сервиса.
+            Вы можете отключить их в настройках браузера, но это может повлиять на функциональность.
+        </p>
+
+        <h2>6. Изменения в политике</h2>
+        <p>
+            Мы можем обновлять данную Политику. О значимых изменениях мы уведомим вас через email или
+            в личном кабинете. Актуальная версия всегда доступна по этой ссылке.
+        </p>
+
+        <h2>7. Контакты</h2>
+        <p>
+            По всем вопросам, связанным с конфиденциальностью, вы можете связаться с нами:
+        </p>
+        <ul>
+            <li><strong>support@cinema-service.ru</strong></li>
+            <li><strong>imirtov@gmail.com</strong></li>
+            <li><strong>+7 (999) 929-04-60</strong></li>
+        </ul>
+
+        <a href="javascript:history.back()" class="policy-back">← Вернуться назад</a>
+
+    </div>
+</main>
+
+<th:block th:replace="~{fragments/footer :: footer}"></th:block>
+
+</body>
+</html>

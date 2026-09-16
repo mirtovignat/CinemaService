@@ -8,16 +8,15 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
-@MappedSuperclass
 @Getter
 @Setter
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
+@MappedSuperclass
 public abstract class AbstractCatalogItem {
 
     @EmbeddedId
@@ -33,7 +32,6 @@ public abstract class AbstractCatalogItem {
     @JoinColumn(name = "movie_id", nullable = false)
     private Movie movie;
 
-    @CreationTimestamp
     @Column(name = "added_at", nullable = false)
     private LocalDateTime addedAt;
 
@@ -42,10 +40,11 @@ public abstract class AbstractCatalogItem {
             User user,
             Movie movie
     ) {
+        entity.setAddedAt(LocalDateTime.now());
         entity.setUser(user);
         entity.setMovie(movie);
-        AbstractCatalogItemId abstractCatalogItemId = AbstractCatalogItemId.from(movie, user);
-        entity.setId(abstractCatalogItemId);
+        AbstractCatalogItemId id = AbstractCatalogItemId.from(movie, user);
+        entity.setId(id);
         return entity;
     }
 }

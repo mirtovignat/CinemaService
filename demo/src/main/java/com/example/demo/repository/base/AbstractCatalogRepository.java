@@ -1,6 +1,7 @@
 package com.example.demo.repository.base;
 
 import com.example.demo.model.base.AbstractCatalogItem;
+import com.example.demo.model.base.AbstractCatalogItemId;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.query.Param;
@@ -11,7 +12,8 @@ import java.util.Optional;
 import static jakarta.persistence.LockModeType.PESSIMISTIC_WRITE;
 
 @NoRepositoryBean
-public interface AbstractCatalogRepository<T extends AbstractCatalogItem> extends JpaRepository<T, Long> {
+public interface AbstractCatalogRepository<Entity extends AbstractCatalogItem>
+        extends JpaRepository<Entity, AbstractCatalogItemId> {
 
     @EntityGraph(attributePaths = {
             "movie",
@@ -22,7 +24,7 @@ public interface AbstractCatalogRepository<T extends AbstractCatalogItem> extend
             FROM #{#entityName} item
             WHERE item.user.id = :userId
             """)
-    List<T> findAllByUserId(@Param("userId") Long userId);
+    List<Entity> findAllByUserId(@Param("userId") Long userId);
 
     @Query("""
             SELECT item
@@ -31,7 +33,7 @@ public interface AbstractCatalogRepository<T extends AbstractCatalogItem> extend
             JOIN FETCH item.movie
             WHERE item.movie.id = :movieId
             """)
-    List<T> findAllByMovieId(@Param("movieId") Long movieId);
+    List<Entity> findAllByMovieId(@Param("movieId") Long movieId);
 
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("""
@@ -50,8 +52,8 @@ public interface AbstractCatalogRepository<T extends AbstractCatalogItem> extend
             WHERE item.user.id = :userId
             AND item.movie.id = :movieId
             """)
-    Optional<T> findByMovieIdAndUserId(@Param("movieId") Long movieId,
-                                       @Param("userId") Long userId);
+    Optional<Entity> findByMovieIdAndUserId(@Param("movieId") Long movieId,
+                                            @Param("userId") Long userId);
 
     @Lock(PESSIMISTIC_WRITE)
     @Query("""
@@ -60,22 +62,8 @@ public interface AbstractCatalogRepository<T extends AbstractCatalogItem> extend
             WHERE item.movie.id = :movieId
             AND item.user.id = :userId
             """)
-    Optional<T> findByMovieIdAndUserIdWithLock(@Param("movieId") Long movieId,
-                                               @Param("userId") Long userId);
-
-    @Query("""
-            SELECT COUNT(item)
-            FROM #{#entityName} item
-            WHERE item.user.id = :userId
-            """)
-    Long countByUserId(@Param("userId") Long userId);
-
-    @Query("""
-            SELECT COUNT(item)
-            FROM #{#entityName} item
-            WHERE item.movie.id = :movieId
-            """)
-    Long countByMovieId(@Param("movieId") Long movieId);
+    Optional<Entity> findByMovieIdAndUserIdWithLock(@Param("movieId") Long movieId,
+                                                    @Param("userId") Long userId);
 
     @Query("""
             SELECT COUNT(item) > 0
@@ -85,4 +73,12 @@ public interface AbstractCatalogRepository<T extends AbstractCatalogItem> extend
             """)
     boolean existsByMovieIdAndUserId(@Param("movieId") Long movieId,
                                      @Param("userId") Long userId);
+
+
+    @Modifying
+    @Query("""
+            DELETE FROM #{#entityName} item
+            WHERE item.id.userId = :userId
+            """)
+    void deleteAllByUserId(@Param("userId") Long userId);
 }

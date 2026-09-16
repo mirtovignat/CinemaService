@@ -23,11 +23,11 @@ public class BadgeService {
         if (id == null) {
             return BadgeCountsDTO.builder().build();
         }
-        return new BadgeCountsDTO(
-                cartItemRepository.countByUserId(id),
-                favouriteMovieRepository.countByUserId(id),
-                purchasedMovieRepository.countByUserId(id),
-                ratedMovieRepository.countByUserId(id)
-        );
+        return BadgeCountsDTO.builder()
+                .cartCount(cartItemRepository.countByUserId(id))
+                .favouritesCount(favouriteMovieRepository.countByUserId(id))
+                .purchasesCount(purchasedMovieRepository.countByUserId(id))
+                .ratingsCount(ratedMovieRepository.countByUserId(id))
+                .build();
     }
 }

@@ -1,18 +1,77 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ru">
 <head>
-    <title>Корзина — Cinema Service</title>
+    <title>Корзина — CinemaService</title>
     <th:block th:replace="~{fragments/head :: head}"></th:block>
     <style>
-        .catalog-header {
+        html, body { min-height: 100vh; margin: 0; padding: 0; }
+        body { display: flex; flex-direction: column; }
+        .catalog-wrapper {
+            flex: 1 1 auto;
+            padding: 1rem 0.75rem 1.25rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+            position: relative;
+        }
+        .catalog-search-slot {
+            position: absolute;
+            left: 16px;
+            top: 16px;
+            width: 340px;
+            max-width: calc(50% - 2rem);
+            z-index: 100;
+            box-sizing: border-box;
+        }
+        .catalog-search-slot form,
+        .catalog-search-slot input,
+        .catalog-search-slot .catalog-search,
+        .catalog-search-slot > * {
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box;
+        }
+        .catalog-search-slot .catalog-search {
+            position: static !important;
+            top: auto !important;
+            right: auto !important;
+            left: auto !important;
+            bottom: auto !important;
+            margin: 0 !important;
+            transform: none !important;
+        }
+        .catalog-header-wrapper {
+            position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-            padding: 0.5rem 0 1.2rem 0;
+            padding: 0 0 1.4rem;
+            min-height: 44px;
+        }
+        .catalog-header {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.8rem;
+            flex-wrap: nowrap;
             text-align: center;
+            width: 100%;
             position: relative;
+            padding: 0 0 0 380px;
+            box-sizing: border-box;
+        }
+        @media (max-width: 1200px) {
+            .catalog-header { padding: 0 0 0 320px; }
+        }
+        @media (max-width: 1000px) {
+            .catalog-header {
+                padding: 0;
+                justify-content: center;
+                flex-wrap: wrap;
+                row-gap: 0.7rem;
+            }
+            .catalog-search-slot { display: none; }
         }
         .catalog-header h1 {
             font-size: 1.8rem;
@@ -22,38 +81,44 @@
             background-clip: text;
             color: transparent;
             margin: 0;
+            white-space: nowrap;
         }
         .catalog-count {
             background: rgba(255, 255, 255, 0.08);
-            padding: 0.2rem 0.9rem;
+            padding: 0.25rem 1rem;
             border-radius: 60px;
             border: 1px solid rgba(255, 255, 255, 0.12);
             color: #cbd5e1;
             font-size: 0.85rem;
+            white-space: nowrap;
         }
-        .clear-favourites-btn {
-            margin-left: auto;
+        .clear-cart-btn {
+            position: relative;
             background: transparent;
             border: 1px solid var(--glow-danger);
             color: var(--glow-danger);
-            padding: 0.4rem 1.2rem;
+            padding: 0.45rem 1.3rem;
             border-radius: 60px;
             font-weight: 600;
             font-size: 0.85rem;
             cursor: pointer;
             transition: 0.2s;
             white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
         }
-        .clear-favourites-btn:hover {
+        .clear-cart-btn:hover {
             background: var(--glow-danger);
             color: white;
             box-shadow: 0 0 12px #f43f5e;
         }
+        .clear-cart-btn svg { width: 16px; height: 16px; }
         .checkout-btn {
             background: linear-gradient(135deg, var(--glow-primary), #6366f1);
             border: none;
             color: white;
-            padding: 0.5rem 2rem;
+            padding: 0.5rem 1.5rem;
             border-radius: 60px;
             font-weight: 700;
             font-size: 1rem;
@@ -61,7 +126,7 @@
             transition: 0.3s;
             display: inline-flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.75rem;
             box-shadow: 0 8px 30px rgba(99, 102, 241, 0.3);
             white-space: nowrap;
         }
@@ -75,35 +140,6 @@
             border-radius: 40px;
             font-size: 0.85rem;
         }
-        .empty-message {
-            text-align: center;
-            padding: 5rem 1rem;
-        }
-        .empty-message h2 {
-            font-size: 2rem;
-            color: var(--text-muted);
-        }
-        .text-muted {
-            color: var(--text-muted);
-        }
-        .browse-movies-btn {
-            background: var(--glow-primary);
-            color: white;
-            padding: 1rem 2.5rem;
-            border-radius: 60px;
-            text-decoration: none;
-            font-weight: 600;
-            display: inline-block;
-            margin-top: 2rem;
-        }
-        main.catalog-wrapper {
-            flex: 1 0 auto;
-            padding: 0.5rem 1.5rem 3rem 1.5rem;
-            max-width: 1400px;
-            margin: 0 auto;
-            width: 100%;
-            box-sizing: border-box;
-        }
         .cart-container {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -114,26 +150,7 @@
             padding-bottom: 2rem;
             overflow: visible;
         }
-        @media (max-width: 1100px) {
-            .cart-container {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-        @media (max-width: 780px) {
-            .cart-container {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 1.5rem;
-            }
-        }
-        @media (max-width: 480px) {
-            .cart-container {
-                grid-template-columns: 1fr;
-                max-width: 320px;
-                margin: 0 auto;
-            }
-        }
-
-        .favourites-card {
+        .cart-card {
             display: flex;
             flex-direction: column;
             background: rgba(15, 23, 42, 0.6);
@@ -151,18 +168,17 @@
             min-height: 480px;
             align-self: stretch;
         }
-        .favourites-card:hover {
+        .cart-card:hover {
             transform: translateY(-6px);
             border-color: rgba(129, 140, 248, 0.6);
             box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.5);
         }
-        .favourites-card.removing {
+        .cart-card.removing {
             opacity: 0;
             transform: scale(0.9);
             transition: all 0.3s ease;
         }
-
-        .favourites-poster-link {
+        .cart-poster-link {
             width: 100%;
             aspect-ratio: 2 / 3;
             display: block;
@@ -174,14 +190,14 @@
             text-decoration: none;
             border-radius: 18px 18px 0 0;
         }
-        .favourites-poster-link > a {
+        .cart-poster-link > a {
             display: block;
             width: 100%;
             height: 100%;
             text-decoration: none;
             position: relative;
         }
-        .favourites-poster-img {
+        .cart-poster-img {
             width: 100%;
             height: 100%;
             object-fit: cover;
@@ -190,7 +206,6 @@
         .movie-poster-placeholder {
             width: 100%;
             height: 100%;
-            object-fit: cover;
             background: #2d3748;
             display: flex;
             align-items: center;
@@ -198,7 +213,7 @@
             color: #718096;
             font-size: 0.85rem;
         }
-        .favourites-rating-badge {
+        .cart-rating-badge {
             position: absolute;
             top: 0.8rem;
             left: 0.8rem;
@@ -217,20 +232,14 @@
             pointer-events: none;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
         }
-        .favourites-rating-badge .star {
-            font-size: 0.8rem;
-            color: #fcd34d;
-        }
-        .favourites-rating-badge .rating-value {
-            color: #fff;
-        }
-        .favourites-rating-badge .rating-max {
+        .cart-rating-badge .star { font-size: 0.8rem; color: #fcd34d; }
+        .cart-rating-badge .rating-value { color: #fff; }
+        .cart-rating-badge .rating-max {
             color: rgba(255, 255, 255, 0.4);
             font-weight: 400;
             font-size: 0.7rem;
         }
-
-        .favourites-card-content {
+        .cart-card-content {
             padding: 0.4rem 0.5rem 0.5rem;
             display: flex;
             flex-direction: column;
@@ -245,8 +254,7 @@
             gap: 0.15rem;
             overflow: hidden;
         }
-
-        .favourites-card-title {
+        .cart-card-title {
             margin: 0;
             font-size: 0.9rem;
             font-weight: 700;
@@ -260,16 +268,13 @@
             max-height: 2.1rem;
             text-shadow: 0 0 6px rgba(167, 139, 250, 0.15);
         }
-        .favourites-card-title a {
+        .cart-card-title a {
             color: #f8fafc;
             text-decoration: none;
             transition: color 0.2s;
         }
-        .favourites-card:hover .favourites-card-title a {
-            color: #c4b5fd;
-        }
-
-        .favourites-info {
+        .cart-card:hover .cart-card-title a { color: #c4b5fd; }
+        .cart-info {
             display: flex;
             flex-direction: column;
             flex: 1 1 auto;
@@ -277,8 +282,7 @@
             min-height: 0;
             gap: 0.45rem;
         }
-
-        .favourites-details {
+        .cart-details {
             display: flex;
             flex-wrap: wrap;
             gap: 0.35rem;
@@ -286,7 +290,7 @@
             padding-top: 0.35rem;
             border-top: 1px solid rgba(255, 255, 255, 0.06);
         }
-        .favourites-details span {
+        .cart-details span {
             background: rgba(255, 255, 255, 0.06);
             border: 1px solid rgba(255, 255, 255, 0.08);
             color: #dbe4f3;
@@ -298,14 +302,9 @@
             cursor: default;
             transition: background 0.2s;
         }
-        .favourites-details span:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-        .favourites-details .separator {
-            display: none;
-        }
-
-        .favourites-price {
+        .cart-details span:hover { background: rgba(255, 255, 255, 0.1); }
+        .cart-details .separator { display: none; }
+        .cart-price {
             display: inline-flex;
             align-items: center;
             gap: 0.25rem;
@@ -315,12 +314,7 @@
             text-shadow: 0 0 10px rgba(192, 132, 252, 0.25);
             white-space: nowrap;
         }
-        .favourites-price::before {
-            content: "💰";
-            font-size: 0.8rem;
-        }
-
-        .favourites-price-and-actions {
+        .cart-price-and-actions {
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -328,15 +322,14 @@
             border-top: 1px solid rgba(255, 255, 255, 0.05);
             gap: 0.3rem;
         }
-
-        .favourites-actions {
+        .cart-actions {
             display: flex;
             gap: 0.3rem;
             align-items: center;
             flex-shrink: 0;
         }
-        .favourites-actions .icon-btn,
-        .favourites-actions .remove-favourites-btn {
+        .cart-actions .icon-btn,
+        .cart-actions .remove-cart-btn {
             width: 28px;
             height: 28px;
             font-size: 0.85rem;
@@ -355,20 +348,19 @@
             padding: 0;
             line-height: 1;
         }
-        .favourites-actions .icon-btn:hover {
+        .cart-actions .icon-btn:hover {
             transform: scale(1.1);
-            border-color: #f472b6;
-            color: #f472b6;
-            box-shadow: 0 0 15px rgba(244, 114, 182, 0.3);
+            border-color: #fcd34d;
+            color: #fcd34d;
+            box-shadow: 0 0 15px rgba(252, 211, 77, 0.3);
         }
-        .favourites-actions .remove-favourites-btn:hover {
+        .cart-actions .remove-cart-btn:hover {
             transform: scale(1.1);
             border-color: var(--glow-danger);
             color: var(--glow-danger);
             box-shadow: 0 0 15px rgba(244, 63, 94, 0.3);
         }
-
-        .favourites-actions .buy-now-btn {
+        .cart-actions .buy-now-btn {
             width: auto;
             height: 28px;
             padding: 0 12px;
@@ -386,12 +378,112 @@
             white-space: nowrap;
             box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
-
-        .favourites-actions .buy-now-btn:hover {
+        .cart-actions .buy-now-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
         }
-
+        .cart-actions .icon-btn svg,
+        .cart-actions .remove-cart-btn svg { width: 16px; height: 16px; }
+        .cart-actions .rating-btn svg,
+        .cart-actions .rating-btn svg * {
+            color: #fcd34d;
+            stroke: #fcd34d;
+            stroke-width: 2;
+        }
+        .empty-message {
+            position: relative;
+            overflow: hidden;
+            width: min(680px, calc(100% - 2rem));
+            height: clamp(260px, 34vh, 330px);
+            min-height: 0;
+            margin: 1rem auto 0;
+            padding: 2rem 1.5rem;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            border-radius: 28px;
+            background: linear-gradient(180deg, rgba(99, 102, 241, 0.06), rgba(15, 23, 42, 0.28)), rgba(15, 23, 42, 0.46);
+            border: 1px solid rgba(99, 102, 241, 0.15);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035), 0 20px 60px rgba(0, 0, 0, 0.12);
+        }
+        .empty-message::before,
+        .empty-message::after {
+            content: "";
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .empty-message::before {
+            width: 260px;
+            height: 260px;
+            top: -180px;
+            left: 8%;
+            background: rgba(59, 130, 246, 0.08);
+            filter: blur(12px);
+        }
+        .empty-message::after {
+            width: 300px;
+            height: 300px;
+            right: -180px;
+            bottom: -200px;
+            background: rgba(168, 85, 247, 0.08);
+            filter: blur(16px);
+        }
+        .empty-icon {
+            position: relative;
+            z-index: 1;
+            width: 68px;
+            height: 68px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.9rem;
+            border-radius: 21px;
+            background: linear-gradient(145deg, rgba(99, 102, 241, 0.28), rgba(59, 130, 246, 0.1));
+            border: 1px solid rgba(129, 140, 248, 0.25);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 18px 45px rgba(37, 99, 235, 0.12);
+        }
+        .empty-icon svg { width: 34px; height: 34px; color: #a78bfa; stroke: #a78bfa; }
+        .empty-message h2 {
+            position: relative;
+            z-index: 1;
+            margin: 0 0 0.45rem;
+            font-size: 1.5rem;
+            line-height: 1.2;
+            color: #f1f5f9;
+        }
+        .empty-message p {
+            position: relative;
+            z-index: 1;
+            max-width: 500px;
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.55;
+        }
+        .browse-movies-btn {
+            position: relative;
+            z-index: 1;
+            background: linear-gradient(135deg, var(--glow-primary), #6366f1);
+            color: white;
+            padding: 0.75rem 1.8rem;
+            border-radius: 60px;
+            text-decoration: none;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 1.25rem;
+            transition: 0.25s;
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.25);
+        }
+        .browse-movies-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 38px rgba(99, 102, 241, 0.38);
+        }
         .modal {
             position: fixed;
             inset: 0;
@@ -405,10 +497,7 @@
             transition: opacity 0.25s ease, visibility 0.25s ease;
             z-index: 5000;
         }
-        .modal.show {
-            opacity: 1;
-            visibility: visible;
-        }
+        .modal.show { opacity: 1; visibility: visible; }
         .modal-content {
             width: min(430px, calc(100vw - 32px));
             background: linear-gradient(180deg, rgba(25, 29, 53, 0.98), rgba(15, 18, 35, 0.98));
@@ -419,9 +508,7 @@
             transform: translateY(20px) scale(0.96);
             transition: transform 0.25s ease;
         }
-        .modal.show .modal-content {
-            transform: translateY(0) scale(1);
-        }
+        .modal.show .modal-content { transform: translateY(0) scale(1); }
         .modal-header {
             display: flex;
             justify-content: space-between;
@@ -446,10 +533,7 @@
             transition: 0.2s;
             line-height: 1;
         }
-        .modal-x:hover {
-            color: var(--glow-danger);
-            transform: rotate(90deg);
-        }
+        .modal-x:hover { color: var(--glow-danger); transform: rotate(90deg); }
         .modal-buttons {
             display: flex;
             justify-content: flex-end;
@@ -465,9 +549,7 @@
             cursor: pointer;
             font-weight: 600;
         }
-        .modal-cancel-btn:hover {
-            background: rgba(255, 255, 255, 0.06);
-        }
+        .modal-cancel-btn:hover { background: rgba(255, 255, 255, 0.06); }
         .modal-confirm-btn {
             background: linear-gradient(135deg, var(--glow-success), #059669);
             color: white;
@@ -498,6 +580,7 @@
         .modal-summary .item {
             display: flex;
             justify-content: space-between;
+            gap: 1rem;
             padding: 0.25rem 0;
             color: #cbd5e1;
             font-size: 0.9rem;
@@ -510,97 +593,129 @@
             color: #c084fc;
             font-size: 1.1rem;
         }
+        .modal-price {
+            margin-top: 1rem;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #c084fc;
+        }
+        @media (max-width: 1100px) {
+            .cart-container { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (max-width: 780px) {
+            .cart-container { grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+        }
+        @media (max-width: 480px) {
+            .catalog-wrapper { padding: 0.5rem 0.8rem 1rem; }
+            .cart-container { grid-template-columns: 1fr; max-width: 320px; margin: 0 auto; }
+            .catalog-header { flex-direction: column; gap: 0.7rem; }
+            .clear-cart-btn,
+            .checkout-btn { width: 100%; justify-content: center; }
+            .empty-message { height: clamp(240px, 40vh, 300px); padding: 1.5rem 1rem; border-radius: 22px; }
+            .empty-message h2 { font-size: 1.3rem; }
+            .empty-message p { font-size: 0.85rem; }
+        }
     </style>
 </head>
 <body>
-
 <th:block th:replace="~{fragments/header :: header}"></th:block>
 <th:block th:replace="~{fragments/flash-messages :: flashMessages}"></th:block>
-
-<div id="authStatus"
-     th:data-authenticated="${session.sessionUser != null}"
-     style="display:none;"></div>
-
+<div id="authStatus" th:data-authenticated="${session.sessionUser != null}" style="display:none;"></div>
 <main class="catalog-wrapper">
-    <div class="catalog-header">
-        <h1>🛒 Ваша корзина</h1>
-        <div class="catalog-count">Количество фильмов: <span th:text="${cartCount}" id="cartCountDisplay">0</span></div>
-        <button class="clear-favourites-btn" th:if="${cart != null and !cart.isEmpty()}" onclick="showClearCartModal()">
-            🗑️ Очистить всю корзину
-        </button>
-        <button class="checkout-btn" th:if="${cart != null and !cart.isEmpty()}"
-                th:with="totalPrice=${#aggregates.sum(cart.![price])}"
-                onclick="showBulkBuyModal()">
-            <span class="btn-text">🛒 Купить всё</span>
-            <span class="btn-price" id="bulkTotalPrice" th:text="${totalPrice} + ' ₽'">0 ₽</span>
-        </button>
+
+    <div class="catalog-search-slot" th:if="${catalog != null and !catalog.isEmpty()}">
+        <th:block th:replace="~{fragments/catalog-search :: catalogSearch}"></th:block>
     </div>
 
-    <div class="cart-container" th:if="${cart != null and !cart.isEmpty()}">
-        <div class="favourites-card" th:each="cartMovie : ${cart}" th:data-movie-id="${cartMovie.id}"
-             th:data-movie-price="${cartMovie.price}">
-            <div class="favourites-poster-link">
-                <a th:href="@{/movies/{id}(id=${cartMovie.id})}">
-                    <img th:if="${cartMovie.posterUrl != null and !cartMovie.posterUrl.isEmpty()}"
-                         th:src="${cartMovie.posterUrl}"
+    <div class="catalog-header-wrapper" th:if="${catalog != null and !catalog.isEmpty()}">
+        <div class="catalog-header">
+            <h1>Ваша корзина</h1>
+            <div class="catalog-count">
+                Количество фильмов:
+                <span th:text="${catalogCount}" id="cartCountDisplay">0</span>
+            </div>
+            <button class="checkout-btn"
+                    th:with="totalPrice=${#aggregates.sum(catalog.![price.price])}"
+                    onclick="showBulkBuyModal()">
+                <span class="btn-text">
+                    <th:block th:replace="~{fragments/icons :: icon-cart}"></th:block>
+                    Купить всё
+                </span>
+                <span class="btn-price"
+                      id="bulkTotalPrice"
+                      th:text="${totalPrice} + ' ₽'">
+                    0 ₽
+                </span>
+            </button>
+            <button class="clear-cart-btn" onclick="showClearCartModal()">
+                <th:block th:replace="~{fragments/icons :: icon-trash}"></th:block>
+                Очистить всю корзину
+            </button>
+        </div>
+    </div>
+
+    <div class="cart-container" th:if="${catalog != null and !catalog.isEmpty()}">
+        <div class="cart-card"
+             th:each="cartMovie : ${catalog}"
+             th:data-movie-id="${cartMovie.id.id}"
+             th:data-movie-price="${cartMovie.price.price}">
+            <div class="cart-poster-link">
+                <a th:href="@{/movies/{id}(id=${cartMovie.id.id})}">
+                    <img th:if="${cartMovie.media.posterUrl != null and !cartMovie.media.posterUrl.isEmpty()}"
+                         th:src="${cartMovie.media.posterUrl}"
                          alt="Постер"
-                         class="favourites-poster-img"
+                         class="cart-poster-img"
                          onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';"
-                         src=""/>
+                         src="">
                     <div class="movie-poster-placeholder"
-                         th:style="${cartMovie.posterUrl != null and !cartMovie.posterUrl.isEmpty()} ? 'display:none;' : ''">
-                        <span>📽️ Постер</span>
+                         th:style="${cartMovie.media.posterUrl != null and !cartMovie.media.posterUrl.isEmpty()} ? 'display:none;' : ''">
+                        <span>Постер</span>
                     </div>
-                    <div class="favourites-rating-badge" th:if="${cartMovie.rating != null}">
-                        <span class="star">★</span>
-                        <span class="rating-value"
-                              th:text="${#numbers.formatDecimal(cartMovie.rating, 1, 1)}">8.5</span>
+                    <div class="cart-rating-badge" th:if="${cartMovie.rating.rating != null}">
+                        <span class="star"><th:block th:replace="~{fragments/icons :: icon-star}"></th:block></span>
+                        <span class="rating-value" th:text="${#numbers.formatDecimal(cartMovie.rating.rating, 1, 1)}">8.5</span>
                         <span class="rating-max">/ 10</span>
                     </div>
                 </a>
             </div>
-
-            <div class="favourites-card-content">
-                <h3 class="favourites-card-title">
-                    <a th:href="@{/movies/{id}(id=${cartMovie.id})}" th:text="${cartMovie.title}">Название</a>
+            <div class="cart-card-content">
+                <h3 class="cart-card-title">
+                    <a th:href="@{/movies/{id}(id=${cartMovie.id.id})}" th:text="${cartMovie.title.title}">Название</a>
                 </h3>
-
-                <div class="favourites-info">
-                    <div class="favourites-details">
-                        <span th:if="${cartMovie.releaseYear != null}"
-                              th:text="'📅 ' + ${cartMovie.releaseYear}"
-                              title="Год выпуска">📅 2014</span>
+                <div class="cart-info">
+                    <div class="cart-details">
+                        <span th:if="${cartMovie.release.releaseYear != null}"
+                              th:text="${cartMovie.release.releaseYear}" title="Год выпуска"></span>
                         <span class="separator"
-                              th:if="${cartMovie.releaseYear != null and cartMovie.genre != null}">•</span>
-                        <span th:if="${cartMovie.genre != null and !cartMovie.genre.isEmpty()}"
-                              th:text="'🎬 ' + ${cartMovie.genre}"
-                              title="Жанр">🎬 Sci-Fi</span>
+                              th:if="${cartMovie.release.releaseYear != null and cartMovie.media.genre != null}">•</span>
+                        <span th:if="${cartMovie.media.genre != null and !cartMovie.media.genre.isEmpty()}"
+                              th:text="${cartMovie.media.genre}" title="Жанр"></span>
                         <span class="separator"
-                              th:if="${cartMovie.genre != null and cartMovie.formattedDuration != null}">•</span>
-                        <span th:if="${cartMovie.formattedDuration != null}"
-                              th:text="'⏱ ' + ${cartMovie.formattedDuration}"
-                              title="Длительность">⏱ 2ч 49м</span>
+                              th:if="${cartMovie.media.genre != null and cartMovie.meta.formattedDuration != null}">•</span>
+                        <span th:if="${cartMovie.meta.formattedDuration != null}"
+                              th:text="${cartMovie.meta.formattedDuration}" title="Длительность"></span>
                     </div>
-
-                    <div class="favourites-price-and-actions">
-                        <span class="favourites-price" th:text="${cartMovie.price} + ' ₽'">600 ₽</span>
-                        <div class="favourites-actions">
+                    <div class="cart-price-and-actions">
+                        <span class="cart-price" th:text="${cartMovie.price.price} + ' ₽'">600 ₽</span>
+                        <div class="cart-actions">
                             <button class="icon-btn rating-btn"
-                                    th:data-movie-id="${cartMovie.id}"
-                                    th:data-movie-title="${cartMovie.title}"
+                                    th:data-movie-id="${cartMovie.id.id}"
+                                    th:data-movie-title="${cartMovie.title.title}"
                                     onclick="showRatingModal(this.getAttribute('data-movie-id'), this.getAttribute('data-movie-title'))"
-                                    title="Оценить фильм">☆
+                                    title="Оценить фильм">
+                                <th:block th:replace="~{fragments/icons :: icon-star}"></th:block>
                             </button>
-                            <button class="remove-favourites-btn"
-                                    th:data-movie-id="${cartMovie.id}"
-                                    th:data-movie-title="${cartMovie.title}"
+                            <button class="remove-cart-btn"
+                                    th:data-movie-id="${cartMovie.id.id}"
+                                    th:data-movie-title="${cartMovie.title.title}"
                                     onclick="showRemoveFromCartModal(this.getAttribute('data-movie-id'), this.getAttribute('data-movie-title'))"
-                                    title="Удалить из корзины">🗑️
+                                    title="Удалить из корзины">
+                                <th:block th:replace="~{fragments/icons :: icon-trash}"></th:block>
                             </button>
                             <button class="buy-now-btn"
-                                    th:data-movie-id="${cartMovie.id}"
-                                    th:data-movie-price="${cartMovie.price}"
-                                    th:data-movie-title="${cartMovie.title}"
+                                    th:data-movie-id="${cartMovie.id.id}"
+                                    th:data-movie-price="${cartMovie.price.price}"
+                                    th:data-movie-title="${cartMovie.title.title}"
                                     onclick="showSingleBuyModal(this)"
                                     title="Купить сейчас">
                                 Купить сейчас
@@ -612,9 +727,12 @@
         </div>
     </div>
 
-    <div th:if="${cart == null or cart.isEmpty()}" class="empty-message">
-        <h2>😔 Корзина пуста</h2>
-        <p class="text-muted">Вы еще не добавили ни одного фильма.</p>
+    <div th:if="${catalog == null or catalog.isEmpty()}" class="empty-message">
+        <div class="empty-icon">
+            <th:block th:replace="~{fragments/icons :: icon-cart}"></th:block>
+        </div>
+        <h2>Корзина пока пуста</h2>
+        <p>Добавляйте фильмы, которые хотите приобрести, а здесь они будут аккуратно собраны в одном месте.</p>
         <a th:href="@{/}" class="browse-movies-btn">Перейти в каталог</a>
     </div>
 </main>
@@ -626,7 +744,7 @@
             <button class="modal-x" onclick="hideClearCartModal()">✕</button>
         </div>
         <p>Вы уверены, что хотите удалить все фильмы из корзины?</p>
-        <p>Будет удалено <span id="cartItemsCount" th:text="${cartCount}">0</span> фильмов.</p>
+        <p>Будет удалено <span id="cartItemsCount" th:text="${catalogCount}">0</span> фильмов.</p>
         <div class="modal-buttons">
             <button class="modal-cancel-btn" onclick="hideClearCartModal()">Отмена</button>
             <button class="modal-confirm-btn danger" onclick="clearCart()">Очистить корзину</button>
@@ -655,9 +773,9 @@
             <h2>Подтверждение покупки</h2>
             <button class="modal-x" onclick="hideBulkBuyModal()">✕</button>
         </div>
-        <p style="font-weight:600; color:#3b82f6; margin-bottom: 0.5rem;">Вы покупаете все фильмы из корзины:</p>
+        <p style="font-weight:600; color:#3b82f6; margin-bottom:0.5rem;">Вы покупаете все фильмы из корзины:</p>
         <div class="modal-summary" id="bulkBuySummary"></div>
-        <p style="color: #94a3b8; font-size: 0.9rem;">С вашего счёта будет списана указанная сумма.</p>
+        <p style="color:#94a3b8; font-size:0.9rem;">С вашего счёта будет списана указанная сумма.</p>
         <div class="modal-buttons">
             <button class="modal-cancel-btn" onclick="hideBulkBuyModal()">Отмена</button>
             <button class="modal-confirm-btn" onclick="confirmBulkPurchase()">Купить всё</button>
@@ -684,6 +802,8 @@
 <th:block th:replace="~{fragments/modals :: ratingModal}"></th:block>
 
 <script th:src="@{/js/main.js}" defer></script>
+<script th:src="@{/js/catalog-search.js}" defer></script>
+
 <script>
     let movieToRemoveFromCartId = '';
     let movieToRemoveFromCartTitle = '';
@@ -696,11 +816,19 @@
 
     function handleResponse(response) {
         if (!response.ok) {
-            return response.json().then(data => {
-                throw { status: response.status, message: data.message || 'Ошибка' };
-            }).catch(() => {
-                throw { status: response.status, message: 'Ошибка ' + response.status };
-            });
+            return response.json()
+                .then(data => {
+                    throw {
+                        status: response.status,
+                        message: data.message || 'Ошибка'
+                    };
+                })
+                .catch(() => {
+                    throw {
+                        status: response.status,
+                        message: 'Ошибка ' + response.status
+                    };
+                });
         }
         return response.json();
     }
@@ -715,92 +843,95 @@
             }
             sessionStorage.setItem('cart', JSON.stringify(cart));
             updateCartCount();
-        } catch(e) {}
+        } catch (e) {
+        }
     }
 
     function updateCartCount() {
         const cartCount = document.getElementById('cart-count');
-        if (!cartCount) return;
+        if (!cartCount) {
+            return;
+        }
         try {
             const cart = JSON.parse(sessionStorage.getItem('cart') || '{}');
             const count = Object.keys(cart).length;
             cartCount.textContent = count;
             cartCount.style.display = count > 0 ? 'inline' : 'none';
-        } catch(e) {}
+        } catch (e) {
+        }
     }
 
     function refreshCounts() {
         updateCartCount();
         const countSpan = document.getElementById('cartCountDisplay');
-        if (!countSpan) return;
+        if (!countSpan) {
+            return;
+        }
         try {
             const cart = JSON.parse(sessionStorage.getItem('cart') || '{}');
             countSpan.textContent = Object.keys(cart).length;
-        } catch(e) {}
+        } catch (e) {
+        }
     }
 
     function removeCardWithAnimation(movieId, callback) {
-        const card = document.querySelector(`.favourites-card[data-movie-id="${movieId}"]`);
+        const card = document.querySelector(`.cart-card[data-movie-id="${movieId}"]`);
         if (!card) {
-            if (callback) callback();
+            if (callback) {
+                callback();
+            }
             return;
         }
-
-        const priceText = card.querySelector('.favourites-price')?.textContent || '0 ₽';
+        const priceText = card.querySelector('.cart-price')?.textContent || '0 ₽';
         const cardPrice = parseFloat(priceText.replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
-
         card.style.transition = 'all .3s ease';
         card.style.opacity = '0';
         card.style.transform = 'scale(0.9)';
-
         setTimeout(() => {
             card.remove();
-
             const countSpan = document.getElementById('cartCountDisplay');
             if (countSpan) {
                 let count = parseInt(countSpan.textContent) || 0;
                 count = Math.max(0, count - 1);
                 countSpan.textContent = count;
             }
-
             const priceElement = document.getElementById('bulkTotalPrice');
             if (priceElement && cardPrice > 0) {
                 let total = parseFloat(priceElement.textContent.replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
                 total = Math.max(0, total - cardPrice);
                 priceElement.textContent = total.toFixed(0) + ' ₽';
             }
-
             setCartStatus(movieId, false);
-
-            const remainingCards = document.querySelectorAll('.favourites-card');
+            const remainingCards = document.querySelectorAll('.cart-card');
             if (remainingCards.length === 0) {
                 showEmptyCart();
             }
-
             refreshCounts();
-
-            if (callback) callback();
+            if (callback) {
+                callback();
+            }
         }, 300);
     }
 
     function showEmptyCart() {
-        const grid = document.querySelector('.cart-container');
-        if (grid) grid.remove();
-
-        const header = document.querySelector('.catalog-header');
-        if (header) header.remove();
-
         const main = document.querySelector('main.catalog-wrapper');
-        if (main) {
-            main.innerHTML = `
-                <div class="empty-message">
-                    <h2>😔 Корзина пуста</h2>
-                    <p class="text-muted">Вы еще не добавили ни одного фильма.</p>
-                    <a href="/" class="browse-movies-btn">Перейти в каталог</a>
-                </div>
-            `;
+        if (!main) {
+            return;
         }
-
+        main.innerHTML = `
+            <div class="empty-message">
+                <div class="empty-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M3 4h2l2.4 10.2a2 2 0 0 0 1.95 1.55h7.7a2 2 0 0 0 1.9-1.4L21 7H6"></path>
+                        <circle cx="10" cy="19" r="1.2"></circle>
+                        <circle cx="18" cy="19" r="1.2"></circle>
+                    </svg>
+                </div>
+                <h2>Корзина пока пуста</h2>
+                <p>Добавляйте фильмы, которые хотите приобрести, а здесь они будут аккуратно собраны в одном месте.</p>
+                <a href="/" class="browse-movies-btn">Перейти в каталог</a>
+            </div>
+        `;
         const headerCount = document.getElementById('cart-count');
         if (headerCount) {
             headerCount.textContent = '0';
@@ -820,38 +951,38 @@
     }
 
     function confirmRemoveFromCart() {
-        if (!movieToRemoveFromCartId) return;
+        if (!movieToRemoveFromCartId) {
+            return;
+        }
         const btn = document.querySelector('#removeFromCartModal .modal-confirm-btn');
         if (btn) {
             btn.textContent = 'Удаляем...';
             btn.disabled = true;
         }
-
         const movieId = movieToRemoveFromCartId;
-
         fetch('/cart/remove/' + encodeURIComponent(movieId), {
             method: 'POST',
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
-        .then(handleResponse)
-        .then(data => {
-            hideRemoveFromCartModal();
-            removeCardWithAnimation(movieId);
-            showFlashMessage(data.message || 'Фильм удалён из корзины', 'success');
-            if (btn) {
-                btn.textContent = 'Удалить';
-                btn.disabled = false;
-            }
-            movieToRemoveFromCartId = '';
-        })
-        .catch(error => {
-            showFlashMessage(error.message || 'Не удалось удалить', 'error', true);
-            if (btn) {
-                btn.textContent = 'Удалить';
-                btn.disabled = false;
-            }
-            hideRemoveFromCartModal();
-        });
+            .then(handleResponse)
+            .then(data => {
+                hideRemoveFromCartModal();
+                removeCardWithAnimation(movieId);
+                showFlashMessage(data.message || 'Фильм удалён из корзины', 'success');
+                if (btn) {
+                    btn.textContent = 'Удалить';
+                    btn.disabled = false;
+                }
+                movieToRemoveFromCartId = '';
+            })
+            .catch(error => {
+                showFlashMessage(error.message || 'Не удалось удалить', 'error', true);
+                if (btn) {
+                    btn.textContent = 'Удалить';
+                    btn.disabled = false;
+                }
+                hideRemoveFromCartModal();
+            });
     }
 
     function showClearCartModal() {
@@ -868,60 +999,57 @@
             confirmBtn.textContent = 'Очищаем...';
             confirmBtn.disabled = true;
         }
-
         const movieIds = [];
-        document.querySelectorAll('.favourites-card').forEach(card => {
+        document.querySelectorAll('.cart-card').forEach(card => {
             const id = card.getAttribute('data-movie-id');
-            if (id) movieIds.push(id);
+            if (id) {
+                movieIds.push(id);
+            }
         });
-
         fetch('/cart/clear', {
             method: 'POST',
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
-        .then(handleResponse)
-        .then(data => {
-            showFlashMessage(data.message || 'Корзина успешно очищена!', 'success');
-            movieIds.forEach(id => setCartStatus(id, false));
-            hideClearCartModal();
-
-            const cards = document.querySelectorAll('.favourites-card');
-            cards.forEach((card, index) => {
-                setTimeout(() => {
-                    const id = card.getAttribute('data-movie-id');
-                    if (id) {
-                        card.style.transition = 'all .3s ease';
-                        card.style.opacity = '0';
-                        card.style.transform = 'scale(0.9)';
-                        setTimeout(() => {
-                            card.remove();
-                            if (index === cards.length - 1) {
-                                showEmptyCart();
-                                refreshCounts();
-                            }
-                        }, 300);
-                    }
-                }, index * 100);
+            .then(handleResponse)
+            .then(data => {
+                showFlashMessage(data.message || 'Корзина успешно очищена!', 'success');
+                movieIds.forEach(id => setCartStatus(id, false));
+                hideClearCartModal();
+                const cards = document.querySelectorAll('.cart-card');
+                cards.forEach((card, index) => {
+                    setTimeout(() => {
+                        const id = card.getAttribute('data-movie-id');
+                        if (id) {
+                            card.style.transition = 'all .3s ease';
+                            card.style.opacity = '0';
+                            card.style.transform = 'scale(0.9)';
+                            setTimeout(() => {
+                                card.remove();
+                                if (index === cards.length - 1) {
+                                    showEmptyCart();
+                                    refreshCounts();
+                                }
+                            }, 300);
+                        }
+                    }, index * 100);
+                });
+                if (cards.length === 0) {
+                    showEmptyCart();
+                    refreshCounts();
+                }
+                if (confirmBtn) {
+                    confirmBtn.textContent = 'Очистить корзину';
+                    confirmBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                showFlashMessage(error.message || 'Не удалось очистить корзину', 'error', true);
+                if (confirmBtn) {
+                    confirmBtn.textContent = 'Очистить корзину';
+                    confirmBtn.disabled = false;
+                }
+                hideClearCartModal();
             });
-
-            if (cards.length === 0) {
-                showEmptyCart();
-                refreshCounts();
-            }
-
-            if (confirmBtn) {
-                confirmBtn.textContent = 'Очистить корзину';
-                confirmBtn.disabled = false;
-            }
-        })
-        .catch(error => {
-            showFlashMessage(error.message || 'Не удалось очистить корзину', 'error', true);
-            if (confirmBtn) {
-                confirmBtn.textContent = 'Очистить корзину';
-                confirmBtn.disabled = false;
-            }
-            hideClearCartModal();
-        });
     }
 
     function showSingleBuyModal(button) {
@@ -929,17 +1057,14 @@
             showFlashMessage('Авторизуйтесь!', 'error');
             return;
         }
-
         const movieId = button.getAttribute('data-movie-id');
         if (!movieId) {
             showFlashMessage('Ошибка: не удалось определить фильм', 'error');
             return;
         }
         singleMovieId = movieId;
-
         const title = button.getAttribute('data-movie-title') || movieId;
         const price = button.getAttribute('data-movie-price');
-
         document.getElementById('singleModalMovieTitle').textContent = title;
         document.getElementById('singleModalMoviePrice').innerHTML = price ? price + ' ₽' : '';
         document.getElementById('singleBuyModal').classList.add('show');
@@ -955,64 +1080,69 @@
             showFlashMessage('Ошибка: не удалось определить фильм', 'error');
             return;
         }
-
         const btn = document.querySelector('#singleBuyModal .modal-confirm-btn');
         if (btn) {
             btn.textContent = 'Покупаем...';
             btn.disabled = true;
         }
-
         const movieId = singleMovieId;
-
         fetch('/orders/add/' + encodeURIComponent(movieId), {
             method: 'POST',
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
-        .then(handleResponse)
-        .then(data => {
-            hideSingleBuyModal();
-            showFlashMessage(data.message || 'Фильм успешно куплен! 🎉', 'success');
-            removeCardWithAnimation(movieId);
-            if (btn) {
-                btn.textContent = 'Купить';
-                btn.disabled = false;
-            }
-            singleMovieId = '';
-        })
-        .catch(error => {
-            hideSingleBuyModal();
-            if (error.status === 401) {
-                showFlashMessage('Авторизуйтесь!', 'error');
-            } else {
-                showFlashMessage(error.message || 'Ошибка при покупке', 'error');
-            }
-            if (btn) {
-                btn.textContent = 'Купить';
-                btn.disabled = false;
-            }
-        });
+            .then(handleResponse)
+            .then(data => {
+                hideSingleBuyModal();
+                showFlashMessage(data.message || 'Фильм успешно куплен! 🎉', 'success');
+                removeCardWithAnimation(movieId);
+                if (btn) {
+                    btn.textContent = 'Купить';
+                    btn.disabled = false;
+                }
+                singleMovieId = '';
+            })
+            .catch(error => {
+                hideSingleBuyModal();
+                if (error.status === 401) {
+                    showFlashMessage('Авторизуйтесь!', 'error');
+                } else {
+                    showFlashMessage(error.message || 'Ошибка при покупке', 'error');
+                }
+                if (btn) {
+                    btn.textContent = 'Купить';
+                    btn.disabled = false;
+                }
+            });
     }
 
     function showBulkBuyModal() {
-        const cards = document.querySelectorAll('.favourites-card');
+        const cards = document.querySelectorAll('.cart-card');
         if (!cards.length) {
             showFlashMessage('Корзина пуста', 'error');
             return;
         }
-
         const summary = document.getElementById('bulkBuySummary');
         let html = '';
         let total = 0;
-
         cards.forEach(card => {
-            const title = card.querySelector('.favourites-card-title a')?.textContent || 'Фильм';
-            const price = parseFloat(card.getAttribute('data-movie-price')) ||
-                          parseFloat(card.querySelector('.favourites-price')?.textContent?.replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
+            const title = card.querySelector('.cart-card-title a')?.textContent || 'Фильм';
+            const price = parseFloat(card.getAttribute('data-movie-price'))
+                || parseFloat(card.querySelector('.cart-price')?.textContent?.replace(/[^\d.,]/g, '').replace(',', '.'))
+                || 0;
             total += price;
-            html += `<div class="item"><span>${title}</span><span>${price.toFixed(0)} ₽</span></div>`;
+            html += `
+                <div class="item">
+                    <span>${title}</span>
+                    <span>${price.toFixed(0)} ₽</span>
+                </div>
+            `;
         });
-
-        html += `<div class="item total"><span>Итого:</span><span>${total.toFixed(0)} ₽</span></div>`;
+        html += `
+            <div class="item total">
+                <span>Итого:</span>
+                <span>${total.toFixed(0)} ₽</span>
+            </div>
+        `;
         summary.innerHTML = html;
         document.getElementById('bulkBuyModal').classList.add('show');
     }
@@ -1027,13 +1157,13 @@
             btn.textContent = 'Покупаем...';
             btn.disabled = true;
         }
-
         const movieIds = [];
-        document.querySelectorAll('.favourites-card').forEach(card => {
+        document.querySelectorAll('.cart-card').forEach(card => {
             const id = card.getAttribute('data-movie-id');
-            if (id) movieIds.push(id);
+            if (id) {
+                movieIds.push(id);
+            }
         });
-
         if (!movieIds.length) {
             showFlashMessage('Корзина пуста', 'error');
             if (btn) {
@@ -1042,10 +1172,8 @@
             }
             return;
         }
-
         const params = new URLSearchParams();
         movieIds.forEach(id => params.append('movieIds', id));
-
         fetch('/orders/add/bulk', {
             method: 'POST',
             headers: {
@@ -1054,45 +1182,47 @@
             },
             body: params.toString()
         })
-        .then(handleResponse)
-        .then(data => {
-            hideBulkBuyModal();
-            sessionStorage.setItem('flashMessage', JSON.stringify({
-                message: data.message || 'Покупка прошла успешно! 🎉',
-                type: 'success'
-            }));
-            window.location.href = '/';
-        })
-        .catch(error => {
-            hideBulkBuyModal();
-            if (error.status === 401) {
-                showFlashMessage('Авторизуйтесь!', 'error');
-            } else {
-                showFlashMessage(error.message || 'Ошибка при покупке', 'error');
-            }
-            if (btn) {
-                btn.textContent = 'Купить всё';
-                btn.disabled = false;
-            }
-        });
+            .then(handleResponse)
+            .then(data => {
+                hideBulkBuyModal();
+                sessionStorage.setItem('flashMessage', JSON.stringify({
+                    message: data.message || 'Покупка прошла успешно! 🎉',
+                    type: 'success'
+                }));
+                window.location.href = '/';
+            })
+            .catch(error => {
+                hideBulkBuyModal();
+                if (error.status === 401) {
+                    showFlashMessage('Авторизуйтесь!', 'error');
+                } else {
+                    showFlashMessage(error.message || 'Ошибка при покупке', 'error');
+                }
+                if (btn) {
+                    btn.textContent = 'Купить всё';
+                    btn.disabled = false;
+                }
+            });
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        const cards = document.querySelectorAll('.favourites-card');
+        const cards = document.querySelectorAll('.cart-card');
         let total = 0;
         cards.forEach(card => {
-            const price = parseFloat(card.getAttribute('data-movie-price')) ||
-                          parseFloat(card.querySelector('.favourites-price')?.textContent?.replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
+            const price = parseFloat(card.getAttribute('data-movie-price'))
+                || parseFloat(card.querySelector('.cart-price')?.textContent?.replace(/[^\d.,]/g, '').replace(',', '.'))
+                || 0;
             total += price;
         });
         const priceElement = document.getElementById('bulkTotalPrice');
         if (priceElement && total > 0) {
             priceElement.textContent = total.toFixed(0) + ' ₽';
         }
-
         cards.forEach(card => {
             const id = card.getAttribute('data-movie-id');
-            if (id) setCartStatus(id, true);
+            if (id) {
+                setCartStatus(id, true);
+            }
         });
         refreshCounts();
     });

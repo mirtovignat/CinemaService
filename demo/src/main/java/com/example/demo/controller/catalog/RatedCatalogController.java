@@ -1,32 +1,31 @@
 package com.example.demo.controller.catalog;
 
-import com.example.demo.dto.catalog.RatedMovieForOwnerViewDTO;
-import com.example.demo.dto.user.SessionUser;
+import com.example.demo.dto.catalog.RatedMovieViewDTO;
+import com.example.demo.dto.response.GroupedHistoryResponse;
+import com.example.demo.model.entity.RatedMovie;
 import com.example.demo.service.catalog.RatedCatalogService;
-import lombok.AllArgsConstructor;
+import com.example.demo.service.movie.MovieService;
+import com.example.demo.service.user.UserQueryService;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.SessionAttribute;
 
-import java.util.List;
-
-@AllArgsConstructor
 @Controller
 @RequestMapping("/rated/history")
-public class RatedCatalogController {
+public class RatedCatalogController extends AbstractGroupedHistoryController<RatedMovie, RatedMovieViewDTO> {
 
     private final RatedCatalogService ratedCatalogService;
 
-    @GetMapping
-    public String getRatedHistory(
-            Model model,
-            @SessionAttribute SessionUser sessionUser
+    public RatedCatalogController(
+            RatedCatalogService ratedCatalogService,
+            MovieService movieService,
+            UserQueryService userQueryService
     ) {
-        Long userId = sessionUser.id();
-        List<RatedMovieForOwnerViewDTO> items = ratedCatalogService.getCatalog(userId);
-        model.addAttribute("items", items);
-        return "catalog/rated";
+        super("catalog/rated", ratedCatalogService, movieService, userQueryService);
+        this.ratedCatalogService = ratedCatalogService;
+    }
+
+    @Override
+    protected GroupedHistoryResponse<RatedMovieViewDTO> getGroupedHistory(Long userId) {
+        return ratedCatalogService.getGroupedRatedHistory(userId);
     }
 }

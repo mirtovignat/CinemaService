@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<body>
+
+<div th:fragment="catalogSearch" class="catalog-search">
+    <style>
+        .catalog-search {
+            position: absolute;
+            top: 1.5rem;
+            right: 2.5rem;
+            width: 340px;
+            max-width: calc(100% - 5rem);
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            margin: 0;
+            z-index: 100;
+        }
+
+        .catalog-search-form {
+            width: 100%;
+            position: relative;
+        }
+
+        .catalog-search-input-wrapper {
+            position: relative;
+            width: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        .catalog-search-input-wrapper .catalog-search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            pointer-events: none;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .catalog-search-input-wrapper .catalog-search-icon svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .catalog-search-input-wrapper input {
+            width: 100%;
+            padding: 0.7rem 2.6rem 0.7rem 42px;
+            border-radius: 2rem;
+            border: 1px solid rgba(72, 187, 255, 0.25);
+            background: rgba(15, 23, 42, 0.75);
+            color: #eef2ff;
+            font-size: 0.9rem;
+            font-family: inherit;
+            outline: none;
+            box-sizing: border-box;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .catalog-search-input-wrapper input::placeholder {
+            color: #64748b;
+        }
+
+        .catalog-search-input-wrapper input:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        .catalog-search-clear {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            line-height: 1;
+            padding: 0;
+            transition: color 0.2s ease, background 0.2s ease;
+        }
+
+        .catalog-search-clear:hover {
+            color: #e2e8f0;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .catalog-search-input-wrapper.has-value .catalog-search-clear {
+            display: flex;
+        }
+
+        .catalog-search-suggestions {
+            display: none;
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            right: 0;
+            background: #131730;
+            border: 1px solid rgba(168, 85, 247, 0.4);
+            border-radius: 14px;
+            padding: 0.4rem;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8), 0 0 15px rgba(99, 102, 241, 0.2);
+            z-index: 9999;
+            flex-direction: column;
+            gap: 0.25rem;
+            max-height: 320px;
+            overflow-y: auto;
+        }
+
+        .catalog-search-suggestions.show {
+            display: flex;
+        }
+
+        .catalog-search-suggestion {
+            padding: 0.55rem 0.8rem;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            cursor: pointer;
+            color: #f1f5f9;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .catalog-search-suggestion:hover {
+            background: rgba(99, 102, 241, 0.25);
+            border-color: rgba(168, 85, 247, 0.5);
+            transform: translateX(3px);
+        }
+
+        .catalog-search-suggestion-title {
+            font-weight: 600;
+        }
+
+        .catalog-search-empty {
+            display: none;
+            width: 100%;
+            margin: 0.5rem 0 0;
+            text-align: center;
+            color: #64748b;
+            font-size: 0.85rem;
+        }
+
+        .catalog-search-empty.show {
+            display: block;
+        }
+
+        @media (max-width: 900px) {
+            .catalog-search {
+                position: static;
+                width: 100%;
+                max-width: 100%;
+                margin: 0.5rem 0 1rem;
+            }
+        }
+    </style>
+
+    <form class="catalog-search-form" onsubmit="return false;">
+
+        <div class="catalog-search-input-wrapper" data-catalog-search-wrapper>
+            <span class="catalog-search-icon">
+                <th:block th:replace="~{fragments/icons :: icon-search}"></th:block>
+            </span>
+
+            <label for="catalogSearchInput"
+                   style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">
+                Поиск по каталогу
+            </label>
+
+            <input type="text"
+                   id="catalogSearchInput"
+                   name="q"
+                   autocomplete="off"
+                   placeholder="Поиск по началу названия..."
+                   maxlength="100"
+                   data-catalog-search-input>
+
+            <button type="button"
+                    class="catalog-search-clear"
+                    data-catalog-search-clear
+                    aria-label="Очистить поиск"
+                    title="Очистить">✕
+            </button>
+
+            <div class="catalog-search-suggestions"
+                 data-catalog-search-suggestions></div>
+        </div>
+    </form>
+
+    <div class="catalog-search-empty" data-catalog-search-empty>
+        Ничего не найдено
+    </div>
+</div>
+
+</body>
+</html>

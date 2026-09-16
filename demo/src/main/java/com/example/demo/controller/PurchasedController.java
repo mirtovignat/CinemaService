@@ -1,8 +1,10 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.dto.user.SessionUser;
 import com.example.demo.exception.SuccessCode;
 import com.example.demo.service.purchased.PurchasedCommandService;
+import com.example.demo.util.MessageUtils;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,30 +20,38 @@ import java.util.Map;
 public class PurchasedController {
 
     private final PurchasedCommandService purchasedCommandService;
+    private final MessageUtils messageUtils;
 
     @PostMapping("/add/bulk")
     @ResponseBody
-    public ResponseEntity<Map<String, String>> buyMovies(
-            @SessionAttribute SessionUser sessionUser,
-            HttpSession httpSession) {
+    public ResponseEntity<ApiResponse> buyMovies(@SessionAttribute SessionUser sessionUser,
+                                                 HttpSession httpSession) {
         Long userId = sessionUser.id();
         BigDecimal newBalance = purchasedCommandService.purchaseBulk(userId);
         SessionUser updated = sessionUser.withBalance(newBalance);
         httpSession.setAttribute("sessionUser", updated);
-        return ResponseEntity.ok(Map.of(
-                "message", SuccessCode.PURCHASED.getMessage()
-        ));
+        String message = messageUtils.getSuccess(SuccessCode.PURCHASED);
+        return ResponseEntity.ok(ApiResponse.builder()
+                .code(SuccessCode.PURCHASED.name())
+                .message(message)
+                .data(Map.of())
+                .build());
     }
 
     @PostMapping("/add/{id}")
     @ResponseBody
-    public Map<String, String> buyMovie(@PathVariable Long id,
-                                        @SessionAttribute SessionUser sessionUser,
-                                        HttpSession httpSession) {
+    public ResponseEntity<ApiResponse> buyMovie(@PathVariable Long id,
+                                                @SessionAttribute SessionUser sessionUser,
+                                                HttpSession httpSession) {
         Long userId = sessionUser.id();
         BigDecimal newBalance = purchasedCommandService.purchase(id, userId);
         SessionUser updated = sessionUser.withBalance(newBalance);
         httpSession.setAttribute("sessionUser", updated);
-        return Map.of("message", SuccessCode.PURCHASED.getMessage());
+        String message = messageUtils.getSuccess(SuccessCode.PURCHASED);
+        return ResponseEntity.ok(ApiResponse.builder()
+                .code(SuccessCode.PURCHASED.name())
+                .message(message)
+                .data(Map.of())
+                .build());
     }
 }

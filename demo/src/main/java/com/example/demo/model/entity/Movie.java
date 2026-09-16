@@ -1,12 +1,15 @@
 package com.example.demo.model.entity;
 
-import com.example.demo.model.base.AbstractEntity;
+import com.example.demo.model.Genre;
+import com.example.demo.model.base.IdentifiableEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.JdbcType;
+import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -21,7 +24,8 @@ import java.util.Set;
 @SuperBuilder
 @Entity
 @Table(name = "movies")
-public class Movie extends AbstractEntity {
+public class Movie extends IdentifiableEntity {
+
     @Column(name = "poster_url")
     private String posterUrl;
 
@@ -37,8 +41,9 @@ public class Movie extends AbstractEntity {
     @Column(name = "duration_seconds")
     private Duration duration;
 
-    @Column(name = "genre")
-    private String genre;
+    @JdbcType(PostgreSQLEnumJdbcType.class)
+    @Column(name = "genre", columnDefinition = "genre_type")
+    private Genre genre;
 
     @DecimalMin(value = "0.1", message = "Рейтинг не может быть меньше 0.1")
     @DecimalMax(value = "10.0", message = "Рейтинг не может быть больше 10.0")
@@ -74,4 +79,7 @@ public class Movie extends AbstractEntity {
     @BatchSize(size = 20)
     @OneToMany(mappedBy = "movie", fetch = FetchType.LAZY)
     private Set<RatedMovie> ratings = new LinkedHashSet<>();
+
+    @Column(name = "tmdb_id")
+    private Long tmdbId;
 }

@@ -1,169 +1,1117 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ru">
 <head>
-    <title>Личный кабинет — Cinema Service</title>
+    <title>Личный кабинет — CinemaService</title>
     <th:block th:replace="~{fragments/head :: head}"></th:block>
+
     <style>
-        *, *::before, *::after{box-sizing:border-box;}
-        .profile-wrapper{max-width:1400px;margin:0 auto;padding:2rem 2rem 0;}
-        .profile-header{margin-bottom:2rem;}
-        .profile-header h1{font-size:2.5rem;font-weight:700;background:linear-gradient(135deg,#e0e7ff,#c084fc);-webkit-background-clip:text;background-clip:text;color:transparent;margin:0;}
-        .profile-grid{display:grid;grid-template-columns:380px 1fr;gap:2rem;align-items:start;}
-        .profile-card{background:var(--card-bg);backdrop-filter:blur(8px);border-radius:var(--radius-xl);padding:2rem;border:1px solid var(--glass-border);position:sticky;top:100px;}
-        .profile-avatar{text-align:center;margin-bottom:1.5rem;}
-        .profile-avatar-letter {
-            width: 120px;
-            height: 120px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #0b0e14;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Inter', system-ui, sans-serif;
+            color: #eef2ff;
+        }
+
+        .header-wrapper {
+            flex: 0 0 auto;
+            z-index: 50;
+        }
+
+        .profile-wrapper {
+            flex: 1 1 auto;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            position: relative;
+            overflow: hidden;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 240px minmax(0, 1fr);
+            gap: 0;
+            align-items: stretch;
+            flex: 1 1 auto;
+            min-height: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .profile-card {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(8px);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            padding: 1.25rem 0.75rem;
+            position: relative;
+            min-width: 0;
+            transition: all 0.4s ease;
+        }
+
+        .profile-card::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .profile-card::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .profile-card::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 6px;
+        }
+
+        .profile-card::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.24);
+        }
+
+        .sidebar-toggle {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            z-index: 10;
+            border: none;
+            background: transparent;
+            color: #94a3b8;
+            font-size: 1.4rem;
+            cursor: pointer;
+            transition: 0.2s;
+            user-select: none;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+        }
+
+        .sidebar-toggle:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .profile-grid.sidebar-collapsed {
+            grid-template-columns: 56px minmax(0, 1fr);
+        }
+
+        .profile-grid.sidebar-collapsed .profile-card {
+            padding: 0.75rem 0.5rem;
+            min-width: 56px;
+            width: 56px;
+            overflow: hidden;
+        }
+
+        .profile-grid.sidebar-collapsed .sidebar-toggle {
+            right: 4px;
+            top: 4px;
+            font-size: 1.2rem;
+        }
+
+        .sidebar-content {
+            opacity: 1;
+            transition: opacity 0.3s ease 0.1s;
+            overflow: hidden;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-height: 0;
+        }
+
+        .profile-grid.sidebar-collapsed .sidebar-content {
+            opacity: 0;
+            pointer-events: none;
+            max-height: 0;
+            overflow: hidden;
+            flex: 0;
+        }
+
+        .sidebar-profile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.75rem 0.5rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            margin-bottom: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .sidebar-avatar {
+            width: 56px;
+            height: 56px;
             border-radius: 50%;
             background: linear-gradient(135deg, #4f46e5, #7c3aed);
-            display: inline-flex;
+            display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            font-size: 3.5rem;
-            color: white;
-            line-height: 1;
-            text-transform: none;
-            border: 3px solid var(--glow-primary);
-            box-shadow: 0 4px 20px rgba(79, 70, 229, 0.4);
-            transition: 0.2s;
-            user-select: none;
+            font-size: 1.4rem;
+            color: #fff;
+            border: 2px solid #6366f1;
+            margin-bottom: 0.5rem;
+            flex-shrink: 0;
+            text-transform: uppercase;
         }
-        .profile-avatar-letter:hover{transform:scale(1.05);border-color:#c084fc;}
-        .profile-name{font-size:1.6rem;font-weight:600;text-align:center;margin:0.5rem 0 0.25rem;display:flex;align-items:center;justify-content:center;gap:0.5rem;}
-        .edit-icon{cursor:pointer;font-size:1rem;background:rgba(59,130,246,0.15);padding:4px 8px;border-radius:40px;transition:0.2s;line-height:1;color:var(--text-muted);}
-        .edit-icon:hover{background:var(--glow-primary);color:white;}
-        .profile-details{margin:1.5rem 0;}
-        .profile-detail-item{display:grid;grid-template-columns:80px 1fr auto;align-items:center;gap:10px;padding:0.7rem 0;border-bottom:1px solid rgba(255,255,255,0.06);}
-        .detail-label{color:var(--text-muted);font-size:0.85rem;font-weight:500;}
-        .detail-value{white-space:normal;overflow:visible;text-overflow:clip;word-break:keep-all;overflow-wrap:anywhere;color:var(--text-light);font-size:0.95rem;}
-        .detail-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;}
-        .detail-edit,.delete-phone-btn{cursor:pointer;background:none;border:none;color:var(--text-muted);font-size:0.9rem;padding:0 4px;transition:0.2s;}
-        .detail-edit:hover{color:var(--glow-primary);transform:scale(1.1);}
-        .delete-phone-btn{color:var(--glow-danger);}
-        .delete-phone-btn:hover{color:#fecdd3;transform:scale(1.1);}
-        .delete-account-btn{margin-top:1.5rem;width:100%;padding:0.75rem;background:transparent;border:1px solid var(--glow-danger);color:var(--glow-danger);border-radius:60px;font-weight:600;cursor:pointer;transition:0.2s;text-align:center;}
-        .delete-account-btn:hover{background:var(--glow-danger);color:white;transform:translateY(-2px);box-shadow:0 8px 20px rgba(244,63,94,0.4);}
-        .profile-right{display:flex;flex-direction:column;gap:2rem;}
-        .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
-        .stat-card{background:rgba(0,0,0,0.3);border-radius:var(--radius-lg);padding:1.5rem 1rem;text-align:center;border:1px solid var(--glass-border);transition:0.2s;}
-        .stat-card:hover{border-color:var(--glow-primary);transform:translateY(-2px);}
-        .stat-value{font-size:2.5rem;font-weight:700;color:#c084fc;}
-        .stat-label{font-size:0.8rem;color:var(--text-muted);letter-spacing:0.5px;margin-top:0.2rem;}
-        .sections-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;}
-        .section-link{background:rgba(0,0,0,0.25);border-radius:var(--radius-lg);padding:1.25rem 1rem;text-decoration:none;color:inherit;display:flex;flex-direction:column;align-items:center;gap:0.5rem;transition:0.2s;border:1px solid var(--glass-border);text-align:center;}
-        .section-link:hover{transform:translateY(-4px);border-color:var(--glow-primary);box-shadow:0 12px 24px -10px rgba(0,0,0,0.4);background:rgba(59,130,246,0.05);}
-        .section-icon{font-size:2.2rem;}
-        .section-title{font-weight:600;font-size:1rem;}
-        .section-desc{font-size:0.8rem;color:var(--text-muted);}
-        .error-msg{color:var(--glow-danger);font-size:0.75rem;margin-top:-0.8rem;margin-bottom:0.8rem;display:none;}
-        #phoneDisplayEmpty{color:var(--text-muted);font-style:italic;cursor:pointer;}
-        #phoneDisplayEmpty:hover{text-decoration:underline;color:var(--glow-primary);}
-        @media(max-width:1024px){.profile-grid{grid-template-columns:1fr;}.profile-card{position:static;}.sections-grid{grid-template-columns:repeat(2,1fr);}}
-        @media(max-width:640px){.profile-wrapper{padding:1rem;}.stats-grid{grid-template-columns:1fr;}.sections-grid{grid-template-columns:1fr;}.profile-detail-item{grid-template-columns:70px 1fr auto;gap:6px;}.profile-avatar-letter{width:80px;height:80px;font-size:2.5rem;}}
+
+        .sidebar-profile-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #f1f5f9;
+        }
+
+        .sidebar-profile-phone {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: 0.1rem;
+        }
+
+        .sidebar-profile-email {
+            font-size: 0.7rem;
+            color: #64748b;
+            margin-top: 0.1rem;
+        }
+
+        .nav-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0;
+            padding-right: 6px;
+        }
+
+        .nav-menu::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .nav-menu::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 6px;
+            margin: 2px 0;
+        }
+
+        .nav-menu::-webkit-scrollbar-thumb {
+            background: #6b7280;
+            border-radius: 6px;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+            min-height: 30px;
+        }
+
+        .nav-menu::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #94a3b8;
+            transition: 0.2s;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 400;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: #f1f5f9;
+        }
+
+        .nav-link.active {
+            background: rgba(99, 102, 241, 0.15);
+            color: #a78bfa;
+        }
+
+        .nav-link .nav-badge {
+            margin-left: auto;
+            background: #6366f1;
+            color: #fff;
+            border-radius: 40px;
+            min-width: 18px;
+            height: 18px;
+            font-size: 0.55rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+            flex-shrink: 0;
+        }
+
+        .nav-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.06);
+            margin: 0.4rem 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .delete-account-btn {
+            width: 100%;
+            padding: 0.4rem;
+            background: transparent;
+            border: 1px solid #f43f5e;
+            color: #f43f5e;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+            flex-shrink: 0;
+            margin-top: 0.4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.3rem;
+        }
+
+        .delete-account-btn:hover {
+            background: #f43f5e;
+            color: #fff;
+        }
+
+        .delete-account-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .profile-right {
+            display: flex;
+            flex-direction: column;
+            padding: 1.35rem 2.5rem 2.5rem;
+            min-width: 0;
+            background: #0f131a;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .profile-right::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .profile-right::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 6px;
+        }
+
+        .profile-right::-webkit-scrollbar-thumb {
+            background: #6b7280;
+            border-radius: 6px;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+            min-height: 40px;
+        }
+
+        .profile-right::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+
+        .profile-right-header {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.25rem;
+            flex: 0 0 auto;
+            margin-bottom: 1rem;
+        }
+
+        .profile-right-header .greeting {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.15rem;
+            margin: 0;
+            font-weight: 700;
+            background: linear-gradient(135deg, #e0e7ff, #c084fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .profile-right-header .greeting-line-1 {
+            font-size: 2rem;
+            line-height: 1.15;
+        }
+
+        .profile-right-header .greeting-line-2 {
+            font-size: 2.4rem;
+            line-height: 1.15;
+        }
+
+        #mainContent {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            width: 100%;
+            flex: 1 1 auto;
+            overflow: visible;
+            padding: 0;
+        }
+
+        .favorites-section {
+            flex: 0 0 auto;
+            width: 100%;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 0;
+        }
+
+        .favorites-section .section-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #f1f5f9;
+            margin-bottom: 0.9rem;
+            flex: 0 0 auto;
+        }
+
+        .favorites-section .section-label span {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .favorites-section .section-label svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+        }
+
+        .favorites-grid {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 1.25rem;
+            width: 100%;
+            min-width: 0;
+            overflow: visible;
+        }
+
+        .fav-card {
+            flex: 0 0 280px;
+            width: 280px;
+            max-width: 280px;
+            min-width: 0;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            overflow: hidden;
+            transition: 0.25s;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .fav-card:hover {
+            transform: translateY(-5px);
+            border-color: #6366f1;
+            box-shadow: 0 16px 34px -12px rgba(0, 0, 0, 0.55);
+        }
+
+        .fav-card .fav-poster {
+            width: 100%;
+            aspect-ratio: 2 / 3;
+            background: #1a1f2b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .fav-card .fav-poster > a {
+            display: block;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            text-decoration: none;
+        }
+
+        .fav-card .fav-poster img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+        }
+
+        .fav-card .fav-poster .fav-rank {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.74);
+            backdrop-filter: blur(5px);
+            border-radius: 40px;
+            padding: 0.2rem 0.7rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        .fav-card .fav-info {
+            padding: 0.7rem 0.8rem 0.8rem;
+            min-height: 74px;
+        }
+
+        .fav-card .fav-info .fav-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #f1f5f9;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .fav-card .fav-info .fav-meta {
+            font-size: 0.73rem;
+            color: #94a3b8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.4rem;
+            margin-top: 0.2rem;
+        }
+
+        .fav-card .fav-info .fav-meta .fav-score {
+            color: #fbbf24;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
+            white-space: nowrap;
+        }
+
+        .fav-card .fav-info .fav-meta .fav-score svg {
+            width: 13px;
+            height: 13px;
+        }
+
+        .favorites-empty-card {
+            width: 100%;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 2rem;
+            text-align: center;
+            color: #64748b;
+            border-radius: 16px;
+            border: 1px dashed rgba(255, 255, 255, 0.09);
+            background: rgba(255, 255, 255, 0.025);
+        }
+
+        .favorites-empty-card svg {
+            width: 34px;
+            height: 34px;
+        }
+
+        .favorites-empty-card .empty-title {
+            margin-top: 0.55rem;
+            color: #cbd5e1;
+            font-size: 0.9rem;
+        }
+
+        .favorites-empty-card .empty-link {
+            margin-top: 0.35rem;
+            font-size: 0.8rem;
+        }
+
+        .favorites-empty-card .empty-link a {
+            color: #818cf8;
+            text-decoration: none;
+        }
+
+        .recommendations-section {
+            flex: 0 0 auto;
+            width: 100%;
+            min-height: 0;
+            margin-top: 0.9rem;
+            padding-bottom: 0;
+        }
+
+        .recommendations-section .section-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 0.9rem;
+        }
+
+        .recommendations-section .section-label > span:first-child {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #f1f5f9;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .recommendations-section .section-label > span:first-child svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            color: #94a3b8;
+        }
+
+        .recommendations-section .section-label .scroll-hint {
+            font-size: 0.7rem;
+            color: #64748b;
+            font-weight: 400;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .rec-scroll-wrapper {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding-bottom: 12px;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            position: relative;
+        }
+
+        .rec-scroll-wrapper::-webkit-scrollbar {
+            height: 10px;
+        }
+
+        .rec-scroll-wrapper::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 6px;
+            margin: 0 2px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .rec-scroll-wrapper::-webkit-scrollbar-thumb {
+            background: #a78bfa;
+            border-radius: 6px;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+            min-width: 40px;
+        }
+
+        .rec-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+            background: #c084fc;
+        }
+
+        .rec-grid {
+            display: flex;
+            gap: 0.75rem;
+            padding: 0.2rem 0.1rem 0;
+            flex-wrap: nowrap;
+            min-width: max-content;
+            align-items: flex-start;
+        }
+
+        .rec-card {
+            flex: 0 0 140px;
+            min-width: 140px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+            transition: 0.2s;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .rec-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(99, 102, 241, 0.3);
+            box-shadow: 0 8px 24px -10px rgba(0, 0, 0, 0.4);
+        }
+
+        .rec-card .rec-poster {
+            width: 100%;
+            aspect-ratio: 2 / 3;
+            background: #1a1f2b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .rec-card .rec-poster img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .rec-card .rec-info {
+            padding: 0.4rem 0.6rem;
+        }
+
+        .rec-card .rec-info .rec-title {
+            font-weight: 500;
+            font-size: 0.75rem;
+            color: #f1f5f9;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .rec-card .rec-info .rec-year {
+            font-size: 0.65rem;
+            color: #64748b;
+            margin-top: 0.1rem;
+        }
+
+        .recommendations-empty {
+            width: 100%;
+            min-height: 150px;
+            padding: 1.5rem;
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.02);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            text-align: center;
+        }
+
+        .recommendations-empty svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .recommendations-empty .empty-title {
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            color: #cbd5e1;
+        }
+
+        .recommendations-empty .empty-description {
+            margin-top: 0.25rem;
+            font-size: 0.7rem;
+        }
+
+        .delete-account-modal-text {
+            color: #cbd5e1;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 1.25rem;
+        }
+
+        .delete-account-modal-text .danger-text {
+            color: #f43f5e;
+            font-weight: 600;
+        }
+
+        @media (max-width: 1200px) {
+            .profile-right {
+                padding-left: 1.5rem;
+                padding-right: 1.5rem;
+            }
+
+            .fav-card {
+                flex: 0 0 240px;
+                width: 240px;
+                max-width: 240px;
+            }
+
+            .profile-right-header .greeting-line-1 {
+                font-size: 1.7rem;
+            }
+
+            .profile-right-header .greeting-line-2 {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            body {
+                height: auto;
+                overflow-y: auto;
+            }
+
+            .profile-wrapper {
+                overflow: visible;
+            }
+
+            .profile-grid {
+                grid-template-columns: 1fr;
+                height: auto;
+                overflow: visible;
+            }
+
+            .profile-grid.sidebar-collapsed {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-card {
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+                padding: 1rem;
+                height: auto;
+                max-height: 260px;
+                overflow-y: auto;
+            }
+
+            .profile-grid.sidebar-collapsed .profile-card {
+                width: 100%;
+                min-width: auto;
+                max-height: 80px;
+                padding: 1rem;
+            }
+
+            .profile-grid.sidebar-collapsed .sidebar-toggle {
+                right: 12px;
+                top: 12px;
+            }
+
+            .profile-grid.sidebar-collapsed .sidebar-content {
+                opacity: 1;
+                pointer-events: auto;
+                max-height: none;
+                flex: 1;
+            }
+
+            .profile-right {
+                padding: 1rem 1rem 2rem;
+                height: auto;
+                overflow: visible;
+            }
+
+            .favorites-grid {
+                gap: 1rem;
+            }
+
+            .fav-card {
+                flex: 0 0 200px;
+                width: 200px;
+                max-width: 200px;
+            }
+
+            .rec-card {
+                flex-basis: 120px;
+                min-width: 120px;
+            }
+
+            .profile-right-header .greeting-line-1 {
+                font-size: 1.5rem;
+            }
+
+            .profile-right-header .greeting-line-2 {
+                font-size: 1.75rem;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .profile-right {
+                padding: 0.8rem 0.75rem 1.5rem;
+            }
+
+            .profile-right-header {
+                margin-bottom: 0.8rem;
+            }
+
+            .profile-right-header .greeting-line-1 {
+                font-size: 1.15rem;
+            }
+
+            .profile-right-header .greeting-line-2 {
+                font-size: 1.4rem;
+            }
+
+            .favorites-section .section-label,
+            .recommendations-section .section-label {
+                font-size: 0.95rem;
+            }
+
+            .favorites-grid {
+                gap: 0.75rem;
+                flex-wrap: wrap;
+            }
+
+            .fav-card {
+                flex: 0 0 calc((100% - 0.75rem) / 2);
+                width: calc((100% - 0.75rem) / 2);
+                max-width: none;
+            }
+
+            .fav-card .fav-info {
+                padding: 0.55rem 0.6rem 0.65rem;
+                min-height: 60px;
+            }
+
+            .fav-card .fav-info .fav-title {
+                font-size: 0.8rem;
+            }
+
+            .fav-card .fav-info .fav-meta {
+                font-size: 0.64rem;
+            }
+
+            .fav-card .fav-info .fav-meta .fav-score svg {
+                width: 11px;
+                height: 11px;
+            }
+
+            .recommendations-section {
+                padding-bottom: 0;
+            }
+
+            .recommendations-section .section-label {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 0.25rem;
+            }
+
+            .recommendations-section .section-label .scroll-hint {
+                font-size: 0.62rem;
+            }
+
+            .rec-card {
+                flex-basis: 100px;
+                min-width: 100px;
+            }
+        }
     </style>
 </head>
+
 <body>
 
-<th:block th:replace="~{fragments/header :: header}"></th:block>
+<div class="header-wrapper">
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+</div>
+
 <th:block th:replace="~{fragments/flash-messages :: flashMessages}"></th:block>
 
-<main class="profile-wrapper">
-    <div class="profile-header"><h1>Личный кабинет</h1></div>
+<div id="authStatus"
+     th:data-authenticated="${session.sessionUser != null}"
+     style="display:none;"></div>
 
-    <div th:if="${response}" class="profile-grid">
-        <div class="profile-card">
-            <div class="profile-avatar">
-                <div class="profile-avatar-letter"
-                     th:text="${#strings.substring(response.userForOwner.username, 0, 1)}"
-                     style="width:120px; height:120px; border-radius:50%; background:linear-gradient(135deg, #4f46e5, #7c3aed); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:3.5rem; color:white; line-height:0; text-align:center; border:3px solid var(--glow-primary); box-shadow:0 4px 20px rgba(79,70,229,0.4); transition:0.2s; user-select:none; padding:0; margin:0; vertical-align:middle; text-indent:0; transform:translateY(0);">
-                    u
-                </div>
-            </div>
-            <div class="profile-name">
-                <span id="usernameDisplay" class="js-current-username"
-                      th:text="${response.userForOwner.username}">username</span>
-                <span class="edit-icon" onclick="openModal('usernameModal')">✏️</span>
-            </div>
-            <div class="profile-details">
-                <div class="profile-detail-item">
-                    <span class="detail-label">Email</span>
-                    <span id="emailDisplay" class="detail-value"
-                          th:text="${response.userForOwner.email}">email@example.com</span>
-                    <div class="detail-actions">
-                        <span class="detail-edit" onclick="openModal('emailModal')">✏️</span>
-                    </div>
-                </div>
-                <div class="profile-detail-item" id="phoneRow">
-                    <span class="detail-label">Телефон</span>
-                    <input type="hidden" id="initialPhone" th:value="${response.userForOwner.phone}"/>
-                    <span id="phoneDisplay" class="detail-value"></span>
-                    <span id="phoneDisplayEmpty" class="detail-value"
-                          onclick="openModal('phoneModal')">➕ Добавить номер</span>
-                    <div class="detail-actions">
-                        <span class="detail-edit" onclick="openModal('phoneModal')">✏️</span>
-                        <span id="deletePhoneBtn" class="delete-phone-btn" style="display: none;"
-                              onclick="openDeletePhoneModal()">🗑️</span>
-                    </div>
-                </div>
-                <div class="profile-detail-item">
-                    <span class="detail-label">Баланс</span>
-                    <span class="detail-value"
-                          th:text="${response.userForOwner.balance} + ' ' + (${response.userForOwner.currencyCode} ?: '')">0</span>
-                </div>
-            </div>
-            <button class="delete-account-btn" onclick="openDeleteAccountModal()">🗑️ Удалить аккаунт</button>
-        </div>
+<div id="userIdHolder"
+     th:data-user-id="${response.userForOwner.id}"
+     style="display:none;"></div>
+
+<main class="profile-wrapper">
+    <div th:if="${response}"
+         class="profile-grid"
+         id="profileGrid">
+
+        <th:block
+                th:replace="~{fragments/sidebar :: sidebar(currentPage='personal-account', genres=${response.genres}, userForOwner=${response.userForOwner})}">
+        </th:block>
 
         <div class="profile-right">
-            <div class="stats-grid">
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-value"
-                             th:text="${response.purchasesCount}">0
-                        </div>
-                        <div class="stat-label">Покупок</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value"
-                             th:text="${response.ratingsCount}">0
-                        </div>
-                        <div class="stat-label">Оценок</div>
-                    </div>
+
+            <div class="profile-right-header">
+                <div>
+                    <h1 id="mainTitle"
+                        class="greeting"
+                        th:with="u=${response.userForOwner},
+                                 fullName=${u.name != null and u.patronymic != null ? u.name + ' ' + u.patronymic : u.username}">
+                        <span class="greeting-line-1">CinemaService рад приветствовать Вас,</span>
+                        <span class="greeting-line-2" th:text="${fullName} + '!'">Игнат Антонович!</span>
+                    </h1>
                 </div>
             </div>
 
-            <div class="sections-grid">
-                <a th:href="@{/history}" class="section-link">
-                    <span class="section-icon">📜</span>
-                    <span class="section-title">История покупок</span>
-                    <span class="section-desc">Просмотр приобретённых фильмов</span>
-                </a>
-                <a th:href="@{/library}" class="section-link">
-                    <span class="section-icon">📚</span>
-                    <span class="section-title">Библиотека</span>
-                    <span class="section-desc">Все купленные фильмы</span>
-                </a>
-                <a th:href="@{/rated/history}" class="section-link">
-                    <span class="section-icon">⭐</span>
-                    <span class="section-title">Мои оценки</span>
-                    <span class="section-desc">История оценённых фильмов</span>
-                </a>
-                <a th:href="@{/profile/settings}" class="section-link">
-                    <span class="section-icon">⚙️</span>
-                    <span class="section-title">Настройки</span>
-                    <span class="section-desc">Изменить профиль</span>
-                </a>
-                <a th:href="@{/wallet/top-up}" class="section-link">
-                    <span class="section-icon">💰</span>
-                    <span class="section-title">Кошелек</span>
-                    <span class="section-desc">Пополнить баланс</span>
-                </a>
-                <a th:href="@{/profile/settings/change/pwd}" class="section-link">
-                    <span class="section-icon">🔒</span>
-                    <span class="section-title">Сменить пароль</span>
-                    <span class="section-desc">Обновить пароль доступа</span>
-                </a>
+            <div id="mainContent">
+
+                <section class="favorites-section">
+
+                    <div class="section-label" style="justify-content: flex-start;">
+                        <span style="font-size:1.1rem;color:#f1f5f9;display:inline-flex;align-items:baseline;gap:0.35rem;">
+                            <th:block th:replace="~{fragments/icons :: icon-heart}"></th:block>
+                            <span style="font-weight:600;">Мои любимые фильмы:</span>
+                            <span style="font-weight:400;color:#64748b;"
+                                  th:utext="'ТОП-' + ${#lists.size(response.topThreeRatedMovies)}">
+                            </span>
+                        </span>
+                    </div>
+
+                    <div class="favorites-grid"
+                         th:if="${#lists.isEmpty(response.topThreeRatedMovies)}">
+
+                        <div class="favorites-empty-card">
+                            <th:block th:replace="~{fragments/icons :: icon-film}"></th:block>
+
+                            <div class="empty-title">
+                                Вы пока не оценили ни одного фильма
+                            </div>
+
+                            <div class="empty-link">
+                                <a th:href="@{/movies}">
+                                    Перейти в каталог
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="favorites-grid"
+                         th:unless="${#lists.isEmpty(response.topThreeRatedMovies)}">
+
+                        <div class="fav-card"
+                             th:each="ratedMovie, iterStat : ${response.topThreeRatedMovies}">
+
+                            <div class="fav-poster"
+                                 style="background:#0d1322;">
+
+                                <a th:href="@{/movies/{id}(id=${ratedMovie.id.id})}"
+                                   style="display:block;width:100%;height:100%;position:relative;text-decoration:none;">
+
+                                    <img th:if="${ratedMovie.media.posterUrl != null and !ratedMovie.media.posterUrl.isEmpty()}"
+                                         th:src="${ratedMovie.media.posterUrl}"
+                                         th:alt="${ratedMovie.title.title}"
+                                         src=""
+                                         alt="">
+
+                                    <div th:unless="${ratedMovie.media.posterUrl != null and !ratedMovie.media.posterUrl.isEmpty()}"
+                                         style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:.75rem;background:#1a1f2b;">
+                                        Нет постера
+                                    </div>
+
+                                    <span class="fav-rank">
+                                        #<span th:text="${iterStat.index + 1}">1</span>
+                                    </span>
+                                </a>
+                            </div>
+
+                            <div class="fav-info">
+
+                                <div class="fav-title"
+                                     th:text="${ratedMovie.title.title} ?: 'Без названия'">
+                                </div>
+
+                                <div class="fav-meta">
+                                    <span th:text="${ratedMovie.release.releaseDate} ?: ''">
+                                        Год
+                                    </span>
+
+                                    <span class="fav-score">
+                                        <th:block th:replace="~{fragments/icons :: icon-star}"></th:block>
+                                        <span th:text="${ratedMovie.ratingValue}">
+                                            0
+                                        </span>
+                                        /10
+                                    </span>
+                                </div>
+
+                                <div style="font-size:.6rem;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:.1rem;"
+                                     th:text="${ratedMovie.review} ?: 'Без отзыва'">
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="recommendations-section"
+                         id="recommendationsSection"
+                         th:if="${!response.recommendedMovies.isEmpty()}">
+
+                    <div class="section-label">
+
+                        <span>
+                            Вам могло бы понравиться
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                 stroke="currentColor" class="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M19.5 13.5 12 21m0 0-7.5-7.5M12 21V3"/>
+                            </svg>
+                        </span>
+
+                    </div>
+
+                    <div class="rec-scroll-wrapper"
+                         id="recScrollWrapper">
+
+                        <div class="rec-grid"
+                             id="recGrid">
+
+                            <div class="rec-card"
+                                 th:each="movie : ${response.recommendedMovies}"
+                                 th:data-movie-id="${movie.id.id}">
+
+                                <a th:href="@{/movies/{id}(id=${movie.id.id})}"
+                                   style="display:block;text-decoration:none;color:inherit;">
+
+                                    <div class="rec-poster"
+                                         style="background:#0d1322;">
+
+                                        <img th:if="${movie.media.posterUrl != null and !movie.media.posterUrl.isEmpty()}"
+                                             th:src="${movie.media.posterUrl}"
+                                             th:alt="${movie.title.title}"
+                                             src=""
+                                             alt="">
+
+                                        <div th:unless="${movie.media.posterUrl != null and !movie.media.posterUrl.isEmpty()}"
+                                             style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:.6rem;background:#1a1f2b;">
+                                            Нет постера
+                                        </div>
+
+                                    </div>
+
+                                    <div class="rec-info">
+                                        <div class="rec-title"
+                                             th:text="${movie.title.title}">
+                                        </div>
+
+                                        <div class="rec-year"
+                                             th:text="${movie.release.releaseYear} ?: ''">
+                                        </div>
+                                    </div>
+
+                                </a>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </section>
             </div>
         </div>
     </div>
@@ -175,306 +1123,520 @@
             <h3>Удаление аккаунта</h3>
             <button class="modal-x" type="button" onclick="closeDeleteAccountModal()">✕</button>
         </div>
-        <p>Вы уверены? Это действие необратимо.</p>
+        <p class="delete-account-modal-text">
+            Вы уверены, что хотите удалить аккаунт?<br>
+            <span class="danger-text">Это действие необратимо.</span><br>
+            Все покупки, оценки, избранное и история просмотров будут утеряны.
+        </p>
         <div class="modal-buttons">
-            <button type="button" class="modal-cancel-btn" onclick="closeDeleteAccountModal()">Отмена</button>
-            <form th:action="@{/profile/delete}" method="post" style="display:inline;">
-                <button type="submit" class="modal-delete">Удалить</button>
-            </form>
+            <button class="modal-cancel-btn" type="button" onclick="closeDeleteAccountModal()">
+                Отмена
+            </button>
+            <button class="modal-delete" type="button" onclick="confirmDeleteAccount()">
+                Удалить аккаунт
+            </button>
         </div>
-    </div>
-</div>
-
-<div id="deletePhoneModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Удаление номера телефона</h3>
-            <button class="modal-x" type="button" onclick="closeDeletePhoneModal()">✕</button>
-        </div>
-        <p>Вы уверены, что хотите удалить номер телефона?</p>
-        <div class="modal-buttons">
-            <button type="button" class="modal-cancel-btn" onclick="closeDeletePhoneModal()">Отмена</button>
-            <button type="button" id="confirmDeletePhoneBtn" class="modal-delete">Удалить</button>
-        </div>
-    </div>
-</div>
-
-<div id="usernameModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Изменить логин</h3>
-            <button class="modal-x" type="button" onclick="closeModal('usernameModal')">✕</button>
-        </div>
-        <form id="usernameForm">
-            <label for="newUsername"></label><input type="text" name="username" id="newUsername"
-                                                    placeholder="Новый никнейм (6-20 символов)" required>
-            <div id="usernameError" class="error-msg"></div>
-            <div class="modal-buttons">
-                <button type="button" class="modal-cancel-btn" onclick="closeModal('usernameModal')">Отмена</button>
-                <button type="submit" class="modal-save">Сохранить</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div id="emailModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Изменить Email</h3>
-            <button class="modal-x" type="button" onclick="closeModal('emailModal')">✕</button>
-        </div>
-        <form id="emailForm">
-            <label for="newEmail"></label><input type="email" name="email" id="newEmail" placeholder="Новый email"
-                                                 required>
-            <div id="emailError" class="error-msg"></div>
-            <div class="modal-buttons">
-                <button type="button" class="modal-cancel-btn" onclick="closeModal('emailModal')">Отмена</button>
-                <button type="submit" class="modal-save">Сохранить</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div id="phoneModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Изменить телефон</h3>
-            <button class="modal-x" type="button" onclick="closeModal('phoneModal')">✕</button>
-        </div>
-        <form id="phoneForm">
-            <label for="newPhone"></label><input type="tel" name="phone" id="newPhone" placeholder="+7 (999) 123-45-67">
-            <div id="phoneError" class="error-msg"></div>
-            <div class="modal-buttons">
-                <button type="button" class="modal-cancel-btn" onclick="closeModal('phoneModal')">Отмена</button>
-                <button type="submit" class="modal-save">Сохранить</button>
-            </div>
-        </form>
     </div>
 </div>
 
 <script th:src="@{/js/main.js}" defer></script>
+
 <script>
-    function formatPhone(input) {
-        let raw = input.value.replace(/\D/g, '');
-        let digits = raw;
-        if (digits.startsWith('7') || digits.startsWith('8')) {
-            digits = '7' + digits.substring(1);
-        } else if (digits.length > 0 && !digits.startsWith('7')) {
-            digits = '7' + digits;
-        }
-        if (digits.length > 11) digits = digits.substring(0, 11);
-        let formatted = '';
-        if (digits.length > 0) formatted = '+7';
-        if (digits.length > 1) formatted += ' (' + digits.substring(1, 4);
-        if (digits.length > 4) formatted += ') ' + digits.substring(4, 7);
-        if (digits.length > 7) formatted += '-' + digits.substring(7, 9);
-        if (digits.length > 9) formatted += '-' + digits.substring(9, 11);
-        input.value = formatted;
-    }
-
-    function initPhoneDisplay() {
-        const initialPhone = document.getElementById('initialPhone').value;
-        updatePhoneUI(initialPhone);
-    }
-
-    function updatePhoneUI(phoneNumber) {
-        const phoneSpan = document.getElementById('phoneDisplay');
-        const emptySpan = document.getElementById('phoneDisplayEmpty');
-        const deleteBtn = document.getElementById('deletePhoneBtn');
-        const initialPhoneInput = document.getElementById('initialPhone');
-        const hasPhone = phoneNumber && phoneNumber.trim() !== '';
-        if (hasPhone) {
-            phoneSpan.textContent = phoneNumber;
-            phoneSpan.style.display = 'inline';
-            emptySpan.style.display = 'none';
-            deleteBtn.style.display = 'inline-block';
-            if (initialPhoneInput) initialPhoneInput.value = phoneNumber;
-        } else {
-            phoneSpan.textContent = '';
-            phoneSpan.style.display = 'none';
-            emptySpan.style.display = 'inline';
-            deleteBtn.style.display = 'none';
-            if (initialPhoneInput) initialPhoneInput.value = '';
-        }
-    }
-
-    function updateUsernameUI(newUsername) {
-        if (!newUsername) return;
-        document.querySelectorAll('.js-current-username, .user-menu-name, #usernameDisplay').forEach(el => {
-            el.textContent = newUsername;
-        });
-        const firstLetter = newUsername.charAt(0);
-        document.querySelectorAll('.profile-avatar-letter, .avatar, .user-avatar-letter').forEach(avatar => {
-            avatar.textContent = firstLetter;
-        });
-    }
-
-    function openModal(id) {
-        const modal = document.getElementById(id);
+    window.openDeleteAccountModal = function () {
+        const modal = document.getElementById('deleteAccountModal');
         if (modal) modal.classList.add('show');
-    }
-
-    function closeModal(id) {
-        const modal = document.getElementById(id);
-        if (modal) {
-            modal.classList.remove('show');
-            const errorDiv = modal.querySelector('.error-msg');
-            if (errorDiv) {
-                errorDiv.innerText = '';
-                errorDiv.style.display = 'none';
-            }
-        }
-    }
-
-    window.onclick = function(event) {
-        if (event.target.classList.contains('modal')) event.target.classList.remove('show');
     };
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') document.querySelectorAll('.modal.show').forEach(m => m.classList.remove('show'));
+
+    window.closeDeleteAccountModal = function () {
+        const modal = document.getElementById('deleteAccountModal');
+        if (modal) modal.classList.remove('show');
+    };
+
+    window.confirmDeleteAccount = function () {
+        const modal = document.getElementById('deleteAccountModal');
+        if (modal) modal.classList.remove('show');
+
+        const form = document.getElementById('deleteAccountForm');
+        if (form) {
+            form.submit();
+            return;
+        }
+
+        const f = document.createElement('form');
+        f.method = 'POST';
+        f.action = '/profile/delete';
+        document.body.appendChild(f);
+        f.submit();
+    };
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            window.closeDeleteAccountModal();
+        }
     });
 
-    function openDeletePhoneModal() { openModal('deletePhoneModal'); }
-    function closeDeletePhoneModal() { closeModal('deletePhoneModal'); }
-    function openDeleteAccountModal() { openModal('deleteAccountModal'); }
-    function closeDeleteAccountModal() { closeModal('deleteAccountModal'); }
+    (function () {
+        'use strict';
 
-    function deletePhone() {
-        const btn = document.getElementById('confirmDeletePhoneBtn');
-        if (btn) btn.disabled = true;
-        fetch('/profile/settings/delete/phone', {
-            method: 'GET',
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(res => res.json())
-        .then(result => {
-            if (typeof showFlashMessage === 'function') {
-                showFlashMessage(result.message || 'Номер телефона удалён', 'success');
-            }
-            updatePhoneUI('');
-            closeDeletePhoneModal();
-        })
-        .catch(() => {
-            if (typeof showFlashMessage === 'function') {
-                showFlashMessage('Ошибка при удалении телефона', 'error');
-            }
-        })
-        .finally(() => {
-            if (btn) btn.disabled = false;
-        });
-    }
-    document.getElementById('confirmDeletePhoneBtn')?.addEventListener('click', deletePhone);
+        const wrapper = document.getElementById('recScrollWrapper');
+        const grid = document.getElementById('recGrid');
+        const section = document.getElementById('recommendationsSection');
+        const userIdHolder = document.getElementById('userIdHolder');
 
-    var usernameRegex = /^[a-zA-Zа-яА-Я0-9_\- ]{6,20}$/;
-    var phoneRegex = /^$|^\+\d{1,3}\s?\(?\d{1,3}\)?\s?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}$/;
+        if (!userIdHolder) return;
 
-    function validateUsername() {
-        var input = document.getElementById('newUsername');
-        var error = document.getElementById('usernameError');
-        if (!usernameRegex.test(input.value.trim())) {
-            error.textContent = 'Логин: 6-20 символов (латиница, цифры, _)';
-            error.style.display = 'block';
-            return false;
+        const userId = Number(userIdHolder.dataset.userId);
+
+        let currentPage = 0;
+        let isLoading = false;
+        let hasMore = true;
+
+        const loadedIds = new Set();
+        const excludedRecommendationIds = new Set();
+
+        if (grid) {
+            grid.querySelectorAll('.rec-card').forEach(card => {
+                const id = card.dataset.movieId;
+                if (id) {
+                    loadedIds.add(String(id));
+                }
+            });
         }
-        error.style.display = 'none';
-        return true;
-    }
 
-    function validatePhone() {
-        var input = document.getElementById('newPhone');
-        var error = document.getElementById('phoneError');
-        if (input.value.trim() !== "" && !phoneRegex.test(input.value.trim())) {
-            error.textContent = 'Формат: +7 (999) 123-45-67';
-            error.style.display = 'block';
-            return false;
+        function updateSectionVisibility() {
+            if (!section || !grid) return;
+
+            const cards = grid.querySelectorAll('.rec-card');
+            const hasCards = cards.length > 0;
+
+            section.style.display = hasCards ? '' : 'none';
         }
-        error.style.display = 'none';
-        return true;
-    }
 
-    function buildPayload(changedField, newValue) {
-        return {
-            username: changedField === 'username' ? newValue : document.getElementById('usernameDisplay').textContent.trim(),
-            email: changedField === 'email' ? newValue : document.getElementById('emailDisplay').textContent.trim(),
-            phone: changedField === 'phone' ? newValue : document.getElementById('initialPhone').value.trim()
+        function updateRecommendationsEmptyState() {
+            if (!grid) return;
+
+            const cards = grid.querySelectorAll('.rec-card');
+            let empty = grid.querySelector('.recommendations-empty');
+
+            if (cards.length === 0) {
+                if (!empty) {
+                    empty = document.createElement('div');
+                    empty.className = 'recommendations-empty';
+
+                    empty.innerHTML = `
+                        <div class="empty-title">
+                            Нет рекомендаций
+                        </div>
+                        <div class="empty-description">
+                            Вы уже оценили или купили все фильмы
+                        </div>
+                    `;
+
+                    grid.appendChild(empty);
+                }
+            } else {
+                if (empty) {
+                    empty.remove();
+                }
+            }
+
+            updateSectionVisibility();
+        }
+
+        function createCard(movie) {
+            const id = movie?.id;
+
+            if (!id) return null;
+
+            const idStr = String(id);
+
+            if (excludedRecommendationIds.has(idStr)) {
+                return null;
+            }
+
+            if (loadedIds.has(idStr)) {
+                return null;
+            }
+
+            const card = document.createElement('div');
+            card.className = 'rec-card';
+            card.dataset.movieId = idStr;
+
+            const title = movie.title || 'Без названия';
+            const year = movie.release_year || '';
+            const poster = movie.poster_url || '';
+
+            const posterHtml = poster
+                ? `<img src="${poster.replace(/"/g, '&quot;')}" alt="">`
+                : `
+                    <div style="
+                        width:100%;
+                        height:100%;
+                        display:flex;
+                        align-items:center;
+                        justify-content:center;
+                        color:#64748b;
+                        font-size:.6rem;
+                        background:#1a1f2b;
+                    ">
+                        Нет постера
+                    </div>
+                `;
+
+            card.innerHTML = `
+                <a href="/movies/${id}"
+                   style="display:block;text-decoration:none;color:inherit;">
+
+                    <div class="rec-poster" style="background:#0d1322;">
+                        ${posterHtml}
+                    </div>
+
+                    <div class="rec-info">
+                        <div class="rec-title">
+                            ${title}
+                        </div>
+
+                        <div class="rec-year">
+                            ${year}
+                        </div>
+                    </div>
+
+                </a>
+            `;
+
+            return card;
+        }
+
+        window.removeRecommendationOptimistic = function (movieId) {
+            if (!movieId) {
+                return function () {};
+            }
+
+            const id = String(movieId);
+
+            excludedRecommendationIds.add(id);
+            loadedIds.add(id);
+
+            if (!grid) {
+                return function () {};
+            }
+
+            const cards = Array.from(
+                grid.querySelectorAll('.rec-card[data-movie-id]')
+            ).filter(card => {
+                return String(card.dataset.movieId) === id;
+            });
+
+            if (cards.length === 0) {
+                updateRecommendationsEmptyState();
+
+                return function rollback() {
+                    excludedRecommendationIds.delete(id);
+                    loadedIds.delete(id);
+                };
+            }
+
+            const snapshots = cards.map(card => ({
+                html: card.outerHTML,
+                parent: card.parentNode,
+                nextSibling: card.nextSibling
+            }));
+
+            cards.forEach(card => {
+                card.style.transition =
+                    'opacity .2s ease, transform .2s ease';
+
+                card.style.opacity = '0';
+                card.style.transform = 'scale(.92)';
+            });
+
+            setTimeout(function () {
+                cards.forEach(card => card.remove());
+
+                updateRecommendationsEmptyState();
+
+                checkAndLoadMoreRecommendations();
+            }, 200);
+
+            let rolledBack = false;
+
+            return function rollback() {
+                if (rolledBack) return;
+
+                rolledBack = true;
+
+                excludedRecommendationIds.delete(id);
+                loadedIds.delete(id);
+
+                snapshots.forEach(snapshot => {
+                    const parser = document.createElement('div');
+                    parser.innerHTML = snapshot.html;
+
+                    const restoredCard = parser.firstElementChild;
+
+                    if (!restoredCard || !snapshot.parent) {
+                        return;
+                    }
+
+                    restoredCard.style.opacity = '0';
+                    restoredCard.style.transform = 'scale(.92)';
+                    restoredCard.style.transition = 'none';
+
+                    if (
+                        snapshot.nextSibling &&
+                        snapshot.nextSibling.parentNode === snapshot.parent
+                    ) {
+                        snapshot.parent.insertBefore(
+                            restoredCard,
+                            snapshot.nextSibling
+                        );
+                    } else {
+                        snapshot.parent.appendChild(restoredCard);
+                    }
+
+                    requestAnimationFrame(function () {
+                        requestAnimationFrame(function () {
+                            restoredCard.style.transition =
+                                'opacity .2s ease, transform .2s ease';
+
+                            restoredCard.style.opacity = '1';
+                            restoredCard.style.transform = 'scale(1)';
+                        });
+                    });
+                });
+
+                updateRecommendationsEmptyState();
+            };
         };
-    }
 
-    function setupForm(formId, fieldName, validator, successCallback) {
-        var form = document.getElementById(formId);
-        if (!form) return;
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
+        window.__realRemoveRecommendationOptimistic =
+            window.removeRecommendationOptimistic;
 
-            if (validator && !validator()) return;
+        async function loadNextPage() {
+            if (isLoading || !hasMore || !grid) return;
 
-            var val = form.querySelector('input').value.trim();
-            var submitBtn = form.querySelector('button[type="submit"]');
-            if (submitBtn) submitBtn.disabled = true;
+            isLoading = true;
 
-            var errorContainer = form.querySelector('.error-msg');
-            if (errorContainer) {
-                errorContainer.textContent = '';
-                errorContainer.style.display = 'none';
-            }
-            var inputField = form.querySelector('input');
-            if (inputField) inputField.classList.remove('has-error');
+            const nextPage = currentPage + 1;
 
             try {
-                var res = await fetch('/profile/settings/change-ajax', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                    body: JSON.stringify(buildPayload(fieldName, val))
-                });
-                var result = await res.json();
-
-                if (res.ok) {
-                    if (typeof showFlashMessage === 'function') {
-                        showFlashMessage(result.message || 'Изменения сохранены', 'success');
-                    }
-                    const dataObj = result.data || {};
-                    const updatedValue = dataObj[fieldName === 'username' ? 'newUsername' : fieldName === 'email' ? 'newEmail' : 'newPhone'] || val;
-                    if (successCallback) successCallback(updatedValue);
-                    closeModal(formId.replace('Form', 'Modal'));
-                    form.reset();
-                } else {
-                    let errorMsg = result.message;
-                    if (result.errors && Array.isArray(result.errors)) {
-                        const fieldErr = result.errors.find(e => e.field === fieldName);
-                        if (fieldErr) errorMsg = fieldErr.defaultMessage;
-                    }
-                    if (errorMsg && errorContainer) {
-                        errorContainer.textContent = errorMsg;
-                        errorContainer.style.display = 'block';
-                        if (inputField) inputField.classList.add('has-error');
-                    } else {
-                        if (typeof showFlashMessage === 'function') {
-                            showFlashMessage(errorMsg || 'Ошибка сохранения', 'error');
+                const response = await fetch(
+                    `/recommendations?userId=${userId}&page=${nextPage}`,
+                    {
+                        headers: {
+                            'Accept': 'application/json'
                         }
                     }
+                );
+
+                if (!response.ok) {
+                    throw new Error('HTTP ' + response.status);
                 }
-            } catch (error) {
-                if (typeof showFlashMessage === 'function') {
-                    showFlashMessage('Ошибка сети', 'error');
+
+                const slice = await response.json();
+
+                const movies = Array.isArray(slice.content)
+                    ? slice.content
+                    : [];
+
+                currentPage = nextPage;
+
+                hasMore =
+                    slice.hasNext === true ||
+                    (
+                        slice.hasNext === undefined &&
+                        slice.last === false
+                    );
+
+                for (const movie of movies) {
+                    const id = movie?.id;
+
+                    if (!id) continue;
+
+                    const idStr = String(id);
+
+                    if (excludedRecommendationIds.has(idStr)) {
+                        continue;
+                    }
+
+                    if (loadedIds.has(idStr)) {
+                        continue;
+                    }
+
+                    const card = createCard(movie);
+
+                    if (!card) continue;
+
+                    loadedIds.add(idStr);
+
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(6px)';
+                    card.style.transition =
+                        'opacity .2s ease, transform .2s ease';
+
+                    grid.appendChild(card);
+
+                    requestAnimationFrame(function () {
+                        requestAnimationFrame(function () {
+                            card.style.opacity = '1';
+                            card.style.transform = 'translateY(0)';
+                        });
+                    });
                 }
+
+                updateRecommendationsEmptyState();
+
+            } catch (err) {
+                console.error(
+                    'Ошибка загрузки рекомендаций:',
+                    err
+                );
             } finally {
-                if (submitBtn) submitBtn.disabled = false;
+                isLoading = false;
             }
-        });
-    }
-
-    setupForm('usernameForm', 'username', validateUsername, function(newUsername) { updateUsernameUI(newUsername); });
-    setupForm('emailForm', 'email', null, function(newEmail) { document.getElementById('emailDisplay').textContent = newEmail; });
-    setupForm('phoneForm', 'phone', validatePhone, function(newPhone) { updatePhoneUI(newPhone); });
-
-    document.addEventListener('DOMContentLoaded', function() {
-        initPhoneDisplay();
-        var phoneInput = document.getElementById('newPhone');
-        if (phoneInput) {
-            phoneInput.addEventListener('input', function() { formatPhone(this); });
         }
-    });
+
+        function checkAndLoadMoreRecommendations() {
+            if (isLoading || !hasMore || !grid || !wrapper) {
+                updateRecommendationsEmptyState();
+                return;
+            }
+
+            const cards = grid.querySelectorAll('.rec-card');
+
+            if (cards.length === 0) {
+                loadNextPage();
+                return;
+            }
+
+            const remaining =
+                wrapper.scrollWidth -
+                wrapper.scrollLeft -
+                wrapper.clientWidth;
+
+            if (remaining < 200) {
+                loadNextPage();
+            }
+        }
+
+        window.refreshRecommendationsAfterMutation = function () {
+            updateRecommendationsEmptyState();
+            checkAndLoadMoreRecommendations();
+        };
+
+        function checkEdge() {
+            if (!wrapper) return;
+
+            const remaining =
+                wrapper.scrollWidth -
+                wrapper.scrollLeft -
+                wrapper.clientWidth;
+
+            if (remaining < 200) {
+                loadNextPage();
+            }
+        }
+
+        async function reloadRecommendations() {
+            if (isLoading || !grid) return;
+
+            isLoading = true;
+
+            try {
+                const response = await fetch(
+                    `/recommendations?userId=${encodeURIComponent(userId)}&page=1`,
+                    {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        cache: 'no-store'
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error('HTTP ' + response.status);
+                }
+
+                const slice = await response.json();
+                const movies = Array.isArray(slice.content)
+                    ? slice.content
+                    : [];
+
+                currentPage = 1;
+                hasMore =
+                    slice.hasNext === true ||
+                    (slice.hasNext === undefined && slice.last === false);
+
+                loadedIds.clear();
+                grid.innerHTML = '';
+
+                for (const movie of movies) {
+                    const id = movie?.id;
+                    if (!id) continue;
+
+                    const idStr = String(id);
+
+                    if (excludedRecommendationIds.has(idStr)) {
+                        continue;
+                    }
+
+                    if (loadedIds.has(idStr)) {
+                        continue;
+                    }
+
+                    const card = createCard(movie);
+                    if (!card) continue;
+
+                    loadedIds.add(idStr);
+                    grid.appendChild(card);
+                }
+
+                updateRecommendationsEmptyState();
+
+            } catch (error) {
+                console.error('Ошибка обновления рекомендаций:', error);
+            } finally {
+                isLoading = false;
+            }
+        }
+
+        window.reloadRecommendations = reloadRecommendations;
+
+        if (wrapper) {
+            wrapper.addEventListener(
+                'scroll',
+                checkEdge,
+                { passive: true }
+            );
+
+            wrapper.addEventListener(
+                'wheel',
+                function (e) {
+                    if (
+                        Math.abs(e.deltaX) >=
+                        Math.abs(e.deltaY)
+                    ) {
+                        return;
+                    }
+
+                    if (wrapper.scrollWidth <= wrapper.clientWidth) {
+                        return;
+                    }
+
+                    e.preventDefault();
+
+                    wrapper.scrollLeft += e.deltaY;
+                },
+                { passive: false }
+            );
+        }
+
+        updateRecommendationsEmptyState();
+    })();
 </script>
 
 <th:block th:replace="~{fragments/footer :: footer}"></th:block>
+
 </body>
 </html>

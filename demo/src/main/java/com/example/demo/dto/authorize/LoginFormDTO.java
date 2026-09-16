@@ -8,6 +8,10 @@ import lombok.Builder;
 @Builder
 public record LoginFormDTO(
         @NotNull Identifier identifier,
-        @NotBlank String identifierValue,
-        @NotBlank @Size(min = 8) String rawPassword) {
+        @NotBlank(message = "Введите username, email или телефон")
+        String identifierValue,
+        @NotBlank(message = "Введите пароль")
+        @Size(min = 8, message = "Пароль минимум 8 символов")
+        String rawPassword
+) {
 }

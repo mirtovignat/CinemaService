@@ -14,10 +14,18 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
+    @Query("""
+            SELECT user.saveHistory
+            FROM User user
+            WHERE user.id = :userId
+            AND user.deletableState.deleted = false
+            """)
+    boolean findSaveHistoryById(@Param("userId") Long userId);
+
     @Modifying
     @Query("""
             UPDATE User user
-            SET user.deleted = true,
+            SET user.deletableState.deleted = true,
                 user.username = CONCAT('deleted_', user.id, '_', :suffix),
                 user.email = CONCAT('deleted_', user.id, '_', :suffix, '_', COALESCE(user.email, 'null')),
                 user.phone = CONCAT('deleted_', user.id, '_', :suffix, '_', COALESCE(user.phone, 'null'))
@@ -34,7 +42,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
             SELECT user
             FROM User user
             WHERE user.username = :username
-            AND user.deleted = false
+            AND user.deletableState.deleted = false
             """)
     Optional<User> findByUsername(@Param("username") String username);
 
@@ -42,7 +50,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
             SELECT user
             FROM User user
             WHERE user.email = :email
-            AND user.deleted = false
+            AND user.deletableState.deleted = false
             """)
     Optional<User> findByEmail(@Param("email") String email);
 
@@ -50,7 +58,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
             SELECT user
             FROM User user
             WHERE user.phone = :phone
-            AND user.deleted = false
+            AND user.deletableState.deleted = false
             """)
     Optional<User> findByPhone(@Param("phone") String phone);
 
@@ -58,7 +66,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
             SELECT COUNT(user) > 0
             FROM User user
             WHERE user.email = :email
-            AND user.deleted = false
+            AND user.deletableState.deleted = false
             """)
     boolean existsByEmail(@Param("email") String email);
 
@@ -66,7 +74,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
             SELECT COUNT(user) > 0
             FROM User user
             WHERE user.phone = :phone
-            AND user.deleted = false
+            AND user.deletableState.deleted = false
             """)
     boolean existsByPhone(@Param("phone") String phone);
 
@@ -74,21 +82,43 @@ public interface UserRepository extends JpaRepository<User, Long> {
             SELECT COUNT(user) > 0
             FROM User user
             WHERE user.username = :username
-            AND user.deleted = false
+            AND user.deletableState.deleted = false
             """)
     boolean existsByUsername(@Param("username") String username);
 
+    @Modifying
     @Query("""
-            SELECT COUNT(purchasedMovie)
-            FROM PurchasedMovie purchasedMovie
-            WHERE purchasedMovie.user.id = :userId
+            UPDATE User user
+            SET user.username = :username
+            WHERE user.id = :userId
+            AND user.deletableState.deleted = false
             """)
-    long countPurchasesByUserId(@Param("userId") Long userId);
+    void updateUsername(@Param("userId") Long userId, @Param("username") String username);
 
+    @Modifying
     @Query("""
-            SELECT COUNT(ratedMovie)
-            FROM RatedMovie ratedMovie
-            WHERE ratedMovie.user.id = :userId
+            UPDATE User user
+            SET user.email = :email
+            WHERE user.id = :userId
+            AND user.deletableState.deleted = false
             """)
-    long countRatingsByUserId(@Param("userId") Long userId);
+    void updateEmail(@Param("userId") Long userId, @Param("email") String email);
+
+    @Modifying
+    @Query("""
+            UPDATE User user
+            SET user.phone = :phone
+            WHERE user.id = :userId
+            AND user.deletableState.deleted = false
+            """)
+    void updatePhone(@Param("userId") Long userId, @Param("phone") String phone);
+
+    @Modifying
+    @Query("""
+            UPDATE User user
+            SET user.phone = NULL
+            WHERE user.id = :userId
+            AND user.deletableState.deleted = false
+            """)
+    void deletePhone(Long userId);
 }

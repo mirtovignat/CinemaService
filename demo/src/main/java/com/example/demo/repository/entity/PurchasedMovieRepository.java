@@ -11,6 +11,7 @@ import java.util.List;
 @Repository
 public interface PurchasedMovieRepository extends AbstractCatalogRepository<PurchasedMovie> {
 
+    @Override
     @Query("""
             SELECT COUNT(purchasedMovie) > 0
             FROM PurchasedMovie purchasedMovie
@@ -25,7 +26,12 @@ public interface PurchasedMovieRepository extends AbstractCatalogRepository<Purc
             FROM PurchasedMovie purchasedMovie
             WHERE purchasedMovie.user.id = :userId
             """)
-    List<Long> findMovieIdsByUserId(@Param("userId")
-                                    Long userId);
+    List<Long> findMovieIdsByUserId(@Param("userId") Long userId);
 
+    @Query("""
+            SELECT COUNT(item)
+            FROM PurchasedMovie item
+            WHERE item.user.id = :userId
+            """)
+    Long countByUserId(@Param("userId") Long userId);
 }

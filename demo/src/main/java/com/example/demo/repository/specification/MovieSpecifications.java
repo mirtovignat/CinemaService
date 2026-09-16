@@ -1,6 +1,7 @@
 package com.example.demo.repository.specification;
 
 import com.example.demo.filter.MovieFilter;
+import com.example.demo.model.Genre;
 import com.example.demo.model.entity.Movie;
 import jakarta.persistence.criteria.Expression;
 import org.springframework.data.jpa.domain.Specification;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Component
@@ -33,7 +35,7 @@ public class MovieSpecifications {
                         movieFilter.durationTo() != null ? lessThanOrEqualTo("duration", Duration.ofMinutes(movieFilter.durationTo())) : null,
                         movieFilter.ratingFrom() != null ? greaterThanOrEqualTo("rating", movieFilter.ratingFrom()) : null,
                         movieFilter.ratingTo() != null ? lessThanOrEqualTo("rating", movieFilter.ratingTo()) : null,
-                        (movieFilter.genres() != null && !movieFilter.genres().isEmpty()) ? isInCollection("genre", movieFilter.genres()) : null,
+                        (movieFilter.genres() != null && !movieFilter.genres().isEmpty()) ? isGenreInCollection(movieFilter.genres()) : null,
                         (movieFilter.directors() != null && !movieFilter.directors().isEmpty()) ? isInCollection("director", movieFilter.directors()) : null
                 )
                 .filter(Objects::nonNull)
@@ -66,5 +68,14 @@ public class MovieSpecifications {
 
     private <Y> Specification<Movie> isInCollection(String fieldName, Collection<Y> collection) {
         return (root, query, criteriaBuilder) -> root.get(fieldName).in(collection);
+    }
+
+    private Specification<Movie> isGenreInCollection(Collection<String> genreDisplayNames) {
+        return (root, query, criteriaBuilder) -> {
+            Collection<Genre> genres = genreDisplayNames.stream()
+                    .map(com.example.demo.model.Genre::fromDisplayName)
+                    .collect(Collectors.toList());
+            return root.get("genre").in(genres);
+        };
     }
 }

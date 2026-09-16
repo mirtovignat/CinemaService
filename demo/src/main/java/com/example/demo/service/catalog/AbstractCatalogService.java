@@ -1,5 +1,7 @@
 package com.example.demo.service.catalog;
 
+import com.example.demo.dto.response.CatalogResponse;
+import com.example.demo.dto.user.UserForOwnerViewDTO;
 import com.example.demo.model.base.AbstractCatalogItem;
 import com.example.demo.repository.base.AbstractCatalogRepository;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,19 +21,22 @@ public abstract class AbstractCatalogService<CatalogItem extends AbstractCatalog
 
     @Transactional(readOnly = true)
     public List<DTO> getCatalog(Long id) {
-        return getById(id, getMapper());
-    }
-
-    @Transactional(readOnly = true)
-    public List<DTO> getById(Long id, Function<CatalogItem, DTO> mapper) {
         return catalogRepository.findAllByUserId(id)
                 .stream()
-                .map(mapper)
+                .map(getMapper())
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public boolean existsByMovieIdAndUserId(Long movieId, Long userId) {
         return catalogRepository.existsByMovieIdAndUserId(movieId, userId);
+    }
+
+    @Transactional(readOnly = true)
+    public CatalogResponse<DTO> buildCatalogResponse(UserForOwnerViewDTO userForOwnerView) {
+        return CatalogResponse.<DTO>builder()
+                .userForOwner(userForOwnerView)
+                .catalog(getCatalog(userForOwnerView.id()))
+                .build();
     }
 }

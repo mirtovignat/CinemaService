@@ -1,13 +1,16 @@
 package com.example.demo.dto.movie;
 
-import com.example.demo.dto.base.Identifiable;
-import com.example.demo.dto.base.Titled;
+import com.example.demo.dto.base.MovieIdentity;
+import com.example.demo.dto.base.MovieMedia;
+import com.example.demo.dto.base.MovieRelease;
+import com.example.demo.dto.base.MovieTitled;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
 public record MovieSearchDTO(
-        Long id,
-        String title,
-        Integer releaseYear,
-        String genre,
+        @JsonUnwrapped MovieIdentity id,
+        @JsonUnwrapped MovieTitled title,
+        @JsonUnwrapped MovieRelease release,
+        @JsonUnwrapped MovieMedia media,
         String director
-) implements Identifiable, Titled {
+) {
 }

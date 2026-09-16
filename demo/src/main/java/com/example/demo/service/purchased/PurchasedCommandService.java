@@ -1,6 +1,6 @@
 package com.example.demo.service.purchased;
 
-import com.example.demo.dto.catalog.CartMovieForOwnerViewDTO;
+import com.example.demo.dto.catalog.CartItemViewDTO;
 import com.example.demo.exception.BusinessException;
 import com.example.demo.exception.ErrorCode;
 import com.example.demo.model.base.AbstractCatalogItem;
@@ -26,7 +26,7 @@ import java.util.Set;
 public class PurchasedCommandService {
 
     private final PurchasedMovieRepository purchasedMovieRepository;
-    protected final AbstractLinkedCollectionService<CartItem, CartMovieForOwnerViewDTO> cartService;
+    protected final AbstractLinkedCollectionService<CartItem, CartItemViewDTO> cartService;
     private final MovieRepository movieRepository;
     private final UserCommandService userCommandService;
     private final UserQueryService userQueryService;
@@ -73,7 +73,7 @@ public class PurchasedCommandService {
         userCommandService.createUser(user);
         List<PurchasedMovie> purchases = moviesToBuy.stream()
                 .map(movie -> {
-                    PurchasedMovie purchased = new PurchasedMovie();
+                    PurchasedMovie purchased = PurchasedMovie.builder().build();
                     purchased.setPriceSnapshot(movie.getPrice());
                     return AbstractCatalogItem.init(purchased, user, movie);
                 })

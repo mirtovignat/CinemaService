@@ -1,7 +1,7 @@
 package com.example.demo.service.linked_collection;
 
 import com.example.demo.dto.badges.BadgeCountsDTO;
-import com.example.demo.dto.catalog.FavouriteMovieForOwnerViewDTO;
+import com.example.demo.dto.catalog.FavouriteMovieViewDTO;
 import com.example.demo.exception.ErrorCode;
 import com.example.demo.mapper.entity.FavouritesMapper;
 import com.example.demo.model.base.AbstractCatalogItem;
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class FavouritesService extends AbstractLinkedCollectionService<FavouriteMovie,
-        FavouriteMovieForOwnerViewDTO> {
+        FavouriteMovieViewDTO> {
 
     private final FavouritesMapper favouritesMapper;
     private final FavouritePresenceService favouriteMoviePresenceService;
@@ -51,7 +51,7 @@ public class FavouritesService extends AbstractLinkedCollectionService<Favourite
     }
 
     @Override
-    protected FavouriteMovieForOwnerViewDTO mapToDto(FavouriteMovie favouriteMovie) {
+    protected FavouriteMovieViewDTO mapToDto(FavouriteMovie favouriteMovie) {
         return favouritesMapper.toOwnerView(favouriteMovie, favouriteMoviePresenceService);
     }
 }

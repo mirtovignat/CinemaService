@@ -1,6 +1,5 @@
 package com.example.demo.util;
 
-import com.example.demo.dto.user.ProfileSettingsDTO;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -8,18 +7,22 @@ import lombok.NoArgsConstructor;
 public final class PhoneNormalizer {
 
     public static String normalizePhone(String phone) {
-        if (phone == null) {
+        if (phone == null || phone.isBlank()) {
             return null;
         }
-        String trimmed = phone.trim();
-        return trimmed.isEmpty() ? null : trimmed;
-    }
 
-    public static String normalizePhone(ProfileSettingsDTO profileSettingsDTO) {
-        if (profileSettingsDTO == null) {
+        String cleaned = phone.replaceAll("[^+0-9]", "");
+
+        if (!cleaned.startsWith("+")) {
             return null;
         }
-        return normalizePhone(profileSettingsDTO.phone());
-    }
 
+        String digits = cleaned.replace("+", "");
+
+        if (digits.length() < 10 || digits.length() > 15) {
+            return null;
+        }
+
+        return cleaned;
+    }
 }

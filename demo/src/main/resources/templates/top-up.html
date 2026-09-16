@@ -2,461 +2,818 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Пополнение кошелька — Cinema Service</title>
-    <link rel="icon" type="image/x-icon" th:href="@{/favicon.ico}">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap"
-          rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <title>Пополнение кошелька</title>
+    <th:block th:replace="~{fragments/head :: head}"></th:block>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            min-height: 100vh !important;
+        }
         body {
-            background: radial-gradient(circle at 10% 20%, #0b0f1c, #05070f);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-            font-family: 'Inter', system-ui, sans-serif;
-            color: #eef2ff;
+            display: flex !important;
+            flex-direction: column !important;
+            background: #0b1120 !important;
+            font-family: 'Inter', system-ui, sans-serif !important;
+            color: #f1f5f9 !important;
         }
-        main {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        main.wallet-main {
+            flex: 1 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: stretch !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            background: url('/images/background.png') no-repeat center center !important;
+            background-size: cover !important;
+            background-blend-mode: overlay !important;
+            background-color: rgba(0, 0, 0, 0.6) !important;
         }
-        .deposit-container {
-            max-width: 420px;
-            width: 100%;
-            background: rgba(15, 23, 42, 0.75);
-            backdrop-filter: blur(12px);
-            border-radius: 28px;
-            border: 1px solid rgba(72, 187, 255, 0.25);
-            box-shadow: 0 25px 45px -12px rgba(0,0,0,0.5);
-            overflow: hidden;
+        .wallet-rect {
+            width: 100% !important;
+            max-width: 460px !important;
+            background: rgba(8, 12, 24, 0.92) !important;
+            backdrop-filter: blur(12px) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
+            border: 1px solid rgba(72, 187, 255, 0.1) !important;
+            border-radius: 0 !important;
+            padding: 24px 24px 16px !important;
+            box-sizing: border-box !important;
+            margin: 0 auto !important;
+            flex: 1 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: flex-start !important;
+            min-height: 0 !important;
+            position: relative !important;
         }
-        .deposit-header {
-            background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(168,85,247,0.2));
-            padding: 1rem;
-            text-align: center;
-            border-bottom: 1px solid rgba(72, 187, 255, 0.25);
+        .back-link {
+            position: absolute !important;
+            top: 16px !important;
+            left: 16px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            color: #94a3b8 !important;
+            text-decoration: none !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            transition: color 0.2s !important;
+            z-index: 10 !important;
         }
-        .deposit-header .logo-link {
-            text-decoration: none;
-            color: #e2e8f0;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-weight: 600;
-            font-size: 1.05rem;
+        .back-link:hover {
+            color: #c084fc !important;
         }
-        .deposit-header .logo-link img {
-            width: 22px;
-            height: 22px;
-            border-radius: 6px;
+        .back-link svg {
+            width: 18px !important;
+            height: 18px !important;
+            stroke: currentColor !important;
         }
-        .deposit-header h2 {
-            font-size: 1.25rem;
-            margin-top: 0.2rem;
-            background: linear-gradient(135deg, #e0e7ff, #c084fc);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            font-weight: 700;
+        .top-section {
+            flex: 0 0 auto !important;
+            padding-top: 8px !important;
         }
-        .deposit-body {
-            padding: 1.25rem 1.25rem 1.5rem;
+        .middle-section {
+            flex: 0 0 auto !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: flex-start !important;
+            padding: 0 !important;
         }
-        .balance-info {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(72, 187, 255, 0.25);
-            border-radius: 16px;
-            padding: 0.6rem 1rem;
-            text-align: center;
-            margin-bottom: 1rem;
+        .bottom-section {
+            flex: 0 0 auto !important;
+            margin-top: auto !important;
+            padding-top: 18px !important;
+        }
+        .avatar-wrapper {
+            display: flex !important;
+            justify-content: center !important;
+            margin-bottom: 8px !important;
+        }
+        .avatar-circle {
+            width: 144px !important;
+            height: 144px !important;
+            border-radius: 50% !important;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            color: #fff !important;
+            font-weight: 700 !important;
+            font-size: 56px !important;
+            flex-shrink: 0 !important;
+            border: 3px solid #6366f1 !important;
+            box-shadow: 0 0 40px rgba(99, 102, 241, 0.3) !important;
+        }
+        .user-info {
+            text-align: center !important;
+            margin: 0 0 4px 0 !important;
+        }
+        .fullname {
+            font-size: 18px !important;
+            font-weight: 600 !important;
+            color: #f1f5f9 !important;
+            margin: 0 !important;
+            line-height: 1.3 !important;
+        }
+        .phone {
+            font-size: 14px !important;
+            color: #94a3b8 !important;
+            margin: 2px 0 0 0 !important;
+        }
+        .divider-light {
+            border: none !important;
+            border-top: 1px solid rgba(255,255,255,0.05) !important;
+            margin: 10px 0 10px 0 !important;
         }
         .balance-label {
-            color: #94a3b8;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-size: 10px !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.08em !important;
+            color: #94a3b8 !important;
+            margin: 0 !important;
+            text-transform: uppercase !important;
+            text-align: center !important;
         }
-        .balance-amount {
-            color: #e2e8f0;
-            font-size: 1.45rem;
-            font-weight: 700;
+        .balance-number {
+            font-size: 34px !important;
+            font-weight: 800 !important;
+            color: #ffffff !important;
+            line-height: 1.1 !important;
+            margin: 0 !important;
+            text-align: center !important;
+            padding-top: 4px !important;
         }
-        .balance-amount .currency {
-            color: #c084fc;
+
+        .topup-context {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 8px !important;
+            margin: 14px 0 18px !important;
+            color: #718096 !important;
+            font-size: 11px !important;
+            line-height: 1.35 !important;
+            text-align: center !important;
         }
-        .form-group {
-            margin-bottom: 1rem;
+
+        .topup-context::before,
+        .topup-context::after {
+            content: "" !important;
+            width: 28px !important;
+            height: 1px !important;
+            background: rgba(255,255,255,0.06) !important;
+            flex: 0 0 28px !important;
         }
-        .form-group label {
-            display: block;
-            color: #94a3b8;
-            font-size: 0.72rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 0.3rem;
+
+        .topup-context strong {
+            color: #9aa7ba !important;
+            font-weight: 600 !important;
         }
-        .amount-input {
-            position: relative;
+        .balance-number .curr {
+            display: none !important;
         }
-        .currency-symbol {
-            position: absolute;
-            left: 1.1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #94a3b8;
-            font-weight: 600;
-            font-size: 1rem;
+        .topup-label {
+            font-size: 18px !important;
+            font-weight: 700 !important;
+            color: #e2e8f0 !important;
+            margin: 0 0 8px 0 !important;
+            text-align: center !important;
         }
-        .amount-input input {
-            width: 100%;
-            padding: 0.6rem 1.1rem 0.6rem 2.5rem;
-            border-radius: 60px;
-            border: 1px solid rgba(72, 187, 255, 0.25);
-            background: rgba(10, 13, 28, 0.6);
-            color: #f1f5f9;
-            font-size: 1.05rem;
-            text-align: right;
-            transition: 0.2s;
+        .input-wrap {
+            display: flex !important;
+            align-items: center !important;
+            background: rgba(255,255,255,0.05) !important;
+            border: 1.5px solid rgba(255,255,255,0.08) !important;
+            border-radius: 6px !important;
+            padding: 0 12px !important;
+            transition: border-color 0.2s, box-shadow 0.2s !important;
+            height: 48px !important;
         }
-        .amount-input input:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 2px rgba(59,130,246,0.3);
+        .input-wrap:focus-within {
+            border-color: #8b5cf6 !important;
+            box-shadow: 0 0 0 3px rgba(139,92,246,0.15) !important;
         }
-        .quick-amounts {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 0.4rem;
-            margin-bottom: 1.25rem;
+        .currency-static {
+            font-size: 18px !important;
+            font-weight: 700 !important;
+            color: #ffffff !important;
+            padding-right: 6px !important;
+            user-select: none !important;
+            flex-shrink: 0 !important;
+            line-height: 1 !important;
+            display: flex !important;
+            align-items: center !important;
+            height: 100% !important;
         }
-        .quick-amount-btn {
-            padding: 0.45rem 0.2rem;
-            border-radius: 40px;
-            border: 1px solid rgba(72, 187, 255, 0.25);
-            background: rgba(255,255,255,0.05);
-            color: #e2e8f0;
-            font-size: 0.8rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: 0.2s;
-            text-align: center;
+        .amount-input-with-stepper {
+            display: flex !important;
+            align-items: center !important;
+            flex: 1 !important;
+            height: 100% !important;
         }
-        .quick-amount-btn:hover {
-            background: rgba(59,130,246,0.15);
-            border-color: #3b82f6;
+        .amount-input-with-stepper input {
+            flex: 1 !important;
+            min-width: 0 !important;
+            padding: 0 !important;
+            background: transparent !important;
+            border: none !important;
+            outline: none !important;
+            font-size: 18px !important;
+            font-weight: 500 !important;
+            color: #f1f5f9 !important;
+            font-family: inherit !important;
+            box-shadow: none !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: textfield !important;
+            margin: 0 !important;
+            height: 100% !important;
+            line-height: 1 !important;
+            display: flex !important;
+            align-items: center !important;
+            text-align: left !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            width: auto !important;
+            border-radius: 0 !important;
         }
-        .quick-amount-btn.active {
-            background: #3b82f6;
-            color: white;
-            border-color: #3b82f6;
+        .amount-input-with-stepper input::-webkit-outer-spin-button,
+        .amount-input-with-stepper input::-webkit-inner-spin-button {
+            -webkit-appearance: none !important;
+            margin: 0 !important;
         }
-        .payment-methods {
-            margin-bottom: 1.25rem;
+        .amount-input-with-stepper input::placeholder {
+            color: #64748b !important;
         }
-        .payment-methods h3 {
-            color: #94a3b8;
-            font-size: 0.72rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 0.5rem;
+        .hint {
+            font-size: 11px !important;
+            color: #64748b !important;
+            margin: 2px 0 0 0 !important;
+            text-align: center !important;
         }
-        .payment-option {
-            display: flex;
-            align-items: center;
-            padding: 0.5rem 1rem;
-            border-radius: 60px;
-            border: 1px solid rgba(72, 187, 255, 0.25);
-            background: rgba(255,255,255,0.02);
-            margin-bottom: 0.4rem;
-            cursor: pointer;
-            transition: 0.2s;
+        .error {
+            font-size: 11px !important;
+            color: #f87171 !important;
+            margin: 0 !important;
+            text-align: center !important;
         }
-        .payment-option:hover {
-            background: rgba(255,255,255,0.05);
-            border-color: #3b82f6;
+        .presets {
+            display: flex !important;
+            gap: 8px !important;
+            margin: 8px 0 0 !important;
+            justify-content: center !important;
         }
-        .payment-option.selected {
-            border-color: #3b82f6;
-            background: rgba(59,130,246,0.1);
+        .preset-btn {
+            flex: 1 !important;
+            padding: 8px 0 !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            border-radius: 4px !important;
+            background: rgba(255,255,255,0.03) !important;
+            color: #cbd5e1 !important;
+            font-size: 14px !important;
+            font-weight: 600 !important;
+            cursor: pointer !important;
+            text-align: center !important;
+            transition: 0.15s !important;
+            font-family: inherit !important;
         }
-        .payment-option input[type="radio"] {
-            accent-color: #3b82f6;
-            margin-right: 0.6rem;
-            width: 1rem;
-            height: 1rem;
-            flex-shrink: 0;
+        .preset-btn:hover {
+            background: rgba(139,92,246,0.15) !important;
+            border-color: #8b5cf6 !important;
+            color: #c084fc !important;
         }
-        .payment-icon {
-            font-size: 1.2rem;
-            margin-right: 0.6rem;
+        .bank-rule {
+            font-size: 10px !important;
+            color: #64748b !important;
+            text-align: center !important;
+            margin: 10px 0 0 !important;
+            padding: 8px 0 6px !important;
+            line-height: 1.3 !important;
+            border-top: 1px dashed rgba(255,255,255,0.06) !important;
+            letter-spacing: 0.02em !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
         }
-        .payment-info h4 {
-            color: #e2e8f0;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin: 0;
+        .bank-rule svg {
+            width: 14px !important;
+            height: 14px !important;
+            stroke: #5b6b8a !important;
+            flex-shrink: 0 !important;
         }
-        .payment-info p {
-            color: #94a3b8;
-            font-size: 0.72rem;
-            margin: 0;
+        .btn-topup {
+            width: 100% !important;
+            min-height: 46px !important;
+            padding: 11px 0 !important;
+            border: none !important;
+            border-radius: 6px !important;
+            font-size: 15px !important;
+            font-weight: 700 !important;
+            color: #fff !important;
+            background: linear-gradient(135deg, #7c3aed, #4f46e5) !important;
+            cursor: pointer !important;
+            font-family: inherit !important;
+            margin: 4px 0 0 0 !important;
+            box-shadow: 0 4px 16px rgba(124,58,237,0.3) !important;
+            transition: transform 0.15s, box-shadow 0.2s !important;
         }
-        .form-actions {
-            display: flex;
-            gap: 0.75rem;
+        .btn-topup:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 24px rgba(124,58,237,0.45) !important;
         }
-        .btn-menu, .btn-confirm {
-            flex: 1;
-            padding: 0.65rem 1rem;
-            border-radius: 60px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            text-align: center;
-            border: none;
-            cursor: pointer;
-            transition: 0.2s;
-            text-decoration: none;
-            display: inline-block;
+        .bottom-rules {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 5px 10px !important;
+            font-size: 9px !important;
+            color: #6b7280 !important;
+            text-align: center !important;
+            margin: 0 !important;
+            padding-top: 10px !important;
+            border-top: 1px solid rgba(255,255,255,0.04) !important;
+            line-height: 1.45 !important;
         }
-        .btn-menu {
-            background: rgba(255,255,255,0.06);
-            color: #e2e8f0;
-            border: 1px solid rgba(72, 187, 255, 0.25);
+        .bottom-rules .rule-item {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 5px !important;
+            min-width: 0 !important;
         }
-        .btn-menu:hover {
-            background: rgba(255,255,255,0.12);
+        .bottom-rules svg {
+            width: 12px !important;
+            height: 12px !important;
+            stroke: #5b6b8a !important;
+            flex-shrink: 0 !important;
         }
-        .btn-confirm {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
+        .flash-success {
+            background: rgba(16, 185, 129, 0.15) !important;
+            border: 1px solid rgba(16, 185, 129, 0.3) !important;
+            color: #34d399 !important;
+            padding: 8px 12px !important;
+            border-radius: 6px !important;
+            text-align: center !important;
+            font-size: 13px !important;
+            margin-bottom: 8px !important;
         }
-        .btn-confirm:hover {
-            box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+        .flash-error {
+            background: rgba(239, 68, 68, 0.15) !important;
+            border: 1px solid rgba(239, 68, 68, 0.3) !important;
+            color: #f87171 !important;
+            padding: 8px 12px !important;
+            border-radius: 6px !important;
+            text-align: center !important;
+            font-size: 13px !important;
+            margin-bottom: 8px !important;
         }
-        .error-message {
-            color: #f43f5e;
-            font-size: 0.7rem;
-            margin-top: 0.2rem;
-            display: none;
-        }
-        .error-message.show {
-            display: block;
-        }
-        .has-error {
-            border-color: #f43f5e !important;
-        }
-        .flash-message {
-            margin: 0 1.25rem 0.75rem;
-            border-radius: 10px;
-        }
-        @media (max-width: 480px) {
-            body { padding: 1rem 0.5rem; }
-            .deposit-body { padding: 1rem 0.75rem; }
-            .quick-amounts { grid-template-columns: repeat(2, 1fr); }
-            .form-actions { flex-direction: column; gap: 0.5rem; }
+        @media (max-width: 520px) {
+            .wallet-rect {
+                padding: 18px 18px 12px !important;
+            }
+
+            .bottom-section {
+                padding-top: 14px !important;
+            }
+
+            .bottom-rules {
+                grid-template-columns: 1fr !important;
+                gap: 4px !important;
+            }
+
+            .topup-context {
+                margin: 11px 0 14px !important;
+                font-size: 10px !important;
+            }
+
+            .topup-context::before,
+            .topup-context::after {
+                width: 18px !important;
+                flex-basis: 18px !important;
+            }
+            .avatar-circle {
+                width: 120px !important;
+                height: 120px !important;
+                font-size: 44px !important;
+            }
+            .balance-number {
+                font-size: 28px !important;
+                padding-top: 3px !important;
+            }
+            .preset-btn {
+                font-size: 12px !important;
+                padding: 6px 0 !important;
+            }
+            .topup-label {
+                font-size: 16px !important;
+            }
+            .back-link {
+                top: 12px !important;
+                left: 12px !important;
+                font-size: 12px !important;
+            }
+            .back-link svg {
+                width: 16px !important;
+                height: 16px !important;
+            }
+            .currency-static {
+                font-size: 16px !important;
+            }
+            .amount-input-with-stepper input {
+                font-size: 16px !important;
+            }
+            .input-wrap {
+                height: 44px !important;
+            }
         }
     </style>
 </head>
 <body>
-<main>
-    <div class="deposit-container">
-        <div class="deposit-header">
-            <a href="/" class="logo-link">
-                <img src="/favicon.ico" alt="Logo" th:src="@{/favicon.ico}">
-                <span>Cinema Service</span>
-            </a>
-            <h2>Пополнение кошелька</h2>
-        </div>
 
-        <th:block th:replace="~{fragments/flash-messages :: flashMessages}"></th:block>
+<main class="wallet-main">
+    <div class="wallet-rect">
 
-        <div class="deposit-body">
-            <div class="balance-info">
-                <div class="balance-label">Текущий баланс</div>
-                <div class="balance-amount">
-                    <span th:text="${wallet.balance}"></span>
-                    <span class="currency" th:text="${wallet.currencyCode}"></span>
-                </div>
+        <a href="/personal-account" class="back-link">
+            <th:block th:replace="~{fragments/icons :: icon-arrow-left}"></th:block>
+            Назад
+        </a>
+
+        <div class="top-section">
+            <div id="userData"
+                 th:data-username="${wallet != null ? wallet.getFirstUsernameLetter() : 'U'}"
+                 th:data-fullname="${wallet != null ? wallet.fullName() : 'Миртов Игнат Антонович'}"
+                 th:data-phone="${wallet != null ? wallet.phone() : '+7 (999) 929-04-60'}"
+                 th:data-balance="${wallet != null ? wallet.balance() : 2081.20}"
+                 th:data-maxbalance="100000"
+                 th:data-currency="${wallet != null ? wallet.currencyCode() : 'RUB'}"
+                 style="display:none;">
             </div>
 
-            <form th:action="@{/wallet/top-up}" th:object="${topUpFormDTO}" method="post" id="depositForm">
-                <div class="form-group">
-                    <label for="amount">Сумма пополнения</label>
-                    <div class="amount-input-with-stepper">
-                        <span class="currency-symbol" th:text="${wallet.currencyCode == 'RUB' ? '₽' : (wallet.currencyCode == 'USD' ? '$' : '€')}"></span>
-                        <input type="number" id="amount" th:field="*{amount}" min="0.01" step="0.01" placeholder="0.00"
-                               th:classappend="${#fields.hasErrors('amount')} ? 'has-error' : ''">
-                        <div class="stepper-buttons">
-                            <button type="button" class="stepper-btn up"
-                                    onmousedown="startSteppingAmount(0.01, this)"
-                                    onmouseup="stopSteppingAmount(this)"
-                                    onmouseleave="stopSteppingAmount(this)"
-                                    ontouchstart="startSteppingAmount(0.01, this)"
-                                    ontouchend="stopSteppingAmount(this)"
-                                    title="Увеличить на 0.01">
-                                ▲
-                            </button>
-                            <button type="button" class="stepper-btn down"
-                                    onmousedown="startSteppingAmount(-0.01, this)"
-                                    onmouseup="stopSteppingAmount(this)"
-                                    onmouseleave="stopSteppingAmount(this)"
-                                    ontouchstart="startSteppingAmount(-0.01, this)"
-                                    ontouchend="stopSteppingAmount(this)"
-                                    title="Уменьшить на 0.01">
-                                ▼
-                            </button>
+            <div class="avatar-wrapper">
+                <div class="avatar-circle" id="avatarCircle"
+                     th:text="${wallet != null ? wallet.getFirstUsernameLetter() : 'U'}">U
+                </div>
+            </div>
+            <div class="user-info">
+                <div class="fullname" id="userFullname"
+                     th:text="${wallet != null ? wallet.fullName() : 'Миртов Игнат Антонович'}">Миртов Игнат Антонович
+                </div>
+                <div class="phone" id="userPhone"
+                     th:text="${wallet != null ? '+7 (999) ***-**-60' : '+7 (999) ***-**-60'}">+7 (999) ***-**-60
+                </div>
+            </div>
+            <hr class="divider-light">
+            <div class="balance-label">Доступный баланс</div>
+            <div class="balance-number" id="balanceDisplay">
+                <span id="balanceValue"
+                      th:text="${wallet != null ? #numbers.formatDecimal(wallet.balance(), 0, 2) : '2 081,20'}">2 081,20</span>
+                <span class="curr" id="currencySymbol" style="display:none;"></span>
+            </div>
+            <hr class="divider-light">
+        </div>
+
+        <div class="topup-context">
+            <span><strong>Пополнение без комиссии</strong> · зачисление сразу</span>
+        </div>
+
+        <div class="middle-section">
+            <form th:action="@{/wallet/top-up}" th:object="${topUpFormDTO}" method="post" novalidate id="topUpForm"
+                  style="display:flex; flex-direction:column; gap:12px; height:auto; justify-content:flex-start;">
+
+                <div th:if="${successMessage}" class="flash-success" th:text="${successMessage}">Баланс успешно
+                    пополнен!
+                </div>
+                <div th:if="${errorMessage}" class="flash-error" th:text="${errorMessage}">Ошибка!</div>
+                <div id="clientError" class="flash-error" style="display:none;"></div>
+
+                <div>
+                    <div class="topup-label">Сумма пополнения</div>
+                    <div class="input-wrap" th:classappend="${#fields.hasErrors('amount')} ? 'has-error' : ''">
+                        <span class="currency-static">₽</span>
+                        <div class="amount-input-with-stepper">
+                            <label for="amount"
+                                   style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Сумма
+                                пополнения</label>
+                            <input type="text" inputmode="decimal" id="amount" name="amount"
+                                   placeholder="0,00" autocomplete="off"
+                                   th:field="*{amount}"
+                                   required>
                         </div>
                     </div>
-                    <div th:if="${#fields.hasErrors('amount')}" th:errors="*{amount}" class="error-message show"></div>
-                    <div class="error-message" id="amountError"></div>
+                    <div class="error" id="amountError" th:if="${#fields.hasErrors('amount')}" th:errors="*{amount}">
+                        Сумма должна быть больше 0
+                    </div>
+                    <div class="hint">от 0,01 до 100 000,00 ₽</div>
                 </div>
 
-                <div class="quick-amounts">
-                    <button type="button" class="quick-amount-btn" data-amount="100">100</button>
-                    <button type="button" class="quick-amount-btn" data-amount="500">500</button>
-                    <button type="button" class="quick-amount-btn" data-amount="1000">1 000</button>
-                    <button type="button" class="quick-amount-btn" data-amount="5000">5 000</button>
+                <div>
+                    <div class="presets">
+                        <button type="button" class="preset-btn" onclick="setAmount(100)">100 ₽</button>
+                        <button type="button" class="preset-btn" onclick="setAmount(500)">500 ₽</button>
+                        <button type="button" class="preset-btn" onclick="setAmount(1000)">1 000 ₽</button>
+                        <button type="button" class="preset-btn" onclick="setAmount(5000)">5 000 ₽</button>
+                    </div>
                 </div>
 
-                <div class="payment-methods">
-                    <h3>Способ оплаты</h3>
-                    <label class="payment-option">
-                        <input type="radio" name="paymentMethod" value="CARD" checked>
-                        <span class="payment-icon">💳</span>
-                        <div class="payment-info">
-                            <h4>Банковская карта</h4>
-                            <p>Visa, Mastercard, Мир</p>
-                        </div>
-                    </label>
-                    <label class="payment-option">
-                        <input type="radio" name="paymentMethod" value="QIWI">
-                        <span class="payment-icon">📱</span>
-                        <div class="payment-info">
-                            <h4>QIWI Кошелек</h4>
-                            <p>Мгновенное пополнение</p>
-                        </div>
-                    </label>
-                    <label class="payment-option">
-                        <input type="radio" name="paymentMethod" value="YANDEX_MONEY">
-                        <span class="payment-icon">💰</span>
-                        <div class="payment-info">
-                            <h4>ЮMoney</h4>
-                            <p>Быстрый перевод</p>
-                        </div>
-                    </label>
+                <div>
+                    <div class="bank-rule">
+                        <th:block th:replace="~{fragments/icons :: icon-lock}"></th:block>
+                        Списание средств происходит мгновенно. Возврат только на основании письменного заявления.
+                    </div>
+                    <button type="submit" class="btn-topup" id="submitBtn">Пополнить</button>
                 </div>
 
-                <div class="form-actions">
-                    <a href="/" class="btn-menu">В меню</a>
-                    <button type="submit" class="btn-confirm">Пополнить</button>
-                </div>
             </form>
         </div>
+
+        <div class="bottom-section">
+            <div class="bottom-rules">
+                <span class="rule-item">
+                    <th:block th:replace="~{fragments/icons :: icon-lock}"></th:block>
+                    Все операции защищены многофакторной аутентификацией
+                </span>
+                <span class="rule-item">
+                    <th:block th:replace="~{fragments/icons :: icon-clock}"></th:block>
+                    Средства зачисляются на счёт в режиме реального времени
+                </span>
+                <span class="rule-item">
+                    <th:block th:replace="~{fragments/icons :: icon-file-text}"></th:block>
+                    Возврат осуществляется на основании письменного заявления
+                </span>
+                <span class="rule-item">
+                    <th:block th:replace="~{fragments/icons :: icon-credit-card}"></th:block>
+                    Комиссия за пополнение отсутствует
+                </span>
+            </div>
+        </div>
+
     </div>
 </main>
+
 <th:block th:replace="~{fragments/footer :: footer}"></th:block>
+
 <script>
-    document.querySelectorAll('.quick-amount-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const amount = this.getAttribute('data-amount');
-            document.getElementById('amount').value = amount;
-            document.querySelectorAll('.quick-amount-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-        });
-    });
-
-    document.querySelectorAll('.payment-option input').forEach(radio => {
-        radio.addEventListener('change', function() {
-            document.querySelectorAll('.payment-option').forEach(opt => opt.classList.remove('selected'));
-            this.closest('.payment-option').classList.add('selected');
-        });
-        if (radio.checked) radio.closest('.payment-option').classList.add('selected');
-    });
-
-    document.getElementById('depositForm').addEventListener('submit', function(e) {
-        const amountInput = document.getElementById('amount');
-        const amountError = document.getElementById('amountError');
-        let isValid = true;
-        amountError.classList.remove('show');
-        amountInput.classList.remove('has-error');
-        const amount = parseFloat(amountInput.value);
-        if (!amount || amount < 0.01) {
-            amountError.textContent = 'Минимальная сумма пополнения: 0.01';
-            amountError.classList.add('show');
-            amountInput.classList.add('has-error');
-            isValid = false;
-        }
-        if (!isValid) e.preventDefault();
-    });
-
-    document.getElementById('amount').focus();
-
-    setTimeout(() => {
-        document.querySelectorAll('.flash-message').forEach(msg => {
-            msg.style.transition = 'opacity 0.5s ease';
-            msg.style.opacity = '0';
-            setTimeout(() => msg.remove(), 500);
-        });
-    }, 5000);
-
-    let _amountStepInterval = null;
-    let _amountStepTimeout = null;
-
-    function stepAmount(delta) {
-        const input = document.getElementById('amount');
-        if (!input) return;
-        let current = parseFloat(input.value.replace(',', '.'));
-        if (isNaN(current)) current = 0;
-        let newValue = current + delta;
-        newValue = Math.round(newValue * 100) / 100;
-        if (newValue < 0.01) newValue = 0.01;
-        if (newValue > 1000000) newValue = 1000000;
-        input.value = newValue.toFixed(2);
-        const event = new Event('input', { bubbles: true });
-        input.dispatchEvent(event);
-        document.querySelectorAll('.quick-amount-btn').forEach(b => b.classList.remove('active'));
+    function formatAmount(value) {
+        if (value === '' || value === null || value === undefined) return '';
+        var num = parseFloat(value.toString().replace(',', '.'));
+        if (isNaN(num)) return value;
+        var rounded = Math.round(num * 100) / 100;
+        var parts = rounded.toFixed(2).split('.');
+        var intPart = parts[0];
+        var decPart = parts[1] || '00';
+        var formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+        return formattedInt + ',' + decPart + ' ₽';
     }
 
-    function startSteppingAmount(delta, button) {
-        stopSteppingAmount(button);
-        if (button) button.classList.add('holding');
-        stepAmount(delta);
-        _amountStepTimeout = setTimeout(function() {
-            _amountStepInterval = setInterval(function() {
-                stepAmount(delta);
-            }, 10);
-        }, 250);
-    }
-
-    function stopSteppingAmount(button) {
-        if (button) button.classList.remove('holding');
-
-        if (_amountStepTimeout) {
-            clearTimeout(_amountStepTimeout);
-            _amountStepTimeout = null;
-        }
-
-        if (_amountStepInterval) {
-            clearInterval(_amountStepInterval);
-            _amountStepInterval = null;
+    function setAmount(val) {
+        var input = document.getElementById('amount');
+        if (input) {
+            var userData = document.getElementById('userData');
+            var currentBalance = parseFloat(userData.getAttribute('data-balance'));
+            var maxBalance = parseFloat(userData.getAttribute('data-maxbalance'));
+            var maxAllowed = Math.min(100000, maxBalance - currentBalance);
+            var num = Math.min(Math.max(val, 0.01), maxAllowed);
+            if (num < 0.01) num = 0.01;
+            input.value = num.toFixed(2).replace('.', ',');
+            var evt = new Event('input', { bubbles: true });
+            input.dispatchEvent(evt);
         }
     }
 
-    document.querySelectorAll('.quick-amount-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const amount = this.getAttribute('data-amount');
-            document.getElementById('amount').value = amount;
-            document.querySelectorAll('.quick-amount-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
+    window.setAmount = setAmount;
+    window.formatAmount = formatAmount;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var amountInput = document.getElementById('amount');
+        var userData = document.getElementById('userData');
+        var errorEl = document.getElementById('amountError');
+        var clientErrorEl = document.getElementById('clientError');
+
+        var currentBalance = parseFloat(userData.getAttribute('data-balance'));
+        var maxBalance = parseFloat(userData.getAttribute('data-maxbalance'));
+        var maxAllowed = Math.min(100000, maxBalance - currentBalance);
+
+        if (amountInput) {
+            var lastWheelTime = 0;
+            amountInput.addEventListener('wheel', function(e) {
+                e.preventDefault();
+                var now = Date.now();
+                var dt = 0;
+                if (lastWheelTime > 0) {
+                    dt = (now - lastWheelTime) / 1000;
+                } else {
+                    dt = 0.01;
+                }
+                lastWheelTime = now;
+                var direction = e.deltaY < 0 ? 1 : -1;
+                var delta = Math.min(Math.max(dt * 1.0, 0.01), 1.0);
+                delta = direction * Math.round(delta * 100) / 100;
+                var current = parseFloat(amountInput.value.replace(',', '.'));
+                if (isNaN(current)) current = 0;
+                var newValue = current + delta;
+                newValue = Math.round(newValue * 100) / 100;
+                if (newValue < 0) newValue = 0;
+                if (newValue > maxAllowed) newValue = maxAllowed;
+                if (newValue > 100000) newValue = 100000;
+                amountInput.value = newValue.toFixed(2).replace('.', ',');
+                amountInput.dispatchEvent(new Event('input', { bubbles: true }));
+                document.querySelectorAll('.preset-btn').forEach(function(b) { b.classList.remove('active'); });
+            });
+
+            amountInput.addEventListener('beforeinput', function(e) {
+                var val = this.value.replace(',', '.');
+                var current = parseFloat(val);
+                if (isNaN(current)) current = 0;
+                if (e.inputType === 'insertText' && e.data) {
+                    var newVal = val + e.data;
+                    var newNum = parseFloat(newVal);
+                    if (newNum > 100000) {
+                        e.preventDefault();
+                        return;
+                    }
+                }
+            });
+
+            amountInput.addEventListener('input', function() {
+                var val = this.value;
+                if (val === '') return;
+                val = val.replace(',', '.');
+                var parts = val.split('.');
+                var intPart = parts[0].replace(/[^0-9]/g, '');
+                var decPart = parts.length > 1 ? parts[1].replace(/[^0-9]/g, '') : '';
+                if (intPart.length > 1 && intPart.startsWith('0')) {
+                    intPart = intPart.replace(/^0+/, '');
+                    if (intPart === '') intPart = '0';
+                }
+                if (decPart.length > 2) decPart = decPart.slice(0, 2);
+                var newValue = intPart;
+                if (decPart.length > 0 || (val.includes('.') && intPart !== '')) {
+                    newValue = intPart + '.' + decPart;
+                }
+                if (val === '.' || val === ',') newValue = '0.';
+                if (val === '0.') newValue = '0.';
+                var num = parseFloat(newValue);
+                if (!isNaN(num) && num > 100000) {
+                    var prev = this._lastValidValue || '0.00';
+                    this.value = prev;
+                    return;
+                }
+                this._lastValidValue = newValue;
+                if (this.value !== newValue) {
+                    this.value = newValue;
+                }
+                if (errorEl) {
+                    errorEl.textContent = '';
+                    errorEl.style.display = 'none';
+                }
+                if (clientErrorEl) {
+                    clientErrorEl.style.display = 'none';
+                }
+            });
+
+            amountInput.addEventListener('blur', function() {
+                var val = this.value.trim();
+                if (val === '' || val === '.' || val === '0.') {
+                    this.value = '0,01';
+                    this._lastValidValue = '0.01';
+                    return;
+                }
+                var num = parseFloat(val.replace(',', '.'));
+                if (isNaN(num) || num < 0.01) {
+                    this.value = '0,01';
+                } else if (num > 100000) {
+                    this.value = '100000,00';
+                } else {
+                    this.value = num.toFixed(2).replace('.', ',');
+                }
+                this._lastValidValue = this.value.replace(',', '.');
+            });
+
+            if (amountInput.value) {
+                var num = parseFloat(amountInput.value.replace(',', '.'));
+                if (!isNaN(num)) {
+                    amountInput.value = num.toFixed(2).replace('.', ',');
+                    amountInput._lastValidValue = num.toFixed(2);
+                }
+            }
+        }
+
+        var successMsg = document.querySelector('.flash-success');
+        if (successMsg) {
+            var username = userData.getAttribute('data-username');
+            var fullname = userData.getAttribute('data-fullname');
+            var phone = userData.getAttribute('data-phone');
+            var balance = userData.getAttribute('data-balance');
+            var avatar = document.getElementById('avatarCircle');
+            if (avatar && username) avatar.textContent = username;
+            var nameEl = document.getElementById('userFullname');
+            if (nameEl && fullname) nameEl.textContent = fullname;
+            var phoneEl = document.getElementById('userPhone');
+            if (phoneEl && phone) {
+                var masked = phone.replace(/(\+7 \(\d{3}\)) (\d{3})-(\d{2})-(\d{2})/, '$1 ***-**-$4');
+                phoneEl.textContent = masked;
+            }
+            var balanceEl = document.getElementById('balanceValue');
+            if (balanceEl && balance) {
+                var balanceNum = parseFloat(balance.toString().replace(',', '.'));
+                if (!isNaN(balanceNum)) {
+                    balanceEl.textContent = formatAmount(balanceNum.toFixed(2));
+                } else {
+                    balanceEl.textContent = balance;
+                }
+            }
+        }
+
+        var phoneEl = document.getElementById('userPhone');
+        if (phoneEl && phoneEl.textContent) {
+            var raw = phoneEl.textContent.trim();
+            if (raw.match(/\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}/)) {
+                phoneEl.textContent = raw.replace(/(\+7 \(\d{3}\)) (\d{3})-(\d{2})-(\d{2})/, '$1 ***-**-$4');
+            }
+        }
+
+        var balanceEl = document.getElementById('balanceValue');
+        if (balanceEl && balanceEl.textContent) {
+            var num = parseFloat(balanceEl.textContent.replace(/\s/g, '').replace(',', '.'));
+            if (!isNaN(num)) {
+                balanceEl.textContent = formatAmount(num.toFixed(2));
+            }
+        }
+
+        var currEl = document.getElementById('currencySymbol');
+        if (currEl) {
+            currEl.style.display = 'none';
+        }
+
+        var form = document.getElementById('topUpForm');
+        form.addEventListener('submit', function(e) {
+            var input = document.getElementById('amount');
+            var rawVal = input.value.replace(/[^0-9,.]/g, '').replace(',', '.');
+            var num = parseFloat(rawVal);
+
+            if (input.value.trim() === '' || isNaN(num)) {
+                e.preventDefault();
+                if (clientErrorEl) {
+                    clientErrorEl.textContent = 'Сумма не может быть пустой';
+                    clientErrorEl.style.display = 'block';
+                }
+                input.focus();
+                return false;
+            }
+
+            if (num < 0.01) {
+                e.preventDefault();
+                if (clientErrorEl) {
+                    clientErrorEl.textContent = 'Сумма должна быть не меньше 0,01 ₽';
+                    clientErrorEl.style.display = 'block';
+                }
+                input.focus();
+                return false;
+            }
+
+            if (num > 100000) {
+                e.preventDefault();
+                if (clientErrorEl) {
+                    clientErrorEl.textContent = 'Сумма не может превышать 100 000,00 ₽';
+                    clientErrorEl.style.display = 'block';
+                }
+                input.focus();
+                return false;
+            }
+
+            var currentBal = parseFloat(userData.getAttribute('data-balance'));
+            var maxBal = parseFloat(userData.getAttribute('data-maxbalance'));
+            if (currentBal + num > maxBal) {
+                e.preventDefault();
+                var available = maxBal - currentBal;
+                if (clientErrorEl) {
+                    clientErrorEl.textContent = 'Сумма пополнения не может превышать ' + available.toFixed(2) + ' ₽ (максимальный баланс 100 000 ₽)';
+                    clientErrorEl.style.display = 'block';
+                }
+                input.focus();
+                return false;
+            }
+
+            input.disabled = true;
+            var hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'amount';
+            hiddenInput.value = num.toFixed(2);
+            form.appendChild(hiddenInput);
         });
+
+        if (amountInput) {
+            amountInput.addEventListener('input', function() {
+                if (clientErrorEl) {
+                    clientErrorEl.style.display = 'none';
+                }
+            });
+        }
     });
 </script>
+
 </body>
 </html>

@@ -1,11 +1,34 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ru">
 <head>
-    <title>Шапка Cinema Service</title>
+    <title>Шапка CinemaService</title>
 </head>
 <body>
 <header th:fragment="header" class="site-header">
     <style>
+        .site-header svg {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+        .action-button svg {
+            width: 22px;
+            height: 22px;
+        }
+        .filters-toggle-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+        .login-button svg {
+            width: 16px;
+            height: 16px;
+            margin-right: 4px;
+        }
+        .search-icon svg {
+            width: 16px;
+            height: 16px;
+        }
+
         .site-header {
             position: sticky;
             top: 0;
@@ -52,6 +75,48 @@
         .search-form {
             display: flex;
             gap: 0.5rem;
+            align-items: center;
+        }
+        .search-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .search-input-wrapper .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .search-input-wrapper input {
+            padding: 0.5rem 1rem 0.5rem 36px !important;
+            border-radius: 2rem;
+            border: 1px solid var(--glass-border);
+            background: var(--card-bg);
+            color: var(--text-light);
+            width: 220px;
+            outline: none;
+            transition: width 0.25s ease, border-color 0.2s ease;
+        }
+        .search-input-wrapper input:focus {
+            width: 260px;
+            border-color: var(--glow-primary);
+        }
+        .search-btn {
+            background: var(--glow-primary);
+            border: none;
+            border-radius: 2rem;
+            padding: 0.5rem 1rem;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .search-btn:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
         }
         .header-actions {
             display: flex;
@@ -427,7 +492,6 @@
             background: rgba(10, 13, 28, 0.9);
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
         }
-
         .amount-input-with-stepper {
             display: flex;
             align-items: center;
@@ -467,81 +531,172 @@
             background: rgba(99,102,241,0.3);
             border-color: #6366f1;
         }
-        .user-avatar-letter {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            line-height: 1 !important;
-            text-align: center !important;
-            vertical-align: middle !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            flex-shrink: 0 !important;
-            width: 32px !important;
-            height: 32px !important;
-            border-radius: 50% !important;
-            background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
-            color: white !important;
-            font-weight: 700 !important;
-            font-size: 1.2rem !important;
-            border: 2px solid #6366f1 !important;
+        .login-button {
+            background: linear-gradient(135deg, var(--glow-primary), #1d4ed8);
+            color: white;
+            padding: 0.6rem 1.5rem;
+            border-radius: 2rem;
+            text-decoration: none;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59,130,246,0.4);
+        }
+        .action-button {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 40px;
+            background: var(--glass-bg, rgba(255, 255, 255, 0.05));
+            border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+            color: var(--text-light, #f1f5f9);
+            cursor: pointer;
+            font-size: inherit;
+            font-family: inherit;
+            text-decoration: none;
+            transition: all 0.25s ease;
+            backdrop-filter: blur(4px);
+        }
+        .action-button:hover {
+            transform: translateY(-3px);
+            border-color: var(--glow-primary);
+            color: var(--glow-primary);
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+        }
+        .count-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: var(--glow-danger);
+            color: white;
+            border-radius: 40px;
+            min-width: 22px;
+            height: 22px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 6px #f43f5e;
+        }
+        .logo-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .logo-link a {
+            text-decoration: none;
+            color: inherit;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        .logo-link img {
+            height: 32px;
+            width: auto;
+            display: block;
         }
     </style>
 
-    <div class="logo-link" style="display: flex; align-items: center; gap: 8px;">
+    <div class="logo-link">
         <a href="/favicon.ico" target="_blank" title="Открыть favicon">
-            <img src="/favicon.ico" alt="Favicon" style="height: 32px; width: auto; display: block;">
+            <img src="/favicon.ico" alt="Favicon">
         </a>
-        <a href="/" style="text-decoration: none; color: inherit; font-weight: 700; font-size: 1.2rem;">Cinema
-            Service</a>
+        <a href="/">CinemaService</a>
     </div>
 
     <div class="header-actions">
         <button type="button" class="filters-toggle-btn" onclick="toggleFiltersModal(true)">
-            🎛️ Фильтры
+            <th:block th:replace="~{fragments/icons :: icon-filter}"></th:block>
+            Фильтры
         </button>
 
         <div class="search-container">
-            <form id="headerSearchForm" action="/search" method="get" class="search-form">
-                <label for="headerSearchInput" style="display:none;">Поиск по названию</label>
-                <input type="text" id="headerSearchInput" name="title" autocomplete="off"
-                       placeholder="Поиск фильмов...">
+            <form id="headerSearchForm" action="/" method="get" class="search-form"
+                  onsubmit="return validateSearchQuery()">
+                <div class="search-input-wrapper">
+                    <span class="search-icon">
+                        <th:block th:replace="~{fragments/icons :: icon-search}"></th:block>
+                    </span>
+                    <label for="headerSearchInput"
+                           style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Поиск
+                        фильмов</label>
+                    <input type="text" id="headerSearchInput" name="title" autocomplete="off"
+                           placeholder="Поиск фильмов..." maxlength="100">
+                </div>
                 <button type="submit" class="search-btn">Найти</button>
             </form>
             <div id="headerSuggestions" class="header-suggestions"></div>
         </div>
 
-        <a th:href="@{/favourites}" class="action-button favourites-btn" title="Избранное"
-           onclick="return requireAuth(event, this.href)">
-            ♥ <span id="favourites-count" class="count-badge" th:text="${favouritesCount != null ? favouritesCount : 0}"
-                    th:style="${favouritesCount == null || favouritesCount == 0} ? 'display: none;' : ''">0</span>
-        </a>
+        <button type="button" class="action-button favourites-btn" title="Избранное"
+                onclick="navigateProtected('/favourites')">
+            <th:block th:replace="~{fragments/icons :: icon-heart}"></th:block>
+            <span id="favourites-count" class="count-badge" th:text="${favouritesCount != null ? favouritesCount : 0}"
+                  th:style="${favouritesCount == null || favouritesCount == 0} ? 'display: none;' : ''">0</span>
+        </button>
 
-        <a th:href="@{/cart}" class="action-button cart-btn" title="Корзина"
-           onclick="return requireAuth(event, this.href)">
-            🛒 <span id="cart-count" class="count-badge" th:text="${cartCount != null ? cartCount : 0}"
-                    th:style="${cartCount == null || cartCount == 0} ? 'display: none;' : ''">0</span>
-        </a>
+        <button type="button" class="action-button cart-btn" title="Корзина" onclick="navigateProtected('/cart')">
+            <th:block th:replace="~{fragments/icons :: icon-cart}"></th:block>
+            <span id="cart-count" class="count-badge" th:text="${cartCount != null ? cartCount : 0}"
+                  th:style="${cartCount == null || cartCount == 0} ? 'display: none;' : ''">0</span>
+        </button>
 
         <div th:if="${session.sessionUser != null}" class="user-menu" id="userMenu">
             <div class="user-menu-toggle" onclick="toggleUserMenu()">
                 <div class="user-avatar-letter"
-                     th:text="${session.sessionUser != null ? session.sessionUser.firstUsernameLetter() : 'u'}">
-                </div>
+                     th:text="${session.sessionUser.getFirstUsernameLetter()}"></div>
                 <span class="toggle-icon">▼</span>
             </div>
             <div class="user-dropdown">
-                <a th:href="@{/personal-account}">Личный кабинет</a>
-                <a th:href="@{/profile/settings}">Настройки⚙️</a>
-                <a th:href="@{/wallet/top-up}">Пополнить💰</a>
+                <div class="user-dropdown-header">
+                    <div class="user-dropdown-avatar">
+                        <div class="user-avatar-letter"
+                             th:text="${session.sessionUser.getFirstUsernameLetter()}"></div>
+                    </div>
+                    <div class="user-dropdown-info">
+                        <div class="user-dropdown-name">
+                            <span th:text="${session.sessionUser.username()}"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="user-dropdown-divider"></div>
+                <a th:href="@{/personal-account}" class="user-dropdown-item">
+                    <th:block th:replace="~{fragments/icons :: icon-user}"></th:block>
+                    Личный кабинет
+                </a>
+                <a th:href="@{/settings}" class="user-dropdown-item">
+                    <th:block th:replace="~{fragments/icons :: icon-settings}"></th:block>
+                    Настройки
+                </a>
+                <div class="user-dropdown-divider"></div>
                 <form th:action="@{/logout}" method="post" style="margin:0;">
-                    <button type="submit" class="logout-btn">Выйти</button>
+                    <button type="submit" class="user-dropdown-logout">
+                        <th:block th:replace="~{fragments/icons :: icon-logout}"></th:block>
+                        Выйти
+                    </button>
                 </form>
+                <div class="user-dropdown-divider"></div>
+                <div class="user-dropdown-add-account" onclick="window.location.href='/login'">
+                    <span>Добавить аккаунт</span>
+                </div>
             </div>
         </div>
 
-        <a th:if="${session.sessionUser == null}" th:href="@{/login}" class="login-button">👤 Войти</a>
+        <a th:if="${session.sessionUser == null}" th:href="@{/login}" class="login-button">
+            <th:block th:replace="~{fragments/icons :: icon-user}"></th:block>
+            Войти
+        </a>
     </div>
+
+    <input type="hidden" id="currentUserId"
+           th:value="${session.sessionUser != null ? session.sessionUser.id() : ''}">
 
     <div id="filtersModalOverlay" class="filters-modal-overlay" onclick="handleOverlayClick(event)">
         <div class="filters-modal-content">
@@ -549,8 +704,7 @@
                 <h3>Поиск по фильтрам</h3>
                 <button type="button" class="filters-modal-close" onclick="toggleFiltersModal(false)">&times;</button>
             </div>
-
-            <form action="/search" method="get" id="filterForm" onsubmit="return validateFilter()">
+            <form action="/" method="get" id="filterForm" onsubmit="return validateFilter()">
                 <div class="filter-group">
                     <label for="priceFrom">Цена (₽)</label>
                     <div class="filter-row">
@@ -573,6 +727,9 @@
                             </div>
                         </div>
                         <div class="amount-input-with-stepper">
+                            <label for="priceTo"
+                                   style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Цена
+                                до</label>
                             <input type="text" inputmode="decimal" id="priceTo" name="priceTo" class="filter-input"
                                    placeholder="До">
                             <div class="stepper-buttons">
@@ -592,7 +749,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="filter-group">
                     <label for="ratingFrom">Рейтинг CinemaService</label>
                     <div class="filter-row">
@@ -615,6 +771,9 @@
                             </div>
                         </div>
                         <div class="amount-input-with-stepper">
+                            <label for="ratingTo"
+                                   style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Рейтинг
+                                до</label>
                             <input type="text" inputmode="decimal" id="ratingTo" name="ratingTo" class="filter-input"
                                    placeholder="До 10.0">
                             <div class="stepper-buttons">
@@ -635,29 +794,24 @@
                     </div>
                     <div id="ratingFilterError" class="rating-error"></div>
                 </div>
-
                 <div class="filter-group accordion-group">
-                    <label class="accordion-trigger" data-target="directorsDropdown">
-                        Режиссер ▾
-                    </label>
+                    <div class="accordion-trigger" data-target="directorsDropdown">Режиссер ▾</div>
                     <div class="accordion-dropdown" id="directorsDropdown"></div>
                 </div>
-
                 <div class="filter-group accordion-group">
-                    <label class="accordion-trigger" data-target="genresDropdown">
-                        Жанр кино ▾
-                    </label>
+                    <div class="accordion-trigger" data-target="genresDropdown">Жанр кино ▾</div>
                     <div class="accordion-dropdown" id="genresDropdown"></div>
                 </div>
-
                 <div class="filter-group">
                     <label for="releaseDateFrom">Дата выхода</label>
                     <div class="filter-row">
                         <input type="date" id="releaseDateFrom" name="releaseDateFrom" class="filter-input">
+                        <label for="releaseDateTo"
+                               style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Дата
+                            выхода до</label>
                         <input type="date" id="releaseDateTo" name="releaseDateTo" class="filter-input">
                     </div>
                 </div>
-
                 <div class="filter-group">
                     <label>Длительность</label>
                     <div class="duration-range-inline">
@@ -665,18 +819,27 @@
                             <span class="range-prefix">от</span>
                             <div class="duration-picker">
                                 <div class="duration-field field-hours">
+                                    <label for="durationFromHours"
+                                           style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Часы
+                                        от</label>
                                     <input type="text" id="durationFromHours" class="filter-input positive-int"
                                            placeholder="0" data-max="16" maxlength="2" inputmode="numeric"
                                            autocomplete="off">
                                     <span class="unit">ч.</span>
                                 </div>
                                 <div class="duration-field field-mins">
+                                    <label for="durationFromMinutes"
+                                           style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Минуты
+                                        от</label>
                                     <input type="text" id="durationFromMinutes" class="filter-input positive-int"
                                            placeholder="0" data-max="59" maxlength="2" inputmode="numeric"
                                            autocomplete="off">
                                     <span class="unit">мин.</span>
                                 </div>
                                 <div class="duration-field field-secs">
+                                    <label for="durationFromSeconds"
+                                           style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Секунды
+                                        от</label>
                                     <input type="text" id="durationFromSeconds" class="filter-input positive-int"
                                            placeholder="0" data-max="59" maxlength="2" inputmode="numeric"
                                            autocomplete="off">
@@ -689,18 +852,27 @@
                             <span class="range-prefix">до</span>
                             <div class="duration-picker">
                                 <div class="duration-field field-hours">
+                                    <label for="durationToHours"
+                                           style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Часы
+                                        до</label>
                                     <input type="text" id="durationToHours" class="filter-input positive-int"
                                            placeholder="0" data-max="16" maxlength="2" inputmode="numeric"
                                            autocomplete="off">
                                     <span class="unit">ч.</span>
                                 </div>
                                 <div class="duration-field field-mins">
+                                    <label for="durationToMinutes"
+                                           style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Минуты
+                                        до</label>
                                     <input type="text" id="durationToMinutes" class="filter-input positive-int"
                                            placeholder="0" data-max="59" maxlength="2" inputmode="numeric"
                                            autocomplete="off">
                                     <span class="unit">мин.</span>
                                 </div>
                                 <div class="duration-field field-secs">
+                                    <label for="durationToSeconds"
+                                           style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Секунды
+                                        до</label>
                                     <input type="text" id="durationToSeconds" class="filter-input positive-int"
                                            placeholder="0" data-max="59" maxlength="2" inputmode="numeric"
                                            autocomplete="off">
@@ -712,9 +884,8 @@
                     <input type="hidden" id="minDuration" name="durationFrom">
                     <input type="hidden" id="maxDuration" name="durationTo">
                 </div>
-
                 <div class="filters-modal-footer">
-                    <button type="submit" class="btn btn-primary">Применить</button>
+                    <button type="submit" class="btn btn-primary">Применить и найти</button>
                     <a href="/" class="btn btn-secondary">Сброс</a>
                 </div>
             </form>
@@ -722,439 +893,7 @@
     </div>
 </header>
 
-<script>
-    function updateBadges() {
-        fetch('/cart/count').then(r => r.text()).then(c => {
-            var badge = document.getElementById('cart-count');
-            if (badge) {
-                badge.innerText = c;
-                badge.parentElement.style.display = (c === '0' || c === '') ? 'none' : '';
-            }
-        }).catch(console.error);
-        fetch('/favourites/count').then(r => r.text()).then(c => {
-            var badge = document.getElementById('favourites-count');
-            if (badge) {
-                badge.innerText = c;
-                badge.parentElement.style.display = (c === '0' || c === '') ? 'none' : '';
-            }
-        }).catch(console.error);
-    }
-
-    function toggleUserMenu() {
-        document.getElementById('userMenu')?.classList.toggle('show');
-    }
-
-    function toggleFiltersModal(show) {
-        var overlay = document.getElementById('filtersModalOverlay');
-        if (show) {
-            overlay?.classList.add('show');
-            document.body.style.overflow = 'hidden';
-        } else {
-            overlay?.classList.remove('show');
-            document.body.style.overflow = '';
-            document.querySelectorAll('.accordion-group.active').forEach(function(g) {
-                g.classList.remove('active');
-            });
-        }
-    }
-
-    function handleOverlayClick(e) {
-        if (e.target.id === 'filtersModalOverlay') {
-            toggleFiltersModal(false);
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        var favLink = document.getElementById('favourites-link');
-        var cartLink = document.getElementById('cart-link');
-        function handleProtectedClick(e) {
-            var userMenu = document.querySelector('.user-menu');
-            if (!userMenu) {
-                e.preventDefault();
-                if (typeof showFlashMessage === 'function') {
-                    showFlashMessage('Авторизуйтесь!', 'error');
-                } else {
-                    alert('Авторизуйтесь!');
-                }
-                return false;
-            }
-            return true;
-        }
-        if (favLink) {
-            favLink.addEventListener('click', handleProtectedClick);
-        }
-        if (cartLink) {
-            cartLink.addEventListener('click', handleProtectedClick);
-        }
-    });
-
-    (function() {
-        function setupFilterPriceInput(inputId) {
-            var input = document.getElementById(inputId);
-            if (!input) return;
-            input.addEventListener('input', function () {
-                var value = this.value;
-                if (value === '') return;
-                value = value.replace(',', '.');
-                var parts = value.split('.');
-                var intPart = parts[0].replace(/[^0-9]/g, '');
-                var decPart = parts.length > 1 ? parts[1].replace(/[^0-9]/g, '') : '';
-                if (intPart.length > 1 && intPart.startsWith('0')) {
-                    intPart = intPart.replace(/^0+/, '');
-                    if (intPart === '') intPart = '0';
-                }
-                if (decPart.length > 2) decPart = decPart.slice(0, 2);
-                var newValue = intPart;
-                if (decPart.length > 0 || (value.includes('.') && intPart !== '')) {
-                    newValue = intPart + '.' + decPart;
-                }
-                if (value === '.' || value === ',') newValue = '0.';
-                if (this.value !== newValue) this.value = newValue;
-            });
-            input.addEventListener('keydown', function (e) {
-                var allowedKeys = ['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', 'Delete', 'Enter', 'Escape', '.', ','];
-                if (allowedKeys.includes(e.key)) return;
-                if (e.key >= '0' && e.key <= '9') return;
-                e.preventDefault();
-            });
-            input.addEventListener('paste', function (e) {
-                e.preventDefault();
-                var pasted = (e.clipboardData || window.clipboardData).getData('text');
-                var cleaned = pasted.replace(/[^0-9.,]/g, '').replace(',', '.');
-                var parts = cleaned.split('.');
-                var intPart = parts[0].replace(/[^0-9]/g, '');
-                var decPart = parts.length > 1 ? parts[1].replace(/[^0-9]/g, '').slice(0, 2) : '';
-                if (intPart !== '' || decPart !== '') {
-                    this.value = decPart.length > 0 ? intPart + '.' + decPart : intPart;
-                } else if (cleaned === '.') {
-                    this.value = '0.';
-                } else {
-                    this.value = '';
-                }
-                this.dispatchEvent(new Event('input', { bubbles: true }));
-            });
-            input.addEventListener('blur', function () {
-                if (this.value === '.' || this.value === '0.') {
-                    this.value = '0';
-                }
-            });
-        }
-
-        setupFilterPriceInput('priceFrom');
-        setupFilterPriceInput('priceTo');
-
-        function setupFilterRatingInput(inputId) {
-            var input = document.getElementById(inputId);
-            if (!input) return;
-            input.addEventListener('input', function () {
-                var value = this.value;
-                if (value === '') return;
-                value = value.replace(',', '.');
-                var parts = value.split('.');
-                var intPart = parts[0].replace(/[^0-9]/g, '');
-                var decPart = parts.length > 1 ? parts[1].replace(/[^0-9]/g, '') : '';
-                if (intPart === '' && decPart !== '') intPart = '0';
-                if (intPart.length > 1 && intPart.startsWith('0')) {
-                    intPart = intPart.replace(/^0+/, '');
-                    if (intPart === '') intPart = '0';
-                }
-                if (intPart.length > 2) intPart = intPart.slice(0, 2);
-                var intNum = parseInt(intPart, 10);
-                if (intNum > 10) intPart = '10';
-                if (decPart.length > 1) decPart = decPart.slice(0, 1);
-                var newValue = intPart;
-                if (decPart.length > 0 || (value.includes('.') && intPart !== '')) {
-                    newValue = intPart + '.' + decPart;
-                }
-                var num = parseFloat(newValue);
-                if (!isNaN(num)) {
-                    if (num > 10) newValue = '10.0';
-                    if (num < 0) newValue = '0';
-                }
-                if (value === '.' || value === ',') newValue = '0.';
-                if (value === '0.') newValue = '0.';
-                if (this.value !== newValue) this.value = newValue;
-            });
-            input.addEventListener('keydown', function (e) {
-                var allowedKeys = ['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', 'Delete', 'Enter', 'Escape', '.', ','];
-                if (allowedKeys.includes(e.key)) return;
-                if (e.key >= '0' && e.key <= '9') return;
-                e.preventDefault();
-            });
-            input.addEventListener('paste', function (e) {
-                e.preventDefault();
-                var pasted = (e.clipboardData || window.clipboardData).getData('text');
-                var cleaned = pasted.replace(/[^0-9.,]/g, '').replace(',', '.');
-                var num = parseFloat(cleaned);
-                if (!isNaN(num)) {
-                    var val = Math.min(Math.max(num, 0), 10);
-                    this.value = Number.isInteger(val) ? val.toString() : val.toFixed(1);
-                } else if (cleaned === '.') {
-                    this.value = '0.';
-                } else {
-                    this.value = '';
-                }
-                this.dispatchEvent(new Event('input', { bubbles: true }));
-            });
-        }
-
-        setupFilterRatingInput('ratingFrom');
-        setupFilterRatingInput('ratingTo');
-
-        var filterForm = document.getElementById('filterForm');
-
-        if (filterForm) {
-            filterForm.addEventListener('submit', function(e) {
-                var error = document.getElementById('ratingFilterError');
-                if (error) {
-                    error.style.display = 'none';
-                    error.innerText = '';
-                }
-
-                var inputs = [
-                    document.getElementById('ratingFrom'),
-                    document.getElementById('ratingTo')
-                ];
-                var ratingRegex = /^(10(\.0)?|[0-9](\.[0-9])?)$/;
-
-                for (var i = 0; i < inputs.length; i++) {
-                    var input = inputs[i];
-                    if (!input) continue;
-                    if (input.value.trim() === '') continue;
-
-                    var rating = input.value.replace(',', '.');
-                    if (!ratingRegex.test(rating)) {
-                        e.preventDefault();
-                        if (error) {
-                            error.innerText = 'Введите число от 0.0 до 10.0 (одна цифра после точки)';
-                            error.style.display = 'block';
-                        }
-                        input.focus();
-                        return;
-                    }
-                    var ratingValue = parseFloat(rating);
-                    if (ratingValue < 0 || ratingValue > 10) {
-                        e.preventDefault();
-                        if (error) {
-                            error.innerText = 'Оценка должна быть от 0.0 до 10.0';
-                            error.style.display = 'block';
-                        }
-                        input.focus();
-                        return;
-                    }
-                    input.value = rating;
-                }
-
-                function buildIsoDuration(hId, mId, sId) {
-                    var h = parseInt(document.getElementById(hId)?.value || '0', 10);
-                    var m = parseInt(document.getElementById(mId)?.value || '0', 10);
-                    var s = parseInt(document.getElementById(sId)?.value || '0', 10);
-                    if (!h && !m && !s) return '';
-                    var iso = 'PT';
-                    if (h > 0) iso += h + 'H';
-                    if (m > 0) iso += m + 'M';
-                    if (s > 0) iso += s + 'S';
-                    return iso;
-                }
-
-                var minDur = buildIsoDuration('durationFromHours', 'durationFromMinutes', 'durationFromSeconds');
-                var maxDur = buildIsoDuration('durationToHours', 'durationToMinutes', 'durationToSeconds');
-
-                var minInput = document.getElementById('minDuration');
-                var maxInput = document.getElementById('maxDuration');
-                if (minInput) minInput.value = minDur;
-                if (maxInput) maxInput.value = maxDur;
-            });
-        }
-
-        var positiveInputs = document.querySelectorAll('.positive-int');
-        positiveInputs.forEach(function(input) {
-            input.addEventListener('beforeinput', function(e) {
-                if (e.data && !/^\d+$/.test(e.data)) {
-                    e.preventDefault();
-                    return;
-                }
-                if (e.data) {
-                    var selectionStart = input.selectionStart;
-                    var selectionEnd = input.selectionEnd;
-                    var currentValue = input.value;
-                    var nextValueStr = currentValue.slice(0, selectionStart) + e.data + currentValue.slice(selectionEnd);
-                    var nextValueNum = parseInt(nextValueStr, 10);
-                    var max = parseInt(input.dataset.max || '60', 10);
-                    if (nextValueNum > max) {
-                        e.preventDefault();
-                    }
-                }
-            });
-            input.addEventListener('paste', function(e) {
-                e.preventDefault();
-                var pastedText = (e.clipboardData || window.clipboardData).getData('text');
-                if (!/^\d+$/.test(pastedText)) return;
-                var selectionStart = input.selectionStart;
-                var selectionEnd = input.selectionEnd;
-                var currentValue = input.value;
-                var nextValueStr = currentValue.slice(0, selectionStart) + pastedText + currentValue.slice(selectionEnd);
-                var nextValueNum = parseInt(nextValueStr, 10);
-                var max = parseInt(input.dataset.max || '60', 10);
-                if (nextValueNum >= 0 && nextValueNum <= max) {
-                    input.value = nextValueStr;
-                }
-            });
-        });
-
-        var input = document.getElementById('headerSearchInput');
-        var suggestionsDiv = document.getElementById('headerSuggestions');
-        var searchForm = document.getElementById('headerSearchForm');
-
-        if (input && suggestionsDiv && searchForm) {
-            var debounceTimer;
-
-            function escapeHtml(str) {
-                if (!str) return '';
-                return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-            }
-
-            input.addEventListener('input', function() {
-                clearTimeout(debounceTimer);
-                var query = this.value.trim();
-                if (query.length === 0) {
-                    suggestionsDiv.style.display = 'none';
-                    suggestionsDiv.innerHTML = '';
-                    return;
-                }
-                debounceTimer = setTimeout(function() {
-                    var fetchUrl = '/search-suggestions?query=' + encodeURIComponent(query);
-                    fetch(fetchUrl)
-                        .then(function(response) {
-                            if (!response.ok) throw new Error('Network error');
-                            return response.json();
-                        })
-                        .then(function(data) {
-                            if (data && data.length > 0) {
-                                suggestionsDiv.innerHTML = data.map(function(item) {
-                                    var title = escapeHtml(item.title || item.name || item);
-                                    var id = item.id || null;
-                                    var meta = [];
-                                    if (item.releaseYear) meta.push(item.releaseYear);
-                                    if (item.genre) meta.push(escapeHtml(item.genre));
-                                    return '<div class="suggestion-item" data-id="' + id + '" data-title="' + title + '">' +
-                                        '<span class="suggestion-title">' + title + '</span>' +
-                                        (meta.length > 0 ? '<span class="suggestion-meta">' + meta.join(' · ') + '</span>' : '') +
-                                        '</div>';
-                                }).join('');
-                                suggestionsDiv.style.display = 'flex';
-                            } else {
-                                suggestionsDiv.style.display = 'none';
-                            }
-                        })
-                        .catch(function(err) {
-                            console.error('Ошибка загрузки автоподсказок:', err);
-                            suggestionsDiv.style.display = 'none';
-                        });
-                }, 150);
-            });
-
-            suggestionsDiv.addEventListener('mousedown', function(e) {
-                e.preventDefault();
-            });
-
-            suggestionsDiv.addEventListener('click', function(e) {
-                var item = e.target.closest('.suggestion-item');
-                if (!item) return;
-                var movieId = item.getAttribute('data-id');
-                if (movieId && movieId !== 'null' && movieId !== 'undefined') {
-                    window.location.href = '/movies/' + movieId;
-                } else {
-                    input.value = item.getAttribute('data-title');
-                    suggestionsDiv.style.display = 'none';
-                    searchForm.submit();
-                }
-            });
-
-            input.addEventListener('blur', function() {
-                suggestionsDiv.style.display = 'none';
-            });
-        }
-
-        function setupAccordionMultiselect(triggerSelector, dropdownId, fieldName, url) {
-            var trigger = document.querySelector(triggerSelector);
-            var dropdown = document.getElementById(dropdownId);
-            if (!trigger || !dropdown) return;
-            var group = trigger.closest('.accordion-group');
-
-            trigger.addEventListener('click', function(e) {
-                e.stopPropagation();
-                var isActive = group.classList.contains('active');
-                document.querySelectorAll('.accordion-group').forEach(function(g) {
-                    g.classList.remove('active');
-                });
-                if (!isActive) {
-                    group.classList.add('active');
-                    if (!dropdown.dataset.loaded) {
-                        fetch(url)
-                            .then(function(r) { return r.json(); })
-                            .then(function(data) {
-                                if (!data || data.length === 0) {
-                                    dropdown.innerHTML = '<div style="padding:0.5rem;color:#94a3b8;">Нет данных</div>';
-                                    return;
-                                }
-                                dropdown.innerHTML = data.map(function(item) {
-                                    return '<label class="accordion-item" style="display:flex; align-items:center; padding:0.4rem; cursor:pointer;">' +
-                                        '<input type="checkbox" value="' + escapeHtml(item) + '" class="accordion-checkbox" style="margin-right:8px;">' +
-                                        '<span>' + escapeHtml(item) + '</span>' +
-                                        '</label>';
-                                }).join('');
-                                dropdown.dataset.loaded = 'true';
-                                dropdown.querySelectorAll('input[type="checkbox"]').forEach(function(cb) {
-                                    cb.addEventListener('change', updateSelection);
-                                });
-                            })
-                            .catch(function(err) {
-                                console.error('Ошибка загрузки ' + fieldName + ':', err);
-                                dropdown.innerHTML = '<div style="padding:0.5rem;color:#f87171;">Ошибка загрузки</div>';
-                            });
-                    }
-                }
-            });
-
-            dropdown.addEventListener('click', function(e) {
-                e.stopPropagation();
-            });
-
-            function updateSelection() {
-                var form = document.getElementById('filterForm');
-                if (!form) return;
-                form.querySelectorAll('input[type="hidden"][name="' + fieldName + '"]').forEach(function(el) {
-                    el.remove();
-                });
-                dropdown.querySelectorAll('input[type="checkbox"]:checked').forEach(function(cb) {
-                    var input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = fieldName;
-                    input.value = cb.value;
-                    form.appendChild(input);
-                });
-            }
-
-            document.addEventListener('click', function(e) {
-                if (!group.contains(e.target)) {
-                    group.classList.remove('active');
-                }
-            });
-        }
-
-        setupAccordionMultiselect('[data-target="directorsDropdown"]', 'directorsDropdown', 'directors', '/directors');
-        setupAccordionMultiselect('[data-target="genresDropdown"]', 'genresDropdown', 'genres', '/genres');
-    })();
-
-    updateBadges();
-    window.addEventListener('pageshow', updateBadges);
-    window.addEventListener('popstate', updateBadges);
-    document.addEventListener('click', function(e) {
-        var menu = document.getElementById('userMenu');
-        if (menu && !menu.contains(e.target)) menu.classList.remove('show');
-    });
-</script>
+<script th:src="@{/js/main.js}" defer></script>
 
 </body>
 </html>

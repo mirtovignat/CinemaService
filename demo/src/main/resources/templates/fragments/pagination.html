@@ -1,20 +1,114 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="">
+<html xmlns:th="http://www.thymeleaf.org">
 <body>
 
 <div th:fragment="pager(page, url)" class="pagination" th:if="${page != null and page.totalPages > 1}">
     <a th:if="${page.hasPrevious()}"
        th:href="@{{path}(path=${url}, page=${page.number - 1})}"
-       class="page-nav">&larr; Предыдущая</a>
+       class="page-nav"
+       data-page="${page.number - 1}">
+        <th:block th:replace="~{fragments/icons :: icon-chevron-left}"></th:block>
+    </a>
 
-    <div class="page-info">
-        Страница <strong th:text="${page.number + 1}">1</strong> из <span th:text="${page.totalPages}">1</span>
-    </div>
+    <th:block th:with="total=${page.totalPages}, current=${page.number}">
+        <a th:if="${total > 0}"
+           th:href="@{{path}(path=${url}, page=0)}"
+           class="page-nav"
+           th:classappend="${current == 0} ? 'active' : ''"
+           data-page="0">1</a>
+
+        <a th:if="${total > 1}"
+           th:href="@{{path}(path=${url}, page=1)}"
+           class="page-nav"
+           th:classappend="${current == 1} ? 'active' : ''"
+           data-page="1">2</a>
+
+        <span th:if="${total > 4 and current > 3}" class="page-dots">…</span>
+
+        <th:block th:each="p : ${#numbers.sequence(
+            (current - 1 > 2) ? current - 1 : 2,
+            (current + 1 < total) ? current + 1 : total - 1
+        )}">
+            <a th:if="${p >= 2}"
+               th:href="@{{path}(path=${url}, page=${p})}"
+               class="page-nav"
+               th:classappend="${p == current} ? 'active' : ''"
+               th:text="${p + 1}"
+               data-page="${p}"></a>
+        </th:block>
+
+        <span th:if="${total > 4 and current < total - 2}" class="page-dots">…</span>
+    </th:block>
 
     <a th:if="${page.hasNext()}"
        th:href="@{{path}(path=${url}, page=${page.number + 1})}"
-       class="page-nav">Следующая &rarr;</a>
+       class="page-nav"
+       data-page="${page.number + 1}">
+        <th:block th:replace="~{fragments/icons :: icon-chevron-right}"></th:block>
+    </a>
 </div>
+
+<style>
+    .pagination {
+        display: flex;
+        gap: 0.3rem;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5rem 0;
+        flex-wrap: wrap;
+    }
+    .page-nav {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 2.2rem;
+        height: 2.2rem;
+        padding: 0 0.4rem;
+        border-radius: 3px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: #e2e8f0;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: 0.15s ease;
+        cursor: pointer;
+        font-weight: 500;
+        margin: 0;
+        box-sizing: border-box;
+    }
+    .page-nav:hover {
+        background: rgba(59, 130, 246, 0.25);
+        border-color: rgba(59, 130, 246, 0.4);
+        color: #ffffff;
+    }
+    .page-nav.active {
+        background: #3b82f6;
+        border-color: #3b82f6;
+        color: #fff;
+        font-weight: 600;
+        box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+    }
+    .page-nav svg {
+        width: 16px;
+        height: 16px;
+    }
+    .page-dots {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 1.8rem;
+        height: 2.2rem;
+        color: #94a3b8;
+        font-size: 0.9rem;
+        user-select: none;
+        letter-spacing: 2px;
+        padding: 0 0.2rem;
+    }
+    .pagination-loading {
+        opacity: 0.5;
+        pointer-events: none;
+    }
+</style>
 
 </body>
 </html>

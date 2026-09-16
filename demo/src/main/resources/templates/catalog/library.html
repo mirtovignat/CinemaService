@@ -1,205 +1,315 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ru">
 <head>
-    <title>📚 Моя библиотека — Cinema Service</title>
+    <title>Моя коллекция — CinemaService</title>
     <th:block th:replace="~{fragments/head :: head}"></th:block>
     <style>
-        html,
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; margin: 0; padding: 0; }
         body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            background-color: #0b0f19;
-            color: #f8fafc;
-            font-family: 'Inter', system-ui, sans-serif;
-        }
-        body {
+            background: #0b0e14;
             display: flex;
             flex-direction: column;
-            overflow-y: auto;
-            overflow-x: hidden;
+            height: 100vh;
+            font-family: 'Inter', system-ui, sans-serif;
+            color: #eef2ff;
+            overflow: hidden;
         }
-        main.catalog-wrapper {
-            flex: 1 0 auto;
-            padding: 1rem 1.5rem 3rem 1.5rem;
-            max-width: 1400px;
-            margin: 0 auto;
-            width: 100%;
-            box-sizing: border-box;
+        .header-wrapper { flex-shrink: 0; z-index: 50; }
+        .profile-wrapper {
+            flex: 1; width: 100%; margin: 0; padding: 0;
+            position: relative; overflow: hidden; min-height: 0;
+            display: flex; flex-direction: column;
         }
-        .catalog-header {
-            text-align: center;
-            padding: 0.5rem 0 1.2rem 0;
+        .profile-grid {
+            display: grid; grid-template-columns: 240px 1fr;
+            gap: 0; align-items: stretch; flex: 1; min-height: 0;
+            transition: grid-template-columns 0.4s ease;
+        }
+        .profile-card {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(8px);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            height: 100%; max-height: 100%; overflow: hidden;
+            display: flex; flex-direction: column;
+            padding: 1.25rem 0.75rem;
+            position: relative; min-width: 0; flex: 1 1 0;
+            transition: all 0.4s ease;
+        }
+        .sidebar-toggle {
+            position: absolute; top: 12px; right: 12px; z-index: 10;
+            border: none; background: transparent;
+            color: #94a3b8; font-size: 1.4rem; cursor: pointer;
+            transition: 0.2s; user-select: none;
+            padding: 0; width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 8px;
+        }
+        .sidebar-toggle:hover { color: #fff; background: rgba(255, 255, 255, 0.06); }
+        .profile-grid.sidebar-collapsed { grid-template-columns: 56px 1fr; }
+        .profile-grid.sidebar-collapsed .profile-card {
+            padding: 0.75rem 0.5rem; min-width: 56px; width: 56px; overflow: hidden;
+        }
+        .profile-grid.sidebar-collapsed .sidebar-toggle {
+            right: 4px; top: 4px; font-size: 1.2rem;
+        }
+        .sidebar-content {
+            opacity: 1; transition: opacity 0.3s ease 0.1s;
+            overflow: hidden; flex: 1;
+            display: flex; flex-direction: column;
+            height: 100%; min-height: 0;
+        }
+        .profile-grid.sidebar-collapsed .sidebar-content {
+            opacity: 0; pointer-events: none; max-height: 0;
+            overflow: hidden; flex: 0;
+        }
+        @media (max-width: 1024px) {
+            .profile-grid.sidebar-collapsed { grid-template-columns: 1fr; }
+            .profile-grid.sidebar-collapsed .profile-card {
+                padding: 1rem; width: 100%; min-width: auto; max-height: 80px;
+            }
+            .profile-grid.sidebar-collapsed .sidebar-content {
+                opacity: 1; pointer-events: auto; max-height: none; flex: 1;
+            }
+        }
+        .sidebar-profile {
+            display: flex; flex-direction: column; align-items: center;
+            padding: 0.75rem 0.5rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            margin-bottom: 0.75rem; flex-shrink: 0;
+        }
+        .sidebar-avatar {
+            width: 56px; height: 56px; border-radius: 50%;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 1.4rem; color: #fff;
+            border: 2px solid #6366f1; margin-bottom: 0.5rem;
+            flex-shrink: 0; text-transform: uppercase;
+        }
+        .sidebar-profile-name { font-weight: 600; font-size: 0.95rem; color: #f1f5f9; }
+        .sidebar-profile-phone { font-size: 0.75rem; color: #94a3b8; margin-top: 0.1rem; }
+        .sidebar-profile-email { font-size: 0.7rem; color: #64748b; margin-top: 0.1rem; }
+        .nav-menu {
+            display: flex; flex-direction: column; gap: 2px;
+            flex: 1; overflow-y: auto; min-height: 0; padding-right: 6px;
+        }
+        .nav-menu::-webkit-scrollbar { width: 8px; }
+        .nav-menu::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.06); border-radius: 6px; margin: 2px 0;
+        }
+        .nav-menu::-webkit-scrollbar-thumb {
+            background: #6b7280; border-radius: 6px;
+            border: 2px solid transparent; background-clip: padding-box;
+            min-height: 30px;
+        }
+        .nav-menu::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+        .nav-link {
+            display: flex; align-items: center; gap: 0.6rem;
+            padding: 0.5rem 0.75rem; border-radius: 10px;
+            text-decoration: none; color: #94a3b8;
+            transition: 0.2s; cursor: pointer; font-size: 0.85rem;
+            font-weight: 400; border: none; background: transparent;
+            width: 100%; text-align: left; position: relative;
+        }
+        .nav-link:hover { background: rgba(255, 255, 255, 0.06); color: #f1f5f9; }
+        .nav-link.active { background: rgba(99, 102, 241, 0.15); color: #a78bfa; }
+        .nav-link .nav-badge {
+            margin-left: auto; background: #6366f1; color: #fff;
+            border-radius: 40px; min-width: 18px; height: 18px;
+            font-size: 0.55rem; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            padding: 0 5px; flex-shrink: 0;
+        }
+        .nav-divider {
+            height: 1px; background: rgba(255, 255, 255, 0.06);
+            margin: 0.4rem 0.75rem; flex-shrink: 0;
+        }
+        .delete-account-btn {
+            width: 100%; padding: 0.4rem; background: transparent;
+            border: 1px solid #f43f5e; color: #f43f5e;
+            border-radius: 60px; font-weight: 600; font-size: 0.7rem;
+            cursor: pointer; transition: 0.2s; text-align: center;
+            flex-shrink: 0; margin-top: 0.4rem;
+            display: flex; align-items: center; justify-content: center;
+            gap: 0.3rem;
+        }
+        .delete-account-btn:hover { background: #f43f5e; color: #fff; }
+        .delete-account-btn svg { width: 14px; height: 14px; }
+        .profile-right {
+            display: flex; flex-direction: column;
+            padding: 1.5rem 2.5rem; gap: 1.5rem;
+            height: 100%; overflow-y: auto;
+            background: #0f131a; position: relative;
+        }
+        .profile-right::-webkit-scrollbar { width: 8px; }
+        .profile-right::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.06); border-radius: 6px; margin: 2px 0;
+        }
+        .profile-right::-webkit-scrollbar-thumb {
+            background: #6b7280; border-radius: 6px;
+            border: 2px solid transparent; background-clip: padding-box;
+            min-height: 30px;
+        }
+        .profile-right::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+        .page-header-row {
             display: flex;
             align-items: center;
-            justify-content: center;
             gap: 1rem;
-            flex-wrap: wrap;
+            width: 100%;
+            flex-shrink: 0;
+            flex-wrap: nowrap;
         }
-        .catalog-header h1 {
+
+        .page-header-row .profile-right-header {
+            flex: 0 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.25rem;
+        }
+
+        .page-header-row .profile-right-header h1 {
             font-size: 1.8rem;
             font-weight: 700;
-            background: linear-gradient(135deg, #e0e7ff, #a78bfa);
+            background: linear-gradient(135deg, #e0e7ff, #c084fc);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
             margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
         }
-        .catalog-count {
-            background: rgba(255, 255, 255, 0.08);
-            padding: 0.2rem 0.9rem;
-            border-radius: 60px;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            color: #cbd5e1;
-            font-size: 0.85rem;
+        .page-header-row .profile-right-header h1 svg {
+            width: 26px; height: 26px; stroke: #c084fc; flex-shrink: 0;
         }
+        .page-header-row .profile-right-header .greeting-sub {
+            color: #94a3b8; font-size: 0.95rem;
+        }
+
+        .page-header-row .sort-toggle-wrapper {
+            margin-left: auto;
+            flex: 0 0 auto;
+        }
+
+        .page-header-row .catalog-search {
+            position: static !important;
+            top: auto !important;
+            right: auto !important;
+            left: auto !important;
+            margin: 0 !important;
+            flex: 0 0 auto;
+            width: 340px !important;
+            max-width: 340px !important;
+        }
+
+        .page-header-row .catalog-search form,
+        .page-header-row .catalog-search .catalog-search-input-wrapper {
+            width: 100% !important;
+        }
+
+        @media (max-width: 1200px) {
+            .page-header-row {
+                flex-wrap: wrap;
+                row-gap: 0.75rem;
+            }
+            .page-header-row .profile-right-header {
+                flex: 1 1 auto;
+            }
+            .page-header-row .sort-toggle-wrapper {
+                margin-left: 0;
+            }
+        }
+
         .library-container {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 2rem 1.5rem;
-            width: 100%;
-            margin: 0 auto;
-            align-items: stretch;
-            padding-bottom: 2rem;
-            overflow: visible;
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 2rem 1.5rem; width: 100%; margin: 0 auto;
+            align-items: stretch; padding-bottom: 2rem; overflow: visible;
         }
         @media (max-width: 1100px) {
-            .library-container {
-                grid-template-columns: repeat(3, 1fr);
-            }
+            .library-container { grid-template-columns: repeat(3, 1fr); }
         }
         @media (max-width: 780px) {
-            .library-container {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 1.5rem;
-            }
+            .library-container { grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
         }
         @media (max-width: 480px) {
-            .library-container {
-                grid-template-columns: 1fr;
-                max-width: 320px;
-                margin: 0 auto;
-            }
+            .library-container { grid-template-columns: 1fr; max-width: 320px; margin: 0 auto; }
         }
         .library-card {
-            display: flex;
-            flex-direction: column;
+            display: flex; flex-direction: column;
             background: rgba(15, 23, 42, 0.6);
             border-radius: 18px;
             border: 1px solid rgba(72, 187, 255, 0.2);
-            backdrop-filter: blur(8px);
-            overflow: hidden;
-            width: 100%;
-            max-width: 320px;
-            box-sizing: border-box;
-            margin: 0 auto;
-            position: relative;
+            backdrop-filter: blur(8px); overflow: hidden;
+            width: 100%; max-width: 320px; box-sizing: border-box;
+            margin: 0 auto; position: relative;
             transition: all 0.3s ease;
-            height: 100%;
-            min-height: 480px;
-            align-self: stretch;
+            height: 100%; min-height: 480px; align-self: stretch;
         }
         .library-card:hover {
             transform: translateY(-6px);
             border-color: rgba(129, 140, 248, 0.6);
             box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.5);
         }
-        .library-poster-link {
-            width: 100%;
-            aspect-ratio: 2 / 3;
-            display: block;
-            overflow: hidden;
-            position: relative;
-            background-color: #0d1322;
-            flex: 0 0 auto;
-            height: auto;
-            text-decoration: none;
-            border-radius: 18px 18px 0 0;
+        .library-poster-wrapper {
+            width: 100%; aspect-ratio: 2 / 3;
+            display: block; overflow: hidden; position: relative;
+            background-color: #0d1322; flex: 0 0 auto; height: auto;
+            border-radius: 18px 18px 0 0; cursor: pointer;
         }
-        .library-poster-link>a {
-            display: block;
-            width: 100%;
-            height: 100%;
-            text-decoration: none;
-            position: relative;
+        .library-poster-wrapper .poster-link {
+            display: block; width: 100%; height: 100%;
+            text-decoration: none; position: relative;
+            cursor: pointer;
         }
         .library-rating-badge {
-            position: absolute;
-            top: 0.8rem;
-            left: 0.8rem;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(8px);
-            padding: 0.3rem 0.8rem;
-            border-radius: 10px;
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: #fcd34d;
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
+            position: absolute; top: 0.8rem; left: 0.8rem;
+            background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px);
+            padding: 0.3rem 0.8rem; border-radius: 10px;
+            font-size: 0.9rem; font-weight: 700; color: #fcd34d;
+            display: flex; align-items: center; gap: 0.3rem;
             border: 1px solid rgba(252, 211, 77, 0.25);
-            z-index: 5;
-            pointer-events: none;
+            z-index: 5; pointer-events: none;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
         }
         .library-rating-badge .star {
-            font-size: 0.8rem;
-            color: #fcd34d;
+            display: inline-flex; align-items: center;
+            position: relative; top: -1px;
+            color: #fcd34d !important; flex-shrink: 0;
         }
-        .library-rating-badge .rating-value {
-            color: #fff;
+        .library-rating-badge .star svg {
+            width: 12px; height: 12px;
+            color: #fcd34d !important;
+            fill: #fcd34d !important;
+            stroke: #fcd34d !important;
+            vertical-align: middle;
         }
-        .library-rating-badge .rating-max {
-            color: rgba(255, 255, 255, 0.4);
-            font-weight: 400;
-            font-size: 0.7rem;
-        }
-        .library-poster-link .poster-overlay {
-            position: absolute;
-            inset: 0;
+        .poster-overlay {
+            position: absolute; inset: 0;
             background: rgba(0, 0, 0, 0.4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            backdrop-filter: blur(2px);
-            pointer-events: none;
-            z-index: 4;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.3s ease;
+            backdrop-filter: blur(2px); pointer-events: none;
+            z-index: 4; border-radius: 18px 18px 0 0;
         }
-        .library-poster-link:hover .poster-overlay {
-            opacity: 1;
-        }
-        .poster-overlay .watch-btn-neon {
-            pointer-events: auto;
-        }
+        .library-poster-wrapper:hover .poster-overlay { opacity: 1; }
+        .poster-overlay .watch-btn-neon { pointer-events: auto; }
         .watch-btn-neon {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            padding: 0.6rem 1.2rem;
-            border-radius: 50px;
+            display: inline-flex; align-items: center; justify-content: center;
+            gap: 0.5rem; padding: 0.6rem 1.2rem; border-radius: 50px;
             background: linear-gradient(135deg, #7c3aed, #6d28d9);
-            color: white;
-            font-weight: 700;
-            font-size: 0.8rem;
-            text-decoration: none;
-            border: none;
-            cursor: pointer;
+            color: #fff; font-weight: 700; font-size: 0.8rem;
+            text-decoration: none; border: none; cursor: pointer;
             transition: all 0.3s ease;
             box-shadow: 0 0 20px rgba(124, 58, 237, 0.3), inset 0 0 20px rgba(124, 58, 237, 0.1);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            position: relative;
-            overflow: hidden;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            position: relative; overflow: hidden;
         }
         .watch-btn-neon::before {
-            content: '';
-            position: absolute;
-            inset: -2px;
-            border-radius: 50px;
-            padding: 2px;
+            content: ''; position: absolute; inset: -2px;
+            border-radius: 50px; padding: 2px;
             background: linear-gradient(135deg, #a78bfa, #7c3aed, #a78bfa);
             background-size: 200% 200%;
             -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
@@ -209,295 +319,293 @@
             pointer-events: none;
         }
         @keyframes neonPulse {
-            0%,
-            100% {
-                background-position: 0% 50%;
-            }
-            50% {
-                background-position: 100% 50%;
-            }
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
         }
         .watch-btn-neon:hover {
             transform: scale(1.08);
-            box-shadow: 0 0 40px rgba(124, 58, 237, 0.6), 0 0 80px rgba(124, 58, 237, 0.3), inset 0 0 30px rgba(124, 58, 237, 0.2);
+            box-shadow: 0 0 40px rgba(124, 58, 237, 0.6),
+                        0 0 80px rgba(124, 58, 237, 0.3),
+                        inset 0 0 30px rgba(124, 58, 237, 0.2);
             background: linear-gradient(135deg, #8b5cf6, #6d28d9);
         }
-        .watch-btn-neon:active {
-            transform: scale(0.95);
-        }
-        .watch-btn-neon svg {
-            width: 14px;
-            height: 14px;
-            fill: currentColor;
-            flex-shrink: 0;
+        .watch-btn-neon:active { transform: scale(0.95); }
+        .watch-btn-neon svg { width: 14px; height: 14px; fill: currentColor; flex-shrink: 0; }
+        .watch-btn-neon:disabled {
+            opacity: 0.6; cursor: not-allowed; transform: none !important;
         }
         .library-poster-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
+            width: 100%; height: 100%; object-fit: cover; display: block;
         }
         .movie-poster-placeholder {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+            width: 100%; height: 100%; object-fit: cover;
             background: #2d3748;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #718096;
-            font-size: 0.85rem;
+            display: flex; align-items: center; justify-content: center;
+            color: #718096; font-size: 0.85rem;
         }
         .library-card-content {
             padding: 0.8rem 0.8rem 1rem;
-            display: flex;
-            flex-direction: column;
-            flex: 1 1 auto;
-            min-height: 165px;
-            max-height: 165px;
-            height: 165px;
+            display: flex; flex-direction: column; flex: 1 1 auto;
+            min-height: 165px; max-height: 165px; height: 165px;
             box-sizing: border-box;
             background: rgba(15, 23, 42, 0.75);
             border-radius: 0 0 18px 18px;
-            justify-content: space-between;
-            gap: 0.3rem;
-            overflow: hidden;
+            justify-content: space-between; gap: 0.3rem;
+            overflow: hidden; position: relative;
+        }
+        .library-card.watched .library-card-content::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #ef4444, #dc2626, #ef4444);
+            background-size: 200% 100%;
+            animation: watchedBarPulse 2s ease-in-out infinite;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+        }
+        @keyframes watchedBarPulse {
+            0%, 100% { background-position: 0% 0%; }
+            50% { background-position: 100% 0%; }
         }
         .library-card-title {
-            margin: 0;
-            font-size: 1rem;
-            font-weight: 700;
-            word-break: break-word;
-            line-height: 1.3;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            min-height: 2.6rem;
-            max-height: 2.6rem;
+            margin: 0; font-size: 1rem; font-weight: 700;
+            word-break: break-word; line-height: 1.3;
+            display: -webkit-box; -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical; overflow: hidden;
+            min-height: 2.6rem; max-height: 2.6rem;
         }
-        .library-card-title a {
-            color: #fff;
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-        .library-card-title a:hover {
-            color: #a78bfa;
-        }
+        .library-card-title a { color: #fff; text-decoration: none; transition: color 0.2s; }
+        .library-card-title a:hover { color: #a78bfa; }
         .library-info {
-            display: flex;
-            flex-direction: column;
-            gap: 0.35rem;
-            flex: 1 1 auto;
-            justify-content: flex-start;
-            min-height: 0;
+            display: flex; flex-direction: column; gap: 0.35rem;
+            flex: 1 1 auto; justify-content: flex-start; min-height: 0;
         }
         .library-genre-tag {
             background: rgba(96, 165, 250, 0.12);
-            padding: 0.15rem 0.7rem;
-            border-radius: 14px;
-            font-size: 0.75rem;
-            color: #94a3b8;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.3rem;
-            white-space: nowrap;
-            max-width: 80%;
+            padding: 0.15rem 0.7rem; border-radius: 14px;
+            font-size: 0.75rem; color: #94a3b8;
+            display: inline-flex; align-items: center; gap: 0.3rem;
+            white-space: nowrap; max-width: 80%;
             border: 1px solid rgba(96, 165, 250, 0.08);
             align-self: flex-start;
         }
-        .library-genre-tag .genre-label {
-            color: #64748b;
-            font-weight: 500;
-            font-size: 0.65rem;
-        }
+        .library-genre-tag .genre-label { color: #64748b; font-weight: 500; font-size: 0.65rem; }
         .library-genre-tag .genre-value {
-            color: #e2e8f0;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            color: #e2e8f0; overflow: hidden;
+            text-overflow: ellipsis; white-space: nowrap;
         }
         .library-info-row {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            font-size: 0.75rem;
-            color: #94a3b8;
-            line-height: 1.3;
-            flex-wrap: nowrap;
-            min-height: 1.3rem;
-            overflow: hidden;
+            display: flex; align-items: center; gap: 0.4rem;
+            font-size: 0.75rem; color: #94a3b8; line-height: 1.3;
+            flex-wrap: nowrap; min-height: 1.3rem; overflow: hidden;
         }
-        .library-info-icon {
-            flex-shrink: 0;
-            font-size: 0.75rem;
-            opacity: 0.8;
-        }
+        .library-info-icon { flex-shrink: 0; font-size: 0.75rem; opacity: 0.8; }
         .library-info-label {
-            font-size: 0.7rem;
-            font-weight: 600;
-            color: #64748b;
-            flex-shrink: 0;
-            letter-spacing: 0.3px;
+            font-size: 0.7rem; font-weight: 600; color: #64748b;
+            flex-shrink: 0; letter-spacing: 0.3px;
         }
         .library-info-value {
-            color: #e2e8f0;
-            font-weight: 500;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            flex: 1 1 auto;
-            min-width: 0;
-            font-size: 0.75rem;
+            color: #e2e8f0; font-weight: 500;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            flex: 1 1 auto; min-width: 0; font-size: 0.75rem;
         }
         .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            color: #94a3b8;
+            text-align: center; padding: 4rem 2rem; color: #94a3b8;
         }
-        .empty-state p {
-            font-size: 1.2rem;
-            margin-bottom: 1.5rem;
-        }
+        .empty-state p { font-size: 1.2rem; margin-bottom: 1.5rem; }
         .watch-btn-empty {
-            display: inline-block;
-            padding: 0.75rem 2rem;
-            background: #818cf8;
-            color: #0b0f19;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
+            display: inline-block; padding: 0.75rem 2rem;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: #fff; border-radius: 60px;
+            text-decoration: none; font-weight: 600;
             transition: background 0.2s;
         }
-        .watch-btn-empty:hover {
-            background: #a5b4fc;
-        }
+        .watch-btn-empty:hover { background: #818cf8; transform: translateY(-2px); }
         .library-card.highlight {
             border-color: #818cf8 !important;
             box-shadow: 0 0 0 3px #818cf8, 0 0 20px rgba(129, 140, 248, 0.6);
             transition: box-shadow 0.3s ease, border-color 0.3s ease;
         }
-        .library-meta {
-            display: none;
+        @media (max-width: 1024px) {
+            .profile-grid { grid-template-columns: 1fr; }
+            .profile-card {
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+                padding: 1rem; max-height: 260px; overflow-y: auto;
+            }
+            .profile-right { padding: 1rem; height: auto; min-height: 400px; }
+            .library-container { grid-template-columns: repeat(2, 1fr); }
         }
-        .library-release {
-            display: none;
-        }
-        .library-genre {
-            display: none;
-        }
-        .library-rating {
-            display: none;
+        @media (max-width: 640px) {
+            .page-header-row .profile-right-header h1 { font-size: 1.3rem; }
+            .page-header-row .catalog-search {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            .profile-right { padding: 0.75rem; }
+            .library-container { grid-template-columns: 1fr; max-width: 320px; margin: 0 auto; }
         }
     </style>
 </head>
 <body>
+<div class="header-wrapper">
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+</div>
 
-<th:block th:replace="~{fragments/header :: header}"></th:block>
 <th:block th:replace="~{fragments/flash-messages :: flashMessages}"></th:block>
 
-<main class="catalog-wrapper">
-    <div class="catalog-header">
-        <h1>📚 Моя библиотека</h1>
-        <div class="catalog-count" th:if="${items != null}">
-            Всего: <strong th:text="${#lists.size(items)}">0</strong>
-        </div>
-    </div>
+<div id="authStatus" th:data-authenticated="${session.sessionUser != null}" style="display:none;"></div>
+<main class="profile-wrapper">
+    <div class="profile-grid">
+        <th:block
+                th:replace="~{fragments/sidebar :: sidebar(currentPage='library', userForOwner=${response.userForOwner})}">
+        </th:block>
 
-    <div th:if="${items != null and not #lists.isEmpty(items)}" class="library-container">
-        <div th:each="item : ${items}" class="library-card" th:attr="data-movie-id=${item.id}">
-            <div class="library-poster-link">
-                <a th:href="@{/movies/{id}(id=${item.id})}">
-                    <img th:if="${item.posterUrl != null and !item.posterUrl.isEmpty()}"
-                         th:src="${item.posterUrl}"
-                         alt="Постер"
-                         class="library-poster-img"
-                         onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';"
-                         src=""/>
-                    <div class="movie-poster-placeholder"
-                         th:style="${item.posterUrl != null and !item.posterUrl.isEmpty()} ? 'display:none;' : ''">
-                        <span>📽️ Постер</span>
+        <div class="profile-right">
+
+            <div class="page-header-row">
+                <div class="profile-right-header">
+                    <h1>
+                        <th:block th:replace="~{fragments/icons :: icon-film}"></th:block>
+                        Моя коллекция
+                    </h1>
+                    <div class="greeting-sub"
+                         th:if="${response != null and response.catalog != null}">
+                        Всего фильмов:
+                        <strong th:text="${#lists.size(response.catalog)}">0</strong>
                     </div>
-                    <div class="library-rating-badge" th:if="${item.rating != null}">
-                        <span class="star">★</span>
-                        <span class="rating-value" th:text="${#numbers.formatDecimal(item.rating, 1, 1)}">8.5</span>
-                        <span class="rating-max">/ 10</span>
+                </div>
+                <th:block th:replace="~{fragments/sort-toggle :: sortToggle}"></th:block>
+                <th:block th:replace="~{fragments/catalog-search :: catalogSearch}"></th:block>
+            </div>
+
+            <div th:if="${response != null and response.catalog != null and not #lists.isEmpty(response.catalog)}"
+                 class="library-container">
+
+                <div th:each="item : ${response.catalog}"
+                     class="library-card"
+                     th:classappend="${item.watched} ? 'watched' : ''"
+                     th:attr="data-movie-id=${item.id.id},
+                              data-date=${item.addedAt != null ? #temporals.format(item.addedAt, 'yyyy-MM-dd''T''HH:mm:ss') : ''}">
+
+                    <div class="library-poster-wrapper">
+
+                        <a class="poster-link"
+                           href="javascript:void(0);"
+                           onclick="event.preventDefault(); event.stopPropagation(); handlePosterClick(this);">
+
+                            <img th:if="${item.media.posterUrl != null and !item.media.posterUrl.isEmpty()}"
+                                 th:src="${item.media.posterUrl}"
+                                 alt="Постер"
+                                 class="library-poster-img"
+                                 onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                                 src=""/>
+
+                            <div class="movie-poster-placeholder"
+                                 th:style="${item.media.posterUrl != null and !item.media.posterUrl.isEmpty()} ? 'display:none;' : ''">
+                                <span>Постер</span>
+                            </div>
+
+                            <div class="library-rating-badge"
+                                 th:if="${item.rating.rating != null}">
+                                <span class="star">
+                                    <th:block th:replace="~{fragments/icons :: icon-star}"></th:block>
+                                </span>
+                                <span class="rating-value"
+                                      th:text="${#numbers.formatDecimal(item.rating.rating, 1, 1)}">
+                                    8.5
+                                </span>
+                                <span class="rating-max">/ 10</span>
+                            </div>
+
+                        </a>
+
+                        <div class="poster-overlay">
+                            <button class="watch-btn-neon"
+                                    th:data-movie-id="${item.id.id}"
+                                    th:data-movie-title="${item.title.title}"
+                                    th:data-poster-url="${item.media.posterUrl}"
+                                    th:data-watched="${item.watched}"
+                                    onclick="event.stopPropagation(); watchMovie(this)"
+                                    type="button">
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                     width="14" height="14"
+                                     viewBox="0 0 24 24"
+                                     fill="currentColor">
+                                    <polygon points="5 3 19 12 5 21 5 3"/>
+                                </svg>
+                                Смотреть
+                            </button>
+                        </div>
                     </div>
-                </a>
-                <div class="poster-overlay">
-                    <a th:href="${item.posterUrl}" target="_blank" class="watch-btn-neon">
-                        <svg viewBox="0 0 24 24">
-                            <polygon points="5,3 19,12 5,21"/>
-                        </svg>
-                        Смотреть
-                    </a>
+
+                    <div class="library-card-content">
+                        <h3 class="library-card-title">
+                            <a th:href="@{/movies/{id}(id=${item.id.id})}"
+                               th:text="${item.title.title}">
+                                Название
+                            </a>
+                        </h3>
+
+                        <div class="library-info">
+
+                            <div class="library-genre-tag"
+                                 th:if="${item.media.genre != null and !item.media.genre.isEmpty()}">
+                                <span class="genre-label">
+                                    <th:block th:replace="~{fragments/icons :: icon-tag}"></th:block>
+                                    Жанр:
+                                </span>
+                                <span class="genre-value" th:text="${item.media.genre}">
+                                    Фантастика
+                                </span>
+                            </div>
+
+                            <div class="library-info-row"
+                                 th:if="${item.meta.director != null and !item.meta.director.isEmpty()}">
+                                <span class="library-info-icon">
+                                    <th:block th:replace="~{fragments/icons :: icon-video}"></th:block>
+                                </span>
+                                <span class="library-info-label">Режиссёр</span>
+                                <span class="library-info-value"
+                                      th:text="${item.meta.director}"
+                                      th:title="${item.meta.director}">
+                                    Кристофер Нолан
+                                </span>
+                            </div>
+
+                            <div class="library-info-row"
+                                 th:if="${item.release.releaseYear != null}">
+                                <span class="library-info-icon">
+                                    <th:block th:replace="~{fragments/icons :: icon-calendar}"></th:block>
+                                </span>
+                                <span class="library-info-label">Год выпуска</span>
+                                <span class="library-info-value"
+                                      th:text="${item.release.releaseYear}">
+                                    2024
+                                </span>
+                            </div>
+
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="library-card-content">
-                <h3 class="library-card-title">
-                    <a th:href="@{/movies/{id}(id=${item.id})}"
-                       th:text="${item.title}">
-                        Название
-                    </a>
-                </h3>
-
-                <div class="library-info">
-                    <div class="library-genre-tag"
-                         th:if="${item.genre != null and !item.genre.isEmpty()}">
-                        <span class="genre-label">🎭 Жанр:</span>
-                        <span class="genre-value" th:text="${item.genre}">Фантастика</span>
-                    </div>
-
-                    <div class="library-info-row"
-                         th:if="${item.director != null and !item.director.isEmpty()}">
-                        <span class="library-info-icon">🎬</span>
-                        <span class="library-info-label">Режиссёр</span>
-                        <span class="library-info-value"
-                              th:text="${item.director}"
-                              th:title="${item.director}">
-                            Кристофер Нолан
-                        </span>
-                    </div>
-
-                    <div class="library-info-row"
-                         th:if="${item.releaseDate != null}">
-                        <span class="library-info-icon">📅</span>
-                        <span class="library-info-label">Дата выхода</span>
-                        <span class="library-info-value"
-                              th:text="${#temporals.format(item.releaseDate, 'dd.MM.yyyy')}">
-                            25.12.2024
-                        </span>
-                    </div>
-                </div>
+            <div th:if="${response == null or response.catalog == null or #lists.isEmpty(response.catalog)}"
+                 class="empty-state">
+                <p>Ваша коллекция пуста</p>
+                <a href="/" class="watch-btn-empty">Перейти в каталог</a>
             </div>
-        </div>
-    </div>
 
-    <div th:if="${items == null or #lists.isEmpty(items)}" class="empty-state">
-        <p>Библиотека пуста</p>
-        <a href="/" class="watch-btn-empty">Перейти в каталог</a>
+        </div>
     </div>
 </main>
-
 <script th:src="@{/js/main.js}" defer></script>
+<script th:src="@{/js/catalog-search.js}" defer></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const highlightId = urlParams.get('highlight');
-        if (highlightId) {
-            const card = document.querySelector(`.library-card[data-movie-id="${highlightId}"]`);
-            if (card) {
-                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                card.classList.add('highlight');
-                setTimeout(function() {
-                    card.classList.remove('highlight');
-                }, 3000);
-            }
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof window.__initSortToggle === 'function') {
+            window.__initSortToggle();
         }
     });
 </script>
-
 <th:block th:replace="~{fragments/footer :: footer}"></th:block>
 </body>
 </html>

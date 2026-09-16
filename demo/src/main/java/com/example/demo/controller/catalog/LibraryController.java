@@ -1,32 +1,22 @@
 package com.example.demo.controller.catalog;
 
-import com.example.demo.dto.catalog.LibrarianMovieForOwnerViewDTO;
-import com.example.demo.dto.user.SessionUser;
+import com.example.demo.dto.catalog.LibrarianMovieViewDTO;
+import com.example.demo.model.entity.PurchasedMovie;
 import com.example.demo.service.catalog.LibraryService;
-import lombok.AllArgsConstructor;
+import com.example.demo.service.movie.MovieService;
+import com.example.demo.service.user.UserQueryService;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.SessionAttribute;
 
-import java.util.List;
-
-@AllArgsConstructor
 @Controller
 @RequestMapping("/library")
-public class LibraryController {
+public class LibraryController extends AbstractCatalogController<PurchasedMovie, LibrarianMovieViewDTO> {
 
-    private final LibraryService libraryService;
-
-    @GetMapping
-    public String getLibrary(
-            Model model,
-            @SessionAttribute SessionUser sessionUser
+    public LibraryController(
+            LibraryService libraryService,
+            MovieService movieService,
+            UserQueryService userQueryService
     ) {
-        Long userId = sessionUser.id();
-        List<LibrarianMovieForOwnerViewDTO> items = libraryService.getCatalog(userId);
-        model.addAttribute("items", items);
-        return "catalog/library";
+        super("catalog/library", libraryService, movieService, userQueryService);
     }
 }

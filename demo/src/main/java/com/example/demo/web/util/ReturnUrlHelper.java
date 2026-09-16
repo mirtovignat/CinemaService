@@ -1,5 +1,6 @@
 package com.example.demo.web.util;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Component;
 
@@ -8,33 +9,36 @@ public class ReturnUrlHelper {
 
     private static final String RETURN_URL_ATTR = "returnUrl";
 
-    public void saveReturnUrl(HttpSession session, String url) {
+    public void saveReturnUrl(HttpSession httpSession, String url) {
         if (url != null && !url.isBlank()) {
-            session.setAttribute(RETURN_URL_ATTR, url);
+            httpSession.setAttribute(RETURN_URL_ATTR, url);
         }
     }
 
-    public String getAndClearReturnUrl(HttpSession session) {
-        String url = (String) session.getAttribute(RETURN_URL_ATTR);
-        session.removeAttribute(RETURN_URL_ATTR);
+    public String getAndClearReturnUrl(HttpSession httpSession) {
+        String url = (String) httpSession.getAttribute(RETURN_URL_ATTR);
+        httpSession.removeAttribute(RETURN_URL_ATTR);
         return url;
     }
 
-    public String getReturnUrlOrDefault(HttpSession session, String defaultUrl) {
-        String url = getAndClearReturnUrl(session);
+    public String getReturnUrlOrDefault(HttpSession httpSession, String defaultUrl) {
+        String url = getAndClearReturnUrl(httpSession);
         return url != null ? url : defaultUrl;
     }
 
-    public String getReturnUrlOrDefault(HttpSession session) {
-        return getReturnUrlOrDefault(session, "/");
-    }
-
-    public void clearReturnUrl(HttpSession session) {
-        session.removeAttribute(RETURN_URL_ATTR);
-    }
-
-    public boolean hasReturnUrl(HttpSession session) {
-        String url = (String) session.getAttribute(RETURN_URL_ATTR);
-        return url != null && !url.isBlank();
+    public void saveReturnUrlIfNotExists(HttpSession session, HttpServletRequest request, String... excludedPaths) {
+        if (session.getAttribute(RETURN_URL_ATTR) != null) {
+            return;
+        }
+        String referer = request.getHeader("Referer");
+        if (referer == null || referer.isBlank()) {
+            return;
+        }
+        for (String excluded : excludedPaths) {
+            if (referer.contains(excluded)) {
+                return;
+            }
+        }
+        saveReturnUrl(session, referer);
     }
 }

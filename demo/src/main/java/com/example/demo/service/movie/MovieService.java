@@ -1,20 +1,21 @@
 package com.example.demo.service.movie;
 
-import com.example.demo.dto.catalog.CartMovieForOwnerViewDTO;
-import com.example.demo.dto.catalog.FavouriteMovieForOwnerViewDTO;
+import com.example.demo.dto.catalog.CartItemViewDTO;
+import com.example.demo.dto.catalog.FavouriteMovieViewDTO;
 import com.example.demo.dto.movie.*;
 import com.example.demo.exception.BusinessException;
 import com.example.demo.exception.ErrorCode;
 import com.example.demo.filter.MovieFilter;
-import com.example.demo.helper.MovieSearchHelper;
-import com.example.demo.helper.MovieUserStatusHelper;
 import com.example.demo.mapper.entity.MovieMapper;
+import com.example.demo.model.Genre;
 import com.example.demo.model.entity.CartItem;
 import com.example.demo.model.entity.FavouriteMovie;
 import com.example.demo.model.entity.Movie;
 import com.example.demo.repository.entity.MovieRepository;
 import com.example.demo.service.linked_collection.AbstractLinkedCollectionService;
 import com.example.demo.service.purchased.PurchasedQueryService;
+import com.example.demo.util.MovieSearchHelper;
+import com.example.demo.util.MovieUserStatusHelper;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Service
@@ -31,22 +33,24 @@ public class MovieService {
     private final MovieRepository movieRepository;
     private final MovieMapper movieMapper;
     private final PurchasedQueryService purchasedQueryService;
-    private final AbstractLinkedCollectionService<FavouriteMovie, FavouriteMovieForOwnerViewDTO> favouritesService;
-    private final AbstractLinkedCollectionService<CartItem, CartMovieForOwnerViewDTO> cartService;
+    private final AbstractLinkedCollectionService<FavouriteMovie, FavouriteMovieViewDTO> favouritesService;
+    private final AbstractLinkedCollectionService<CartItem, CartItemViewDTO> cartService;
     private final MovieUserStatusHelper userStatusHelper;
     private final MovieSearchHelper movieSearchHelper;
 
-    public Page<MovieForUser<MovieCardViewDTO>> getCatalogPage(
-            Pageable pageable, Long userId) {
-        Page<Movie> moviePage = movieRepository.findAll(pageable);
+    public Page<MovieForUser<MovieCardViewDTO>> getMovies(MovieFilter movieFilter,
+                                                          Pageable pageable,
+                                                          Long userId) {
+        Page<Movie> moviePage = movieSearchHelper.findMoviesByMovieFilter(
+                movieFilter, pageable);
         return enrichWithStatuses(moviePage, userId);
     }
 
-    public Page<MovieForUser<MovieCardViewDTO>> getMoviesByFilter(MovieFilter movieFilter,
-                                                                  Pageable pageable,
-                                                                  Long userId) {
-        Page<Movie> moviePage = movieSearchHelper.findMoviesByMovieFilter(
-                movieFilter, pageable);
+    public Page<MovieForUser<MovieCardViewDTO>> getMoviesByGenre(String genreDisplayName,
+                                                                 Pageable pageable,
+                                                                 Long userId) {
+        Genre genre = Genre.fromDisplayName(genreDisplayName);
+        Page<Movie> moviePage = movieRepository.findAllDistinctByGenre(pageable, genre);
         return enrichWithStatuses(moviePage, userId);
     }
 
@@ -74,7 +78,16 @@ public class MovieService {
     }
 
     public List<String> getAllGenres() {
-        return movieRepository.findAllDistinctGenres();
+        return movieRepository.findAllGenresFromEnum()
+                .stream()
+                .map(genre -> {
+                    try {
+                        return Genre.valueOf(genre).getDisplayName();
+                    } catch (IllegalArgumentException illegalArgumentException) {
+                        return genre;
+                    }
+                })
+                .collect(Collectors.toList());
     }
 
     public Page<MovieForUser<MovieCardViewDTO>> enrichWithStatuses(

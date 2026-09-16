@@ -1,32 +1,31 @@
 package com.example.demo.controller.catalog;
 
-import com.example.demo.dto.catalog.HistoricalMovieForOwnerViewDTO;
-import com.example.demo.dto.user.SessionUser;
+import com.example.demo.dto.catalog.HistoricalMovieViewDTO;
+import com.example.demo.dto.response.GroupedHistoryResponse;
+import com.example.demo.model.entity.PurchasedMovie;
 import com.example.demo.service.catalog.HistoryService;
-import lombok.AllArgsConstructor;
+import com.example.demo.service.movie.MovieService;
+import com.example.demo.service.user.UserQueryService;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.SessionAttribute;
 
-import java.util.List;
-
-@AllArgsConstructor
 @Controller
 @RequestMapping("/history")
-public class HistoryController {
+public class HistoryController extends AbstractGroupedHistoryController<PurchasedMovie, HistoricalMovieViewDTO> {
 
     private final HistoryService historyService;
 
-    @GetMapping
-    public String getHistory(
-            Model model,
-            @SessionAttribute SessionUser sessionUser
+    public HistoryController(
+            HistoryService historyService,
+            MovieService movieService,
+            UserQueryService userQueryService
     ) {
-        Long userId = sessionUser.id();
-        List<HistoricalMovieForOwnerViewDTO> items = historyService.getCatalog(userId);
-        model.addAttribute("items", items);
-        return "catalog/history";
+        super("catalog/history", historyService, movieService, userQueryService);
+        this.historyService = historyService;
+    }
+
+    @Override
+    protected GroupedHistoryResponse<HistoricalMovieViewDTO> getGroupedHistory(Long userId) {
+        return historyService.getGroupedHistory(userId);
     }
 }

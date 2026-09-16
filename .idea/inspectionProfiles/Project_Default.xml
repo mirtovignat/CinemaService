@@ -1,10 +1,13 @@
 <component name="InspectionProjectProfileManager">
   <profile version="1.0">
     <option name="myName" value="Project Default" />
+    <inspection_tool class="AutoCloseableResource" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="METHOD_MATCHER_CONFIG" value="java.util.Formatter,format,java.io.Writer,append,com.google.common.base.Preconditions,checkNotNull,org.hibernate.Session,close,java.io.PrintWriter,printf,java.io.PrintStream,printf,java.lang.foreign.Arena,ofAuto,java.lang.foreign.Arena,global,io.minio.MinioClient.Builder,build" />
+    </inspection_tool>
     <inspection_tool class="HtmlUnknownAttribute" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="myValues">
         <value>
-          <list size="53">
+          <list size="65">
             <item index="0" class="java.lang.String" itemvalue="th:href" />
             <item index="1" class="java.lang.String" itemvalue="th:each" />
             <item index="2" class="java.lang.String" itemvalue="th:text" />
@@ -58,6 +61,18 @@
             <item index="50" class="java.lang.String" itemvalue="th:data-authenticated" />
             <item index="51" class="java.lang.String" itemvalue="ontouchstart" />
             <item index="52" class="java.lang.String" itemvalue="ontouchend" />
+            <item index="53" class="java.lang.String" itemvalue="th:data-original" />
+            <item index="54" class="java.lang.String" itemvalue="th:data-poster-url" />
+            <item index="55" class="java.lang.String" itemvalue="th:data-watched" />
+            <item index="56" class="java.lang.String" itemvalue="th:target" />
+            <item index="57" class="java.lang.String" itemvalue="th:data-phone" />
+            <item index="58" class="java.lang.String" itemvalue="th:data-balance" />
+            <item index="59" class="java.lang.String" itemvalue="th:data-currency" />
+            <item index="60" class="java.lang.String" itemvalue="th:data-user-id" />
+            <item index="61" class="java.lang.String" itemvalue="th:utext" />
+            <item index="62" class="java.lang.String" itemvalue="th:data-maxbalance" />
+            <item index="63" class="java.lang.String" itemvalue="th" />
+            <item index="64" class="java.lang.String" itemvalue="th:data-total" />
           </list>
         </value>
       </option>

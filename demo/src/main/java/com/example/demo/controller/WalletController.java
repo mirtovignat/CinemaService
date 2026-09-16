@@ -6,6 +6,7 @@ import com.example.demo.exception.SuccessCode;
 import com.example.demo.model.entity.User;
 import com.example.demo.service.user.UserCommandService;
 import com.example.demo.service.user.UserQueryService;
+import com.example.demo.util.MessageUtils;
 import com.example.demo.web.util.ReturnUrlHelper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -26,6 +27,7 @@ public class WalletController {
 
     private final UserQueryService userQueryService;
     private final UserCommandService userCommandService;
+    private final MessageUtils messageUtils;
 
     @GetMapping("/top-up")
     public String getTopUpForm(HttpServletRequest request,
@@ -33,10 +35,7 @@ public class WalletController {
                                ReturnUrlHelper returnUrlHelper,
                                @SessionAttribute SessionUser sessionUser,
                                Model model) {
-        String referer = request.getHeader("Referer");
-        if (referer != null && !referer.isBlank()) {
-            returnUrlHelper.saveReturnUrl(session, referer);
-        }
+        returnUrlHelper.saveReturnUrlIfNotExists(session, request, "/wallet/top-up");
         Long userId = sessionUser.id();
         if (!model.containsAttribute("topUpFormDTO")) {
             model.addAttribute("topUpFormDTO", TopUpFormDTO.builder().build());
@@ -46,23 +45,25 @@ public class WalletController {
     }
 
     @PostMapping("/top-up")
-    public String topUp(@Valid @ModelAttribute("topUpFormDTO") TopUpFormDTO topUpFormDTO,
+    public String topUp(@Valid @ModelAttribute("topUpFormDTO") TopUpFormDTO dto,
                         BindingResult bindingResult,
                         @SessionAttribute SessionUser sessionUser,
                         HttpSession httpSession,
                         RedirectAttributes redirectAttributes,
-                        ReturnUrlHelper returnUrlHelper) {
+                        ReturnUrlHelper returnUrlHelper,
+                        Model model) {
         if (bindingResult.hasErrors()) {
+            model.addAttribute("wallet", userQueryService.getWalletForOwner(sessionUser.id()));
             return "top-up";
         }
         User user = userQueryService.getUser(sessionUser.id());
-        userCommandService.saveTopUp(topUpFormDTO.amount(), user);
+        userCommandService.saveTopUp(dto.amount(), user);
         BigDecimal newBalance = userQueryService.getBalance(sessionUser.id());
         SessionUser updated = sessionUser.withBalance(newBalance);
         httpSession.setAttribute("sessionUser", updated);
-        redirectAttributes.addFlashAttribute("successMessage",
-                SuccessCode.BALANCE_HAS_BEEN_TOPPED_UP.getMessage());
-        String redirectUrl = returnUrlHelper.getReturnUrlOrDefault(httpSession, "/wallet/top-up");
+        String message = messageUtils.getSuccess(SuccessCode.TOPPED_UP);
+        redirectAttributes.addFlashAttribute("successMessage", message);
+        String redirectUrl = returnUrlHelper.getReturnUrlOrDefault(httpSession, "/personal-account");
         return "redirect:" + redirectUrl;
     }
 }

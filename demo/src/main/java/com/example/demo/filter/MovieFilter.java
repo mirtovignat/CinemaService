@@ -44,4 +44,19 @@ public record MovieFilter(
         List<String> genres,
         List<String> directors
 ) {
+
+    public boolean hasAnyCriteria() {
+        return (title != null && !title.isBlank()) ||
+                (priceFrom != null) ||
+                (priceTo != null) ||
+                (releaseDateFrom != null) ||
+                (releaseDateTo != null) ||
+                (durationFrom != null) ||
+                (durationTo != null) ||
+                (ratingFrom != null) ||
+                (ratingTo != null) ||
+                (genres != null && !genres.isEmpty()) ||
+                (directors != null && !directors.isEmpty());
+    }
+
 }

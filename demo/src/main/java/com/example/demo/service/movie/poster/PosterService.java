@@ -4,13 +4,8 @@ import com.example.demo.config.MinIOConfig;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.InputStream;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -21,19 +16,22 @@ public class PosterService {
 
     public String uploadPosterFromUrl(String imageUrl, String fileName) throws Exception {
         RestClient restClient = RestClient.create();
-        Resource resource = restClient.get()
+        byte[] bytes = restClient.get()
                 .uri(imageUrl)
                 .retrieve()
-                .body(Resource.class);
-        if (resource == null) {
+                .body(byte[].class);
+
+        if (bytes == null || bytes.length == 0) {
             throw new IllegalStateException("Не удалось скачать постер: " + imageUrl);
         }
-        try (InputStream inputStream = resource.getInputStream()) {
+
+        try (java.io.ByteArrayInputStream inputStream =
+                     new java.io.ByteArrayInputStream(bytes)) {
             minioClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(minIOConfig.getBucketName())
                             .object(fileName)
-                            .stream(inputStream, resource.contentLength(), -1)
+                            .stream(inputStream, bytes.length, -1)
                             .contentType("image/jpeg")
                             .build()
             );
@@ -46,18 +44,4 @@ public class PosterService {
                 + "/" + minIOConfig.getBucketName()
                 + "/" + fileName;
     }
-
-    public String uploadPoster(MultipartFile file) throws Exception {
-        String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-        minioClient.putObject(
-                PutObjectArgs.builder()
-                        .bucket(minIOConfig.getBucketName())
-                        .object(fileName)
-                        .stream(file.getInputStream(), file.getSize(), -1)
-                        .contentType(file.getContentType())
-                        .build()
-        );
-        return minIOConfig.getExternalEndpoint() + "/" + minIOConfig.getBucketName() + "/" + fileName;
-    }
-
 }

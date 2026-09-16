@@ -4,11 +4,15 @@ import com.example.demo.dto.movie.TMDBMovieDTO;
 import com.example.demo.model.entity.Movie;
 import com.example.demo.repository.entity.MovieRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MoviePosterService {
 
     private final TMDBService tmdbService;
@@ -16,40 +20,49 @@ public class MoviePosterService {
     private final MovieRepository movieRepository;
 
     @Transactional
-    public String replacePosterFromTMDB(Long movieId) throws Exception {
+    public void replacePosterFromTMDB(Long movieId) throws Exception {
         Movie movie = movieRepository.findById(movieId)
-                .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "Фильм не найден: " + movieId
-                        )
-                );
-        Integer year = movie.getReleaseDate() != null
-                ? movie.getReleaseDate().getYear()
-                : null;
-        TMDBMovieDTO tmdbMovie =
-                tmdbService.findMovie(movie.getTitle(), year);
-        if (tmdbMovie == null) {
-            throw new IllegalStateException(
-                    "Фильм не найден в TMDB: " + movie.getTitle()
-            );
-        }
-        if (tmdbMovie.posterPath() == null) {
-            throw new IllegalStateException(
-                    "У фильма нет постера в TMDB: " + movie.getTitle()
-            );
-        }
-        String tmdbPosterUrl =
-                tmdbService.getPosterUrl(tmdbMovie.posterPath());
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Фильм не найден: " + movieId));
 
-        String fileName =
-                "movie-" + movie.getId() + ".jpg";
-        String minioUrl =
-                posterService.uploadPosterFromUrl(
-                        tmdbPosterUrl,
-                        fileName
-                );
+        Long tmdbId = movie.getTmdbId();
+        if (tmdbId == null) {
+            throw new IllegalStateException(
+                    "У фильма нет tmdb_id: " + movie.getTitle());
+        }
+
+        TMDBMovieDTO tmdbMovie = tmdbService.getMovieById(tmdbId);
+        if (tmdbMovie == null || tmdbMovie.posterPath() == null) {
+            throw new IllegalStateException(
+                    "Нет постера в TMDB для tmdb_id=" + tmdbId);
+        }
+
+        String tmdbPosterUrl = tmdbService.getPosterUrl(tmdbMovie.posterPath());
+        String fileName = "movie-" + movie.getId() + ".jpg";
+        String minioUrl = posterService.uploadPosterFromUrl(tmdbPosterUrl, fileName);
+
         movie.setPosterUrl(minioUrl);
         movieRepository.save(movie);
-        return minioUrl;
+    }
+
+    @Transactional
+    public int fillMissingPosters() {
+        List<Movie> movies = movieRepository.findByPosterUrlIsNull();
+        int filled = 0;
+        for (Movie movie : movies) {
+            if (movie.getTmdbId() == null) {
+                log.warn("Skip id={} — нет tmdb_id", movie.getId());
+                continue;
+            }
+            try {
+                replacePosterFromTMDB(movie.getId());
+                filled++;
+            } catch (Exception e) {
+                log.warn("Fail id={} tmdb_id={}: {}",
+                        movie.getId(), movie.getTmdbId(), e.getMessage());
+            }
+        }
+        log.info("fillMissingPosters: заполнено {}", filled);
+        return filled;
     }
 }

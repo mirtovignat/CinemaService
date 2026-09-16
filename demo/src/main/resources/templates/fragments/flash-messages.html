@@ -6,12 +6,43 @@
     </div>
 
     <script>
-        setTimeout(() => {
-            document.querySelectorAll('#flash-messages-container .flash-message').forEach(msg => {
-                msg.style.transition = 'opacity 0.5s ease';
-                msg.style.opacity = '0';
-                setTimeout(() => msg.remove(), 500);
+        (function () {
+            const container = document.getElementById('flash-messages-container');
+            if (!container) return;
+
+            const messages = Array.from(container.querySelectorAll('.flash-message'));
+            if (messages.length === 0) return;
+
+            messages.forEach((m, i) => {
+                if (i > 0) m.style.display = 'none';
             });
-        }, 5000);
+
+            let index = 0;
+
+            function showNext() {
+                const current = messages[index];
+                if (!current) return;
+
+                current.style.display = '';
+
+                setTimeout(() => {
+                    if (!current.parentNode) {
+                        index++;
+                        showNext();
+                        return;
+                    }
+
+                    current.setAttribute('data-leaving', 'true');
+                    current.style.animation = 'flashVanish 0.3s ease forwards';
+                    setTimeout(() => {
+                        current.remove();
+                        index++;
+                        showNext();
+                    }, 320);
+                }, 2000);
+            }
+
+            showNext();
+        })();
     </script>
 </div>
