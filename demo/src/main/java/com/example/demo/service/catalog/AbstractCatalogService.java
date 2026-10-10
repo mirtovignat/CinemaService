@@ -7,30 +7,24 @@ import com.example.demo.repository.base.AbstractCatalogItemRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public abstract class AbstractCatalogService<CatalogItem extends AbstractCatalogItem, DTO> {
 
     protected final AbstractCatalogItemRepository<CatalogItem> catalogItemRepository;
-    private final BiFunction<Long, CatalogItem, DTO> catalogItemMapper;
-
-    protected AbstractCatalogService(AbstractCatalogItemRepository<CatalogItem> catalogItemRepository,
-                                     BiFunction<Long, CatalogItem, DTO> catalogItemMapper) {
-        this.catalogItemRepository = catalogItemRepository;
-        this.catalogItemMapper = catalogItemMapper;
-    }
+    private final Function<CatalogItem, DTO> catalogItemMapper;
 
     protected AbstractCatalogService(AbstractCatalogItemRepository<CatalogItem> catalogItemRepository,
                                      Function<CatalogItem, DTO> catalogItemMapper) {
-        this(catalogItemRepository, (userId, item) -> catalogItemMapper.apply(item));
+        this.catalogItemRepository = catalogItemRepository;
+        this.catalogItemMapper = catalogItemMapper;
     }
 
     @Transactional(readOnly = true)
     public List<DTO> getCatalog(Long userId) {
         return catalogItemRepository.findAllByUserId(userId)
                 .stream()
-                .map(item -> catalogItemMapper.apply(userId, item))
+                .map(catalogItemMapper)
                 .toList();
     }
 

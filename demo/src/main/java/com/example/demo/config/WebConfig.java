@@ -23,7 +23,7 @@ public class WebConfig implements WebMvcConfigurer {
                         "/", "/login",
                         "/register", "/movies/**",
                         "/personal-account", "/profile/edit",
-                        "/settings", "/settings/**",
+                        "/settings/**",
                         "/wallet/**",
                         "/cart/**", "/favourites/**",
                         "/library/**", "/history/**",

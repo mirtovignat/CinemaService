@@ -4,7 +4,6 @@ import com.example.demo.dto.catalog.RatedMovieFormDTO;
 import com.example.demo.dto.catalog.RatedMovieViewDTO;
 import com.example.demo.dto.catalog.ReviewViewDTO;
 import com.example.demo.mapper.entity.RatedMapper;
-import com.example.demo.model.entity.RatedMovie;
 import com.example.demo.repository.entity.RatedMovieRepository;
 import com.example.demo.service.movie.MovieService;
 import org.springframework.beans.factory.annotation.Value;
@@ -64,32 +63,6 @@ public class RatedQueryService {
 
     public Long getReviewsCountForMovie(Long movieId) {
         return ratedRepository.countByMovieId(movieId);
-    }
-
-    public boolean isUnchanged(Long movieId, Long userId, RatedMovieFormDTO ratedMovieFormDTO) {
-        return ratedRepository.findByMovieIdAndUserId(movieId, userId)
-                .map(existing -> isUnchanged(ratedMovieFormDTO, existing))
-                .orElse(false);
-    }
-
-    public boolean isUnchanged(RatedMovieFormDTO ratedMovieFormDTO,
-                               RatedMovie ratedMovie) {
-        String emptyString = "";
-        if (ratedMovieFormDTO == null || ratedMovieFormDTO.rating() == null) {
-            return false;
-        }
-        if (ratedMovie.getRatingValue() == null) {
-            return false;
-        }
-        boolean isRatingSame = ratedMovieFormDTO.rating().compareTo(ratedMovie.getRatingValue()) == 0;
-        String newReview = ratedMovieFormDTO.review() != null
-                ? ratedMovieFormDTO.review().trim()
-                : emptyString;
-        String oldReview = ratedMovie.getReview() != null
-                ? ratedMovie.getReview().trim()
-                : emptyString;
-        boolean isReviewSame = newReview.equals(oldReview);
-        return isRatingSame && isReviewSame;
     }
 
     public List<RatedMovieViewDTO> getTopNRatedMovies(Long userId) {

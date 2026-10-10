@@ -16,10 +16,6 @@ public class MoviePosterService {
     private final MovieRepository movieRepository;
     private final MoviePosterUpdater moviePosterUpdater;
 
-    public void replacePosterFromTMDB(Long movieId) throws Exception {
-        moviePosterUpdater.replacePosterFromTMDB(movieId);
-    }
-
     public int fillMissingPosters() {
         List<Movie> movies = movieRepository.findByPosterUrlIsNull();
         int filled = 0;

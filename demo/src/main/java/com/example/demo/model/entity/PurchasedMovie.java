@@ -9,7 +9,6 @@ import lombok.experimental.SuperBuilder;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 @Getter
@@ -41,10 +40,4 @@ public class PurchasedMovie extends AbstractCatalogItem {
         this.watchedHistory.clear();
     }
 
-    public List<LocalDateTime> getWatchTimes() {
-        return watchedHistory.stream()
-                .map(WatchHistoryItem::getWatchedAt)
-                .sorted(Comparator.reverseOrder())
-                .toList();
-    }
 }

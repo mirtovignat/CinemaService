@@ -61,11 +61,10 @@ public class PersonalAccountController {
         return "profile";
     }
 
+    // Раньше был GET /settings -> "settings". Теперь сразу редирект на смену пароля.
     @GetMapping("/settings")
-    public String getSettings(SessionUser sessionUser, Model model) {
-        Long userId = sessionUser.id();
-        model.addAttribute("saveHistory", watchHistoryService.isHistorySaved(userId));
-        return "settings";
+    public String getSettings() {
+        return "redirect:/settings/change/pwd";
     }
 
     @PatchMapping("/settings/change/field")
