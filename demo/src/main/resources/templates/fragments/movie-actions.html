@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<body>
+
+<th:block th:fragment="ratingButton(movieId, movieTitle)">
+    <button type="button"
+            class="icon-btn rating-btn"
+            data-action="show-rating"
+            th:data-movie-id="${movieId}"
+            th:data-movie-title="${movieTitle}"
+            title="Оценить фильм">
+        <th:block th:replace="~{fragments/icons :: icon-star}"></th:block>
+    </button>
+</th:block>
+
+<th:block th:fragment="favouriteButton(movieId, inFavourites)">
+    <button type="button"
+            class="icon-btn favourite-btn"
+            th:classappend="${inFavourites} ? 'active' : ''"
+            data-action="toggle-favourite"
+            th:data-movie-id="${movieId}"
+            th:data-state="${inFavourites} ? 'remove' : 'add'"
+            title="Избранное">
+        <th:block th:replace="~{fragments/icons :: icon-heart}"></th:block>
+    </button>
+</th:block>
+
+<th:block th:fragment="reviewsButton(movieId, ratingsCount)">
+    <a class="icon-btn comment-btn"
+       th:href="@{/rated/{id}/reviews(id=${movieId})}"
+       title="Отзывы">
+        <th:block th:replace="~{fragments/icons :: icon-comments}"></th:block>
+        <span class="reviews-badge"
+              th:if="${ratingsCount != null and ratingsCount > 0}"
+              th:data-movie-id="${movieId}"
+              th:text="${ratingsCount}">0</span>
+    </a>
+</th:block>
+
+<th:block th:fragment="purchaseButtons(movieId, movieTitle, moviePrice, bought, inCart)">
+    <button th:if="${!bought and !inCart}"
+            type="button"
+            class="cart-button to-cart-btn-details"
+            data-action="add-to-cart"
+            th:data-movie-id="${movieId}">
+        В корзину
+    </button>
+
+    <a th:if="${inCart}"
+       th:href="@{/cart(highlight=${movieId})}"
+       class="cart-button in-cart-btn-details">
+        В корзине → Перейти
+    </a>
+
+    <button th:if="${!bought}"
+            type="button"
+            class="buy-now-btn"
+            data-action="buy-now"
+            th:data-movie-id="${movieId}"
+            th:data-movie-title="${movieTitle}"
+            th:data-movie-price="${moviePrice}">
+        Купить сейчас
+    </button>
+
+    <a th:if="${bought}"
+       th:href="@{/library(highlight=${movieId})}"
+       class="bought-btn">
+        Куплено → К коллекции
+    </a>
+</th:block>
+
+</body>
+</html>

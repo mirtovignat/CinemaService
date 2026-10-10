@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<body>
+
+<div th:fragment="watchButton(movieId, movieTitle, posterUrl, watched, variant)"
+     th:with="btnVariant=${variant != null ? variant : 'md'}">
+    <button class="watch-btn-neon"
+            th:classappend="'watch-btn-neon--' + ${btnVariant}"
+            type="button"
+            data-action="watch-movie"
+            th:data-movie-id="${movieId}"
+            th:data-movie-title="${movieTitle}"
+            th:data-poster-url="${posterUrl}"
+            th:data-watched="${watched}">
+        <svg xmlns="http://www.w3.org/2000/svg"
+             viewBox="0 0 24 24"
+             fill="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+        </svg>
+        Смотреть
+    </button>
+</div>
+
+</body>
+</html>

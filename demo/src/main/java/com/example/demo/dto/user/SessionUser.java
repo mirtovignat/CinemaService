@@ -4,6 +4,7 @@ import com.example.demo.model.entity.User;
 import lombok.Builder;
 
 import java.math.BigDecimal;
+import java.util.Locale;
 
 @Builder
 public record SessionUser(
@@ -13,12 +14,10 @@ public record SessionUser(
         String username
 ) {
     public String getFirstUsernameLetter() {
-        String username = username();
         if (username == null || username.isBlank()) {
             return "U";
         }
-        String firstChar = username.substring(0, username.offsetByCodePoints(0, 1));
-        return firstChar.toUpperCase(java.util.Locale.ROOT);
+        return username.substring(0, 1).toUpperCase(Locale.ROOT);
     }
 
     public static SessionUser empty() {
@@ -51,12 +50,12 @@ public record SessionUser(
                 .build();
     }
 
-    public SessionUser withUsername(String username) {
+    public SessionUser withUsername(String newUsername) {
         return SessionUser.builder()
                 .id(this.id)
                 .balance(this.balance)
                 .currencyCode(this.currencyCode)
-                .username(username)
+                .username(newUsername)
                 .build();
     }
 }

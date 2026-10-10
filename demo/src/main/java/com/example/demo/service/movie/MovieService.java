@@ -1,19 +1,17 @@
 package com.example.demo.service.movie;
 
-import com.example.demo.dto.catalog.CartItemViewDTO;
-import com.example.demo.dto.catalog.FavouriteMovieViewDTO;
+import com.example.demo.dto.catalog.ReviewViewDTO;
 import com.example.demo.dto.movie.*;
 import com.example.demo.exception.BusinessException;
 import com.example.demo.exception.ErrorCode;
 import com.example.demo.filter.MovieFilter;
 import com.example.demo.mapper.entity.MovieMapper;
-import com.example.demo.model.Genre;
-import com.example.demo.model.entity.CartItem;
-import com.example.demo.model.entity.FavouriteMovie;
 import com.example.demo.model.entity.Movie;
 import com.example.demo.repository.entity.MovieRepository;
-import com.example.demo.service.linked_collection.AbstractLinkedCollectionService;
+import com.example.demo.service.linked_collection.CartService;
+import com.example.demo.service.linked_collection.FavouritesService;
 import com.example.demo.service.purchased.PurchasedQueryService;
+import com.example.demo.service.rated.RatedQueryService;
 import com.example.demo.util.MovieSearchHelper;
 import com.example.demo.util.MovieUserStatusHelper;
 import lombok.AllArgsConstructor;
@@ -23,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Service
@@ -33,35 +30,38 @@ public class MovieService {
     private final MovieRepository movieRepository;
     private final MovieMapper movieMapper;
     private final PurchasedQueryService purchasedQueryService;
-    private final AbstractLinkedCollectionService<FavouriteMovie, FavouriteMovieViewDTO> favouritesService;
-    private final AbstractLinkedCollectionService<CartItem, CartItemViewDTO> cartService;
+    private final FavouritesService favouritesService;
+    private final CartService cartService;
+    private final RatedQueryService ratedQueryService;
     private final MovieUserStatusHelper userStatusHelper;
     private final MovieSearchHelper movieSearchHelper;
 
     public Page<MovieForUser<MovieCardViewDTO>> getMovies(MovieFilter movieFilter,
+                                                          String title,
                                                           Pageable pageable,
                                                           Long userId) {
-        Page<Movie> moviePage = movieSearchHelper.findMoviesByMovieFilter(
-                movieFilter, pageable);
+        Page<Movie> moviePage = movieSearchHelper.findMovies(movieFilter, title, pageable);
         return enrichWithStatuses(moviePage, userId);
     }
 
-    public Page<MovieForUser<MovieCardViewDTO>> getMoviesByGenre(String genreDisplayName,
+    public Page<MovieForUser<MovieCardViewDTO>> getMoviesByGenre(String genre,
                                                                  Pageable pageable,
                                                                  Long userId) {
-        Genre genre = Genre.fromDisplayName(genreDisplayName);
         Page<Movie> moviePage = movieRepository.findAllDistinctByGenre(pageable, genre);
         return enrichWithStatuses(moviePage, userId);
     }
 
     @Transactional
-    public MovieForUser<MovieCardDetailsViewDTO> getCard(Long movieId, Long userId) {
+    public MovieForUser<MovieDetailsViewDTO> getCard(Long movieId, Long userId) {
         Movie movie = movieRepository.findByIdOrThrow(movieId);
-        MovieCardDetailsViewDTO movieCardDetailsViewDTO = movieMapper.toDetails(movie);
+        MovieDetailsViewDTO dto = movieMapper.toDetails(movie);
         MovieUserStatus status = (userId != null)
                 ? calculateUserStatus(movieId, userId)
                 : MovieUserStatus.builder().build();
-        return new MovieForUser<>(movieCardDetailsViewDTO, status);
+        return MovieForUser.<MovieDetailsViewDTO>builder()
+                .movie(dto)
+                .status(status)
+                .build();
     }
 
     public Double getMovieRating(Long id) {
@@ -73,43 +73,31 @@ public class MovieService {
         return movieSearchHelper.getSuggestions(movieSearchQuery);
     }
 
-    public List<String> getAllDirectors() {
-        return movieRepository.findAllDistinctDirectors();
-    }
-
-    public List<String> getAllGenres() {
-        return movieRepository.findAllGenresFromEnum()
-                .stream()
-                .map(genre -> {
-                    try {
-                        return Genre.valueOf(genre).getDisplayName();
-                    } catch (IllegalArgumentException illegalArgumentException) {
-                        return genre;
-                    }
-                })
-                .collect(Collectors.toList());
-    }
-
-    public Page<MovieForUser<MovieCardViewDTO>> enrichWithStatuses(
-            Page<Movie> moviePage, Long userId) {
+    public Page<MovieForUser<MovieCardViewDTO>> enrichWithStatuses(Page<Movie> moviePage,
+                                                                   Long userId) {
         if (moviePage.isEmpty()) {
             return Page.empty(moviePage.getPageable());
         }
-
         if (userId != null) {
-            return userStatusHelper.enrichWithUserStatuses(moviePage, userId,
-                    movieMapper::toCard);
+            return userStatusHelper.enrichWithUserStatuses(moviePage, userId, movieMapper::toCard);
         }
-
-        return moviePage.map(movie -> new MovieForUser<>(movieMapper.toCard(movie),
-                MovieUserStatus.builder().build()));
+        return moviePage.map(movie -> MovieForUser.<MovieCardViewDTO>builder()
+                .movie(movieMapper.toCard(movie))
+                .status(MovieUserStatus.builder().build())
+                .build());
     }
 
     private MovieUserStatus calculateUserStatus(Long movieId, Long userId) {
         boolean isBought = purchasedQueryService.isMoviePurchasedByUser(movieId, userId);
         boolean isInCart = !isBought && cartService.existsInCollection(movieId, userId);
         boolean isInFavourites = favouritesService.existsInCollection(movieId, userId);
-        return new MovieUserStatus(isBought, isInCart, isInFavourites);
+        ReviewViewDTO ownRating = ratedQueryService.getRating(movieId, userId);
+        return MovieUserStatus.builder()
+                .bought(isBought)
+                .inCart(isInCart)
+                .inFavourites(isInFavourites)
+                .ownRating(ownRating)
+                .build();
     }
 
     public Movie getMovie(Long movieId) {

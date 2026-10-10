@@ -31,7 +31,4 @@ public class MessageUtils {
         );
     }
 
-    public String getMessage(String key, Object... args) {
-        return messageSource.getMessage(key, args, key, LocaleContextHolder.getLocale());
-    }
 }

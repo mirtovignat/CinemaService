@@ -1,0 +1,167 @@
+#flash-messages-container {
+    position: fixed;
+    top: 90px;
+    right: 20px;
+    z-index: 10000;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+#flash-messages-container .flash-message {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.7rem 1.1rem;
+    border-radius: 12px;
+    font-weight: 500;
+    font-size: 0.88rem;
+    line-height: 1.4;
+    width: max-content;
+    min-width: 240px;
+    max-width: min(480px, calc(100vw - 60px));
+    border: 1px solid;
+    border-left-width: 4px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    pointer-events: auto;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    animation: flashBossIn 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#flash-messages-container .flash-icon {
+    flex: 0 0 auto;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+}
+
+#flash-messages-container .flash-icon svg {
+    width: 16px;
+    height: 16px;
+    display: block;
+    flex-shrink: 0;
+}
+
+#flash-messages-container .flash-message-body {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+#flash-messages-container .flash-text {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
+#flash-messages-container .flash-message .flash-action-link {
+    display: inline-block;
+    color: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    white-space: nowrap;
+    opacity: 0.95;
+    transition: opacity 0.15s ease;
+}
+
+#flash-messages-container .flash-message .flash-action-link::before {
+    content: '•';
+    display: inline-block;
+    margin-right: 0.5rem;
+    color: inherit;
+    opacity: 0.7;
+    font-weight: 400;
+}
+
+#flash-messages-container .flash-message .flash-action-link:hover {
+    opacity: 1;
+    text-decoration: none;
+}
+
+#flash-messages-container .flash-message.success {
+    background: rgba(55, 58, 65, 0.94);
+    border-color: rgba(140, 145, 155, 0.5);
+    border-left-color: #6b7280;
+    color: #d1d5db;
+}
+
+#flash-messages-container .flash-message.warning {
+    background: rgba(70, 55, 20, 0.94);
+    border-color: rgba(184, 134, 11, 0.5);
+    border-left-color: #b8860b;
+    color: #e8c476;
+}
+
+#flash-messages-container .flash-message.error {
+    background: rgba(65, 25, 28, 0.94);
+    border-color: rgba(185, 28, 28, 0.5);
+    border-left-color: #b91c1c;
+    color: #f3a6a6;
+}
+
+#flash-messages-container .flash-message.info {
+    background: rgba(50, 55, 68, 0.94);
+    border-color: rgba(120, 130, 150, 0.5);
+    border-left-color: #64748b;
+    color: #cbd5e1;
+}
+
+#flash-messages-container .flash-message.subtle {
+    background: rgba(30, 34, 42, 0.92);
+    border-color: rgba(255, 255, 255, 0.06);
+    border-left-color: rgba(255, 255, 255, 0.06);
+    border-left-width: 1px;
+    color: #c9d1d9;
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 7px 14px;
+    min-width: 0;
+    gap: 0;
+    border-radius: 8px;
+    box-shadow:
+        0 8px 24px -8px rgba(0, 0, 0, 0.5),
+        0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+#flash-messages-container .flash-message.subtle .flash-message-body {
+    gap: 0;
+}
+
+@keyframes flashBossIn {
+    from {
+        opacity: 0;
+        transform: translateX(35%) scale(0.94);
+        filter: blur(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+@keyframes flashVanish {
+    from {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+        filter: blur(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(0) scale(0.86);
+        filter: blur(6px);
+    }
+}

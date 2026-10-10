@@ -3,219 +3,22 @@
 <head>
     <title>Настройки — CinemaService</title>
     <th:block th:replace="~{fragments/head :: head}"></th:block>
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-        }
-        body {
-            display: flex;
-            flex-direction: column;
-            background: var(--bg-primary, #0b0e14);
-            font-family: 'Inter', system-ui, sans-serif;
-            color: #eef2ff;
-            min-height: 100vh;
-        }
-        .header-wrapper {
-            flex-shrink: 0;
-        }
-        main {
-            flex: 1;
-            padding: 2rem 3rem;
-            max-width: 1000px;
-            margin: 0 auto;
-            width: 100%;
-        }
-        .settings-header {
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-        }
-        .settings-header h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #e0e7ff, #a78bfa);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            margin: 0;
-        }
-        .settings-header p {
-            color: #94a3b8;
-            font-size: 0.95rem;
-            margin: 0.2rem 0 0 0;
-        }
-        .settings-section {
-            margin-bottom: 2rem;
-        }
-        .settings-section:last-child {
-            margin-bottom: 0;
-        }
-        .settings-section-title {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #f1f5f9;
-            margin: 0 0 0.8rem 0;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            letter-spacing: 0.02em;
-        }
-        .settings-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.6rem 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-        }
-        .settings-item:last-child {
-            border-bottom: none;
-        }
-        .settings-item-info {
-            display: flex;
-            flex-direction: column;
-            gap: 0.05rem;
-        }
-        .settings-item-label {
-            font-weight: 500;
-            color: #f1f5f9;
-            font-size: 0.95rem;
-        }
-        .settings-item-desc {
-            font-size: 0.75rem;
-            color: #64748b;
-        }
-        .settings-item-control {
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-        }
-        .settings-item-control select {
-            padding: 0.3rem 0.8rem;
-            border-radius: 6px;
-            background: rgba(10, 13, 28, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            color: #f1f5f9;
-            font-size: 0.85rem;
-            outline: none;
-            cursor: pointer;
-            font-family: inherit;
-        }
-        .settings-item-control select:focus {
-            border-color: #6366f1;
-        }
-        .settings-item-control select option {
-            background: #0c0f20;
-        }
-        .change-pwd-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            padding: 0.4rem 1.5rem;
-            border-radius: 40px;
-            background: linear-gradient(135deg, #4f46e5, #6366f1);
-            color: white;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.85rem;
-            transition: all 0.25s ease;
-            border: none;
-            cursor: pointer;
-            font-family: inherit;
-            white-space: nowrap;
-        }
-        .change-pwd-link:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 16px rgba(79, 70, 229, 0.35);
-        }
-        .theme-options {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-        .theme-option {
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-            padding: 0.3rem 0.8rem;
-            border-radius: 40px;
-            background: rgba(255, 255, 255, 0.02);
-            border: 2px solid rgba(255, 255, 255, 0.05);
-            color: #94a3b8;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 0.75rem;
-            font-weight: 500;
-        }
-        .theme-option:hover {
-            border-color: rgba(255, 255, 255, 0.15);
-        }
-        .theme-option.active {
-            border-color: #6366f1;
-            background: rgba(99, 102, 241, 0.12);
-            color: #c084fc;
-        }
-        .theme-dot {
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            flex-shrink: 0;
-        }
-        .footer-wrapper {
-            flex-shrink: 0;
-            margin-top: auto;
-        }
-        @media (max-width: 640px) {
-            main {
-                padding: 1rem;
-            }
-            .settings-item {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.4rem;
-                padding: 0.8rem 0;
-            }
-            .settings-item-control {
-                width: 100%;
-            }
-            .settings-item-control select {
-                width: 100%;
-            }
-            .theme-options {
-                width: 100%;
-            }
-            .theme-option {
-                flex: 1;
-                justify-content: center;
-                font-size: 0.7rem;
-            }
-            .change-pwd-link {
-                width: 100%;
-                justify-content: center;
-            }
-        }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/pages/_settings.css}">
 </head>
 <body>
 <div class="header-wrapper">
     <header th:replace="~{fragments/header :: header}"></header>
 </div>
 <th:block th:replace="~{fragments/flash-messages :: flashMessages}"></th:block>
-<div id="authStatus" th:data-authenticated="${session.sessionUser != null}" style="display:none;"></div>
+<div id="authStatus" th:data-authenticated="${sessionUser != null}" style="display:none;"></div>
 <main>
     <div class="settings-header">
-        <h1>⚙️ Настройки</h1>
+        <h1>Настройки</h1>
         <p>Управляйте параметрами приложения</p>
     </div>
 
-    <!-- Безопасность -->
     <div class="settings-section">
-        <div class="settings-section-title">🔐 Безопасность</div>
+        <div class="settings-section-title">Безопасность</div>
         <div class="settings-item">
             <div class="settings-item-info">
                 <span class="settings-item-label">Пароль</span>
@@ -228,14 +31,15 @@
     </div>
 
     <div class="settings-section">
-        <div class="settings-section-title">🎬 Внешний вид</div>
+        <div class="settings-section-title">Внешний вид</div>
         <div class="settings-item">
             <div class="settings-item-info">
                 <span class="settings-item-label">Язык интерфейса</span>
                 <span class="settings-item-desc">Выберите язык отображения</span>
             </div>
             <div class="settings-item-control">
-                <label for="languageSelect"></label><select id="languageSelect" onchange="setLanguage(this.value)">
+                <label for="languageSelect"></label>
+                <select id="languageSelect" data-action="change-language">
                     <option value="ru">Русский</option>
                     <option value="en">English</option>
                     <option value="ru_beta">Русский (бета)</option>
@@ -249,17 +53,25 @@
             </div>
             <div class="settings-item-control">
                 <div class="theme-options">
-                    <div class="theme-option active" onclick="setTheme('dark', this)">
+                    <div class="theme-option active"
+                         data-action="set-theme"
+                         data-theme="dark">
                         <span class="theme-dot" style="background: #0f172a; border-color: #6366f1;"></span>Тёмная
                     </div>
-                    <div class="theme-option" onclick="setTheme('light', this)">
+                    <div class="theme-option"
+                         data-action="set-theme"
+                         data-theme="light">
                         <span class="theme-dot" style="background: #f1f5f9;"></span>Светлая
                     </div>
-                    <div class="theme-option" onclick="setTheme('system', this)">
+                    <div class="theme-option"
+                         data-action="set-theme"
+                         data-theme="system">
                         <span class="theme-dot"
                               style="background: linear-gradient(135deg, #0f172a 50%, #f1f5f9 50%);"></span>Системная
                     </div>
-                    <div class="theme-option" onclick="setTheme('neon', this)">
+                    <div class="theme-option"
+                         data-action="set-theme"
+                         data-theme="neon">
                         <span class="theme-dot" style="background: linear-gradient(135deg, #1a0a2e, #e94560);"></span>Неон
                     </div>
                 </div>
@@ -267,9 +79,11 @@
         </div>
     </div>
 </main>
-<div class="footer-wrapper">
-    <th:block th:replace="~{fragments/footer :: footer}"></th:block>
-</div>
-<script th:src="@{/js/settings.js}" defer></script>
+
+<th:block th:replace="~{fragments/footer :: footer}"></th:block>
+
+<script th:src="@{/js/pages/page-settings.js}" defer></script>
+<script th:src="@{/js/main.js}" defer></script>
+
 </body>
 </html>

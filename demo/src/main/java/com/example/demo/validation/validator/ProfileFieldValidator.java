@@ -63,19 +63,9 @@ public class ProfileFieldValidator implements ConstraintValidator<ValidProfileFi
                 if (trimmed.isEmpty()) {
                     return true;
                 }
-                String normalized = PhoneNormalizer.normalizePhone(trimmed);
-                if (normalized == null || normalized.isEmpty()) {
-                    setError(constraintValidatorContext, "field", "Некорректный номер телефона. Используйте формат: +код (XXX) XXX-XX-XX");
-                    return false;
-                }
-                if (!normalized.matches("^\\+[0-9]{10,15}$")) {
-                    setError(constraintValidatorContext, "field", "Номер должен быть в международном формате: +код (XXX) XXX-XX-XX");
-                    return false;
-                }
-                String digits = normalized.replace("+", "");
-                int codeLen = Math.min(digits.length() - 10, 3);
-                if (codeLen < 1) {
-                    setError(constraintValidatorContext, "field", "Код страны должен быть от 1 до 3 цифр");
+                if (!PhoneNormalizer.isValid(trimmed)) {
+                    setError(constraintValidatorContext, "field",
+                            "Некорректный номер телефона. Формат: +код (XXX) XXX-XX-XX");
                     return false;
                 }
             }

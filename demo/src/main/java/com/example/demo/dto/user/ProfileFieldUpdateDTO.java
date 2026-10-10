@@ -11,4 +11,9 @@ public record ProfileFieldUpdateDTO(
         @NotNull Identifier identifier,
         String field
 ) {
+    public ProfileFieldUpdateDTO {
+        if (field == null) {
+            field = "";
+        }
+    }
 }

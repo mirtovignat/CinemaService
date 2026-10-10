@@ -1,7 +1,6 @@
 package com.example.demo.service.catalog;
 
 import com.example.demo.dto.catalog.LibrarianMovieViewDTO;
-import com.example.demo.dto.response.GroupedHistoryResponse;
 import com.example.demo.exception.BusinessException;
 import com.example.demo.exception.ErrorCode;
 import com.example.demo.model.base.WatchHistoryItem;
@@ -11,7 +10,6 @@ import com.example.demo.repository.base.WatchHistoryItemRepository;
 import com.example.demo.repository.entity.PurchasedMovieRepository;
 import com.example.demo.repository.entity.UserRepository;
 import com.example.demo.service.catalog.manager.WatchedHistoryManager;
-import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,17 +17,20 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-@AllArgsConstructor
-public class WatchedHistoryService {
+public class WatchedHistoryService extends AbstractGroupedHistoryService<LibrarianMovieViewDTO> {
 
-    private final WatchedHistoryManager watchedHistoryManager;
     private final PurchasedMovieRepository purchasedMovieRepository;
     private final WatchHistoryItemRepository watchHistoryItemRepository;
     private final UserRepository userRepository;
 
-    @Transactional(readOnly = true)
-    public GroupedHistoryResponse<LibrarianMovieViewDTO> getGroupedWatchedHistory(Long userId) {
-        return watchedHistoryManager.getGroupedHistory(userId);
+    public WatchedHistoryService(WatchedHistoryManager watchedHistoryManager,
+                                 PurchasedMovieRepository purchasedMovieRepository,
+                                 WatchHistoryItemRepository watchHistoryItemRepository,
+                                 UserRepository userRepository) {
+        super(watchedHistoryManager);
+        this.purchasedMovieRepository = purchasedMovieRepository;
+        this.watchHistoryItemRepository = watchHistoryItemRepository;
+        this.userRepository = userRepository;
     }
 
     @Transactional

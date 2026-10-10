@@ -1,0 +1,47 @@
+.badge {
+    padding: 0.25rem 0.8rem;
+    border-radius: 40px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.badge.rating {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fde047;
+}
+
+.badge.year {
+    background: rgba(52, 211, 153, 0.2);
+    color: #6ee7b7;
+}
+
+.badge.genre {
+    background: rgba(96, 165, 250, 0.2);
+    color: #93c5fd;
+}
+
+.badge-rating {
+    background: rgba(251,191,36,0.2);
+    color: #fde047;
+    padding: 0.1rem 0.6rem;
+    border-radius: 40px;
+    display: inline-block;
+}
+
+.badge-year {
+    background: rgba(52,211,153,0.2);
+    color: #6ee7b7;
+    padding: 0.1rem 0.6rem;
+    border-radius: 40px;
+    display: inline-block;
+}
+
+.badge-genre {
+    background: rgba(96,165,250,0.2);
+    color: #93c5fd;
+    padding: 0.1rem 0.6rem;
+    border-radius: 40px;
+    display: inline-block;
+}

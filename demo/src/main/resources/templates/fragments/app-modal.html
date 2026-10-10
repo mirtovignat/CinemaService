@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<body>
+
+<div th:fragment="appModal"
+     id="appModal"
+     class="modal"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="appModalTitle">
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+            <h2 id="appModalTitle" data-modal-title></h2>
+            <button type="button"
+                    class="modal-x"
+                    data-modal-action="cancel"
+                    aria-label="Закрыть">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="1.8"
+                     stroke-linecap="round"
+                     aria-hidden="true">
+                    <path d="M7 7l10 10M17 7L7 17"/>
+                </svg>
+            </button>
+        </div>
+
+        <p data-modal-message></p>
+
+        <div class="modal-summary hidden" data-modal-summary></div>
+
+        <div class="modal-buttons">
+            <button type="button"
+                    class="modal-cancel-btn"
+                    data-modal-action="cancel">
+                <span data-modal-cancel-text>Отмена</span>
+            </button>
+            <button type="button"
+                    class="modal-confirm-btn"
+                    data-modal-action="confirm">
+                <span data-modal-confirm-text>Подтвердить</span>
+            </button>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>

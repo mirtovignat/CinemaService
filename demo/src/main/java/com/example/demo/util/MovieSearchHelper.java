@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -23,25 +24,44 @@ public class MovieSearchHelper {
     private final MovieSpecifications movieSpecifications;
     private final MovieMapper movieMapper;
 
-    public Page<Movie> findMoviesByMovieFilter(MovieFilter movieFilter,
-                                               Pageable pageable) {
-        if (movieFilter == null) {
+    public Page<Movie> findMovies(MovieFilter movieFilter,
+                                  String title,
+                                  Pageable pageable) {
+        boolean hasFilter = movieFilter != null && movieFilter.hasAnyCriteria();
+        boolean hasTitle = title != null && !title.isBlank();
+
+        if (!hasFilter && !hasTitle) {
             return movieRepository.findAllWithActiveRatings(pageable);
         }
-        return movieRepository.findAll(movieSpecifications.byFilter(movieFilter),
-                pageable);
+
+        Specification<Movie> spec = Specification.unrestricted();
+        if (hasFilter) {
+            spec = spec.and(movieSpecifications.byFilter(movieFilter));
+        }
+        if (hasTitle) {
+            spec = spec.and(movieSpecifications.titleStartsWith(title));
+        }
+        return movieRepository.findAll(spec, pageable);
     }
 
     public List<MovieSearchDTO> getSuggestions(String query) {
         if (query == null || query.isBlank()) {
             return Collections.emptyList();
         }
-        MovieFilter movieFilter = MovieFilter.builder()
-                .title(query)
-                .build();
+
+        String sanitized = query.toLowerCase()
+                .replace('ё', 'е')
+                .replaceAll("[^a-zа-я0-9]", "");
+
+        if (sanitized.isEmpty()) {
+            return Collections.emptyList();
+        }
+
         Pageable limit = PageRequest.of(0, 10);
-        return movieRepository.findAll(movieSpecifications
-                        .byFilter(movieFilter), limit)
+        return movieRepository.findAll(
+                        movieSpecifications.titleStartsWith(sanitized),
+                        limit
+                )
                 .getContent()
                 .stream()
                 .map(movieMapper::toMovieSearch)

@@ -1,15 +1,23 @@
 package com.example.demo.dto.movie;
 
-import com.example.demo.dto.base.*;
-import com.fasterxml.jackson.annotation.JsonUnwrapped;
+import lombok.Builder;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+@Builder
 public record MovieCardViewDTO(
-        @JsonUnwrapped MovieIdentity id,
-        @JsonUnwrapped MovieTitled title,
-        @JsonUnwrapped MoviePricing price,
-        @JsonUnwrapped MovieMedia media,
-        @JsonUnwrapped MovieRating rating,
-        @JsonUnwrapped MovieRelease release,
-        @JsonUnwrapped MovieMeta meta
-) {
-}
+        Long id,
+        String title,
+        String posterUrl,
+        String genre,
+        BigDecimal price,
+        BigDecimal rating,
+        LocalDate releaseDate,
+        String director,
+        String formattedDuration,
+        String description,
+        Long ratingsCount,
+        Integer ageRating,
+        String currencyCode
+) {}

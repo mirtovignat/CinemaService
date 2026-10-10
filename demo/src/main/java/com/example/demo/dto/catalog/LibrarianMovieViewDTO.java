@@ -1,21 +1,22 @@
 package com.example.demo.dto.catalog;
 
-import com.example.demo.dto.base.*;
-import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import lombok.Builder;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Builder
 public record LibrarianMovieViewDTO(
+        Long id,
+        String title,
+        String posterUrl,
+        String genre,
+        BigDecimal rating,
+        LocalDate releaseDate,
+        Integer ageRating,
         boolean watched,
         LocalDateTime addedAt,
         Long historyItemId,
-        @JsonUnwrapped MovieIdentity id,
-        @JsonUnwrapped MovieTitled title,
-        @JsonUnwrapped MovieMedia media,
-        @JsonUnwrapped MovieRating rating,
-        @JsonUnwrapped MovieRelease release,
-        @JsonUnwrapped MovieMeta meta
-) {
-}
+        String director
+) {}

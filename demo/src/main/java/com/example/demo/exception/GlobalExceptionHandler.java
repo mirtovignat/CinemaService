@@ -1,106 +1,163 @@
 package com.example.demo.exception;
 
+import com.example.demo.dto.authorize.LoginFormDTO;
+import com.example.demo.dto.authorize.RegisterFormDTO;
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.util.MessageUtils;
 import com.example.demo.web.util.RequestUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.ServletRequestBindingException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
+
+import java.util.Map;
 
 @Slf4j
 @ControllerAdvice
 @RequiredArgsConstructor
 public class GlobalExceptionHandler {
 
+    private static final Map<String, String> FORM_VIEWS = Map.of(
+            "/register", "register",
+            "/login", "login"
+    );
+
     private final MessageUtils messageUtils;
 
-    private String fallbackPath(HttpServletRequest request) {
-        String referer = request.getHeader("Referer");
+    private String fallbackPath(HttpServletRequest httpServletRequest) {
+        String referer = httpServletRequest.getHeader("Referer");
         return (referer != null && !referer.isBlank()) ? referer : "/";
     }
 
-    @ExceptionHandler(BusinessException.class)
-    public Object handleBusinessException(BusinessException ex,
-                                          HttpServletRequest request,
-                                          RedirectAttributes redirectAttributes) {
-        ErrorCode code = ex.getCode();
-        String message = messageUtils.getError(code, ex.getArgs());
-        HttpStatus status = mapErrorCodeToHttpStatus(code);
+    private String resolveFormView(HttpServletRequest httpServletRequest) {
+        String uri = httpServletRequest.getRequestURI();
+        return FORM_VIEWS.get(uri);
+    }
 
-        if (RequestUtils.isAjaxRequest(request)) {
-            return ResponseEntity.status(status).body(
-                    ApiResponse.error(code, message)
-            );
+    private void restoreFormModel(String view, Model model) {
+        if ("register".equals(view) && !model.containsAttribute("registerForm")) {
+            model.addAttribute("registerForm", RegisterFormDTO.getForm());
+        }
+        if ("login".equals(view) && !model.containsAttribute("loginForm")) {
+            model.addAttribute("loginForm", LoginFormDTO.builder().build());
+        }
+    }
+
+    private boolean canUseFlash(HttpServletRequest httpServletRequest) {
+        return httpServletRequest.getSession(false) != null;
+    }
+
+    @ExceptionHandler(ClientAbortException.class)
+    public void handleClientAbort(ClientAbortException clientAbortException) {
+        // Браузер оборвал соединение — не ошибка приложения, игнорируем.
+    }
+
+    @ExceptionHandler(BusinessException.class)
+    public Object handleBusinessException(BusinessException businessException,
+                                          HttpServletRequest httpServletRequest,
+                                          Model model,
+                                          RedirectAttributes redirectAttributes) {
+        ErrorCode errorCode = businessException.getCode();
+        String message = messageUtils.getError(errorCode, businessException.getArgs());
+        HttpStatus status = mapErrorCodeToHttpStatus(errorCode);
+
+        if (RequestUtils.isAjaxRequest(httpServletRequest)) {
+            return ResponseEntity.status(status).body(ApiResponse.error(errorCode, message));
         }
 
-        redirectAttributes.addFlashAttribute("errorMessage", message);
-        return "redirect:" + fallbackPath(request);
+        String formView = resolveFormView(httpServletRequest);
+        if (formView != null) {
+            restoreFormModel(formView, model);
+            model.addAttribute("errorMessage", message);
+            return formView;
+        }
+
+        if (canUseFlash(httpServletRequest)) {
+            redirectAttributes.addFlashAttribute("errorMessage", message);
+        }
+        return "redirect:" + fallbackPath(httpServletRequest);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public Object handleValidation(MethodArgumentNotValidException ex,
-                                   HttpServletRequest request,
+    public Object handleValidation(MethodArgumentNotValidException methodArgumentNotValidException,
+                                   HttpServletRequest httpServletRequest,
+                                   Model model,
                                    RedirectAttributes redirectAttributes) {
-        String message = ex.getBindingResult().getFieldErrors().stream()
+        BindingResult bindingResult = methodArgumentNotValidException.getBindingResult();
+
+        if (RequestUtils.isAjaxRequest(httpServletRequest)) {
+            String message = bindingResult.getFieldErrors().stream()
+                    .findFirst()
+                    .map(FieldError::getDefaultMessage)
+                    .orElse("Ошибка валидации");
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error(ErrorCode.VALIDATION_ERROR, message));
+        }
+
+        String formView = resolveFormView(httpServletRequest);
+        if (formView != null) {
+            String objectName = bindingResult.getObjectName();
+            if (!model.containsAttribute(objectName)) {
+                model.addAttribute(objectName, bindingResult.getTarget());
+            }
+            model.addAttribute(BindingResult.MODEL_KEY_PREFIX + objectName, bindingResult);
+            return formView;
+        }
+
+        String message = bindingResult.getFieldErrors().stream()
                 .findFirst()
                 .map(FieldError::getDefaultMessage)
                 .orElse("Ошибка валидации");
-
-        if (RequestUtils.isAjaxRequest(request)) {
-            return ResponseEntity.badRequest().body(
-                    ApiResponse.error(ErrorCode.VALIDATION_ERROR, message)
-            );
+        if (canUseFlash(httpServletRequest)) {
+            redirectAttributes.addFlashAttribute("errorMessage", message);
         }
-
-        redirectAttributes.addFlashAttribute("errorMessage", message);
-        return "redirect:" + fallbackPath(request);
+        return "redirect:" + fallbackPath(httpServletRequest);
     }
 
-    @ExceptionHandler(ServletRequestBindingException.class)
-    public Object handleMissingSessionAttribute(HttpServletRequest request,
-                                                RedirectAttributes redirectAttributes) {
-        String message = messageUtils.getError(ErrorCode.NOT_AUTHORIZED);
-        if (RequestUtils.isAjaxRequest(request)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
-                    ApiResponse.error(ErrorCode.NOT_AUTHORIZED, message)
-            );
+    @ExceptionHandler(NoResourceFoundException.class)
+    public Object handleNoResource(NoResourceFoundException noResourceFoundException,
+                                   HttpServletRequest httpServletRequest,
+                                   Model model) {
+        if (RequestUtils.isAjaxRequest(httpServletRequest)) {
+            return ResponseEntity.notFound().build();
         }
-        redirectAttributes.addFlashAttribute("errorMessage", message);
-        return "redirect:/login";
+
+        model.addAttribute("status", 404);
+        model.addAttribute("error", "Страница не найдена");
+        model.addAttribute("message", "Возможно, страница была удалена или вы ошиблись в адресе.");
+        return "error";
     }
 
     @ExceptionHandler(Exception.class)
-    public Object handleGeneric(Exception ex,
-                                HttpServletRequest request,
-                                RedirectAttributes redirectAttributes) {
-        log.error("Unhandled exception", ex);
-        String message = messageUtils.getError(ErrorCode.INTERNAL_ERROR);
+    public Object handleGeneric(Exception exception,
+                                HttpServletRequest httpServletRequest,
+                                Model model) {
+        log.error("Необработанное исключение на URI: {}", httpServletRequest.getRequestURI(), exception);
 
-        if (RequestUtils.isAjaxRequest(request)) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                    ApiResponse.error(ErrorCode.INTERNAL_ERROR, message)
-            );
+        if (RequestUtils.isAjaxRequest(httpServletRequest)) {
+            String message = messageUtils.getError(ErrorCode.INTERNAL_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error(ErrorCode.INTERNAL_ERROR, message));
         }
 
-        String referer = request.getHeader("Referer");
-        String currentUri = request.getRequestURI();
-        if (referer == null || referer.isBlank() || referer.contains(currentUri)) {
-            throw new RuntimeException(ex);
-        }
-        redirectAttributes.addFlashAttribute("errorMessage", message);
-        return "redirect:" + referer;
+        model.addAttribute("status", 500);
+        model.addAttribute("error", "Внутренняя ошибка");
+        model.addAttribute("message", "Что-то пошло не так. Мы уже работаем над этим.");
+        return "error";
     }
 
-    private HttpStatus mapErrorCodeToHttpStatus(ErrorCode code) {
-        return switch (code) {
+    private HttpStatus mapErrorCodeToHttpStatus(ErrorCode errorCode) {
+        return switch (errorCode) {
             case USER_NOT_FOUND, ENTITY_NOT_FOUND -> HttpStatus.NOT_FOUND;
             case PASSWORD_INVALID, NOT_AUTHORIZED -> HttpStatus.UNAUTHORIZED;
             case INSUFFICIENT_FUNDS -> HttpStatus.PAYMENT_REQUIRED;

@@ -28,17 +28,14 @@ public class RatedCommandService {
 
     @Transactional
     public void addOrUpdateRating(Long movieId, Long userId,
-                                  RatedMovieFormDTO form) {
+                                  RatedMovieFormDTO ratedMovieFormDTO) {
         Movie movie = movieService.getMovie(movieId);
         User user = userQueryService.getUser(userId);
 
         RatedMovie ratedMovie = findOrInit(movieId, userId, user, movie);
-        boolean restored = ratedMovie.getDeletableState().isDeleted();
 
-        applyForm(ratedMovie, form);
-        if (restored) {
-            ratedMovie.setAddedAt(LocalDateTime.now());
-        }
+        applyForm(ratedMovie, ratedMovieFormDTO);
+        ratedMovie.setAddedAt(LocalDateTime.now());
         ratedMovie.getDeletableState().setDeleted(false);
         ratedMovieRepository.saveAndFlush(ratedMovie);
 
@@ -70,9 +67,9 @@ public class RatedCommandService {
 
     private void synchronizeMovieRating(Movie movie, Long movieId) {
         BigDecimal average = ratedMovieRepository.calculateAverageRating(movie);
-        long actualCount = ratedMovieRepository.countByMovieId(movieId);
+        Long actualCount = ratedMovieRepository.countByMovieId(movieId);
         movie.setRating(average != null ? average.setScale(1, RoundingMode.HALF_UP) : null);
-        movie.setRatingsCount(Math.toIntExact(actualCount));
+        movie.setRatingsCount(actualCount == null ? 0 : actualCount.intValue());
         movieService.save(movie);
     }
 }

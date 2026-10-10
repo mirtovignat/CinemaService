@@ -27,8 +27,7 @@ public class MapperUtils {
         return securityConfig.passwordEncoder().encode(rawPassword);
     }
 
-    @Named("tofullName")
-    public static String tofullName(String surname, String name, String patronymic) {
+    public static String toFullName(String surname, String name, String patronymic) {
         if (surname == null || name == null) {
             return null;
         }

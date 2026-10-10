@@ -19,5 +19,4 @@ public record UserForOwnerViewDTO(
         LocalDate birthDate,
         int age,
         boolean sex
-) {
-}
+) {}

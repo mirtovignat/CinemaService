@@ -1,15 +1,14 @@
 package com.example.demo.dto.catalog;
 
-import com.example.demo.dto.base.MovieIdentity;
-import com.example.demo.dto.base.MovieTitled;
-import com.fasterxml.jackson.annotation.JsonUnwrapped;
+import lombok.Builder;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+@Builder
 public record HistoricalMovieViewDTO(
-        @JsonUnwrapped MovieIdentity id,
-        @JsonUnwrapped MovieTitled title,
+        Long id,
+        String title,
         BigDecimal priceSnapshot,
         LocalDateTime addedAt
 ) {

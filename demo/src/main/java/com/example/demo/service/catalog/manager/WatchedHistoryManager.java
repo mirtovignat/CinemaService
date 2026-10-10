@@ -9,43 +9,29 @@ import com.example.demo.repository.entity.UserRepository;
 import com.example.demo.util.HistoryGrouper;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.function.Function;
 
 @Component
-public class WatchedHistoryManager extends AbstractHistoryManager<PurchasedMovie, LibrarianMovieViewDTO> {
+public class WatchedHistoryManager
+        extends AbstractCatalogItemHistoryManager<PurchasedMovie, LibrarianMovieViewDTO> {
 
-    private final PurchasedMovieRepository purchasedMovieRepository;
     private final PurchasedMapper purchasedMapper;
 
-    public WatchedHistoryManager(
-            UserRepository userRepository,
-            HistoryGrouper historyGrouper,
-            UserMapper userMapper,
-            PurchasedMovieRepository purchasedMovieRepository,
-            PurchasedMapper purchasedMapper
-    ) {
-        super(userRepository, historyGrouper, userMapper);
-        this.purchasedMovieRepository = purchasedMovieRepository;
+    public WatchedHistoryManager(UserRepository userRepository,
+                                 HistoryGrouper historyGrouper,
+                                 UserMapper userMapper,
+                                 PurchasedMovieRepository purchasedMovieRepository,
+                                 PurchasedMapper purchasedMapper) {
+        super(userRepository, historyGrouper, userMapper, purchasedMovieRepository,
+                LibrarianMovieViewDTO::addedAt);
         this.purchasedMapper = purchasedMapper;
-    }
-
-    @Override
-    protected List<PurchasedMovie> fetchEntities(Long userId) {
-        return purchasedMovieRepository.findAllByUserId(userId);
     }
 
     @Override
     protected List<LibrarianMovieViewDTO> convertToDtos(List<PurchasedMovie> entities) {
         return entities.stream()
-                .flatMap(p -> p.getWatchedHistory().stream()
+                .flatMap(purchasedMovie -> purchasedMovie.getWatchedHistory().stream()
                         .map(purchasedMapper::toLibrarianViewFromHistoryItem))
                 .toList();
-    }
-
-    @Override
-    protected Function<LibrarianMovieViewDTO, LocalDateTime> getDateExtractor() {
-        return LibrarianMovieViewDTO::addedAt;
     }
 }

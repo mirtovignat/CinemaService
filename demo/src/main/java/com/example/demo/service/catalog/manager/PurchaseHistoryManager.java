@@ -9,31 +9,22 @@ import com.example.demo.repository.entity.UserRepository;
 import com.example.demo.util.HistoryGrouper;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.function.Function;
 
 @Component
-public class PurchaseHistoryManager extends AbstractHistoryManager<PurchasedMovie, HistoricalMovieViewDTO> {
+public class PurchaseHistoryManager
+        extends AbstractCatalogItemHistoryManager<PurchasedMovie, HistoricalMovieViewDTO> {
 
-    private final PurchasedMovieRepository purchasedMovieRepository;
     private final PurchasedMapper purchasedMapper;
 
-    public PurchaseHistoryManager(
-            UserRepository userRepository,
-            HistoryGrouper historyGrouper,
-            UserMapper userMapper,
-            PurchasedMovieRepository purchasedMovieRepository,
-            PurchasedMapper purchasedMapper
-    ) {
-        super(userRepository, historyGrouper, userMapper);
-        this.purchasedMovieRepository = purchasedMovieRepository;
+    public PurchaseHistoryManager(UserRepository userRepository,
+                                  HistoryGrouper historyGrouper,
+                                  UserMapper userMapper,
+                                  PurchasedMovieRepository purchasedMovieRepository,
+                                  PurchasedMapper purchasedMapper) {
+        super(userRepository, historyGrouper, userMapper, purchasedMovieRepository,
+                HistoricalMovieViewDTO::addedAt);
         this.purchasedMapper = purchasedMapper;
-    }
-
-    @Override
-    protected List<PurchasedMovie> fetchEntities(Long userId) {
-        return purchasedMovieRepository.findAllByUserId(userId);
     }
 
     @Override
@@ -41,10 +32,5 @@ public class PurchaseHistoryManager extends AbstractHistoryManager<PurchasedMovi
         return entities.stream()
                 .map(purchasedMapper::toOwnerViewFromHistorical)
                 .toList();
-    }
-
-    @Override
-    protected Function<HistoricalMovieViewDTO, LocalDateTime> getDateExtractor() {
-        return HistoricalMovieViewDTO::addedAt;
     }
 }

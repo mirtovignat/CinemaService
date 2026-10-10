@@ -51,18 +51,16 @@ public class MoviePosterService {
         int filled = 0;
         for (Movie movie : movies) {
             if (movie.getTmdbId() == null) {
-                log.warn("Skip id={} — нет tmdb_id", movie.getId());
                 continue;
             }
             try {
                 replacePosterFromTMDB(movie.getId());
                 filled++;
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 log.warn("Fail id={} tmdb_id={}: {}",
-                        movie.getId(), movie.getTmdbId(), e.getMessage());
+                        movie.getId(), movie.getTmdbId(), exception.getMessage());
             }
         }
-        log.info("fillMissingPosters: заполнено {}", filled);
         return filled;
     }
 }

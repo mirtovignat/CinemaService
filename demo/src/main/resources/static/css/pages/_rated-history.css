@@ -1,0 +1,192 @@
+.header-wrapper { flex-shrink: 0; z-index: 50; }
+
+.history-item:hover {
+    border-color: rgba(167, 139, 250, 0.2);
+}
+
+.history-item-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(167, 139, 250, 0.08);
+    border: 1px solid rgba(167, 139, 250, 0.12);
+    color: #a78bfa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.history-item-icon svg {
+    width: 16px;
+    height: 16px;
+    display: block;
+    fill: currentColor;
+}
+
+.history-item-title:hover { color: #a78bfa; }
+
+.history-item-rating {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.85rem;
+    color: #cbd5e1;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.04);
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.history-item-rating svg {
+    width: 14px;
+    height: 14px;
+    stroke: #fbbf24;
+    fill: #fbbf24;
+}
+
+.history-review {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    padding: 0.1rem 0.6rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 6px;
+    border-left: 2px solid #a78bfa;
+}
+
+.history-item-meta-value--rating {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+    width: fit-content;
+    color: #fcd34d;
+    font-weight: 600;
+}
+
+.history-item-meta-value-max {
+    color: #94a3b8;
+    font-weight: 400;
+}
+
+.history-item-rating-star {
+    display: inline-flex;
+    align-items: center;
+}
+
+.history-item-rating-star svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* === Выравнивание карточек истории оценок === */
+
+.history-item {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 16px;
+}
+
+.history-item-icon {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: start;
+    margin-top: 2px;
+}
+
+.history-item-info {
+    grid-column: 2;
+    min-width: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.history-item-title {
+    align-self: flex-start;
+    text-align: left;
+    margin: 0;
+}
+
+.history-item-meta--rated {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    width: 100%;
+    margin-top: 8px;
+}
+
+.history-item-meta--rated .history-item-meta-row {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr);
+    align-items: baseline;
+    justify-content: initial;
+    gap: 8px;
+    width: 100%;
+    text-align: left;
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+.history-item-meta--rated .history-item-meta-label {
+    min-width: 0;
+    text-align: left;
+    white-space: nowrap;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+.history-item-meta--rated .history-item-meta-value {
+    min-width: 0;
+    text-align: left;
+    overflow-wrap: anywhere;
+    color: #e2e8f0;
+}
+
+.history-item-time {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+    align-self: center;
+    white-space: nowrap;
+}
+
+/* === Приглушённый текст «Пользователь не оставил отзыва» === */
+
+.history-item-meta--rated .history-item-meta-value.history-item-meta-value--muted {
+    color: #64748b;
+    font-style: italic;
+    opacity: 0.75;
+}
+
+@media (max-width: 900px) {
+    .history-item {
+        grid-template-columns: 40px minmax(0, 1fr);
+        row-gap: 12px;
+    }
+    .history-item-time {
+        grid-column: 2;
+        grid-row: 2;
+        justify-self: start;
+    }
+}
+
+@media (max-width: 480px) {
+    .history-item {
+        column-gap: 10px;
+        padding: 12px;
+    }
+    .history-item-meta--rated .history-item-meta-row {
+        grid-template-columns: 58px minmax(0, 1fr);
+        gap: 6px;
+        font-size: 0.8rem;
+    }
+    .history-item-time {
+        font-size: 0.75rem;
+    }
+}

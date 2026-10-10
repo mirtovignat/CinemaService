@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<body>
+
+<div th:fragment="ratingsModals">
+
+    <div id="ratingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Оценить фильм</h2>
+                <button class="modal-x"
+                        type="button"
+                        data-action="hide-rating-modal">✕</button>
+            </div>
+            <p style="font-weight:600; color:#3b82f6;" id="ratingModalMovieTitle"></p>
+
+            <div id="ratingForm">
+                <input type="hidden" name="id" id="ratingFormTitle" value="">
+
+                <div class="rating-input">
+                    <label for="ratingValue"
+                           style="display:block; margin-bottom:4px; font-weight:500; color:#e2e8f0;">
+                        Оценка (0.0–10.0):
+                    </label>
+                    <div class="rating-input-with-stepper">
+                        <input type="number"
+                               id="ratingValue"
+                               name="rating"
+                               step="0.1"
+                               min="0"
+                               max="10"
+                               value="5.0"
+                               required>
+                        <div class="stepper-buttons">
+                            <button type="button" class="stepper-btn up"
+                                    data-action="rating-step-up"
+                                    title="Увеличить на 0.1">▲</button>
+                            <button type="button" class="stepper-btn down"
+                                    data-action="rating-step-down"
+                                    title="Уменьшить на 0.1">▼</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="comment-input">
+                    <label for="ratingComment"
+                           style="display:block; margin-bottom:4px; font-weight:500; color:#e2e8f0;">
+                        Комментарий (необязательно):
+                    </label>
+                    <textarea id="ratingComment"
+                              name="review"
+                              rows="3"
+                              placeholder="Ваш отзыв..."
+                              maxlength="2000"></textarea>
+                </div>
+
+                <div id="ratingModalError" class="modal-error" style="display:none;"></div>
+
+                <div class="modal-buttons">
+                    <button type="button"
+                            class="modal-cancel-btn"
+                            data-action="hide-rating-modal">Отмена</button>
+                    <button type="button"
+                            class="modal-confirm-btn"
+                            data-action="submit-rating">Отправить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirmDeleteModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Удаление отзыва</h2>
+                <button class="modal-x"
+                        type="button"
+                        data-action="hide-confirm-delete-modal">✕</button>
+            </div>
+            <p>Вы уверены, что хотите удалить свой отзыв?</p>
+            <p style="color:#94a3b8; font-size:0.9rem;">Это действие нельзя отменить.</p>
+            <div class="modal-buttons">
+                <button class="modal-cancel-btn"
+                        type="button"
+                        data-action="hide-confirm-delete-modal">Отмена</button>
+                <button class="modal-confirm-btn danger"
+                        id="confirmDeleteBtn"
+                        type="button"
+                        data-action="execute-delete">Удалить</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

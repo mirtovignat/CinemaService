@@ -1,21 +1,15 @@
 package com.example.demo.mapper.entity;
 
-import com.example.demo.dto.base.UserOwnership;
 import com.example.demo.dto.catalog.RatedMovieFormDTO;
 import com.example.demo.dto.catalog.RatedMovieViewDTO;
 import com.example.demo.dto.catalog.ReviewViewDTO;
-import com.example.demo.mapper.util.MovieComponentMapper;
 import com.example.demo.model.entity.RatedMovie;
 import com.example.demo.model.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.springframework.beans.factory.annotation.Autowired;
 
-@Mapper(componentModel = "spring", uses = {MovieComponentMapper.class})
+@Mapper(componentModel = "spring")
 public abstract class RatedMapper {
-
-    @Autowired
-    protected MovieComponentMapper componentMapper;
 
     public ReviewViewDTO toReviewViewWithOwn(RatedMovie ratedMovie, Long currentUserId) {
         if (ratedMovie == null) {
@@ -25,13 +19,12 @@ public abstract class RatedMapper {
         boolean isOwn = ratedMovie.getUser() != null &&
                 ratedMovie.getUser().getId().equals(currentUserId);
         return ReviewViewDTO.builder()
+                .movieId(ratedMovie.getMovie() != null ? ratedMovie.getMovie().getId() : null)
                 .username(username)
                 .ratingValue(ratedMovie.getRatingValue())
                 .reviewText(ratedMovie.getReview())
-                .ownership(UserOwnership.builder()
-                        .own(isOwn)
-                        .addedAt(ratedMovie.getAddedAt())
-                        .build())
+                .addedAt(ratedMovie.getAddedAt())
+                .own(isOwn)
                 .build();
     }
 
@@ -46,32 +39,17 @@ public abstract class RatedMapper {
         return user.getUsername();
     }
 
-    public UserOwnership toUserOwnership(RatedMovie ratedMovie, Long currentUserId) {
-        if (ratedMovie == null) {
-            return UserOwnership.builder()
-                    .own(false)
-                    .addedAt(null)
-                    .build();
-        }
-        boolean isOwn = ratedMovie.getUser() != null &&
-                ratedMovie.getUser().getId().equals(currentUserId);
-        return UserOwnership.builder()
-                .own(isOwn)
-                .addedAt(ratedMovie.getAddedAt())
-                .build();
-    }
-
     public RatedMovieViewDTO toOwnerView(RatedMovie ratedMovie, Long currentUserId) {
         if (ratedMovie == null) {
             return null;
         }
         return RatedMovieViewDTO.builder()
-                .id(componentMapper.toIdentity(ratedMovie.getMovie()))
-                .title(componentMapper.toTitled(ratedMovie.getMovie()))
-                .media(componentMapper.toMedia(ratedMovie.getMovie()))
-                .rating(componentMapper.toRating(ratedMovie.getMovie()))
-                .release(componentMapper.toRelease(ratedMovie.getMovie()))
-                .ownership(toUserOwnership(ratedMovie, currentUserId))
+                .id(ratedMovie.getMovie().getId())
+                .title(ratedMovie.getMovie().getTitle())
+                .posterUrl(ratedMovie.getMovie().getPosterUrl())
+                .genre(ratedMovie.getMovie().getGenre())
+                .rating(ratedMovie.getMovie().getRating())
+                .releaseDate(ratedMovie.getMovie().getReleaseDate())
                 .ratingValue(ratedMovie.getRatingValue())
                 .review(ratedMovie.getReview())
                 .addedAt(ratedMovie.getAddedAt())

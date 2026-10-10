@@ -9,7 +9,7 @@ import java.time.Duration;
 public interface DurationMapper {
 
     @Named("durationToString")
-    default String toString(Duration duration) {
+    default String durationToString(Duration duration) {
         if (duration == null) return null;
         long seconds = duration.getSeconds();
         long hours = seconds / 3600;

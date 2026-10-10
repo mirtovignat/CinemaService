@@ -7,7 +7,7 @@
     <inspection_tool class="HtmlUnknownAttribute" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="myValues">
         <value>
-          <list size="65">
+          <list size="77">
             <item index="0" class="java.lang.String" itemvalue="th:href" />
             <item index="1" class="java.lang.String" itemvalue="th:each" />
             <item index="2" class="java.lang.String" itemvalue="th:text" />
@@ -73,6 +73,18 @@
             <item index="62" class="java.lang.String" itemvalue="th:data-maxbalance" />
             <item index="63" class="java.lang.String" itemvalue="th" />
             <item index="64" class="java.lang.String" itemvalue="th:data-total" />
+            <item index="65" class="java.lang.String" itemvalue="th:max" />
+            <item index="66" class="java.lang.String" itemvalue="th:data-history-id" />
+            <item index="67" class="java.lang.String" itemvalue="th:width" />
+            <item index="68" class="java.lang.String" itemvalue="th:height" />
+            <item index="69" class="java.lang.String" itemvalue="th:data-state" />
+            <item index="70" class="java.lang.String" itemvalue="th:data-cursor-added-at" />
+            <item index="71" class="java.lang.String" itemvalue="th:data-cursor-user-id" />
+            <item index="72" class="java.lang.String" itemvalue="th:data-sort" />
+            <item index="73" class="java.lang.String" itemvalue="th:data-size" />
+            <item index="74" class="java.lang.String" itemvalue="th:data-page" />
+            <item index="75" class="java.lang.String" itemvalue="th:data-href" />
+            <item index="76" class="java.lang.String" itemvalue="th:data-favourite-action" />
           </list>
         </value>
       </option>

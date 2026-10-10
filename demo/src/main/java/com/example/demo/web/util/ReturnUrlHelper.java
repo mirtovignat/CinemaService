@@ -26,11 +26,13 @@ public class ReturnUrlHelper {
         return url != null ? url : defaultUrl;
     }
 
-    public void saveReturnUrlIfNotExists(HttpSession session, HttpServletRequest request, String... excludedPaths) {
-        if (session.getAttribute(RETURN_URL_ATTR) != null) {
+    public void saveReturnUrlIfNotExists(HttpSession httpSession,
+                                         HttpServletRequest httpServletRequest,
+                                         String... excludedPaths) {
+        if (httpSession.getAttribute(RETURN_URL_ATTR) != null) {
             return;
         }
-        String referer = request.getHeader("Referer");
+        String referer = httpServletRequest.getHeader("Referer");
         if (referer == null || referer.isBlank()) {
             return;
         }
@@ -39,6 +41,6 @@ public class ReturnUrlHelper {
                 return;
             }
         }
-        saveReturnUrl(session, referer);
+        saveReturnUrl(httpSession, referer);
     }
 }

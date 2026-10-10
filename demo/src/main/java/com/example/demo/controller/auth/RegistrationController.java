@@ -1,11 +1,11 @@
 package com.example.demo.controller.auth;
 
 import com.example.demo.dto.authorize.RegisterFormDTO;
-import com.example.demo.dto.badges.BadgeCountsDTO;
 import com.example.demo.dto.user.SessionUser;
 import com.example.demo.service.user.AuthorizeService;
-import com.example.demo.web.util.ReturnUrlHelper;
-import jakarta.servlet.http.HttpSession;
+import com.example.demo.web.util.SessionAuthenticator;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -21,25 +21,24 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class RegistrationController {
 
     private final AuthorizeService authorizeService;
-    private final ReturnUrlHelper returnUrlHelper;
+    private final SessionAuthenticator sessionAuthenticator;
 
     @GetMapping
-    public String getRegisterForm(HttpSession httpSession, Model model) {
-        if (httpSession.getAttribute("sessionUser") != null) {
-            return "redirect:/";
+    public String getRegisterForm(Model model) {
+        if (!model.containsAttribute("registerForm")) {
+            model.addAttribute("registerForm", RegisterFormDTO.getForm());
         }
-        model.addAttribute("registerForm", RegisterFormDTO.getForm());
         return "register";
     }
 
     @PostMapping
     public String register(@Valid @ModelAttribute("registerForm") RegisterFormDTO registerFormDTO,
-                           HttpSession httpSession) {
+                           HttpServletRequest httpServletRequest,
+                           HttpServletResponse httpServletResponse) {
         authorizeService.validateRegister(registerFormDTO);
         SessionUser sessionUser = authorizeService.register(registerFormDTO);
-        httpSession.setAttribute("sessionUser", sessionUser);
-        httpSession.setAttribute("badges", BadgeCountsDTO.builder().build());
-        String redirectUrl = returnUrlHelper.getReturnUrlOrDefault(httpSession, "/");
-        return "redirect:" + redirectUrl;
+        sessionAuthenticator.authenticate(sessionUser, registerFormDTO.rawPassword(),
+                httpServletRequest, httpServletResponse);
+        return "redirect:/";
     }
 }

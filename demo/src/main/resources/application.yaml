@@ -1,9 +1,10 @@
 spring:
-  config:
-    import:
-      - optional:classpath:catalog.yml
-      - optional:classpath:messages.yml
-      - optional:classpath:search.yml
+  messages:
+    basename: messages/errors,messages/successes
+    encoding: UTF-8
+    fallback-to-system-locale: false
+    always-use-message-format: false
+    use-code-as-default-message: true
 
   thymeleaf:
     cache: false
@@ -14,7 +15,6 @@ spring:
       indent-output: true
     deserialization:
       fail-on-unknown-properties: true
-    property-naming-strategy: SNAKE_CASE
 
   servlet:
     multipart:
@@ -31,7 +31,7 @@ spring:
     hibernate:
       ddl-auto: update
     database-platform: org.hibernate.dialect.PostgreSQLDialect
-    show-sql: true
+    show-sql: false
     open-in-view: false
     properties:
       hibernate:
@@ -40,10 +40,15 @@ spring:
             non_contextual_creation: true
         type:
           preferred_enum_type: STRING
+        format_sql: false
 
 server:
   port: 8080
   servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
     session:
       tracking-modes: cookie
 
@@ -62,3 +67,8 @@ tmdb:
 app:
   rating:
     top-limit: 4
+  reviews:
+    sort-cookie-max-age: 31536000
+    page-size: 20
+  recommendations:
+    page-size: 8

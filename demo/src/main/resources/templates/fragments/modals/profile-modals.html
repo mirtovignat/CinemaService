@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<body>
+
+<div th:fragment="profileModals">
+
+    <div id="deletePhoneModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>
+                    <th:block th:replace="~{fragments/icons :: icon-trash}"></th:block>
+                    Удаление номера телефона
+                </h3>
+                <button class="modal-x"
+                        type="button"
+                        data-close-delete-phone-modal>✕</button>
+            </div>
+            <p>Вы уверены, что хотите удалить номер телефона?</p>
+            <div class="modal-buttons">
+                <button class="modal-cancel-btn"
+                        type="button"
+                        data-close-delete-phone-modal>Отмена</button>
+                <button id="confirmDeletePhoneBtn"
+                        class="modal-confirm-btn danger"
+                        type="button">
+                    <th:block th:replace="~{fragments/icons :: icon-trash}"></th:block>
+                    Удалить
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

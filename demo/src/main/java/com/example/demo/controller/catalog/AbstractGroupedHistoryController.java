@@ -2,41 +2,30 @@ package com.example.demo.controller.catalog;
 
 import com.example.demo.dto.response.GroupedHistoryResponse;
 import com.example.demo.dto.user.SessionUser;
-import com.example.demo.model.base.AbstractCatalogItem;
-import com.example.demo.service.catalog.AbstractCatalogService;
-import com.example.demo.service.movie.MovieService;
-import com.example.demo.service.user.UserQueryService;
+import com.example.demo.service.movie.FilterMetaService;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.SessionAttribute;
 
-public abstract class AbstractGroupedHistoryController<Entity extends AbstractCatalogItem, DTO>
-        extends AbstractCatalogController<Entity, DTO> {
+import java.util.function.Function;
 
-    private final MovieService movieService;
+public abstract class AbstractGroupedHistoryController<DTO> {
 
-    public AbstractGroupedHistoryController(
-            String viewName,
-            AbstractCatalogService<Entity, DTO> catalogService,
-            MovieService movieService,
-            UserQueryService userQueryService
-    ) {
-        super(viewName, catalogService, movieService, userQueryService);
-        this.movieService = movieService;
+    protected final String viewName;
+    protected final FilterMetaService filterMetaService;
+    private final Function<Long, GroupedHistoryResponse<DTO>> groupedHistoryProvider;
+
+    public AbstractGroupedHistoryController(String viewName,
+                                            FilterMetaService filterMetaService,
+                                            Function<Long, GroupedHistoryResponse<DTO>> groupedHistoryProvider) {
+        this.viewName = viewName;
+        this.filterMetaService = filterMetaService;
+        this.groupedHistoryProvider = groupedHistoryProvider;
     }
 
-    protected abstract GroupedHistoryResponse<DTO> getGroupedHistory(Long userId);
-
-    @Override
     @GetMapping
-    public String getCatalog(
-            Model model,
-            @SessionAttribute SessionUser sessionUser
-    ) {
-        Long userId = sessionUser.id();
-        GroupedHistoryResponse<DTO> groupedResponse = getGroupedHistory(userId);
-        model.addAttribute("groupedResponse", groupedResponse);
-        model.addAttribute("genres", movieService.getAllGenres());
-        return getViewName();
+    public String getCatalog(Model model, SessionUser sessionUser) {
+        model.addAttribute("groupedResponse", groupedHistoryProvider.apply(sessionUser.id()));
+        model.addAttribute("genres", filterMetaService.getAllGenres());
+        return viewName;
     }
 }

@@ -1,101 +1,76 @@
 package com.example.demo.controller.linked_collection;
 
-import com.example.demo.dto.badges.BadgeCountsDTO;
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.dto.user.SessionUser;
 import com.example.demo.exception.SuccessCode;
+import com.example.demo.model.base.AbstractCatalogItem;
 import com.example.demo.service.linked_collection.AbstractLinkedCollectionService;
 import com.example.demo.util.MessageUtils;
-import jakarta.servlet.http.HttpSession;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.Map;
 
 @Controller
 @AllArgsConstructor
-public abstract class AbstractLinkedCollectionController<DTO> {
+public abstract class AbstractLinkedCollectionController<Entity extends AbstractCatalogItem, DTO> {
 
     @Getter
     private final String viewName;
-    protected final AbstractLinkedCollectionService<?, DTO> linkedCollectionService;
+    protected final AbstractLinkedCollectionService<Entity, DTO> abstractLinkedCollectionService;
     protected final MessageUtils messageUtils;
 
     @GetMapping
-    public String getCatalog(Model model,
-                             @SessionAttribute SessionUser sessionUser) {
+    public String getCatalog(Model model, SessionUser sessionUser) {
         Long userId = sessionUser.id();
-        model.addAttribute("catalog", linkedCollectionService.getAllOfUser(userId));
-        model.addAttribute("catalogCount", linkedCollectionService.getCount(userId));
-        return getViewName();
+        model.addAttribute("catalog", abstractLinkedCollectionService.getAllOfUser(userId));
+        model.addAttribute("catalogCount", abstractLinkedCollectionService.getCount(userId));
+        return viewName;
     }
 
     @GetMapping("/count")
     @ResponseBody
-    public Long getCount(@SessionAttribute(required = false) SessionUser sessionUser) {
+    public Long getCount(SessionUser sessionUser) {
         Long userId = sessionUser != null ? sessionUser.id() : null;
-        return linkedCollectionService.getNormalizedCount(userId);
+        return abstractLinkedCollectionService.getNormalizedCount(userId);
     }
 
     @PostMapping("/add/{id}")
     @ResponseBody
-    public ResponseEntity<ApiResponse> add(@PathVariable Long id,
-                                           @SessionAttribute SessionUser sessionUser,
-                                           HttpSession httpSession) {
+    public ResponseEntity<ApiResponse> add(@PathVariable Long id, SessionUser sessionUser) {
         Long userId = sessionUser.id();
-        linkedCollectionService.add(id, userId);
-        Long newCount = linkedCollectionService.getCount(userId);
-        updateBadgeInSession(httpSession, newCount);
-        String message = messageUtils.getSuccess(SuccessCode.ADDED);
-        return ResponseEntity.ok(ApiResponse.builder()
-                .code(SuccessCode.ADDED.name())
-                .message(message)
-                .data(Map.of("count", newCount))
-                .build());
+        abstractLinkedCollectionService.add(id, userId);
+        return respond(SuccessCode.ADDED, abstractLinkedCollectionService.getCount(userId));
     }
 
     @PostMapping("/remove/{id}")
     @ResponseBody
-    public ResponseEntity<ApiResponse> remove(@PathVariable Long id,
-                                              @SessionAttribute SessionUser sessionUser,
-                                              HttpSession httpSession) {
+    public ResponseEntity<ApiResponse> remove(@PathVariable Long id, SessionUser sessionUser) {
         Long userId = sessionUser.id();
-        linkedCollectionService.remove(id, userId);
-        Long newCount = linkedCollectionService.getCount(userId);
-        updateBadgeInSession(httpSession, newCount);
-        String message = messageUtils.getSuccess(SuccessCode.REMOVED);
-        return ResponseEntity.ok(ApiResponse.builder()
-                .code(SuccessCode.REMOVED.name())
-                .message(message)
-                .data(Map.of("count", newCount))
-                .build());
+        abstractLinkedCollectionService.remove(id, userId);
+        return respond(SuccessCode.REMOVED, abstractLinkedCollectionService.getCount(userId));
     }
 
     @PostMapping("/clear")
     @ResponseBody
-    public ResponseEntity<ApiResponse> clear(@SessionAttribute SessionUser sessionUser,
-                                             HttpSession httpSession) {
+    public ResponseEntity<ApiResponse> clear(SessionUser sessionUser) {
         Long userId = sessionUser.id();
-        linkedCollectionService.removeAll(userId);
-        updateBadgeInSession(httpSession, 0L);
-        String message = messageUtils.getSuccess(SuccessCode.CLEARED);
-        return ResponseEntity.ok(ApiResponse.builder()
-                .code(SuccessCode.CLEARED.name())
-                .message(message)
-                .data(Map.of("count", 0))
-                .build());
+        abstractLinkedCollectionService.removeAll(userId);
+        return respond(SuccessCode.CLEARED, 0L);
     }
 
-    private void updateBadgeInSession(HttpSession httpSession, Long newCount) {
-        BadgeCountsDTO current = (BadgeCountsDTO) httpSession.getAttribute("badges");
-        if (current == null) {
-            current = BadgeCountsDTO.builder().build();
-        }
-        BadgeCountsDTO updated = linkedCollectionService.updateBadge(current, newCount);
-        httpSession.setAttribute("badges", updated);
+    private ResponseEntity<ApiResponse> respond(SuccessCode successCode, Long count) {
+        return ResponseEntity.ok(ApiResponse.builder()
+                .code(successCode.name())
+                .message(messageUtils.getSuccess(successCode))
+                .data(Map.of("count", count))
+                .build());
     }
 }

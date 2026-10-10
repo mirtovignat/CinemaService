@@ -1,0 +1,13 @@
+.text-muted {
+    color: var(--text-muted);
+}
+
+.text-center {
+    text-align: center;
+}
+
+.inline-icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+}

@@ -3,6 +3,7 @@ package com.example.demo.dto.authorize;
 import com.example.demo.exception.BusinessException;
 import com.example.demo.exception.ErrorCode;
 import com.example.demo.validation.annotation.ValidEmailDomain;
+import com.example.demo.validation.annotation.ValidPhone;
 import jakarta.validation.constraints.*;
 import lombok.Builder;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -37,8 +38,7 @@ public record RegisterFormDTO(
         @Size(min = 8, message = "Пароль минимум 8 символов")
         String repeatRawPassword,
 
-        @Pattern(regexp = "^$|^\\+\\d{1,3}\\s?\\(\\d{1,4}\\)\\s?\\d{3}-?\\d{2}-?\\d{2}$",
-                message = "Некорректный номер телефона. Используйте формат: +код (XXX) XXX-XX-XX")
+        @ValidPhone
         String phone,
 
         @NotBlank(message = "Введите фамилию")

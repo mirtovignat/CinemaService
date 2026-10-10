@@ -1,0 +1,210 @@
+main.catalog-wrapper {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    padding: 0 2.5rem 0.75rem 2.5rem;
+    margin: 0;
+    width: 100%;
+    min-height: 0;
+    box-sizing: border-box;
+    position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+main.catalog-wrapper::-webkit-scrollbar {
+    width: 8px;
+}
+
+main.catalog-wrapper::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+    margin: 2px 0;
+}
+
+main.catalog-wrapper::-webkit-scrollbar-thumb {
+    background: #6b7280;
+    border-radius: 6px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    min-height: 30px;
+}
+
+main.catalog-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+
+.catalog-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0.75rem 0 0;
+    box-sizing: border-box;
+    flex: 0 0 auto;
+}
+
+.page-header-row .page-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.checkout-btn {
+    background: linear-gradient(135deg, var(--glow-primary), #6366f1);
+    border: none;
+    color: white;
+    padding: 0.45rem 1.3rem;
+    border-radius: 60px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    box-shadow: 0 8px 30px rgba(99, 102, 241, 0.3);
+    white-space: nowrap;
+    font-family: inherit;
+}
+
+.checkout-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(99, 102, 241, 0.5);
+}
+
+.checkout-btn .btn-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.checkout-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+.btn-price {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.12rem 0.65rem;
+    border-radius: 40px;
+    font-size: 0.8rem;
+    backdrop-filter: blur(4px);
+}
+
+.clear-cart-btn {
+    background: transparent;
+    border: 1px solid var(--glow-danger);
+    color: var(--glow-danger);
+    padding: 0.4rem 1.2rem;
+    border-radius: 60px;
+    font-weight: 600;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: 0.2s;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: inherit;
+}
+
+.clear-cart-btn:hover {
+    background: var(--glow-danger);
+    color: white;
+    box-shadow: 0 0 12px #f43f5e;
+}
+
+.clear-cart-btn svg {
+    width: 15px;
+    height: 15px;
+}
+
+.cart-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem 1.5rem;
+    width: 100%;
+    margin: 0 auto;
+    align-items: stretch;
+    padding-bottom: 0;
+    overflow: visible;
+}
+
+.cart-card {
+    opacity: 1;
+}
+
+.cart-card .media-card-poster-link {
+    position: relative;
+}
+
+.cart-card .poster-overlay {
+    pointer-events: none;
+}
+
+.cart-card .poster-overlay .watch-btn-neon {
+    pointer-events: auto;
+}
+
+.cart-card .media-card-content {
+    box-sizing: border-box;
+    min-height: 147px;
+    height: 147px;
+    overflow: hidden;
+}
+
+.cart-card.removing {
+    opacity: 0;
+    transform: scale(0.9);
+    transition: all 0.3s ease;
+}
+
+@media (max-width: 1100px) {
+    .cart-container {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 1024px) {
+    main.catalog-wrapper {
+        padding: 0 1rem 0.75rem 1rem;
+    }
+}
+
+@media (max-width: 780px) {
+    .cart-container {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .catalog-content {
+        padding: 0.5rem 0 0;
+    }
+
+    main.catalog-wrapper {
+        padding: 0 0.75rem 0.5rem 0.75rem;
+    }
+
+    .cart-container {
+        grid-template-columns: 1fr;
+        max-width: 320px;
+        margin: 0 auto;
+    }
+
+    .page-header-row .page-header-actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .clear-cart-btn,
+    .checkout-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}

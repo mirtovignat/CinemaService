@@ -6,11 +6,13 @@ import com.example.demo.repository.entity.FavouriteMovieRepository;
 import com.example.demo.repository.entity.PurchasedMovieRepository;
 import com.example.demo.repository.entity.RatedMovieRepository;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class BadgeService {
 
     private final CartItemRepository cartItemRepository;
@@ -20,9 +22,6 @@ public class BadgeService {
 
     @Transactional(readOnly = true)
     public BadgeCountsDTO getBadgeCounts(Long id) {
-        if (id == null) {
-            return BadgeCountsDTO.builder().build();
-        }
         return BadgeCountsDTO.builder()
                 .cartCount(cartItemRepository.countByUserId(id))
                 .favouritesCount(favouriteMovieRepository.countByUserId(id))

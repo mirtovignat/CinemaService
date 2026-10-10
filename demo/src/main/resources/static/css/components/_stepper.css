@@ -1,0 +1,114 @@
+.rating-input-with-stepper,
+.amount-input-with-stepper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+    width: 100%;
+    max-width: 100%;
+}
+
+.rating-input-with-stepper input[type="number"],
+.amount-input-with-stepper input[type="text"] {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+    padding: 8px 12px;
+    height: 42px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 8px;
+    color: #e2e8f0;
+    font-size: 1rem;
+    box-sizing: border-box;
+    margin-bottom: 0 !important;
+}
+
+.rating-input-with-stepper input[type="number"]:focus,
+.amount-input-with-stepper input[type="text"]:focus {
+    border-color: #3b82f6;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.rating-input-with-stepper input[type="number"]::-webkit-inner-spin-button,
+.rating-input-with-stepper input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.rating-input-with-stepper input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.rating-input-with-stepper .stepper-buttons,
+.amount-input-with-stepper .stepper-buttons {
+    display: flex !important;
+    flex-direction: column;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.rating-input-with-stepper .stepper-btn,
+.amount-input-with-stepper .stepper-btn {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    border-radius: 4px;
+    color: #94a3b8;
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    width: 24px;
+    height: 18px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    flex-shrink: 0;
+    margin: 0 !important;
+    position: relative;
+}
+
+.rating-input-with-stepper .stepper-btn::before,
+.amount-input-with-stepper .stepper-btn::before {
+    content: "";
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    display: block;
+}
+
+.rating-input-with-stepper .stepper-btn.up::before,
+.amount-input-with-stepper .stepper-btn.up::before {
+    border-bottom: 5px solid currentColor;
+}
+
+.rating-input-with-stepper .stepper-btn.down::before,
+.amount-input-with-stepper .stepper-btn.down::before {
+    border-top: 5px solid currentColor;
+}
+
+.rating-input-with-stepper .stepper-btn:hover,
+.amount-input-with-stepper .stepper-btn:hover {
+    background: rgba(148, 163, 184, 0.1);
+    border-color: rgba(148, 163, 184, 0.3);
+    color: #cbd5e1;
+}
+
+.rating-input-with-stepper .stepper-btn:active,
+.rating-input-with-stepper .stepper-btn.holding,
+.amount-input-with-stepper .stepper-btn:active,
+.amount-input-with-stepper .stepper-btn.holding {
+    background: rgba(96, 165, 250, 0.15);
+    border-color: rgba(96, 165, 250, 0.3);
+    color: #93c5fd;
+    transform: scale(0.92);
+}
+
+.rating-input-with-stepper .stepper-btn.up,
+.amount-input-with-stepper .stepper-btn.up {
+    margin-bottom: 1px !important;
+}

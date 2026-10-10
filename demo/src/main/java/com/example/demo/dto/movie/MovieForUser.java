@@ -6,5 +6,4 @@ import lombok.Builder;
 public record MovieForUser<Movie>(
         Movie movie,
         MovieUserStatus status
-) {
-}
+) {}

@@ -2,8 +2,8 @@ package com.example.demo.repository.entity;
 
 import com.example.demo.exception.BusinessException;
 import com.example.demo.exception.ErrorCode;
-import com.example.demo.model.Genre;
 import com.example.demo.model.entity.Movie;
+import com.example.demo.repository.projection.RangeProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -37,17 +37,13 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
             """)
     List<String> findAllDistinctDirectors();
 
-    @Query(value = "SELECT unnest(enum_range(NULL::genre_type))", nativeQuery = true)
-    List<String> findAllGenresFromEnum();
-
     @Query("""
-            SELECT DISTINCT movie
+            SELECT DISTINCT movie.genre
             FROM Movie movie
-            LEFT JOIN movie.ratings ratedMovie
-            WHERE movie.genre = :genre
-            AND (ratedMovie IS NULL OR ratedMovie.deletableState.deleted = false)
+            WHERE movie.genre IS NOT NULL
+            ORDER BY movie.genre
             """)
-    Page<Movie> findAllDistinctByGenre(Pageable pageable, @Param("genre") Genre genre);
+    List<String> findAllDistinctGenres();
 
     @Query("""
             SELECT DISTINCT movie
@@ -84,4 +80,25 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
             @Param("excludedIds") List<Long> excludedIds,
             Pageable pageable
     );
+
+    @Query("""
+            SELECT DISTINCT movie
+            FROM Movie movie
+            LEFT JOIN movie.ratings ratedMovie
+            WHERE movie.genre = :genre
+            AND (ratedMovie IS NULL OR ratedMovie.deletableState.deleted = false)
+            """)
+    Page<Movie> findAllDistinctByGenre(Pageable pageable, @Param("genre") String genre);
+
+    @Query("""
+            SELECT
+                MIN(movie.duration)    AS minDuration,
+                MAX(movie.duration)    AS maxDuration,
+                MIN(movie.price)       AS minPrice,
+                MAX(movie.price)       AS maxPrice,
+                MIN(movie.releaseDate) AS minReleaseDate,
+                MAX(movie.releaseDate) AS maxReleaseDate
+            FROM Movie movie
+            """)
+    RangeProjection findRanges();
 }

@@ -10,11 +10,10 @@ import com.example.demo.repository.entity.CartItemRepository;
 import com.example.demo.repository.entity.FavouriteMovieRepository;
 import com.example.demo.repository.entity.PurchasedMovieRepository;
 import com.example.demo.repository.entity.UserRepository;
+import com.example.demo.service.movie.FilterMetaService;
 import com.example.demo.service.movie.MovieRecommendationService;
-import com.example.demo.service.movie.MovieService;
 import com.example.demo.service.rated.RatedQueryService;
 import lombok.AllArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +22,7 @@ import java.math.BigDecimal;
 
 @Service
 @AllArgsConstructor
+@Transactional(readOnly = true)
 public class UserQueryService {
 
     private final UserRepository userRepository;
@@ -32,18 +32,12 @@ public class UserQueryService {
     private final FavouriteMovieRepository favouriteMovieRepository;
     private final CartItemRepository cartItemRepository;
     private final MovieRecommendationService movieRecommendationService;
-    private final MovieService movieService;
+    private final FilterMetaService filterMetaService;
 
-    private static final int RECOMMENDATIONS_PAGE_SIZE = 8;
-
-    @Transactional(readOnly = true)
     public PersonalAccountResponse buildUserPage(UserForOwnerViewDTO userForOwner) {
         Long userId = userForOwner.id();
 
-        Slice<MovieCardViewDTO> firstPage = movieRecommendationService.getRecommendedMoviesSlice(
-                userId,
-                PageRequest.of(0, RECOMMENDATIONS_PAGE_SIZE)
-        );
+        Slice<MovieCardViewDTO> firstPage = movieRecommendationService.getFirstRecommendationsPage(userId);
 
         return PersonalAccountResponse.builder()
                 .userForOwner(userForOwner)
@@ -53,7 +47,7 @@ public class UserQueryService {
                 .cartCount(cartItemRepository.countByUserId(userId))
                 .topThreeRatedMovies(ratedQueryService.getTopNRatedMovies(userId))
                 .recommendedMovies(firstPage.getContent())
-                .genres(movieService.getAllGenres())
+                .genres(filterMetaService.getAllGenres())
                 .build();
     }
 

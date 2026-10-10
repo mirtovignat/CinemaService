@@ -1,6 +1,5 @@
 package com.example.demo.model.entity;
 
-import com.example.demo.model.Genre;
 import com.example.demo.model.base.IdentifiableEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMax;
@@ -8,8 +7,6 @@ import jakarta.validation.constraints.DecimalMin;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.BatchSize;
-import org.hibernate.annotations.JdbcType;
-import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -32,6 +29,9 @@ public class Movie extends IdentifiableEntity {
     @Column(name = "title", nullable = false)
     private String title;
 
+    @Column(name = "age_rating", nullable = false)
+    private Integer ageRating;
+
     @Column(name = "price", nullable = false, precision = 12, scale = 2)
     private BigDecimal price;
 
@@ -41,9 +41,8 @@ public class Movie extends IdentifiableEntity {
     @Column(name = "duration_seconds")
     private Duration duration;
 
-    @JdbcType(PostgreSQLEnumJdbcType.class)
-    @Column(name = "genre", columnDefinition = "genre_type")
-    private Genre genre;
+    @Column(name = "genre", columnDefinition = "text")
+    private String genre;
 
     @DecimalMin(value = "0.1", message = "Рейтинг не может быть меньше 0.1")
     @DecimalMax(value = "10.0", message = "Рейтинг не может быть больше 10.0")

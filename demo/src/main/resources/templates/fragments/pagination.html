@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="">
 <body>
 
 <div th:fragment="pager(page, url)" class="pagination" th:if="${page != null and page.totalPages > 1}">
@@ -47,68 +47,6 @@
         <th:block th:replace="~{fragments/icons :: icon-chevron-right}"></th:block>
     </a>
 </div>
-
-<style>
-    .pagination {
-        display: flex;
-        gap: 0.3rem;
-        align-items: center;
-        justify-content: center;
-        padding: 0.5rem 0;
-        flex-wrap: wrap;
-    }
-    .page-nav {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 2.2rem;
-        height: 2.2rem;
-        padding: 0 0.4rem;
-        border-radius: 3px;
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        color: #e2e8f0;
-        text-decoration: none;
-        font-size: 0.9rem;
-        transition: 0.15s ease;
-        cursor: pointer;
-        font-weight: 500;
-        margin: 0;
-        box-sizing: border-box;
-    }
-    .page-nav:hover {
-        background: rgba(59, 130, 246, 0.25);
-        border-color: rgba(59, 130, 246, 0.4);
-        color: #ffffff;
-    }
-    .page-nav.active {
-        background: #3b82f6;
-        border-color: #3b82f6;
-        color: #fff;
-        font-weight: 600;
-        box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
-    }
-    .page-nav svg {
-        width: 16px;
-        height: 16px;
-    }
-    .page-dots {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 1.8rem;
-        height: 2.2rem;
-        color: #94a3b8;
-        font-size: 0.9rem;
-        user-select: none;
-        letter-spacing: 2px;
-        padding: 0 0.2rem;
-    }
-    .pagination-loading {
-        opacity: 0.5;
-        pointer-events: none;
-    }
-</style>
 
 </body>
 </html>

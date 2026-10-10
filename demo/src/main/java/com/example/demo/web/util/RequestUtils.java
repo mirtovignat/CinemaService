@@ -7,14 +7,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class RequestUtils {
 
-    public static boolean isAjaxRequest(HttpServletRequest request) {
-        if (request == null) {
+    public static boolean isAjaxRequest(HttpServletRequest httpServletRequest) {
+        if (httpServletRequest == null) {
             return false;
         }
 
-        String requestedWith = request.getHeader("X-Requested-With");
-        String accept = request.getHeader("Accept");
-        String contentType = request.getHeader("Content-Type");
+        String requestedWith = httpServletRequest.getHeader("X-Requested-With");
+        String accept = httpServletRequest.getHeader("Accept");
+        String contentType = httpServletRequest.getHeader("Content-Type");
 
         return "XMLHttpRequest".equalsIgnoreCase(requestedWith)
                 || (accept != null && accept.contains("application/json"))

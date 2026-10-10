@@ -8,12 +8,17 @@ import com.example.demo.model.entity.RatedMovie;
 import com.example.demo.repository.entity.RatedMovieRepository;
 import com.example.demo.service.movie.MovieService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -27,7 +32,7 @@ public class RatedQueryService {
     public RatedQueryService(
             RatedMovieRepository ratedRepository,
             RatedMapper ratedMapper,
-            MovieService movieService,
+            @Lazy MovieService movieService,
             @Value("${app.rating.top-limit:4}") int ratingsToLimit
     ) {
         this.ratedRepository = ratedRepository;
@@ -37,14 +42,8 @@ public class RatedQueryService {
     }
 
     public long countByUserId(Long userId) {
-        return ratedRepository.countByUserId(userId);
-    }
-
-    public List<ReviewViewDTO> getReviewsByMovieId(Long movieId, Long currentUserId) {
-        List<RatedMovie> ratedMovies = ratedRepository.findAllByMovieId(movieId);
-        return ratedMovies.stream()
-                .map(ratedMovie -> ratedMapper.toReviewViewWithOwn(ratedMovie, currentUserId))
-                .toList();
+        Long count = ratedRepository.countByUserId(userId);
+        return count == null ? 0L : count;
     }
 
     public RatedMovieFormDTO getPreFilledForm(Long movieId, Long userId) {
@@ -67,9 +66,9 @@ public class RatedQueryService {
         return ratedRepository.countByMovieId(movieId);
     }
 
-    public boolean isUnchanged(Long movieId, Long userId, RatedMovieFormDTO form) {
+    public boolean isUnchanged(Long movieId, Long userId, RatedMovieFormDTO ratedMovieFormDTO) {
         return ratedRepository.findByMovieIdAndUserId(movieId, userId)
-                .map(existing -> isUnchanged(form, existing))
+                .map(existing -> isUnchanged(ratedMovieFormDTO, existing))
                 .orElse(false);
     }
 
@@ -100,5 +99,26 @@ public class RatedQueryService {
                 ).stream()
                 .map(ratedMovie -> ratedMapper.toOwnerView(ratedMovie, userId))
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Long, ReviewViewDTO> getOwnRatings(Long userId) {
+        return ratedRepository.findAllActiveByUserId(userId).stream()
+                .map(ratedMovie -> ratedMapper.toReviewViewWithOwn(ratedMovie, userId))
+                .collect(Collectors.toMap(
+                        ReviewViewDTO::movieId,
+                        Function.identity(),
+                        (existing, replacement) -> existing,
+                        LinkedHashMap::new
+                ));
+    }
+
+    public ReviewViewDTO getRating(Long movieId, Long userId) {
+        if (userId == null || movieId == null) {
+            return null;
+        }
+        return ratedRepository.findOwnReview(movieId, userId)
+                .map(ratedMovie -> ratedMapper.toReviewViewWithOwn(ratedMovie, userId))
+                .orElse(null);
     }
 }

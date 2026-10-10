@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<body>
+<div th:fragment="ratingBadge(movieId, rating)"
+     class="media-card-rating-badge js-media-rating-badge"
+     th:data-movie-id="${movieId}"
+     th:style="${rating != null} ? '' : 'display:none;'">
+    <span class="star">
+        <th:block th:replace="~{fragments/icons :: icon-star}"></th:block>
+    </span>
+  <span class="rating-value"
+        th:text="${rating != null ? #numbers.formatDecimal(rating, 1, 1) : ''}"></span>
+  <span class="rating-max">/ 10</span>
+</div>
+</body>
+</html>

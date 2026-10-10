@@ -10,10 +10,7 @@ import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 
 @SuperBuilder
@@ -82,13 +79,6 @@ public class User extends IdentifiableEntity {
     @Builder.Default
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<RatedMovie> ratings = new LinkedHashSet<>();
-
-    public List<LocalDateTime> getWatchedHistory() {
-        return purchases.stream()
-                .flatMap(purchasedMovie -> purchasedMovie.getWatchTimes().stream())
-                .sorted(Comparator.reverseOrder())
-                .toList();
-    }
 
     public void addMoney(BigDecimal amount) {
         if (amount == null || amount.signum() <= 0) {

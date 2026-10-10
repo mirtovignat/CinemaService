@@ -5,604 +5,6 @@
 </head>
 <body>
 <header th:fragment="header" class="site-header">
-    <style>
-        .site-header svg {
-            width: 20px;
-            height: 20px;
-            flex-shrink: 0;
-        }
-        .action-button svg {
-            width: 22px;
-            height: 22px;
-        }
-        .filters-toggle-btn svg {
-            width: 18px;
-            height: 18px;
-        }
-        .login-button svg {
-            width: 16px;
-            height: 16px;
-            margin-right: 4px;
-        }
-        .search-icon svg {
-            width: 16px;
-            height: 16px;
-        }
-
-        .site-header {
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.6rem 1.5rem;
-            width: 100%;
-            box-sizing: border-box;
-            transition: background-color 0.3s ease;
-        }
-        .filters-toggle-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.6rem 1.2rem;
-            border-radius: 2rem;
-            background: var(--glass-bg, rgba(255, 255, 255, 0.05));
-            border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
-            color: var(--text-light, #f1f5f9);
-            cursor: pointer;
-            font-size: 0.95rem;
-            font-weight: 600;
-            transition: all 0.25s ease;
-            backdrop-filter: blur(4px);
-        }
-        .filters-toggle-btn:hover {
-            border-color: var(--glow-accent, #a855f7);
-            color: #c084fc;
-            box-shadow: 0 0 12px rgba(168, 85, 247, 0.3);
-            transform: translateY(-2px);
-        }
-        .search-container {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-        .search-form {
-            display: flex;
-            gap: 0.5rem;
-            align-items: center;
-        }
-        .search-input-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-        .search-input-wrapper .search-icon {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #64748b;
-            pointer-events: none;
-            z-index: 1;
-        }
-        .search-input-wrapper input {
-            padding: 0.5rem 1rem 0.5rem 36px !important;
-            border-radius: 2rem;
-            border: 1px solid var(--glass-border);
-            background: var(--card-bg);
-            color: var(--text-light);
-            width: 220px;
-            outline: none;
-            transition: width 0.25s ease, border-color 0.2s ease;
-        }
-        .search-input-wrapper input:focus {
-            width: 260px;
-            border-color: var(--glow-primary);
-        }
-        .search-btn {
-            background: var(--glow-primary);
-            border: none;
-            border-radius: 2rem;
-            padding: 0.5rem 1rem;
-            color: white;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .search-btn:hover {
-            background: #2563eb;
-            transform: translateY(-2px);
-        }
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        .header-suggestions {
-            position: absolute;
-            top: calc(100% + 8px);
-            left: 0;
-            min-width: 320px;
-            max-width: 450px;
-            background: #131730;
-            border: 1px solid rgba(168, 85, 247, 0.4);
-            border-radius: 14px;
-            padding: 0.6rem;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8), 0 0 15px rgba(99, 102, 241, 0.2);
-            z-index: 999999 !important;
-            display: none;
-            flex-direction: column;
-            gap: 0.4rem;
-        }
-        .suggestion-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.6rem 0.9rem;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 10px;
-            cursor: pointer;
-            color: #f1f5f9;
-            font-size: 0.9rem;
-            transition: all 0.2s ease;
-        }
-        .suggestion-item:hover {
-            background: rgba(99, 102, 241, 0.25);
-            border-color: rgba(168, 85, 247, 0.5);
-            transform: translateX(3px);
-        }
-        .suggestion-title {
-            font-weight: 600;
-            color: #ffffff;
-        }
-        .suggestion-meta {
-            font-size: 0.78rem;
-            color: #94a3b8;
-        }
-        .filters-modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(5, 7, 15, 0.92);
-            backdrop-filter: blur(12px);
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding-top: 6vh;
-            z-index: 9999;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.25s ease, visibility 0.25s ease;
-        }
-        .filters-modal-overlay.show {
-            opacity: 1;
-            visibility: visible;
-        }
-        .filters-modal-content {
-            width: min(520px, calc(100vw - 32px));
-            height: auto;
-            max-height: 90vh;
-            background: linear-gradient(180deg, #15182e, #0c0f20);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 20px;
-            padding: 1.5rem;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75), 0 0 30px rgba(99, 102, 241, 0.12);
-            transform: translateY(30px) scale(0.96);
-            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-            display: flex;
-            flex-direction: column;
-        }
-        .filters-modal-overlay.show .filters-modal-content {
-            transform: translateY(0) scale(1);
-        }
-        .filters-modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.25rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            flex-shrink: 0;
-        }
-        .filters-modal-header h3 {
-            font-size: 1.25rem;
-            font-weight: 700;
-            letter-spacing: -0.01em;
-            color: #f8fafc;
-            margin: 0;
-        }
-        .filters-modal-close {
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            color: #94a3b8;
-            font-size: 1.2rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            line-height: 1;
-        }
-        .filters-modal-close:hover {
-            background: rgba(239, 68, 68, 0.2);
-            color: #f87171;
-            border-color: rgba(239, 68, 68, 0.4);
-        }
-        #filterForm {
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-            padding-right: 2px;
-        }
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.4rem;
-            margin-bottom: 0.9rem;
-            text-align: left;
-            position: relative;
-        }
-        .filter-group label:not(.accordion-trigger) {
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: #818cf8;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-        }
-        .filter-row {
-            display: flex;
-            gap: 0.75rem;
-        }
-        .filter-input, .accordion-trigger {
-            box-sizing: border-box;
-            height: 42px;
-            padding: 0 0.85rem;
-            background: rgba(10, 13, 28, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            color: #f1f5f9;
-            font-size: 0.9rem;
-            font-weight: 500;
-            outline: none;
-            transition: all 0.2s ease;
-        }
-        .filter-input::placeholder {
-            color: #64748b;
-        }
-        .filter-input:focus {
-            border-color: #6366f1;
-            background: rgba(10, 13, 28, 0.9);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-        }
-        .accordion-trigger {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            user-select: none;
-            color: #cbd5e1;
-        }
-        .accordion-trigger:hover {
-            border-color: rgba(255, 255, 255, 0.25);
-            background: rgba(255, 255, 255, 0.04);
-        }
-        .accordion-dropdown {
-            display: none;
-            position: relative;
-            margin-top: 6px;
-            left: 0;
-            right: 0;
-            z-index: 10001;
-            max-height: 220px;
-            overflow-y: auto;
-            background: #131730;
-            border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
-            border-radius: 12px;
-            padding: 0.5rem;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-        }
-        .accordion-dropdown::-webkit-scrollbar,
-        #filterForm::-webkit-scrollbar {
-            width: 6px;
-        }
-        .accordion-dropdown::-webkit-scrollbar-track,
-        #filterForm::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-        }
-        .accordion-dropdown::-webkit-scrollbar-thumb,
-        #filterForm::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.35);
-            border-radius: 10px;
-        }
-        .accordion-dropdown::-webkit-scrollbar-thumb:hover,
-        #filterForm::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.6);
-        }
-        .accordion-dropdown,
-        #filterForm {
-            scrollbar-width: thin;
-            scrollbar-color: rgba(255, 255, 255, 0.35) rgba(255, 255, 255, 0.05);
-        }
-        .accordion-group.active .accordion-dropdown {
-            display: block;
-        }
-        .accordion-checkbox {
-            accent-color: var(--glow-accent, #a855f7);
-            margin-right: 0.5rem;
-        }
-        .accordion-item {
-            display: flex;
-            align-items: center;
-            padding: 0.4rem 0.6rem;
-            border-radius: 8px;
-            color: white;
-            font-size: 0.9rem;
-            cursor: pointer;
-        }
-        .accordion-item:hover {
-            background: rgba(255,255,255,0.08);
-        }
-        .filters-modal-footer {
-            display: flex;
-            gap: 0.75rem;
-            margin-top: 1.1rem;
-            margin-bottom: 0;
-            flex-shrink: 0;
-        }
-        .filters-modal-footer .btn-primary {
-            flex: 2;
-            height: 42px;
-            border: none;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #4f46e5, #6366f1);
-            color: #ffffff;
-            font-weight: 600;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
-        }
-        .filters-modal-footer .btn-primary:hover {
-            background: linear-gradient(135deg, #4338ca, #4f46e5);
-            transform: translateY(-1px);
-            box-shadow: 0 6px 18px rgba(79, 70, 229, 0.45);
-        }
-        .filters-modal-footer .btn-secondary {
-            flex: 1;
-            height: 42px;
-            line-height: 40px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.05);
-            color: #cbd5e1;
-            font-weight: 600;
-            font-size: 0.95rem;
-            text-decoration: none;
-            box-sizing: border-box;
-            transition: all 0.2s ease;
-        }
-        .filters-modal-footer .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: #ffffff;
-            border-color: rgba(255, 255, 255, 0.3);
-        }
-        .duration-range-inline {
-            display: flex;
-            align-items: center;
-            gap: 0.35rem;
-            width: 100%;
-        }
-        .duration-block {
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-            flex: 1;
-            min-width: 0;
-        }
-        .range-prefix {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #818cf8;
-            flex-shrink: 0;
-        }
-        .range-separator {
-            color: #64748b;
-            font-weight: bold;
-            flex-shrink: 0;
-        }
-        .duration-picker {
-            display: flex;
-            gap: 0.2rem;
-            flex: 1;
-            min-width: 0;
-        }
-        .duration-field {
-            position: relative;
-            flex: 1;
-            min-width: 0;
-        }
-        .duration-field .filter-input {
-            width: 100%;
-            height: 38px;
-            padding-left: 0.2rem !important;
-            text-align: right;
-            font-size: 0.82rem;
-        }
-        .field-hours .filter-input {
-            padding-right: 1.3rem !important;
-        }
-        .field-mins .filter-input {
-            padding-right: 2.1rem !important;
-        }
-        .field-secs .filter-input {
-            padding-right: 2.1rem !important;
-        }
-        .duration-field .unit {
-            position: absolute;
-            right: 0.3rem;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 0.68rem;
-            color: #94a3b8;
-            pointer-events: none;
-            user-select: none;
-        }
-        .rating-error {
-            display: none;
-            color: #f87171;
-            font-size: 0.85rem;
-            margin-top: 6px;
-        }
-        input[type="date"] {
-            color-scheme: dark;
-            background: rgba(10, 13, 28, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            color: #f1f5f9;
-            height: 42px;
-            padding: 0 0.85rem;
-            box-sizing: border-box;
-            width: 100%;
-            font-family: inherit;
-            font-size: 0.9rem;
-            outline: none;
-            transition: all 0.2s ease;
-        }
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: invert(1);
-            opacity: 0.6;
-            cursor: pointer;
-            transition: opacity 0.2s ease;
-        }
-        input[type="date"]::-webkit-calendar-picker-indicator:hover {
-            opacity: 1;
-        }
-        input[type="date"]:focus {
-            border-color: #6366f1;
-            background: rgba(10, 13, 28, 0.9);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-        }
-        .amount-input-with-stepper {
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-            position: relative;
-            flex: 1;
-        }
-        .amount-input-with-stepper .filter-input {
-            flex: 1;
-            min-width: 0;
-        }
-        .amount-input-with-stepper .stepper-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 1px;
-        }
-        .stepper-btn {
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 4px;
-            color: #cbd5e1;
-            font-size: 0.6rem;
-            padding: 0.1rem 0.25rem;
-            cursor: pointer;
-            line-height: 1;
-            transition: 0.15s;
-            height: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .stepper-btn:hover {
-            background: rgba(255,255,255,0.18);
-            border-color: #818cf8;
-        }
-        .stepper-btn.holding {
-            background: rgba(99,102,241,0.3);
-            border-color: #6366f1;
-        }
-        .login-button {
-            background: linear-gradient(135deg, var(--glow-primary), #1d4ed8);
-            color: white;
-            padding: 0.6rem 1.5rem;
-            border-radius: 2rem;
-            text-decoration: none;
-            transition: 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-        .login-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(59,130,246,0.4);
-        }
-        .action-button {
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 48px;
-            height: 48px;
-            border-radius: 40px;
-            background: var(--glass-bg, rgba(255, 255, 255, 0.05));
-            border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
-            color: var(--text-light, #f1f5f9);
-            cursor: pointer;
-            font-size: inherit;
-            font-family: inherit;
-            text-decoration: none;
-            transition: all 0.25s ease;
-            backdrop-filter: blur(4px);
-        }
-        .action-button:hover {
-            transform: translateY(-3px);
-            border-color: var(--glow-primary);
-            color: var(--glow-primary);
-            box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
-        }
-        .count-badge {
-            position: absolute;
-            top: -6px;
-            right: -6px;
-            background: var(--glow-danger);
-            color: white;
-            border-radius: 40px;
-            min-width: 22px;
-            height: 22px;
-            font-size: 0.7rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 6px #f43f5e;
-        }
-        .logo-link {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .logo-link a {
-            text-decoration: none;
-            color: inherit;
-            font-weight: 700;
-            font-size: 1.2rem;
-        }
-        .logo-link img {
-            height: 32px;
-            width: auto;
-            display: block;
-        }
-    </style>
 
     <div class="logo-link">
         <a href="/favicon.ico" target="_blank" title="Открыть favicon">
@@ -611,58 +13,103 @@
         <a href="/">CinemaService</a>
     </div>
 
-    <div class="header-actions">
-        <button type="button" class="filters-toggle-btn" onclick="toggleFiltersModal(true)">
-            <th:block th:replace="~{fragments/icons :: icon-filter}"></th:block>
-            Фильтры
+    <div class="search-container">
+        <form id="headerSearchForm" action="/" method="get" class="search-form">
+            <div class="search-input-wrapper" id="headerSearchWrapper">
+            <span class="search-icon">
+                <th:block th:replace="~{fragments/icons :: icon-search}"></th:block>
+            </span>
+                <button type="button"
+                        class="filters-inline-btn"
+                        id="headerFiltersBtn"
+                        aria-label="Фильтры"
+                        title="Фильтры">
+                    <th:block th:replace="~{fragments/icons :: icon-filter}"></th:block>
+                </button>
+                <label for="headerSearchInput"
+                       style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Поиск
+                    фильмов</label>
+                <input type="text" id="headerSearchInput" name="title" autocomplete="off"
+                       placeholder="Поиск фильмов..." maxlength="100"
+                       th:value="${param.title != null and !#strings.isEmpty(param.title[0])
+                                ? (#strings.length(param.title[0]) > 30
+                                    ? #strings.substring(param.title[0], 0, 30) + '…'
+                                    : param.title[0])
+                                : ''}">
+
+                <button type="button"
+                        class="header-search-clear"
+                        id="headerSearchClear"
+                        aria-label="Очистить поиск"
+                        title="Очистить">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         aria-hidden="true">
+                        <path d="M7 7l10 10M17 7L7 17"/>
+                    </svg>
+                </button>
+
+                <span id="headerAutocompleteOverlay"
+                      class="search-autocomplete-overlay"
+                      aria-hidden="true">
+                <span class="typed" id="headerAutocompleteTyped"></span>
+                <span class="hint" id="headerAutocompleteHint"></span>
+            </span>
+
+                <div id="headerSuggestions" class="header-suggestions"></div>
+            </div>
+        </form>
+        <button type="submit" form="headerSearchForm" class="search-btn search-btn-outside" id="headerSearchSubmitBtn">
+            Найти
         </button>
+    </div>
 
-        <div class="search-container">
-            <form id="headerSearchForm" action="/" method="get" class="search-form"
-                  onsubmit="return validateSearchQuery()">
-                <div class="search-input-wrapper">
-                    <span class="search-icon">
-                        <th:block th:replace="~{fragments/icons :: icon-search}"></th:block>
-                    </span>
-                    <label for="headerSearchInput"
-                           style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Поиск
-                        фильмов</label>
-                    <input type="text" id="headerSearchInput" name="title" autocomplete="off"
-                           placeholder="Поиск фильмов..." maxlength="100">
-                </div>
-                <button type="submit" class="search-btn">Найти</button>
-            </form>
-            <div id="headerSuggestions" class="header-suggestions"></div>
-        </div>
-
-        <button type="button" class="action-button favourites-btn" title="Избранное"
-                onclick="navigateProtected('/favourites')">
+    <div class="header-actions">
+        <button type="button" class="action-button favourites-btn" id="headerFavouritesBtn"
+                title="Избранное">
             <th:block th:replace="~{fragments/icons :: icon-heart}"></th:block>
-            <span id="favourites-count" class="count-badge" th:text="${favouritesCount != null ? favouritesCount : 0}"
+            <span id="favourites-count" class="count-badge"
+                  th:text="${favouritesCount != null ? favouritesCount : 0}"
                   th:style="${favouritesCount == null || favouritesCount == 0} ? 'display: none;' : ''">0</span>
         </button>
 
-        <button type="button" class="action-button cart-btn" title="Корзина" onclick="navigateProtected('/cart')">
+        <button type="button" class="action-button cart-btn" id="headerCartBtn" title="Корзина">
             <th:block th:replace="~{fragments/icons :: icon-cart}"></th:block>
-            <span id="cart-count" class="count-badge" th:text="${cartCount != null ? cartCount : 0}"
+            <span id="cart-count" class="count-badge"
+                  th:text="${cartCount != null ? cartCount : 0}"
                   th:style="${cartCount == null || cartCount == 0} ? 'display: none;' : ''">0</span>
         </button>
 
-        <div th:if="${session.sessionUser != null}" class="user-menu" id="userMenu">
-            <div class="user-menu-toggle" onclick="toggleUserMenu()">
+        <div th:if="${sessionUser != null}" class="user-menu" id="userMenu">
+            <div class="user-menu-toggle" id="userMenuToggle" data-action="toggle-user-menu">
                 <div class="user-avatar-letter"
-                     th:text="${session.sessionUser.getFirstUsernameLetter()}"></div>
-                <span class="toggle-icon">▼</span>
+                     th:text="${sessionUser.getFirstUsernameLetter()}"></div>
+                <span class="toggle-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+                        <path d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
+                    </svg>
+                </span>
             </div>
             <div class="user-dropdown">
                 <div class="user-dropdown-header">
                     <div class="user-dropdown-avatar">
                         <div class="user-avatar-letter"
-                             th:text="${session.sessionUser.getFirstUsernameLetter()}"></div>
+                             th:text="${sessionUser.getFirstUsernameLetter()}"></div>
                     </div>
                     <div class="user-dropdown-info">
                         <div class="user-dropdown-name">
-                            <span th:text="${session.sessionUser.username()}"></span>
+                            <span th:text="${sessionUser.username()}"></span>
                         </div>
                     </div>
                 </div>
@@ -683,217 +130,362 @@
                     </button>
                 </form>
                 <div class="user-dropdown-divider"></div>
-                <div class="user-dropdown-add-account" onclick="window.location.href='/login'">
+                <div class="account-switcher" id="accountSwitcher"></div>
+                <div class="user-dropdown-divider"></div>
+                <div class="user-dropdown-add-account" id="userMenuAddAccount">
                     <span>Добавить аккаунт</span>
                 </div>
             </div>
         </div>
 
-        <a th:if="${session.sessionUser == null}" th:href="@{/login}" class="login-button">
+        <a th:if="${sessionUser == null}" th:href="@{/login}" class="login-button">
             <th:block th:replace="~{fragments/icons :: icon-user}"></th:block>
             Войти
         </a>
     </div>
 
     <input type="hidden" id="currentUserId"
-           th:value="${session.sessionUser != null ? session.sessionUser.id() : ''}">
+           th:value="${sessionUser != null ? sessionUser.id() : ''}">
 
-    <div id="filtersModalOverlay" class="filters-modal-overlay" onclick="handleOverlayClick(event)">
+    <div th:if="${sessionUser != null}"
+         id="currentUserData"
+         th:data-username="${sessionUser.username()}"
+         style="display:none;"></div>
+
+    <div id="filtersModalOverlay" class="filters-modal-overlay">
         <div class="filters-modal-content">
             <div class="filters-modal-header">
                 <h3>Поиск по фильтрам</h3>
-                <button type="button" class="filters-modal-close" onclick="toggleFiltersModal(false)">&times;</button>
+                <button type="button"
+                        class="filters-modal-close"
+                        id="filtersModalCloseBtn"
+                        aria-label="Закрыть">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         aria-hidden="true">
+                        <path d="M7 7l10 10M17 7L7 17"/>
+                    </svg>
+                </button>
             </div>
-            <form action="/" method="get" id="filterForm" onsubmit="return validateFilter()">
+
+            <form action="/" method="get" id="filterForm" accept-charset="UTF-8">
+
                 <div class="filter-group">
                     <label for="priceFrom">Цена (₽)</label>
                     <div class="filter-row">
                         <div class="amount-input-with-stepper">
-                            <input type="text" inputmode="decimal" id="priceFrom" name="priceFrom" class="filter-input"
-                                   placeholder="От">
+                            <div class="filter-input-with-clear">
+                                <input type="text" inputmode="decimal" id="priceFrom" name="priceFrom"
+                                       class="filter-input"
+                                       placeholder="От 0.01 ₽"
+                                       th:value="${param.priceFrom != null ? param.priceFrom[0] : ''}">
+                                <button type="button" class="filter-clear-btn" data-clear-target="priceFrom"
+                                        aria-label="Очистить" title="Очистить">
+                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                         viewBox="0 0 24 24"
+                                         fill="none"
+                                         stroke="currentColor"
+                                         stroke-width="1.8"
+                                         stroke-linecap="round"
+                                         aria-hidden="true">
+                                        <path d="M7 7l10 10M17 7L7 17"/>
+                                    </svg>
+                                </button>
+                            </div>
                             <div class="stepper-buttons">
                                 <button type="button" class="stepper-btn up"
-                                        onmousedown="startSteppingFilter('priceFrom', 0.01, 0, null, 2, this)"
-                                        onmouseup="stopSteppingFilter(this)" onmouseleave="stopSteppingFilter(this)"
-                                        ontouchstart="startSteppingFilter('priceFrom', 0.01, 0, null, 2, this)"
-                                        ontouchend="stopSteppingFilter(this)" title="Увеличить">▲
-                                </button>
+                                        data-stepper-target="priceFrom" data-stepper-delta="0.01"
+                                        data-stepper-min="0.01" data-stepper-max="100000" data-stepper-decimals="2"
+                                        title="Увеличить" aria-label="Увеличить"></button>
                                 <button type="button" class="stepper-btn down"
-                                        onmousedown="startSteppingFilter('priceFrom', -0.01, 0, null, 2, this)"
-                                        onmouseup="stopSteppingFilter(this)" onmouseleave="stopSteppingFilter(this)"
-                                        ontouchstart="startSteppingFilter('priceFrom', -0.01, 0, null, 2, this)"
-                                        ontouchend="stopSteppingFilter(this)" title="Уменьшить">▼
-                                </button>
+                                        data-stepper-target="priceFrom" data-stepper-delta="-0.01"
+                                        data-stepper-min="0.01" data-stepper-max="100000" data-stepper-decimals="2"
+                                        title="Уменьшить" aria-label="Уменьшить"></button>
                             </div>
                         </div>
                         <div class="amount-input-with-stepper">
                             <label for="priceTo"
                                    style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Цена
                                 до</label>
-                            <input type="text" inputmode="decimal" id="priceTo" name="priceTo" class="filter-input"
-                                   placeholder="До">
+                            <div class="filter-input-with-clear">
+                                <input type="text" inputmode="decimal" id="priceTo" name="priceTo" class="filter-input"
+                                       placeholder="До 100000.00 ₽"
+                                       th:value="${param.priceTo != null ? param.priceTo[0] : ''}">
+                                <button type="button" class="filter-clear-btn" data-clear-target="priceTo"
+                                        aria-label="Очистить" title="Очистить">
+                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                         viewBox="0 0 24 24"
+                                         fill="none"
+                                         stroke="currentColor"
+                                         stroke-width="1.8"
+                                         stroke-linecap="round"
+                                         aria-hidden="true">
+                                        <path d="M7 7l10 10M17 7L7 17"/>
+                                    </svg>
+                                </button>
+                            </div>
                             <div class="stepper-buttons">
                                 <button type="button" class="stepper-btn up"
-                                        onmousedown="startSteppingFilter('priceTo', 0.01, 0, null, 2, this)"
-                                        onmouseup="stopSteppingFilter(this)" onmouseleave="stopSteppingFilter(this)"
-                                        ontouchstart="startSteppingFilter('priceTo', 0.01, 0, null, 2, this)"
-                                        ontouchend="stopSteppingFilter(this)" title="Увеличить">▲
-                                </button>
+                                        data-stepper-target="priceTo" data-stepper-delta="0.01"
+                                        data-stepper-min="0.01" data-stepper-max="100000" data-stepper-decimals="2"
+                                        title="Увеличить" aria-label="Увеличить"></button>
                                 <button type="button" class="stepper-btn down"
-                                        onmousedown="startSteppingFilter('priceTo', -0.01, 0, null, 2, this)"
-                                        onmouseup="stopSteppingFilter(this)" onmouseleave="stopSteppingFilter(this)"
-                                        ontouchstart="startSteppingFilter('priceTo', -0.01, 0, null, 2, this)"
-                                        ontouchend="stopSteppingFilter(this)" title="Уменьшить">▼
-                                </button>
+                                        data-stepper-target="priceTo" data-stepper-delta="-0.01"
+                                        data-stepper-min="0.01" data-stepper-max="100000" data-stepper-decimals="2"
+                                        title="Уменьшить" aria-label="Уменьшить"></button>
                             </div>
                         </div>
                     </div>
                 </div>
+
                 <div class="filter-group">
                     <label for="ratingFrom">Рейтинг CinemaService</label>
                     <div class="filter-row">
                         <div class="amount-input-with-stepper">
-                            <input type="text" inputmode="decimal" id="ratingFrom" name="ratingFrom"
-                                   class="filter-input" placeholder="От 0.0">
+                            <div class="filter-input-with-clear">
+                                <input type="text" inputmode="decimal" id="ratingFrom" name="ratingFrom"
+                                       class="filter-input" placeholder="От 0.0"
+                                       th:value="${param.ratingFrom != null ? param.ratingFrom[0] : ''}">
+                                <button type="button" class="filter-clear-btn" data-clear-target="ratingFrom"
+                                        aria-label="Очистить" title="Очистить">
+                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                         viewBox="0 0 24 24"
+                                         fill="none"
+                                         stroke="currentColor"
+                                         stroke-width="1.8"
+                                         stroke-linecap="round"
+                                         aria-hidden="true">
+                                        <path d="M7 7l10 10M17 7L7 17"/>
+                                    </svg>
+                                </button>
+                            </div>
                             <div class="stepper-buttons">
                                 <button type="button" class="stepper-btn up"
-                                        onmousedown="startSteppingFilter('ratingFrom', 0.1, 0, 10, 1, this)"
-                                        onmouseup="stopSteppingFilter(this)" onmouseleave="stopSteppingFilter(this)"
-                                        ontouchstart="startSteppingFilter('ratingFrom', 0.1, 0, 10, 1, this)"
-                                        ontouchend="stopSteppingFilter(this)" title="Увеличить">▲
-                                </button>
+                                        data-stepper-target="ratingFrom" data-stepper-delta="0.1"
+                                        data-stepper-min="0" data-stepper-max="10" data-stepper-decimals="1"
+                                        title="Увеличить" aria-label="Увеличить"></button>
                                 <button type="button" class="stepper-btn down"
-                                        onmousedown="startSteppingFilter('ratingFrom', -0.1, 0, 10, 1, this)"
-                                        onmouseup="stopSteppingFilter(this)" onmouseleave="stopSteppingFilter(this)"
-                                        ontouchstart="startSteppingFilter('ratingFrom', -0.1, 0, 10, 1, this)"
-                                        ontouchend="stopSteppingFilter(this)" title="Уменьшить">▼
-                                </button>
+                                        data-stepper-target="ratingFrom" data-stepper-delta="-0.1"
+                                        data-stepper-min="0" data-stepper-max="10" data-stepper-decimals="1"
+                                        title="Уменьшить" aria-label="Уменьшить"></button>
                             </div>
                         </div>
                         <div class="amount-input-with-stepper">
                             <label for="ratingTo"
                                    style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Рейтинг
                                 до</label>
-                            <input type="text" inputmode="decimal" id="ratingTo" name="ratingTo" class="filter-input"
-                                   placeholder="До 10.0">
+                            <div class="filter-input-with-clear">
+                                <input type="text" inputmode="decimal" id="ratingTo" name="ratingTo"
+                                       class="filter-input"
+                                       placeholder="До 10.0"
+                                       th:value="${param.ratingTo != null ? param.ratingTo[0] : ''}">
+                                <button type="button" class="filter-clear-btn" data-clear-target="ratingTo"
+                                        aria-label="Очистить" title="Очистить">
+                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                         viewBox="0 0 24 24"
+                                         fill="none"
+                                         stroke="currentColor"
+                                         stroke-width="1.8"
+                                         stroke-linecap="round"
+                                         aria-hidden="true">
+                                        <path d="M7 7l10 10M17 7L7 17"/>
+                                    </svg>
+                                </button>
+                            </div>
                             <div class="stepper-buttons">
                                 <button type="button" class="stepper-btn up"
-                                        onmousedown="startSteppingFilter('ratingTo', 0.1, 0, 10, 1, this)"
-                                        onmouseup="stopSteppingFilter(this)" onmouseleave="stopSteppingFilter(this)"
-                                        ontouchstart="startSteppingFilter('ratingTo', 0.1, 0, 10, 1, this)"
-                                        ontouchend="stopSteppingFilter(this)" title="Увеличить">▲
-                                </button>
+                                        data-stepper-target="ratingTo" data-stepper-delta="0.1"
+                                        data-stepper-min="0" data-stepper-max="10" data-stepper-decimals="1"
+                                        title="Увеличить" aria-label="Увеличить"></button>
                                 <button type="button" class="stepper-btn down"
-                                        onmousedown="startSteppingFilter('ratingTo', -0.1, 0, 10, 1, this)"
-                                        onmouseup="stopSteppingFilter(this)" onmouseleave="stopSteppingFilter(this)"
-                                        ontouchstart="startSteppingFilter('ratingTo', -0.1, 0, 10, 1, this)"
-                                        ontouchend="stopSteppingFilter(this)" title="Уменьшить">▼
-                                </button>
+                                        data-stepper-target="ratingTo" data-stepper-delta="-0.1"
+                                        data-stepper-min="0" data-stepper-max="10" data-stepper-decimals="1"
+                                        title="Уменьшить" aria-label="Уменьшить"></button>
                             </div>
                         </div>
                     </div>
                     <div id="ratingFilterError" class="rating-error"></div>
                 </div>
+
                 <div class="filter-group accordion-group">
-                    <div class="accordion-trigger" data-target="directorsDropdown">Режиссер ▾</div>
+                    <div class="accordion-trigger" data-target="directorsDropdown">
+                        <span>Режиссёр</span>
+                        <span class="accordion-caret" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                 viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="2"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round">
+                                <path d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
+                            </svg>
+                        </span>
+                    </div>
                     <div class="accordion-dropdown" id="directorsDropdown"></div>
                 </div>
+
                 <div class="filter-group accordion-group">
-                    <div class="accordion-trigger" data-target="genresDropdown">Жанр кино ▾</div>
+                    <div class="accordion-trigger" data-target="genresDropdown">
+                        <span>Жанр кино</span>
+                        <span class="accordion-caret" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                 viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="2"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round">
+                                <path d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
+                            </svg>
+                        </span>
+                    </div>
                     <div class="accordion-dropdown" id="genresDropdown"></div>
                 </div>
+
                 <div class="filter-group">
                     <label for="releaseDateFrom">Дата выхода</label>
                     <div class="filter-row">
-                        <input type="date" id="releaseDateFrom" name="releaseDateFrom" class="filter-input">
+                        <div class="filter-input-with-clear">
+                            <input type="date" id="releaseDateFrom" name="releaseDateFrom" class="filter-input"
+                                   th:value="${param.releaseDateFrom != null ? param.releaseDateFrom[0] : ''}"
+                                   th:max="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
+                            <button type="button" class="filter-clear-btn" data-clear-target="releaseDateFrom"
+                                    aria-label="Очистить" title="Очистить">
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                     viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="1.8"
+                                     stroke-linecap="round"
+                                     aria-hidden="true">
+                                    <path d="M7 7l10 10M17 7L7 17"/>
+                                </svg>
+                            </button>
+                        </div>
                         <label for="releaseDateTo"
                                style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Дата
                             выхода до</label>
-                        <input type="date" id="releaseDateTo" name="releaseDateTo" class="filter-input">
+                        <div class="filter-input-with-clear">
+                            <input type="date" id="releaseDateTo" name="releaseDateTo" class="filter-input"
+                                   th:value="${param.releaseDateTo != null ? param.releaseDateTo[0] : ''}"
+                                   th:max="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
+                            <button type="button" class="filter-clear-btn" data-clear-target="releaseDateTo"
+                                    aria-label="Очистить" title="Очистить">
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                     viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="1.8"
+                                     stroke-linecap="round"
+                                     aria-hidden="true">
+                                    <path d="M7 7l10 10M17 7L7 17"/>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
+
                 <div class="filter-group">
                     <label>Длительность</label>
                     <div class="duration-range-inline">
                         <div class="duration-block">
-                            <span class="range-prefix">от</span>
+                            <span class="range-prefix">От</span>
                             <div class="duration-picker">
-                                <div class="duration-field field-hours">
+                                <div class="duration-field">
                                     <label for="durationFromHours"
                                            style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Часы
                                         от</label>
-                                    <input type="text" id="durationFromHours" class="filter-input positive-int"
-                                           placeholder="0" data-max="16" maxlength="2" inputmode="numeric"
-                                           autocomplete="off">
-                                    <span class="unit">ч.</span>
+                                    <div class="duration-input-wrapper">
+                                        <input type="text" id="durationFromHours" class="filter-input positive-int"
+                                               placeholder="0" data-max="16" maxlength="2" inputmode="numeric"
+                                               autocomplete="off">
+                                        <span class="unit">ч.</span>
+                                    </div>
                                 </div>
-                                <div class="duration-field field-mins">
+                                <div class="duration-field">
                                     <label for="durationFromMinutes"
                                            style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Минуты
                                         от</label>
-                                    <input type="text" id="durationFromMinutes" class="filter-input positive-int"
-                                           placeholder="0" data-max="59" maxlength="2" inputmode="numeric"
-                                           autocomplete="off">
-                                    <span class="unit">мин.</span>
+                                    <div class="duration-input-wrapper">
+                                        <input type="text" id="durationFromMinutes" class="filter-input positive-int"
+                                               placeholder="0" data-max="59" maxlength="2" inputmode="numeric"
+                                               autocomplete="off">
+                                        <span class="unit">мин.</span>
+                                    </div>
                                 </div>
-                                <div class="duration-field field-secs">
+                                <div class="duration-field">
                                     <label for="durationFromSeconds"
                                            style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Секунды
                                         от</label>
-                                    <input type="text" id="durationFromSeconds" class="filter-input positive-int"
-                                           placeholder="0" data-max="59" maxlength="2" inputmode="numeric"
-                                           autocomplete="off">
-                                    <span class="unit">сек.</span>
+                                    <div class="duration-input-wrapper">
+                                        <input type="text" id="durationFromSeconds" class="filter-input positive-int"
+                                               placeholder="0" data-max="59" maxlength="2" inputmode="numeric"
+                                               autocomplete="off">
+                                        <span class="unit">сек.</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         <span class="range-separator">—</span>
                         <div class="duration-block">
-                            <span class="range-prefix">до</span>
+                            <span class="range-prefix">До</span>
                             <div class="duration-picker">
-                                <div class="duration-field field-hours">
+                                <div class="duration-field">
                                     <label for="durationToHours"
                                            style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Часы
                                         до</label>
-                                    <input type="text" id="durationToHours" class="filter-input positive-int"
-                                           placeholder="0" data-max="16" maxlength="2" inputmode="numeric"
-                                           autocomplete="off">
-                                    <span class="unit">ч.</span>
+                                    <div class="duration-input-wrapper">
+                                        <input type="text" id="durationToHours" class="filter-input positive-int"
+                                               placeholder="0" data-max="16" maxlength="2" inputmode="numeric"
+                                               autocomplete="off">
+                                        <span class="unit">ч.</span>
+                                    </div>
                                 </div>
-                                <div class="duration-field field-mins">
+                                <div class="duration-field">
                                     <label for="durationToMinutes"
                                            style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Минуты
                                         до</label>
-                                    <input type="text" id="durationToMinutes" class="filter-input positive-int"
-                                           placeholder="0" data-max="59" maxlength="2" inputmode="numeric"
-                                           autocomplete="off">
-                                    <span class="unit">мин.</span>
+                                    <div class="duration-input-wrapper">
+                                        <input type="text" id="durationToMinutes" class="filter-input positive-int"
+                                               placeholder="0" data-max="59" maxlength="2" inputmode="numeric"
+                                               autocomplete="off">
+                                        <span class="unit">мин.</span>
+                                    </div>
                                 </div>
-                                <div class="duration-field field-secs">
+                                <div class="duration-field">
                                     <label for="durationToSeconds"
                                            style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Секунды
                                         до</label>
-                                    <input type="text" id="durationToSeconds" class="filter-input positive-int"
-                                           placeholder="0" data-max="59" maxlength="2" inputmode="numeric"
-                                           autocomplete="off">
-                                    <span class="unit">сек.</span>
+                                    <div class="duration-input-wrapper">
+                                        <input type="text" id="durationToSeconds" class="filter-input positive-int"
+                                               placeholder="0" data-max="59" maxlength="2" inputmode="numeric"
+                                               autocomplete="off">
+                                        <span class="unit">сек.</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <input type="hidden" id="minDuration" name="durationFrom">
-                    <input type="hidden" id="maxDuration" name="durationTo">
+                    <input type="hidden" id="minDuration" name="durationFrom"
+                           th:value="${param.durationFrom != null ? param.durationFrom[0] : ''}">
+                    <input type="hidden" id="maxDuration" name="durationTo"
+                           th:value="${param.durationTo != null ? param.durationTo[0] : ''}">
                 </div>
+
                 <div class="filters-modal-footer">
                     <button type="submit" class="btn btn-primary">Применить и найти</button>
-                    <a href="/" class="btn btn-secondary">Сброс</a>
+                    <button type="button" class="btn btn-secondary" id="filtersResetBtn">Сброс</button>
                 </div>
             </form>
         </div>
     </div>
-</header>
 
-<script th:src="@{/js/main.js}" defer></script>
+</header>
 
 </body>
 </html>

@@ -1,452 +1,15 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title id="pageTitle">Регистрация — CinemaService</title>
-    <link rel="icon" type="image/x-icon" th:href="@{/favicon.ico}">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap"
-          rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/main.css}">
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html,
-        body {
-            min-height: 100%;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            background: radial-gradient(circle at 10% 20%, #0b0f1c, #05070f);
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            align-items: stretch;
-            min-height: 100vh;
-            padding: 0;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .main-container {
-            max-width: 750px;
-            width: 100%;
-            flex: 1 0 auto;
-            align-self: center;
-            display: flex;
-            flex-direction: column;
-            background: rgba(15, 23, 42, 0.65);
-            backdrop-filter: blur(16px);
-            border-radius: 0;
-            border: 1px solid rgba(72, 187, 255, 0.15);
-            border-top: 0;
-            border-bottom: 0;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-            margin: 0 auto;
-        }
-
-        .header {
-            background: linear-gradient(
-                    135deg,
-                    rgba(59, 130, 246, 0.1),
-                    rgba(168, 85, 247, 0.1)
-            );
-            padding: 1.2rem 1.5rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.4rem;
-        }
-
-        .logo-link {
-            text-decoration: none;
-            color: #94a3b8;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-weight: 500;
-            font-size: 0.85rem;
-            transition: 0.2s;
-        }
-
-        .logo-link:hover {
-            color: #fff;
-        }
-
-        .logo-link img {
-            width: 22px;
-            height: 22px;
-            border-radius: 5px;
-        }
-
-        .header h1 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin: 0;
-            background: linear-gradient(135deg, #fff, #c084fc);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            text-align: center;
-        }
-
-        .form-container {
-            flex: 1 0 auto;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding: 2rem 1.75rem 2.5rem;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.2rem 1.5rem;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-
-        label {
-            font-size: 0.75rem;
-            font-weight: 600;
-            margin-bottom: 0.4rem;
-            color: #eef2ff;
-            letter-spacing: 0.3px;
-        }
-
-        select.form-control {
-            width: 100%;
-            padding: 0.65rem 0.9rem;
-            min-height: 39px;
-            border-radius: 10px;
-            border: 1px solid rgba(72, 187, 255, 0.2);
-            background: rgba(0, 0, 0, 0.4);
-            color: white;
-            font-size: 0.85rem;
-            box-sizing: border-box;
-            transition: 0.2s ease;
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            cursor: pointer;
-            background-image:
-                linear-gradient(45deg, transparent 50%, #64748b 50%),
-                linear-gradient(135deg, #64748b 50%, transparent 50%);
-            background-position:
-                calc(100% - 16px) 50%,
-                calc(100% - 11px) 50%;
-            background-size:
-                5px 5px,
-                5px 5px;
-            background-repeat: no-repeat;
-        }
-
-        select.form-control option {
-            background: #1a1f2b;
-            color: white;
-        }
-
-        select.form-control:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
-        }
-
-        input.form-control {
-            width: 100%;
-            min-height: 39px;
-            padding: 0.65rem 5rem 0.65rem 0.9rem;
-            border-radius: 10px;
-            border: 1px solid rgba(72, 187, 255, 0.2);
-            background: rgba(0, 0, 0, 0.4) !important;
-            color: white !important;
-            font-size: 0.85rem;
-            box-sizing: border-box;
-            transition: 0.2s ease;
-        }
-
-        input.form-control::placeholder {
-            color: #64748b;
-            opacity: 1;
-        }
-
-        input.form-control[type="date"] {
-            padding: 0.65rem 5.5rem 0.65rem 0.9rem;
-            color-scheme: dark;
-        }
-
-        .date-input-wrapper {
-            position: relative;
-        }
-
-        input.form-control[type="date"]::-webkit-calendar-picker-indicator {
-            position: absolute;
-            right: 8px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 18px;
-            height: 18px;
-            margin: 0;
-            padding: 0;
-            cursor: pointer;
-            opacity: 1;
-            filter: brightness(0) invert(1);
-        }
-
-        input.form-control:-webkit-autofill,
-        input.form-control:-webkit-autofill:hover,
-        input.form-control:-webkit-autofill:focus,
-        input.form-control:-webkit-autofill:active {
-            -webkit-text-fill-color: white !important;
-            background-color: rgba(0, 0, 0, 0.4) !important;
-            background-image: none !important;
-            -webkit-box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.4) inset !important;
-            box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.4) inset !important;
-            border: 1px solid rgba(72, 187, 255, 0.2) !important;
-            transition: background-color 99999s ease-in-out 0s !important;
-        }
-
-        input.form-control:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
-        }
-
-        .input-wrapper {
-            position: relative;
-            width: 100%;
-        }
-
-        .input-wrapper:has(input[type="date"]) .clear-input-btn {
-            right: 34px;
-        }
-
-        .input-wrapper:has(.toggle-password) .clear-input-btn {
-            right: 42px;
-        }
-
-        .clear-input-btn {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            width: 28px;
-            height: 28px;
-            transform: translateY(-50%);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-            border: 0;
-            border-radius: 50%;
-            background: transparent;
-            color: #64748b;
-            cursor: pointer;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.18s ease, color 0.18s ease, background 0.18s ease;
-            z-index: 2;
-        }
-
-        .input-wrapper.has-value .clear-input-btn {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .clear-input-btn:hover {
-            color: #e2e8f0;
-            background: rgba(148, 163, 184, 0.12);
-        }
-
-        .clear-input-btn:focus-visible {
-            outline: 2px solid rgba(96, 165, 250, 0.6);
-            outline-offset: 1px;
-        }
-
-        .clear-input-btn svg {
-            width: 15px;
-            height: 15px;
-        }
-
-        .privacy-note {
-            width: min(100%, 620px);
-            margin: 0 auto;
-            padding: 0 0.25rem 0.15rem;
-            color: #64748b;
-            font-size: 0.72rem;
-            line-height: 1.6;
-            text-align: center;
-        }
-
-        .privacy-note strong {
-            color: #94a3b8;
-            font-weight: 500;
-        }
-
-        .privacy-note a {
-            color: #a78bfa;
-            text-decoration: none;
-        }
-
-        .privacy-note a:hover {
-            text-decoration: underline;
-        }
-
-        .toggle-password {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            color: #64748b;
-            cursor: pointer;
-            font-size: 1rem;
-            padding: 0;
-            z-index: 3;
-            width: 24px;
-            height: 24px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .toggle-password:hover {
-            color: #94a3b8;
-        }
-
-        .field-error {
-            color: #f43f5e;
-            font-size: 0.7rem;
-            position: absolute;
-            bottom: -15px;
-            left: 2px;
-            display: none;
-        }
-
-        .field-error.show {
-            display: block;
-        }
-
-        .has-error {
-            border-color: #f43f5e !important;
-        }
-
-        .footer-actions {
-            grid-column: span 2;
-            margin-top: 1rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.6rem;
-        }
-
-        .btn-submit {
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-            color: white;
-            padding: 0.75rem;
-            border: none;
-            border-radius: 10px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            transition: 0.2s;
-        }
-
-        .btn-submit:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
-        }
-
-        .login-link {
-            font-size: 0.85rem;
-            color: #94a3b8;
-            margin: 0;
-        }
-
-        .login-link a {
-            color: #c084fc;
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .login-link a:hover {
-            text-decoration: underline;
-        }
-
-        .flash-container {
-            grid-column: span 2;
-        }
-
-        .flash-message {
-            padding: 0.5rem 1rem;
-            border-radius: 10px;
-            margin-bottom: 0.5rem;
-            font-size: 0.85rem;
-        }
-
-        .flash-message.error {
-            background: rgba(244, 63, 94, 0.15);
-            border: 1px solid #f43f5e;
-            color: #fecdd3;
-        }
-
-        .flash-message.success {
-            background: rgba(16, 185, 129, 0.15);
-            border: 1px solid #10b981;
-            color: #d1fae5;
-        }
-
-        @media (max-width: 640px) {
-            .form-container {
-                align-items: flex-start;
-                padding: 1.25rem;
-            }
-
-            .form-grid {
-                grid-template-columns: 1fr;
-                gap: 1.2rem;
-            }
-
-            .footer-actions {
-                grid-column: span 1;
-            }
-
-            .flash-container {
-                grid-column: span 1;
-            }
-
-            input.form-control[type="date"] {
-                padding-right: 5.5rem;
-            }
-        }
-
-        body > footer,
-        body > .footer,
-        body > .page-footer {
-            width: 100%;
-            margin-top: 0;
-            flex: 0 0 auto;
-        }
-    </style>
+    <th:block th:replace="~{fragments/head :: head}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/pages/_auth.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
-<body>
+<body class="auth-page auth-page--no-scroll">
 
 <div class="main-container">
     <div class="header">
@@ -454,8 +17,7 @@
             <img src="/favicon.ico" alt="Logo" th:src="@{/favicon.ico}">
             <span>CinemaService</span>
         </a>
-
-        <h1 data-translate="title">Регистрация</h1>
+        <h1>Регистрация</h1>
     </div>
 
     <div class="form-container">
@@ -463,7 +25,8 @@
               th:object="${registerForm}"
               method="post"
               id="registerForm"
-              autocomplete="off">
+              autocomplete="off"
+              data-persist>
 
             <div class="form-grid">
 
@@ -472,123 +35,82 @@
                     <div th:if="${successMessage}"
                          class="flash-message success"
                          th:text="${successMessage}"></div>
-
                     <div th:if="${errorMessage}"
                          class="flash-message error"
                          th:text="${errorMessage}"></div>
-
                     <div th:if="${passwordsMismatchExceptionMessage}"
                          class="flash-message error"
                          th:text="${passwordsMismatchExceptionMessage}"></div>
-
                     <div th:if="${alreadyRegisteredExceptionMessage}"
                          class="flash-message error"
                          th:text="${alreadyRegisteredExceptionMessage}"></div>
-
                     <div th:if="${tooYoungExceptionMessage}"
                          class="flash-message error"
                          th:text="${tooYoungExceptionMessage}"></div>
                 </div>
 
                 <div class="form-group">
-                    <label for="surname" data-translate="lblSurname">Фамилия</label>
-
+                    <label for="surname">Фамилия</label>
                     <div class="input-wrapper">
                         <input type="text"
                                th:field="*{surname}"
                                id="surname"
                                class="form-control"
-                               placeholder="Иванов"
-                               data-placeholder="placeholderSurname"
+                               placeholder="Фамилия"
                                autocomplete="off"
                                th:classappend="${#fields.hasErrors('surname')} ? 'has-error' : ''"/>
-
-                        <button type="button"
-                                class="clear-input-btn"
-                                aria-label="Очистить поле"
-                                title="Очистить">
-                            <svg viewBox="0 0 24 24"
-                                 fill="none"
-                                 stroke="currentColor"
-                                 stroke-width="1.8"
+                        <button type="button" class="clear-input-btn" aria-label="Очистить поле" title="Очистить">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                                  stroke-linecap="round">
                                 <path d="M7 7l10 10M17 7L7 17"/>
                             </svg>
                         </button>
                     </div>
-
-                    <div th:if="${#fields.hasErrors('surname')}"
-                         th:errors="*{surname}"
-                         class="field-error show"></div>
+                    <div id="surnameError" class="field-error"></div>
                 </div>
 
                 <div class="form-group">
-                    <label for="name" data-translate="lblName">Имя</label>
-
+                    <label for="name">Имя</label>
                     <div class="input-wrapper">
                         <input type="text"
                                th:field="*{name}"
                                id="name"
                                class="form-control"
-                               placeholder="Иван"
-                               data-placeholder="placeholderName"
+                               placeholder="Имя"
                                autocomplete="off"
                                th:classappend="${#fields.hasErrors('name')} ? 'has-error' : ''"/>
-
-                        <button type="button"
-                                class="clear-input-btn"
-                                aria-label="Очистить поле"
-                                title="Очистить">
-                            <svg viewBox="0 0 24 24"
-                                 fill="none"
-                                 stroke="currentColor"
-                                 stroke-width="1.8"
+                        <button type="button" class="clear-input-btn" aria-label="Очистить поле" title="Очистить">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                                  stroke-linecap="round">
                                 <path d="M7 7l10 10M17 7L7 17"/>
                             </svg>
                         </button>
                     </div>
-
-                    <div th:if="${#fields.hasErrors('name')}"
-                         th:errors="*{name}"
-                         class="field-error show"></div>
+                    <div id="nameError" class="field-error"></div>
                 </div>
 
                 <div class="form-group">
-                    <label for="patronymic" data-translate="lblPatronymic">Отчество</label>
-
+                    <label for="patronymic">Отчество</label>
                     <div class="input-wrapper">
                         <input type="text"
                                th:field="*{patronymic}"
                                id="patronymic"
                                class="form-control"
-                               placeholder="Иванович"
-                               data-placeholder="placeholderPatronymic"
+                               placeholder="Отчество"
                                autocomplete="off"
                                th:classappend="${#fields.hasErrors('patronymic')} ? 'has-error' : ''"/>
-
-                        <button type="button"
-                                class="clear-input-btn"
-                                aria-label="Очистить поле"
-                                title="Очистить">
-                            <svg viewBox="0 0 24 24"
-                                 fill="none"
-                                 stroke="currentColor"
-                                 stroke-width="1.8"
+                        <button type="button" class="clear-input-btn" aria-label="Очистить поле" title="Очистить">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                                  stroke-linecap="round">
                                 <path d="M7 7l10 10M17 7L7 17"/>
                             </svg>
                         </button>
                     </div>
-
-                    <div th:if="${#fields.hasErrors('patronymic')}"
-                         th:errors="*{patronymic}"
-                         class="field-error show"></div>
+                    <div id="patronymicError" class="field-error"></div>
                 </div>
 
                 <div class="form-group">
-                    <label for="sex" data-translate="lblSex">Пол</label>
-
+                    <label for="sex">Пол</label>
                     <select th:field="*{sex}"
                             id="sex"
                             class="form-control"
@@ -596,15 +118,11 @@
                         <option value="true">Мужской</option>
                         <option value="false">Женский</option>
                     </select>
-
-                    <div th:if="${#fields.hasErrors('sex')}"
-                         th:errors="*{sex}"
-                         class="field-error show"></div>
+                    <div id="sexError" class="field-error"></div>
                 </div>
 
                 <div class="form-group">
-                    <label for="birthDate" data-translate="lblBirthDate">Дата рождения</label>
-
+                    <label for="birthDate">Дата рождения</label>
                     <div class="input-wrapper date-input-wrapper">
                         <input type="date"
                                th:field="*{birthDate}"
@@ -612,92 +130,59 @@
                                class="form-control"
                                autocomplete="off"
                                th:classappend="${#fields.hasErrors('birthDate')} ? 'has-error' : ''"
-                               max="2012-08-21"/>
-
-                        <button type="button"
-                                class="clear-input-btn"
-                                aria-label="Очистить поле"
-                                title="Очистить">
-                            <svg viewBox="0 0 24 24"
-                                 fill="none"
-                                 stroke="currentColor"
-                                 stroke-width="1.8"
+                               th:max="${#temporals.format(#temporals.createNow().minusYears(14), 'yyyy-MM-dd')}"/>
+                        <button type="button" class="clear-input-btn" aria-label="Очистить поле" title="Очистить">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                                  stroke-linecap="round">
                                 <path d="M7 7l10 10M17 7L7 17"/>
                             </svg>
                         </button>
                     </div>
-
-                    <div th:if="${#fields.hasErrors('birthDate')}"
-                         th:errors="*{birthDate}"
-                         class="field-error show"></div>
+                    <div id="birthDateError" class="field-error"></div>
                 </div>
 
                 <div class="form-group">
-                    <label for="username" data-translate="lblUsername">Username пользователя</label>
-
+                    <label for="username">Username пользователя</label>
                     <div class="input-wrapper">
                         <input type="text"
                                th:field="*{username}"
                                id="username"
                                class="form-control"
-                               placeholder="username"
+                               placeholder="Username"
                                autocomplete="off"
                                th:classappend="${#fields.hasErrors('username')} ? 'has-error' : ''"/>
-
-                        <button type="button"
-                                class="clear-input-btn"
-                                aria-label="Очистить поле"
-                                title="Очистить">
-                            <svg viewBox="0 0 24 24"
-                                 fill="none"
-                                 stroke="currentColor"
-                                 stroke-width="1.8"
+                        <button type="button" class="clear-input-btn" aria-label="Очистить поле" title="Очистить">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                                  stroke-linecap="round">
                                 <path d="M7 7l10 10M17 7L7 17"/>
                             </svg>
                         </button>
                     </div>
-
-                    <div th:if="${#fields.hasErrors('username')}"
-                         th:errors="*{username}"
-                         class="field-error show"></div>
+                    <div id="usernameError" class="field-error"></div>
                 </div>
 
                 <div class="form-group">
-                    <label for="email" data-translate="lblEmail">Электронная почта</label>
-
+                    <label for="email">Электронная почта</label>
                     <div class="input-wrapper">
                         <input type="email"
                                th:field="*{email}"
                                id="email"
                                class="form-control"
-                               placeholder="mail@example.com"
+                               placeholder="Email"
                                autocomplete="off"
                                th:classappend="${#fields.hasErrors('email')} ? 'has-error' : ''"/>
-
-                        <button type="button"
-                                class="clear-input-btn"
-                                aria-label="Очистить поле"
-                                title="Очистить">
-                            <svg viewBox="0 0 24 24"
-                                 fill="none"
-                                 stroke="currentColor"
-                                 stroke-width="1.8"
+                        <button type="button" class="clear-input-btn" aria-label="Очистить поле" title="Очистить">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                                  stroke-linecap="round">
                                 <path d="M7 7l10 10M17 7L7 17"/>
                             </svg>
                         </button>
                     </div>
-
-                    <div th:if="${#fields.hasErrors('email')}"
-                         th:errors="*{email}"
-                         class="field-error show"></div>
+                    <div id="emailError" class="field-error"></div>
                 </div>
 
                 <div class="form-group">
-                    <label for="phone" data-translate="lblPhone">Телефон</label>
-
+                    <label for="phone">Телефон</label>
                     <div class="input-wrapper">
                         <input type="tel"
                                th:field="*{phone}"
@@ -706,30 +191,20 @@
                                placeholder="+7 (999) 123-45-67"
                                inputmode="tel"
                                autocomplete="off"
+                               data-phone-mask
                                th:classappend="${#fields.hasErrors('phone')} ? 'has-error' : ''"/>
-
-                        <button type="button"
-                                class="clear-input-btn"
-                                aria-label="Очистить поле"
-                                title="Очистить">
-                            <svg viewBox="0 0 24 24"
-                                 fill="none"
-                                 stroke="currentColor"
-                                 stroke-width="1.8"
+                        <button type="button" class="clear-input-btn" aria-label="Очистить поле" title="Очистить">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                                  stroke-linecap="round">
                                 <path d="M7 7l10 10M17 7L7 17"/>
                             </svg>
                         </button>
                     </div>
-
-                    <div th:if="${#fields.hasErrors('phone')}"
-                         th:errors="*{phone}"
-                         class="field-error show"></div>
+                    <div id="phoneError" class="field-error"></div>
                 </div>
 
                 <div class="form-group">
-                    <label for="rawPassword" data-translate="lblPassword">Пароль (мин. 8 симв.)</label>
-
+                    <label for="rawPassword">Пароль (мин. 8 симв.)</label>
                     <div class="input-wrapper">
                         <input type="password"
                                th:field="*{rawPassword}"
@@ -738,36 +213,22 @@
                                placeholder="••••••••"
                                autocomplete="new-password"
                                th:classappend="${#fields.hasErrors('rawPassword')} ? 'has-error' : ''"/>
-
-                        <button type="button"
-                                class="clear-input-btn"
-                                aria-label="Очистить пароль"
-                                title="Очистить">
-                            <svg viewBox="0 0 24 24"
-                                 fill="none"
-                                 stroke="currentColor"
-                                 stroke-width="1.8"
+                        <button type="button" class="clear-input-btn" aria-label="Очистить пароль" title="Очистить">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                                  stroke-linecap="round">
                                 <path d="M7 7l10 10M17 7L7 17"/>
                             </svg>
                         </button>
-
-                        <button type="button"
-                                class="toggle-password"
-                                data-target="rawPassword"
+                        <button type="button" class="toggle-password" data-target="rawPassword"
                                 aria-label="Показать пароль">
                             <i class="fas fa-eye-slash"></i>
                         </button>
                     </div>
-
-                    <div th:if="${#fields.hasErrors('rawPassword')}"
-                         th:errors="*{rawPassword}"
-                         class="field-error show"></div>
+                    <div id="rawPasswordError" class="field-error"></div>
                 </div>
 
                 <div class="form-group">
-                    <label for="repeatRawPassword" data-translate="lblRepeatPassword">Повторите пароль</label>
-
+                    <label for="repeatRawPassword">Повторите пароль</label>
                     <div class="input-wrapper">
                         <input type="password"
                                th:field="*{repeatRawPassword}"
@@ -776,49 +237,29 @@
                                placeholder="••••••••"
                                autocomplete="new-password"
                                th:classappend="${#fields.hasErrors('repeatRawPassword')} ? 'has-error' : ''"/>
-
-                        <button type="button"
-                                class="clear-input-btn"
-                                aria-label="Очистить пароль"
-                                title="Очистить">
-                            <svg viewBox="0 0 24 24"
-                                 fill="none"
-                                 stroke="currentColor"
-                                 stroke-width="1.8"
+                        <button type="button" class="clear-input-btn" aria-label="Очистить пароль" title="Очистить">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                                  stroke-linecap="round">
                                 <path d="M7 7l10 10M17 7L7 17"/>
                             </svg>
                         </button>
-
-                        <button type="button"
-                                class="toggle-password"
-                                data-target="repeatRawPassword"
+                        <button type="button" class="toggle-password" data-target="repeatRawPassword"
                                 aria-label="Показать пароль">
                             <i class="fas fa-eye-slash"></i>
                         </button>
                     </div>
-
-                    <div th:if="${#fields.hasErrors('repeatRawPassword')}"
-                         th:errors="*{repeatRawPassword}"
-                         class="field-error show"></div>
+                    <div id="repeatRawPasswordError" class="field-error"></div>
                 </div>
 
-                <input type="hidden"
-                       th:field="*{currencyCode}"
-                       id="currencyCode"
-                       value="RUB"/>
+                <input type="hidden" th:field="*{currencyCode}" id="currencyCode" value="RUB"/>
 
                 <div class="footer-actions">
-                    <button type="submit"
-                            class="btn-submit"
-                            id="btnSubmit"
-                            data-translate="btnSubmit">
+                    <button type="submit" class="btn-submit" id="btnSubmit">
                         Зарегистрироваться →
                     </button>
-
                     <div class="login-link">
-                        <span data-translate="hasAccount">Уже есть аккаунт?</span>
-                        <a th:href="@{/login}" data-translate="loginLink">Войти</a>
+                        <span>Уже есть аккаунт?</span>
+                        <a th:href="@{/login}">Войти</a>
                     </div>
                 </div>
             </div>
@@ -836,545 +277,8 @@
     <th:block th:replace="~{fragments/footer :: footer}"></th:block>
 </div>
 
+<script th:src="@{/js/pages/page-register.js}" defer></script>
 <script th:src="@{/js/main.js}" defer></script>
-
-<script>
-    const translations = {
-        ru: {
-            title: "Регистрация",
-            pageTitle: "Регистрация — CinemaService",
-            lblSurname: "Фамилия",
-            placeholderSurname: "Иванов",
-            lblName: "Имя",
-            placeholderName: "Иван",
-            lblPatronymic: "Отчество",
-            placeholderPatronymic: "Иванович",
-            lblSex: "Пол",
-            lblBirthDate: "Дата рождения",
-            lblUsername: "Username пользователя",
-            lblEmail: "Электронная почта",
-            lblPhone: "Телефон",
-            lblPassword: "Пароль (мин. 8 симв.)",
-            lblRepeatPassword: "Повторите пароль",
-            btnSubmit: "Зарегистрироваться →",
-            hasAccount: "Уже есть аккаунт? ",
-            loginLink: "Войти",
-            errLogin: "Введите username",
-            errEmail: "Введите email",
-            errPhone: "Номер должен содержать 10 цифр после +7",
-            errSurname: "Введите фамилию",
-            errName: "Введите имя",
-            errPatronymic: "Введите отчество",
-            errSex: "Выберите пол",
-            errBirthDate: "Введите дату рождения",
-            errPassEmpty: "Введите пароль",
-            errPassMin: "Минимум 8 символов",
-            errRepeatEmpty: "Повторите пароль",
-            errMatch: "Пароли не совпадают"
-        },
-        en: {
-            title: "Registration",
-            pageTitle: "Registration — CinemaService",
-            lblSurname: "Last Name",
-            placeholderSurname: "Smith",
-            lblName: "First Name",
-            placeholderName: "John",
-            lblPatronymic: "Middle Name",
-            placeholderPatronymic: "Edward",
-            lblSex: "Gender",
-            lblBirthDate: "Date of Birth",
-            lblUsername: "Username",
-            lblEmail: "Email Address",
-            lblPhone: "Phone Number",
-            lblPassword: "Password (min. 8 chars)",
-            lblRepeatPassword: "Confirm Password",
-            btnSubmit: "Sign Up →",
-            hasAccount: "Already have an account? ",
-            loginLink: "Log In",
-            errLogin: "Enter username",
-            errEmail: "Enter email",
-            errPhone: "Phone must contain 10 digits after +7",
-            errSurname: "Enter last name",
-            errName: "Enter first name",
-            errPatronymic: "Enter middle name",
-            errSex: "Select gender",
-            errBirthDate: "Enter date of birth",
-            errPassEmpty: "Enter password",
-            errPassMin: "Minimum 8 characters",
-            errRepeatEmpty: "Confirm your password",
-            errMatch: "Passwords do not match"
-        }
-    };
-
-    let currentLang = localStorage.getItem('cinema_lang') || 'ru';
-
-    function applyLanguage(lang) {
-        currentLang = lang;
-        localStorage.setItem('cinema_lang', lang);
-
-        const langRu = document.getElementById('lang-ru');
-        const langEn = document.getElementById('lang-en');
-        const pageTitle = document.getElementById('pageTitle');
-
-        if (langRu) {
-            langRu.classList.toggle('active', lang === 'ru');
-        }
-
-        if (langEn) {
-            langEn.classList.toggle('active', lang === 'en');
-        }
-
-        if (pageTitle) {
-            pageTitle.textContent = translations[lang].pageTitle;
-        }
-
-        document.querySelectorAll('[data-translate]').forEach(function(el) {
-            const key = el.getAttribute('data-translate');
-
-            if (!translations[lang][key]) {
-                return;
-            }
-
-            if (el.tagName === 'BUTTON' ||
-                el.tagName === 'A' ||
-                el.tagName === 'SPAN' ||
-                el.tagName === 'H1' ||
-                el.tagName === 'LABEL') {
-
-                if (key === 'btnSubmit' || key === 'title') {
-                    el.textContent = translations[lang][key];
-                } else {
-                    el.innerHTML = translations[lang][key];
-                }
-            }
-        });
-
-        document.querySelectorAll('[data-placeholder]').forEach(function(el) {
-            const key = el.getAttribute('data-placeholder');
-
-            if (translations[lang][key]) {
-                el.setAttribute('placeholder', translations[lang][key]);
-            }
-        });
-    }
-
-    function changeLang(lang) {
-        applyLanguage(lang);
-    }
-
-    function initPasswordToggles() {
-        document.querySelectorAll('.toggle-password').forEach(function(btn) {
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-
-                const targetId = this.getAttribute('data-target');
-
-                if (!targetId) {
-                    return;
-                }
-
-                const input = document.getElementById(targetId);
-
-                if (!input) {
-                    return;
-                }
-
-                const icon = this.querySelector('i');
-
-                if (input.type === 'password') {
-                    input.type = 'text';
-
-                    if (icon) {
-                        icon.classList.remove('fa-eye-slash');
-                        icon.classList.add('fa-eye');
-                    }
-                } else {
-                    input.type = 'password';
-
-                    if (icon) {
-                        icon.classList.remove('fa-eye');
-                        icon.classList.add('fa-eye-slash');
-                    }
-                }
-            });
-        });
-    }
-
-    function initPasswordRestrictions() {
-        document.querySelectorAll('input[type="password"]').forEach(function(input) {
-            ['copy', 'cut', 'paste', 'drop'].forEach(function(eventName) {
-                input.addEventListener(eventName, function(e) {
-                    e.preventDefault();
-                });
-            });
-
-            input.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
-            });
-
-            input.addEventListener('keydown', function(e) {
-                const key = e.key.toLowerCase();
-
-                if ((e.ctrlKey || e.metaKey) && ['c', 'v', 'x'].includes(key)) {
-                    e.preventDefault();
-                }
-
-                if (e.shiftKey && e.key === 'Insert') {
-                    e.preventDefault();
-                }
-            });
-        });
-    }
-
-    function showError(id, msg) {
-        const el = document.getElementById(id);
-
-        if (el) {
-            el.textContent = msg;
-            el.classList.add('show');
-        }
-    }
-
-    function clearError(id) {
-        const el = document.getElementById(id);
-
-        if (el) {
-            el.textContent = '';
-            el.classList.remove('show');
-        }
-    }
-
-    function markError(id) {
-        const el = document.getElementById(id);
-
-        if (el) {
-            el.classList.add('has-error');
-        }
-    }
-
-    function validateProfileForm() {
-        let isValid = true;
-        const lang = currentLang;
-
-        document.querySelectorAll('.field-error.show').forEach(function(el) {
-            el.classList.remove('show');
-        });
-
-        document.querySelectorAll('.has-error').forEach(function(el) {
-            el.classList.remove('has-error');
-        });
-
-        const usernameElement = document.getElementById('username');
-
-        if (usernameElement) {
-            const username = usernameElement.value.trim();
-
-            if (!username) {
-                showError('usernameError', translations[lang].errLogin);
-                markError('username');
-                isValid = false;
-            }
-        }
-
-        const emailElement = document.getElementById('email');
-
-        if (emailElement) {
-            const email = emailElement.value.trim();
-
-            if (!email) {
-                showError('emailError', translations[lang].errEmail);
-                markError('email');
-                isValid = false;
-            }
-        }
-
-        const phoneElement = document.getElementById('phone');
-
-        if (phoneElement) {
-            const phone = phoneElement.value;
-            const phoneDigits = phone.replace(/\D/g, '');
-
-            if (phoneDigits.length > 0 && phoneDigits.length < 4) {
-                showError('phoneError', translations[lang].errPhone);
-                markError('phone');
-                isValid = false;
-            }
-        }
-
-        const surnameElement = document.getElementById('surname');
-
-        if (surnameElement) {
-            const surname = surnameElement.value.trim();
-
-            if (!surname) {
-                showError('surnameError', translations[lang].errSurname);
-                markError('surname');
-                isValid = false;
-            }
-        }
-
-        const nameElement = document.getElementById('name');
-
-        if (nameElement) {
-            const name = nameElement.value.trim();
-
-            if (!name) {
-                showError('nameError', translations[lang].errName);
-                markError('name');
-                isValid = false;
-            }
-        }
-
-        const sexElement = document.getElementById('sex');
-
-        if (sexElement) {
-            const sex = sexElement.value;
-
-            if (sex === null || sex === undefined || sex === '') {
-                showError('sexError', translations[lang].errSex);
-                markError('sex');
-                isValid = false;
-            }
-        }
-
-        const birthDateElement = document.getElementById('birthDate');
-
-        if (birthDateElement) {
-            const birthDate = birthDateElement.value;
-
-            if (!birthDate) {
-                showError('birthDateError', translations[lang].errBirthDate);
-                markError('birthDate');
-                isValid = false;
-            }
-        }
-
-        const passwordElement = document.getElementById('rawPassword');
-
-        if (passwordElement) {
-            const password = passwordElement.value;
-
-            if (!password) {
-                showError('rawPasswordError', translations[lang].errPassEmpty);
-                markError('rawPassword');
-                isValid = false;
-            } else if (password.length < 8) {
-                showError('rawPasswordError', translations[lang].errPassMin);
-                markError('rawPassword');
-                isValid = false;
-            }
-        }
-
-        const repeatPasswordElement = document.getElementById('repeatRawPassword');
-
-        if (repeatPasswordElement) {
-            const repeatPass = repeatPasswordElement.value;
-            const passwordElement = document.getElementById('rawPassword');
-            const password = passwordElement ? passwordElement.value : '';
-
-            if (!repeatPass) {
-                showError('repeatPasswordError', translations[lang].errRepeatEmpty);
-                markError('repeatRawPassword');
-                isValid = false;
-            } else if (repeatPass.length < 8) {
-                showError('repeatPasswordError', translations[lang].errPassMin);
-                markError('repeatRawPassword');
-                isValid = false;
-            } else if (password !== repeatPass) {
-                showError('repeatPasswordError', translations[lang].errMatch);
-                markError('repeatRawPassword');
-                isValid = false;
-            }
-        }
-
-        return isValid;
-    }
-
-    function hasServerError() {
-        return !!document.querySelector('.flash-message.error') ||
-               !!document.querySelector('.field-error.show');
-    }
-
-    function clearRegisterFields() {
-        const registerForm = document.getElementById('registerForm');
-
-        if (!registerForm) {
-            return;
-        }
-
-        registerForm.querySelectorAll('.form-control').forEach(function(field) {
-            if (field.type === 'hidden') return;
-
-            if (field.tagName === 'SELECT') {
-                field.selectedIndex = 0;
-                field.dispatchEvent(new Event('change', { bubbles: true }));
-                return;
-            }
-
-            field.value = '';
-            field.dispatchEvent(new Event('input', { bubbles: true }));
-            field.dispatchEvent(new Event('change', { bubbles: true }));
-            field.classList.remove('has-error');
-        });
-
-        registerForm.querySelectorAll('.input-wrapper').forEach(function(wrapper) {
-            wrapper.classList.remove('has-value');
-        });
-
-        registerForm.querySelectorAll('.field-error.show').forEach(function(el) {
-            el.classList.remove('show');
-            el.textContent = '';
-        });
-
-        registerForm.querySelectorAll('input[type="password"]').forEach(function(p) {
-            p.type = 'password';
-        });
-
-        registerForm.querySelectorAll('.toggle-password i').forEach(function(icon) {
-            icon.classList.remove('fa-eye');
-            icon.classList.add('fa-eye-slash');
-        });
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.input-wrapper').forEach(function(wrapper) {
-            const input = wrapper.querySelector('input');
-            const clearButton = wrapper.querySelector('.clear-input-btn');
-
-            if (!input || !clearButton) {
-                return;
-            }
-
-            const syncClearButton = function() {
-                wrapper.classList.toggle('has-value', input.value.length > 0);
-            };
-
-            clearButton.addEventListener('click', function() {
-                input.value = '';
-                input.dispatchEvent(new Event('input', { bubbles: true }));
-                input.dispatchEvent(new Event('change', { bubbles: true }));
-                input.focus();
-                syncClearButton();
-            });
-
-            input.addEventListener('input', syncClearButton);
-            input.addEventListener('change', syncClearButton);
-
-            syncClearButton();
-        });
-
-        applyLanguage(currentLang);
-        initPasswordToggles();
-        initPasswordRestrictions();
-
-        const sex = document.getElementById('sex');
-
-        if (sex) {
-            sex.addEventListener('paste', function(e) {
-                e.preventDefault();
-            });
-
-            sex.addEventListener('copy', function(e) {
-                e.preventDefault();
-            });
-
-            sex.addEventListener('cut', function(e) {
-                e.preventDefault();
-            });
-        }
-
-        const birthDate = document.getElementById('birthDate');
-
-        if (birthDate) {
-            birthDate.addEventListener('paste', function(e) {
-                e.preventDefault();
-            });
-
-            birthDate.addEventListener('copy', function(e) {
-                e.preventDefault();
-            });
-
-            birthDate.addEventListener('cut', function(e) {
-                e.preventDefault();
-            });
-
-            birthDate.addEventListener('drop', function(e) {
-                e.preventDefault();
-            });
-        }
-
-        var phoneField = document.getElementById('phone');
-
-        if (phoneField && typeof initPhoneField === 'function') {
-            initPhoneField(phoneField);
-        }
-
-        var profileForm = document.getElementById('registerForm');
-
-        if (profileForm) {
-            profileForm.addEventListener('submit', function(e) {
-                if (!validateProfileForm()) {
-                    e.preventDefault();
-                }
-            });
-        }
-
-        clearRegisterFields();
-
-        setTimeout(function() {
-            document.querySelectorAll('.flash-message').forEach(function(msg) {
-                msg.style.animation = 'fadeOut 0.3s ease forwards';
-
-                setTimeout(function() {
-                    msg.remove();
-                }, 300);
-            });
-        }, 4000);
-    });
-
-    window.addEventListener('beforeunload', function () {
-        clearRegisterFields();
-    });
-
-    window.addEventListener('pageshow', function () {
-        clearRegisterFields();
-        setTimeout(clearRegisterFields, 0);
-        setTimeout(clearRegisterFields, 60);
-        setTimeout(clearRegisterFields, 200);
-    });
-
-    window.addEventListener('popstate', function () {
-        clearRegisterFields();
-    });
-
-    (function () {
-        if (performance && performance.getEntriesByType) {
-            var nav = performance.getEntriesByType('navigation')[0];
-            if (nav && nav.type === 'back_forward') {
-                clearRegisterFields();
-            }
-        }
-    })();
-
-    (function blockBackToRegister() {
-        var sessionUser = /*[[${session.sessionUser}]]*/ null;
-        var isLoggedIn = sessionUser !== null && sessionUser !== undefined && sessionUser.id !== null;
-        if (!isLoggedIn) return;
-
-        function kick() {
-            if (window.location.pathname !== '/') {
-                window.location.replace('/');
-            }
-        }
-
-        kick();
-        window.addEventListener('pageshow', function () { kick(); });
-        window.addEventListener('popstate', kick);
-        setInterval(kick, 50);
-
-        if (document.body) document.body.style.visibility = 'hidden';
-    })();
-</script>
 
 </body>
 </html>

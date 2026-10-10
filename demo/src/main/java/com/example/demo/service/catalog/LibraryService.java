@@ -6,21 +6,11 @@ import com.example.demo.model.entity.PurchasedMovie;
 import com.example.demo.repository.entity.PurchasedMovieRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.function.Function;
-
 @Service
 public class LibraryService extends AbstractCatalogService<PurchasedMovie, LibrarianMovieViewDTO> {
 
-    private final PurchasedMapper purchasedMapper;
-
-    protected LibraryService(PurchasedMovieRepository purchasedMovieRepository,
-                             PurchasedMapper purchasedMapper) {
-        super(purchasedMovieRepository);
-        this.purchasedMapper = purchasedMapper;
-    }
-
-    @Override
-    protected Function<PurchasedMovie, LibrarianMovieViewDTO> getMapper() {
-        return purchasedMapper::toOwnerViewFromLibrarian;
+    public LibraryService(PurchasedMovieRepository purchasedMovieRepository,
+                          PurchasedMapper purchasedMapper) {
+        super(purchasedMovieRepository, purchasedMapper::toOwnerViewFromLibrarian);
     }
 }

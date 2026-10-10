@@ -3,33 +3,35 @@ package com.example.demo.service.catalog;
 import com.example.demo.dto.response.CatalogResponse;
 import com.example.demo.dto.user.UserForOwnerViewDTO;
 import com.example.demo.model.base.AbstractCatalogItem;
-import com.example.demo.repository.base.AbstractCatalogRepository;
+import com.example.demo.repository.base.AbstractCatalogItemRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public abstract class AbstractCatalogService<CatalogItem extends AbstractCatalogItem, DTO> {
 
-    protected final AbstractCatalogRepository<CatalogItem> catalogRepository;
+    protected final AbstractCatalogItemRepository<CatalogItem> catalogItemRepository;
+    private final BiFunction<Long, CatalogItem, DTO> catalogItemMapper;
 
-    protected AbstractCatalogService(AbstractCatalogRepository<CatalogItem> catalogRepository) {
-        this.catalogRepository = catalogRepository;
+    protected AbstractCatalogService(AbstractCatalogItemRepository<CatalogItem> catalogItemRepository,
+                                     BiFunction<Long, CatalogItem, DTO> catalogItemMapper) {
+        this.catalogItemRepository = catalogItemRepository;
+        this.catalogItemMapper = catalogItemMapper;
     }
 
-    protected abstract Function<CatalogItem, DTO> getMapper();
+    protected AbstractCatalogService(AbstractCatalogItemRepository<CatalogItem> catalogItemRepository,
+                                     Function<CatalogItem, DTO> catalogItemMapper) {
+        this(catalogItemRepository, (userId, item) -> catalogItemMapper.apply(item));
+    }
 
     @Transactional(readOnly = true)
-    public List<DTO> getCatalog(Long id) {
-        return catalogRepository.findAllByUserId(id)
+    public List<DTO> getCatalog(Long userId) {
+        return catalogItemRepository.findAllByUserId(userId)
                 .stream()
-                .map(getMapper())
+                .map(item -> catalogItemMapper.apply(userId, item))
                 .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public boolean existsByMovieIdAndUserId(Long movieId, Long userId) {
-        return catalogRepository.existsByMovieIdAndUserId(movieId, userId);
     }
 
     @Transactional(readOnly = true)

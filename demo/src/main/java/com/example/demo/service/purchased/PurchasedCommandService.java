@@ -1,6 +1,5 @@
 package com.example.demo.service.purchased;
 
-import com.example.demo.dto.catalog.CartItemViewDTO;
 import com.example.demo.exception.BusinessException;
 import com.example.demo.exception.ErrorCode;
 import com.example.demo.model.base.AbstractCatalogItem;
@@ -10,8 +9,8 @@ import com.example.demo.model.entity.PurchasedMovie;
 import com.example.demo.model.entity.User;
 import com.example.demo.repository.entity.MovieRepository;
 import com.example.demo.repository.entity.PurchasedMovieRepository;
-import com.example.demo.service.linked_collection.AbstractLinkedCollectionService;
-import com.example.demo.service.user.UserCommandService;
+import com.example.demo.repository.entity.UserRepository;
+import com.example.demo.service.linked_collection.CartService;
 import com.example.demo.service.user.UserQueryService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,9 +25,9 @@ import java.util.Set;
 public class PurchasedCommandService {
 
     private final PurchasedMovieRepository purchasedMovieRepository;
-    protected final AbstractLinkedCollectionService<CartItem, CartItemViewDTO> cartService;
+    private final UserRepository userRepository;
+    private final CartService cartService;
     private final MovieRepository movieRepository;
-    private final UserCommandService userCommandService;
     private final UserQueryService userQueryService;
     private final PurchasedQueryService purchasedQueryService;
 
@@ -70,7 +69,7 @@ public class PurchasedCommandService {
             throw BusinessException.of(ErrorCode.INSUFFICIENT_FUNDS, totalPrice, user.getBalance());
         }
         user.spendMoney(totalPrice);
-        userCommandService.createUser(user);
+        userRepository.save(user);
         List<PurchasedMovie> purchases = moviesToBuy.stream()
                 .map(movie -> {
                     PurchasedMovie purchased = PurchasedMovie.builder().build();
@@ -83,7 +82,7 @@ public class PurchasedCommandService {
         return user.getBalance();
     }
 
-    private void clearCartFor(List<Long> requestedMovieIds, Long userId, Boolean isSinglePurchase) {
+    private void clearCartFor(List<Long> requestedMovieIds, Long userId, boolean isSinglePurchase) {
         if (isSinglePurchase && !requestedMovieIds.isEmpty()) {
             cartService.remove(requestedMovieIds.get(0), userId);
         } else {

@@ -1,62 +1,45 @@
 package com.example.demo.config;
 
-import com.example.demo.web.interceptor.BadgeUpdater;
 import com.example.demo.web.interceptor.CacheControlInterceptor;
-import com.example.demo.web.interceptor.SessionInterceptor;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.util.List;
 
 @Configuration
 @AllArgsConstructor
 public class WebConfig implements WebMvcConfigurer {
 
-    private final SessionInterceptor sessionInterceptor;
-    private final BadgeUpdater badgeUpdater;
     private final CacheControlInterceptor cacheControlInterceptor;
+    private final SessionUserArgumentResolver sessionUserArgumentResolver;
 
     @Override
     public void addInterceptors(InterceptorRegistry interceptorRegistry) {
-        interceptorRegistry.addInterceptor(sessionInterceptor)
-                .addPathPatterns(
-                        "/cart/**",
-                        "/orders/**",
-                        "/favourites/**",
-                        "/profile/**",
-                        "/rated/**",
-                        "/history/**",
-                        "/library/**",
-                        "/watched/**"
-                )
-                .excludePathPatterns(
-                        "/rated/*/reviews",
-                        "/rated/rating/*",
-                        "/rated/count/*",
-                        "/logout"
-                );
-        interceptorRegistry.addInterceptor(badgeUpdater)
-                .addPathPatterns("/**")
-                .excludePathPatterns("/css/**", "/js/**", "/images/**", "/webjars/**", "/error", "/login", "/register");
         interceptorRegistry.addInterceptor(cacheControlInterceptor)
                 .addPathPatterns(
-                        "/",
-                        "/login",
-                        "/register",
-                        "/movies/**",
-                        "/personal-account",
-                        "/settings",
-                        "/settings/change/field",
-                        "/settings/delete/phone",
-                        "/settings/change/pwd",
-                        "/wallet/top-up",
-                        "/cart/**",
-                        "/favourites/**",
-                        "/library/**",
-                        "/history/**",
-                        "/rated/**",
-                        "/watched/**"
+                        "/", "/login",
+                        "/register", "/movies/**",
+                        "/personal-account", "/profile/edit",
+                        "/settings", "/settings/**",
+                        "/wallet/**",
+                        "/cart/**", "/favourites/**",
+                        "/library/**", "/history/**",
+                        "/rated/**", "/watched/**"
                 )
-                .excludePathPatterns("/css/**", "/js/**", "/images/**", "/favicon.ico");
+                .excludePathPatterns(
+                        "/css/**", "/js/**", "/images/**", "/favicon.ico",
+                        "/cart/count", "/favourites/count",
+                        "/rated/count/**", "/rated/rating/**",
+                        "/rated/*/reviews/more",
+                        "/movies/*/rating"
+                );
+    }
+
+    @Override
+    public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
+        resolvers.add(sessionUserArgumentResolver);
     }
 }

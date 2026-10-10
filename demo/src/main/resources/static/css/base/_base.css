@@ -1,0 +1,34 @@
+html, body {
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background:
+        linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+        url('/images/background.png') no-repeat center center fixed;
+    background-size: cover;
+    color: #eef2ff;
+    line-height: 1.5;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+body.auth-page {
+    background:
+        linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+        url('/images/background.png') no-repeat center center fixed;
+    background-size: cover;
+}
+
+body > .header-wrapper { flex: 0 0 auto; }
+body > main           { flex: 1 1 auto; }
+body > .footer-wrapper { flex: 0 0 auto; }
+
+body.layout-fixed {
+    height: 100vh;
+    overflow: hidden;
+}

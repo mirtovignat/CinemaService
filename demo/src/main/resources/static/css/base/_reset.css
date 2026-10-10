@@ -1,0 +1,83 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+svg {
+    display: inline-block;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+
+.size-6 {
+    width: 24px;
+    height: 24px;
+}
+
+input[type="number"] {
+    -webkit-appearance: textfield;
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input {
+    -webkit-box-shadow: none !important;
+    box-shadow: none !important;
+    background-clip: padding-box !important;
+}
+
+.avatar,
+.profile-avatar-letter,
+.user-avatar-letter {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+    text-align: center !important;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    -webkit-text-fill-color: #eef2ff !important;
+    caret-color: #eef2ff !important;
+    -webkit-box-shadow: 0 0 0 1000px rgba(10, 13, 28, 0.75) inset !important;
+    box-shadow: 0 0 0 1000px rgba(10, 13, 28, 0.75) inset !important;
+    background-color: transparent !important;
+    background-clip: padding-box !important;
+    transition: background-color 99999s ease-in-out 0s;
+}
+
+input:-webkit-autofill::first-line {
+    -webkit-text-fill-color: #eef2ff !important;
+    color: #eef2ff !important;
+}
+
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+    -webkit-text-fill-color: #eef2ff !important;
+    -webkit-box-shadow: 0 0 0 1000px rgba(10, 13, 28, 0.75) inset !important;
+    box-shadow: 0 0 0 1000px rgba(10, 13, 28, 0.75) inset !important;
+    background-color: transparent !important;
+}
+
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus {
+    -webkit-text-fill-color: #eef2ff !important;
+    -webkit-box-shadow: 0 0 0 1000px rgba(10, 13, 28, 0.75) inset !important;
+    box-shadow: 0 0 0 1000px rgba(10, 13, 28, 0.75) inset !important;
+    background-color: transparent !important;
+}
+.hidden {
+    display: none !important;
+}

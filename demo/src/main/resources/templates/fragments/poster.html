@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<body>
+
+<div th:fragment="posterBlock(posterUrl, posterAlt, rating, variant)"
+     th:with="hasPoster=${posterUrl != null and !posterUrl.isEmpty()},
+              badgeVariant=${variant != null ? variant : 'default'}">
+
+  <img th:if="${hasPoster}"
+       th:src="${posterUrl}"
+       th:alt="${posterAlt != null ? posterAlt : 'Постер'}"
+       class="media-card-poster-img"
+       data-poster-img
+       src=""/>
+
+  <div class="movie-poster-placeholder"
+       th:classappend="${hasPoster} ? 'hidden' : ''"
+       data-poster-placeholder>
+    <span>Постер</span>
+  </div>
+
+  <div th:if="${rating != null}"
+       class="media-card-rating-badge"
+       data-rating-badge>
+        <span class="star">
+            <th:block th:replace="~{fragments/icons :: icon-star}"></th:block>
+        </span>
+    <span class="rating-value"
+          th:text="${#numbers.formatDecimal(rating, 1, 1)}">8.5</span>
+    <span class="rating-max">/ 10</span>
+  </div>
+
+</div>
+
+</body>
+</html>

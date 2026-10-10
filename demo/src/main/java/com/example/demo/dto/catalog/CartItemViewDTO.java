@@ -1,17 +1,22 @@
 package com.example.demo.dto.catalog;
 
-import com.example.demo.dto.base.*;
-import com.fasterxml.jackson.annotation.JsonUnwrapped;
+import lombok.Builder;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+@Builder
 public record CartItemViewDTO(
-        @JsonUnwrapped MovieIdentity id,
-        @JsonUnwrapped MovieTitled title,
-        @JsonUnwrapped MoviePricing price,
-        @JsonUnwrapped MovieMedia media,
-        @JsonUnwrapped MovieRating rating,
-        @JsonUnwrapped MovieRelease release,
-        @JsonUnwrapped MovieMeta meta,
-        @JsonUnwrapped UserStatus status,
-        @JsonUnwrapped CatalogQuantity quantity
-) {
-}
+        Long id,
+        String title,
+        String posterUrl,
+        String genre,
+        BigDecimal price,
+        BigDecimal rating,
+        LocalDate releaseDate,
+        String currencyCode,
+        boolean inFavourites,
+        boolean bought,
+        short quantity,
+        String formattedDuration
+) {}

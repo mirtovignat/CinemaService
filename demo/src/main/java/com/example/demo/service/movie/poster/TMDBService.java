@@ -2,7 +2,6 @@ package com.example.demo.service.movie.poster;
 
 import com.example.demo.config.TMDBConfig;
 import com.example.demo.dto.movie.TMDBMovieDTO;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -11,7 +10,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 
-@Slf4j
+
 @Service
 public class TMDBService {
 

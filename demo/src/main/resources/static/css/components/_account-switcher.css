@@ -1,0 +1,176 @@
+.account-switcher {
+    padding: 4px 0;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    perspective: 800px;
+}
+
+.account-switcher-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 6px 16px;
+    text-decoration: none;
+    color: #f0f6fc;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    will-change: transform;
+    transform-origin: center;
+    backface-visibility: hidden;
+    background: transparent;
+    box-shadow: none;
+}
+
+.account-switcher-item::before,
+.account-switcher-item::after {
+    display: none !important;
+    content: none !important;
+    box-shadow: none !important;
+}
+
+.account-switcher-item:hover {
+    background: #1f242e;
+}
+
+.account-switcher-item.active {
+    background: rgba(99, 102, 241, 0.12);
+    cursor: default;
+}
+
+.account-switcher-item.active .account-switcher-name {
+    color: #a78bfa;
+}
+
+.account-switcher-item.active .account-switcher-avatar {
+    border: 2px solid #6366f1;
+}
+
+.account-switcher-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+    box-shadow: none;
+}
+
+.account-switcher-name {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+}
+
+.account-switcher-remove {
+    background: transparent;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 0 4px;
+    flex-shrink: 0;
+    line-height: 1;
+    font-family: inherit;
+    transition: color 0.15s, transform 0.15s;
+    box-shadow: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.account-switcher-remove svg {
+    width: 14px;
+    height: 14px;
+    display: block;
+    pointer-events: none;
+}
+
+.account-switcher-remove:hover {
+    color: #f43f5e;
+    transform: scale(1.2) rotate(90deg);
+}
+
+.account-switcher-clear {
+    display: flex;
+    align-items: center;
+    padding: 6px 16px;
+    cursor: pointer;
+    color: #8b949e;
+    font-size: 0.85rem;
+    font-weight: 400;
+    transition: background 0.15s, color 0.15s;
+    user-select: none;
+}
+
+.account-switcher-clear:hover {
+    background: #1f242e;
+    color: #f0f6fc;
+}
+
+.account-switcher-clear:focus-visible {
+    outline: 2px solid rgba(99, 102, 241, 0.6);
+    outline-offset: -2px;
+}
+
+.account-switcher-item[draggable="true"] {
+    cursor: grab;
+}
+
+.account-switcher-item[draggable="true"]:active {
+    cursor: grabbing;
+}
+
+.account-switcher.is-dragging-active .account-switcher-item:hover {
+    background: transparent;
+}
+
+.account-switcher.is-dragging-active .account-switcher-item.active:hover {
+    background: rgba(99, 102, 241, 0.12);
+}
+
+.account-switcher-item.is-dragging {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    outline: none !important;
+    opacity: 0.4;
+    z-index: 100;
+    cursor: grabbing;
+    pointer-events: none;
+    transition: none;
+}
+
+.account-switcher-item.is-dragging * {
+    pointer-events: none;
+}
+
+.account-switcher-item.is-flying {
+    background: transparent !important;
+    box-shadow: none !important;
+    z-index: 1;
+}
+
+.account-switcher-item.is-flying.active {
+    background: rgba(99, 102, 241, 0.12) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .account-switcher-item,
+    .account-switcher-avatar,
+    .account-switcher-remove {
+        transition: none !important;
+        animation: none !important;
+    }
+}

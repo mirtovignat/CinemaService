@@ -5,11 +5,16 @@ import com.example.demo.dto.user.SessionUser;
 import com.example.demo.exception.SuccessCode;
 import com.example.demo.service.purchased.PurchasedCommandService;
 import com.example.demo.util.MessageUtils;
-import jakarta.servlet.http.HttpSession;
+import com.example.demo.web.util.SessionAuthenticator;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.math.BigDecimal;
 import java.util.Map;
@@ -21,32 +26,38 @@ public class PurchasedController {
 
     private final PurchasedCommandService purchasedCommandService;
     private final MessageUtils messageUtils;
+    private final SessionAuthenticator sessionAuthenticator;
 
     @PostMapping("/add/bulk")
     @ResponseBody
-    public ResponseEntity<ApiResponse> buyMovies(@SessionAttribute SessionUser sessionUser,
-                                                 HttpSession httpSession) {
-        Long userId = sessionUser.id();
-        BigDecimal newBalance = purchasedCommandService.purchaseBulk(userId);
-        SessionUser updated = sessionUser.withBalance(newBalance);
-        httpSession.setAttribute("sessionUser", updated);
-        String message = messageUtils.getSuccess(SuccessCode.PURCHASED);
-        return ResponseEntity.ok(ApiResponse.builder()
-                .code(SuccessCode.PURCHASED.name())
-                .message(message)
-                .data(Map.of())
-                .build());
+    public ResponseEntity<ApiResponse> buyMovies(
+            SessionUser sessionUser,
+            HttpServletRequest httpServletRequest,
+            HttpServletResponse httpServletResponse) {
+        BigDecimal newBalance = purchasedCommandService.purchaseBulk(sessionUser.id());
+        return respond(sessionUser, newBalance, httpServletRequest, httpServletResponse);
     }
 
     @PostMapping("/add/{id}")
     @ResponseBody
-    public ResponseEntity<ApiResponse> buyMovie(@PathVariable Long id,
-                                                @SessionAttribute SessionUser sessionUser,
-                                                HttpSession httpSession) {
-        Long userId = sessionUser.id();
-        BigDecimal newBalance = purchasedCommandService.purchase(id, userId);
-        SessionUser updated = sessionUser.withBalance(newBalance);
-        httpSession.setAttribute("sessionUser", updated);
+    public ResponseEntity<ApiResponse> buyMovie(
+            @PathVariable Long id,
+            SessionUser sessionUser,
+            HttpServletRequest httpServletRequest,
+            HttpServletResponse httpServletResponse) {
+        BigDecimal newBalance = purchasedCommandService.purchase(id, sessionUser.id());
+        return respond(sessionUser, newBalance, httpServletRequest, httpServletResponse);
+    }
+
+    private ResponseEntity<ApiResponse> respond(SessionUser sessionUser,
+                                                BigDecimal newBalance,
+                                                HttpServletRequest httpServletRequest,
+                                                HttpServletResponse httpServletResponse) {
+        sessionAuthenticator.updatePrincipal(
+                sessionUser.withBalance(newBalance),
+                httpServletRequest,
+                httpServletResponse
+        );
         String message = messageUtils.getSuccess(SuccessCode.PURCHASED);
         return ResponseEntity.ok(ApiResponse.builder()
                 .code(SuccessCode.PURCHASED.name())

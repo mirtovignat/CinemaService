@@ -13,8 +13,6 @@ import java.util.List;
 
 @Builder
 public record MovieFilter(
-        String title,
-
         @PositiveOrZero(message = "Цена от не может быть отрицательной")
         BigDecimal priceFrom,
 
@@ -27,10 +25,10 @@ public record MovieFilter(
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
         LocalDate releaseDateTo,
 
-        @Min(value = 1, message = "Длительность от должна быть не менее 1 минуты")
+        @Min(value = 1, message = "Длительность от должна быть не менее 1 секунды")
         Integer durationFrom,
 
-        @Min(value = 1, message = "Длительность до должна быть не менее 1 минуты")
+        @Min(value = 1, message = "Длительность до должна быть не менее 1 секунды")
         Integer durationTo,
 
         @DecimalMin(value = "0.1", message = "Рейтинг от должен быть не менее 0.1")
@@ -46,8 +44,7 @@ public record MovieFilter(
 ) {
 
     public boolean hasAnyCriteria() {
-        return (title != null && !title.isBlank()) ||
-                (priceFrom != null) ||
+        return (priceFrom != null) ||
                 (priceTo != null) ||
                 (releaseDateFrom != null) ||
                 (releaseDateTo != null) ||
@@ -58,5 +55,4 @@ public record MovieFilter(
                 (genres != null && !genres.isEmpty()) ||
                 (directors != null && !directors.isEmpty());
     }
-
 }

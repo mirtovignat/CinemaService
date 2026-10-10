@@ -9,6 +9,7 @@ import com.example.demo.model.entity.User;
 import com.example.demo.repository.entity.CartItemRepository;
 import com.example.demo.repository.entity.FavouriteMovieRepository;
 import com.example.demo.repository.entity.UserRepository;
+import com.example.demo.util.PhoneNormalizer;
 import com.example.demo.util.UserSuffixGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,10 +29,11 @@ public class UserCommandService {
     private final FavouriteMovieRepository favouriteMovieRepository;
     private final UserSuffixGenerator userSuffixGenerator;
 
-    public ProfileFieldUpdateDTO prepareAndValidateField(ProfileFieldUpdateDTO dto, Long userId) {
+    public ProfileFieldUpdateDTO prepareAndValidateField(ProfileFieldUpdateDTO profileFieldUpdateDTO,
+                                                         Long userId) {
         User user = userQueryService.getUser(userId);
-        String field = dto.field();
-        Identifier identifier = dto.identifier();
+        String field = profileFieldUpdateDTO.field();
+        Identifier identifier = profileFieldUpdateDTO.identifier();
 
         switch (identifier) {
             case USERNAME -> {
@@ -41,6 +43,7 @@ public class UserCommandService {
                 if (userRepository.existsByUsername(field)) {
                     throw BusinessException.of(ErrorCode.ALREADY_TAKEN);
                 }
+                return profileFieldUpdateDTO;
             }
             case EMAIL -> {
                 if (field.equals(user.getEmail())) {
@@ -49,28 +52,54 @@ public class UserCommandService {
                 if (userRepository.existsByEmail(field)) {
                     throw BusinessException.of(ErrorCode.ALREADY_TAKEN);
                 }
+                return profileFieldUpdateDTO;
             }
             case PHONE -> {
+                String trimmedField = field != null ? field.trim() : "";
                 String currentPhone = user.getPhone() != null ? user.getPhone() : "";
-                if (field.equals(currentPhone)) {
+
+                if (trimmedField.isEmpty()) {
+                    if (currentPhone.isEmpty()) {
+                        throw BusinessException.of(ErrorCode.DATA_COINCIDENCE);
+                    }
+                    return ProfileFieldUpdateDTO.builder()
+                            .identifier(identifier)
+                            .build();
+                }
+
+                String normalized = PhoneNormalizer.normalizePhone(trimmedField);
+                if (normalized == null) {
+                    throw BusinessException.of(ErrorCode.PHONE_INVALID);
+                }
+                if (normalized.equals(currentPhone)) {
                     throw BusinessException.of(ErrorCode.DATA_COINCIDENCE);
                 }
-                if (userRepository.existsByPhone(field)) {
+                if (userRepository.existsByPhone(normalized)) {
                     throw BusinessException.of(ErrorCode.ALREADY_TAKEN);
                 }
+                return ProfileFieldUpdateDTO.builder()
+                        .identifier(identifier)
+                        .field(normalized)
+                        .build();
             }
-            default -> throw BusinessException.of(ErrorCode.VALIDATION_ERROR, "Неизвестное поле: " + identifier);
+            default -> throw BusinessException.of(ErrorCode.VALIDATION_ERROR);
         }
-        return dto;
     }
 
     @Transactional
-    public void updateField(Long userId, ProfileFieldUpdateDTO dto) {
-        switch (dto.identifier()) {
-            case USERNAME -> userRepository.updateUsername(userId, dto.field());
-            case EMAIL -> userRepository.updateEmail(userId, dto.field());
-            case PHONE -> userRepository.updatePhone(userId, dto.field());
-            default -> throw BusinessException.of(ErrorCode.VALIDATION_ERROR, "Неизвестное поле: " + dto.identifier());
+    public void updateField(Long userId, ProfileFieldUpdateDTO profileFieldUpdateDTO) {
+        switch (profileFieldUpdateDTO.identifier()) {
+            case USERNAME -> userRepository.updateUsername(userId, profileFieldUpdateDTO.field());
+            case EMAIL -> userRepository.updateEmail(userId, profileFieldUpdateDTO.field());
+            case PHONE -> {
+                String value = profileFieldUpdateDTO.field();
+                if (value == null || value.isBlank()) {
+                    userRepository.deletePhone(userId);
+                } else {
+                    userRepository.updatePhone(userId, value);
+                }
+            }
+            default -> throw BusinessException.of(ErrorCode.VALIDATION_ERROR);
         }
     }
 
@@ -113,10 +142,5 @@ public class UserCommandService {
     @Transactional
     public void deletePhone(Long userId) {
         userRepository.deletePhone(userId);
-    }
-
-    @Transactional
-    public void createUser(User user) {
-        userRepository.save(user);
     }
 }

@@ -17,10 +17,14 @@ public class CacheControlInterceptor implements HandlerInterceptor {
                                 Exception exception) {
         String uri = httpServletRequest.getRequestURI();
 
-        if (uri.startsWith("/login") || uri.startsWith("/register")) {
-            NoCacheHeaders.applyAndClearSiteData(httpServletResponse);
-        } else {
-            NoCacheHeaders.apply(httpServletResponse);
+        if (uri.startsWith("/js/")
+                || uri.startsWith("/css/")
+                || uri.startsWith("/images/")
+                || uri.startsWith("/webjars/")
+                || uri.equals("/favicon.ico")) {
+            return;
         }
+
+        NoCacheHeaders.apply(httpServletResponse);
     }
 }

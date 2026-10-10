@@ -14,39 +14,23 @@ import org.mapstruct.Mapping;
         imports = {PhoneNormalizer.class})
 public interface UserMapper {
 
-    @Mapping(target = "id", source = "id")
-    @Mapping(target = "balance", source = "balance")
-    @Mapping(target = "currencyCode", source = "currencyCode")
-    @Mapping(target = "email", source = "email")
-    @Mapping(target = "username", source = "username")
-    @Mapping(target = "phone", source = "phone")
     @Mapping(target = "surname", expression = "java(MapperUtils.extractSurname(user.getFullName()))")
     @Mapping(target = "name", expression = "java(MapperUtils.extractName(user.getFullName()))")
     @Mapping(target = "patronymic", expression = "java(MapperUtils.extractPatronymic(user.getFullName()))")
-    @Mapping(target = "birthDate", source = "birthDate")
-    @Mapping(target = "sex", source = "sex")
     @Mapping(target = "age", expression = "java(MapperUtils.calculateAge(user.getBirthDate()))")
     UserForOwnerViewDTO toOwnerView(User user);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "deletableState", ignore = true)
     @Mapping(target = "passwordHash", source = "rawPassword", qualifiedByName = "rawToEncoded")
-    @Mapping(target = "fullName", expression = "java(MapperUtils.tofullName(registerFormDTO.surname(), registerFormDTO.name(), registerFormDTO.patronymic()))")
+    @Mapping(target = "fullName", expression = "java(MapperUtils.toFullName(registerFormDTO.surname(), registerFormDTO.name(), registerFormDTO.patronymic()))")
     @Mapping(target = "phone", expression = "java(PhoneNormalizer.normalizePhone(registerFormDTO.phone()))")
     @Mapping(target = "balance", ignore = true)
     @Mapping(target = "purchases", ignore = true)
     @Mapping(target = "favourites", ignore = true)
     @Mapping(target = "ratings", ignore = true)
     @Mapping(target = "cartItems", ignore = true)
-    @Mapping(target = "birthDate", source = "birthDate")
-    @Mapping(target = "sex", source = "sex")
-    @Mapping(target = "currencyCode", source = "currencyCode")
     User fromRegisterForm(RegisterFormDTO registerFormDTO);
 
-    @Mapping(target = "fullName", source = "fullName")
-    @Mapping(target = "balance", source = "balance")
-    @Mapping(target = "currencyCode", source = "currencyCode")
-    @Mapping(target = "username", source = "username")
-    @Mapping(target = "phone", source = "phone")
     WalletForOwnerViewDTO toWalletView(User user);
 }
