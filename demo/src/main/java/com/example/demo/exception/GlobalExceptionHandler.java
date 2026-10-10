@@ -3,6 +3,7 @@ package com.example.demo.exception;
 import com.example.demo.dto.authorize.LoginFormDTO;
 import com.example.demo.dto.authorize.RegisterFormDTO;
 import com.example.demo.dto.response.ApiResponse;
+import com.example.demo.dto.user.PasswordChangingDTO;
 import com.example.demo.util.MessageUtils;
 import com.example.demo.web.util.RequestUtils;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,7 +30,8 @@ public class GlobalExceptionHandler {
 
     private static final Map<String, String> FORM_VIEWS = Map.of(
             "/register", "register",
-            "/login", "login"
+            "/login", "login",
+            "/settings/change/pwd", "change-password"
     );
 
     private final MessageUtils messageUtils;
@@ -51,6 +53,9 @@ public class GlobalExceptionHandler {
         if ("login".equals(view) && !model.containsAttribute("loginForm")) {
             model.addAttribute("loginForm", LoginFormDTO.builder().build());
         }
+        if ("change-password".equals(view) && !model.containsAttribute("passwordChangingDTO")) {
+            model.addAttribute("passwordChangingDTO", PasswordChangingDTO.builder().build());
+        }
     }
 
     private boolean canUseFlash(HttpServletRequest httpServletRequest) {
@@ -59,7 +64,6 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ClientAbortException.class)
     public void handleClientAbort(ClientAbortException clientAbortException) {
-        // Браузер оборвал соединение — не ошибка приложения, игнорируем.
     }
 
     @ExceptionHandler(BusinessException.class)

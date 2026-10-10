@@ -56,6 +56,10 @@
         return request(url, { method: 'GET' });
     }
 
+    function del(url, body) {
+        return request(url, { method: 'DELETE', body: body });
+    }
+
     function encode(value) {
         return encodeURIComponent(value);
     }
@@ -125,6 +129,7 @@
         request: request,
         post: post,
         get: get,
+        del: del,
         cart: Cart,
         favourites: Favourites,
         orders: Orders,

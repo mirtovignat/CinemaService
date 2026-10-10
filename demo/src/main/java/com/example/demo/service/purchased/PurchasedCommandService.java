@@ -62,6 +62,11 @@ public class PurchasedCommandService {
             return user.getBalance();
         }
         List<Movie> moviesToBuy = movieRepository.findAllById(idsToBuy);
+
+        if (moviesToBuy.size() != idsToBuy.size()) {
+            throw BusinessException.of(ErrorCode.ENTITY_NOT_FOUND);
+        }
+
         BigDecimal totalPrice = moviesToBuy.stream()
                 .map(Movie::getPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);

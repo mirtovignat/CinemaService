@@ -18,33 +18,33 @@
 
         <div class="top-section">
             <div id="userData"
-                 th:data-username="${wallet != null ? wallet.getFirstUsernameLetter() : 'U'}"
-                 th:data-fullname="${wallet != null ? wallet.fullName() : 'Миртов Игнат Антонович'}"
-                 th:data-phone="${wallet != null ? wallet.phone() : '+7 (999) 929-04-60'}"
-                 th:data-balance="${wallet != null ? wallet.balance() : 2081.20}"
+                 th:data-username="${wallet.getFirstUsernameLetter()}"
+                 th:data-fullname="${wallet.fullName()}"
+                 th:data-phone="${wallet.phone()}"
+                 th:data-balance="${wallet.balance()}"
                  th:data-maxbalance="100000"
-                 th:data-currency="${wallet != null ? wallet.currencyCode() : 'RUB'}"
+                 th:data-currency="${wallet.currencyCode()}"
                  style="display:none;">
             </div>
 
             <div class="avatar-wrapper">
                 <div class="avatar-circle" id="avatarCircle"
-                     th:text="${wallet != null ? wallet.getFirstUsernameLetter() : 'U'}">U
+                     th:text="${wallet.getFirstUsernameLetter()}">U
                 </div>
             </div>
             <div class="user-info">
                 <div class="fullname" id="userFullname"
-                     th:text="${wallet != null ? wallet.fullName() : 'Миртов Игнат Антонович'}">Миртов Игнат Антонович
+                     th:text="${wallet.fullName()}">Пользователь
                 </div>
                 <div class="phone" id="userPhone"
-                     th:text="${wallet != null ? '+7 (999) ***-**-60' : '+7 (999) ***-**-60'}">+7 (999) ***-**-60
+                     th:text="${wallet.phone()}">+7 (999) 000-00-00
                 </div>
             </div>
             <hr class="divider-light">
             <div class="balance-label">Доступный баланс</div>
             <div class="balance-number" id="balanceDisplay">
                 <span id="balanceValue"
-                      th:text="${wallet != null ? #numbers.formatDecimal(wallet.balance(), 0, 2) : '2 081,20'}">2 081,20</span>
+                      th:text="${#numbers.formatDecimal(wallet.balance(), 0, 2)}">0,00</span>
                 <span class="curr" id="currencySymbol" style="display:none;"></span>
             </div>
             <hr class="divider-light">

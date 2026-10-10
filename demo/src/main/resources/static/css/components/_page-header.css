@@ -66,6 +66,14 @@
     font-size: 0.85rem;
 }
 
+.page-header-row .page-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
 .page-header-row .sort-toggle-wrapper {
     margin-left: 0;
     flex: 0 0 auto;
@@ -137,5 +145,9 @@
 @media (max-width: 640px) {
     .page-header-row .profile-right-header h1 {
         font-size: 1.2rem;
+    }
+    .page-header-row .page-header-actions {
+        width: 100%;
+        flex-wrap: wrap;
     }
 }

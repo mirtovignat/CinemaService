@@ -7,7 +7,7 @@
     <inspection_tool class="HtmlUnknownAttribute" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="myValues">
         <value>
-          <list size="77">
+          <list size="78">
             <item index="0" class="java.lang.String" itemvalue="th:href" />
             <item index="1" class="java.lang.String" itemvalue="th:each" />
             <item index="2" class="java.lang.String" itemvalue="th:text" />
@@ -85,6 +85,7 @@
             <item index="74" class="java.lang.String" itemvalue="th:data-page" />
             <item index="75" class="java.lang.String" itemvalue="th:data-href" />
             <item index="76" class="java.lang.String" itemvalue="th:data-favourite-action" />
+            <item index="77" class="java.lang.String" itemvalue="th:content" />
           </list>
         </value>
       </option>

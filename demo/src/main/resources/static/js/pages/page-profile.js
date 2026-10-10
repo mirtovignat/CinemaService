@@ -281,7 +281,7 @@
         btn.dataset.confirmPhoneBound = '1';
 
         btn.addEventListener('click', function () {
-            API.get('/settings/delete/phone')
+            API.del('/settings/delete/phone')
             .then(function (data) {
                 closeDeletePhoneModal();
 

@@ -91,7 +91,7 @@ public class PersonalAccountController {
         ));
     }
 
-    @GetMapping("/settings/delete/phone")
+    @DeleteMapping("/settings/delete/phone")
     @ResponseBody
     public ResponseEntity<ApiResponse> deletePhone(SessionUser sessionUser) {
         userCommandService.deletePhone(sessionUser.id());

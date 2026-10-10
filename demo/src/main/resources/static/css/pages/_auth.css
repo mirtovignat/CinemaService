@@ -1,16 +1,3 @@
-:root {
-    --glass-bg: rgba(18, 25, 45, 0.65);
-    --glass-border: rgba(72, 187, 255, 0.25);
-    --glow-primary: #3b82f6;
-    --glow-success: #10b981;
-    --glow-danger: #f43f5e;
-    --text-light: #e2e8f0;
-    --text-muted: #94a3b8;
-    --card-bg: rgba(15, 23, 42, 0.75);
-    --shadow-xl: 0 25px 45px -12px rgba(0, 0, 0, 0.5);
-    --radius-xl: 28px;
-}
-
 .login-container {
     max-width: 450px;
     width: 100%;
@@ -32,7 +19,7 @@
 
 .login-container > * { width: 100%; }
 
-h1 {
+.auth-page h1 {
     text-align: center;
     font-size: 1.8rem;
     margin-bottom: 1.5rem;
@@ -60,7 +47,32 @@ h1 {
 
 .logo-link img { width: 28px; height: 28px; border-radius: 10px; }
 
-label { display: block; margin-top: 0.8rem; margin-bottom: 0.3rem; font-weight: 500; font-size: 0.9rem; }
+body.auth-page .logo-link a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: inherit;
+    font: inherit;
+    background: inherit;
+    -webkit-background-clip: inherit;
+    background-clip: inherit;
+    -webkit-text-fill-color: inherit;
+}
+
+body.auth-page .logo-link a img {
+    width: 28px;
+    height: 28px;
+    border-radius: 10px;
+}
+
+.auth-page label {
+    display: block;
+    margin-top: 0.8rem;
+    margin-bottom: 0.3rem;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
 
 .input-container { position: relative; width: 100%; margin-bottom: 0.5rem; }
 
@@ -92,7 +104,7 @@ label { display: block; margin-top: 0.8rem; margin-bottom: 0.3rem; font-weight: 
 .clear-input-btn:focus-visible { outline: 2px solid rgba(96, 165, 250, 0.6); outline-offset: 1px; }
 .clear-input-btn svg { width: 16px; height: 16px; }
 
-input {
+.auth-page input {
     width: 100%;
     padding: 0.8rem 5rem 0.8rem 1rem;
     border-radius: 60px;
@@ -102,13 +114,13 @@ input {
     font-size: 1rem;
 }
 
-input::placeholder { color: #64748b; opacity: 1; }
-input:focus { outline: none; border-color: var(--glow-primary); box-shadow: 0 0 0 2px rgba(59,130,246,0.3); }
+.auth-page input::placeholder { color: #64748b; opacity: 1; }
+.auth-page input:focus { outline: none; border-color: var(--glow-primary); box-shadow: 0 0 0 2px rgba(59,130,246,0.3); }
 
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus,
-input:-webkit-autofill:active {
+.auth-page input:-webkit-autofill,
+.auth-page input:-webkit-autofill:hover,
+.auth-page input:-webkit-autofill:focus,
+.auth-page input:-webkit-autofill:active {
     -webkit-text-fill-color: white !important;
     caret-color: white !important;
     -webkit-box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.3) inset !important;
@@ -117,9 +129,10 @@ input:-webkit-autofill:active {
     transition: background-color 99999s ease-in-out 0s !important;
 }
 
-input[type="text"], input[type="password"] { background-color: rgba(0,0,0,0.3); }
+.auth-page input[type="text"],
+.auth-page input[type="password"] { background-color: rgba(0,0,0,0.3); }
 
-button[type="submit"] {
+.auth-page button[type="submit"] {
     width: 100%;
     margin-top: 1.2rem;
     padding: 0.8rem;
@@ -137,7 +150,7 @@ button[type="submit"] {
     gap: 0.5rem;
 }
 
-button[type="submit"]:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(59,130,246,0.4); }
+.auth-page button[type="submit"]:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(59,130,246,0.4); }
 
 .toggle-password-btn {
     position: absolute;
@@ -207,6 +220,41 @@ button[type="submit"]:hover { transform: translateY(-2px); box-shadow: 0 8px 20p
 }
 
 body > footer, body > .footer, body > .page-footer { width: 100%; margin-top: 0; flex: 0 0 auto; }
+
+body.auth-page .footer-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(8, 12, 24, 0.6);
+    width: 100%;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+body.auth-page .footer-wrapper .footer-links {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+body.auth-page .footer-wrapper .footer-link {
+    color: #6b7280;
+    text-decoration: none;
+    transition: color 0.2s ease;
+    font-size: 0.7rem;
+}
+
+body.auth-page .footer-wrapper .footer-link:hover {
+    color: #9ca3af;
+    text-decoration: underline;
+}
+
+body.auth-page .footer-wrapper .footer-copy {
+    color: #4b5563;
+    font-size: 0.7rem;
+}
 
 .main-container {
     max-width: 750px;
@@ -515,6 +563,7 @@ input.form-control:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0
     .flash-container { grid-column: span 1; }
     input.form-control[type="date"] { padding-right: 5.5rem; }
 }
+
 body.auth-page--no-scroll {
     height: 100vh;
     max-height: 100vh;

@@ -46,13 +46,7 @@ public class ValidEmailDomainValidator
             Lookup mxLookup = new Lookup(domain, Type.MX);
             mxLookup.setResolver(resolver);
             Record[] mxRecords = mxLookup.run();
-            if (mxRecords != null && mxRecords.length > 0) {
-                return true;
-            }
-            Lookup aLookup = new Lookup(domain, Type.A);
-            aLookup.setResolver(resolver);
-            Record[] aRecords = aLookup.run();
-            return aRecords != null && aRecords.length > 0;
+            return mxRecords != null && mxRecords.length > 0;
         } catch (Exception exception) {
             return false;
         }

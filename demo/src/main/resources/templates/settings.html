@@ -7,7 +7,7 @@
 </head>
 <body>
 <div class="header-wrapper">
-    <header th:replace="~{fragments/header :: header}"></header>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
 </div>
 <th:block th:replace="~{fragments/flash-messages :: flashMessages}"></th:block>
 <div id="authStatus" th:data-authenticated="${sessionUser != null}" style="display:none;"></div>

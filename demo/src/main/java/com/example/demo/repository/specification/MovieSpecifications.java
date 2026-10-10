@@ -1,5 +1,7 @@
 package com.example.demo.repository.specification;
 
+import com.example.demo.exception.BusinessException;
+import com.example.demo.exception.ErrorCode;
 import com.example.demo.filter.MovieFilter;
 import com.example.demo.model.entity.Movie;
 import jakarta.persistence.criteria.Expression;
@@ -27,6 +29,7 @@ public class MovieSpecifications {
         if (movieFilter == null) {
             return Specification.unrestricted();
         }
+        validateRanges(movieFilter);
 
         return Stream.of(
                         movieFilter.priceFrom() != null ? greaterThanOrEqualTo("price", movieFilter.priceFrom()) : null,
@@ -44,6 +47,25 @@ public class MovieSpecifications {
                 )
                 .filter(Objects::nonNull)
                 .reduce(Specification.unrestricted(), Specification::and);
+    }
+
+    private void validateRanges(MovieFilter movieFilter) {
+        if (movieFilter.priceFrom() != null && movieFilter.priceTo() != null
+                && movieFilter.priceFrom().compareTo(movieFilter.priceTo()) > 0) {
+            throw BusinessException.of(ErrorCode.VALIDATION_ERROR);
+        }
+        if (movieFilter.ratingFrom() != null && movieFilter.ratingTo() != null
+                && movieFilter.ratingFrom().compareTo(movieFilter.ratingTo()) > 0) {
+            throw BusinessException.of(ErrorCode.VALIDATION_ERROR);
+        }
+        if (movieFilter.durationFrom() != null && movieFilter.durationTo() != null
+                && movieFilter.durationFrom() > movieFilter.durationTo()) {
+            throw BusinessException.of(ErrorCode.VALIDATION_ERROR);
+        }
+        if (movieFilter.releaseDateFrom() != null && movieFilter.releaseDateTo() != null
+                && movieFilter.releaseDateFrom().isAfter(movieFilter.releaseDateTo())) {
+            throw BusinessException.of(ErrorCode.VALIDATION_ERROR);
+        }
     }
 
     public Specification<Movie> titleStartsWith(String rawQuery) {

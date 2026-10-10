@@ -21,6 +21,7 @@ public record RegisterFormDTO(
         @NotNull(message = "Заполните пол")
         boolean sex,
 
+        @NotNull(message = "Укажите дату рождения")
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
         @Past(message = "Дата рождения должна быть в прошлом")
         LocalDate birthDate,
@@ -73,11 +74,12 @@ public record RegisterFormDTO(
     }
 
     public void validateAge() {
-        if (birthDate != null) {
-            int age = Period.between(birthDate, LocalDate.now()).getYears();
-            if (age < 14) {
-                throw BusinessException.of(ErrorCode.TOO_YOUNG);
-            }
+        if (birthDate == null) {
+            throw BusinessException.of(ErrorCode.VALIDATION_ERROR);
+        }
+        int age = Period.between(birthDate, LocalDate.now()).getYears();
+        if (age < 14) {
+            throw BusinessException.of(ErrorCode.TOO_YOUNG);
         }
     }
 }

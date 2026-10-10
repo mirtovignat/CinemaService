@@ -141,6 +141,14 @@
         var movieId = getMovieId(el);
         if (!movieId) return;
 
+        if (typeof window.requireAuth === 'function' && !window.requireAuth()) {
+            showFlashMessage('Авторизуйтесь!', 'error', undefined, {
+                text: 'Перейти к авторизации',
+                url: '/login'
+            });
+            return;
+        }
+
         Modal.open({
             title: 'Подтверждение покупки',
             message: 'Вы уверены, что хотите купить фильм:',

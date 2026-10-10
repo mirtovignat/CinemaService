@@ -46,10 +46,8 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
     List<String> findAllDistinctGenres();
 
     @Query("""
-            SELECT DISTINCT movie
+            SELECT movie
             FROM Movie movie
-            LEFT JOIN movie.ratings ratedMovie
-            WHERE (ratedMovie IS NULL OR ratedMovie.deletableState.deleted = false)
             """)
     Page<Movie> findAllWithActiveRatings(Pageable pageable);
 
@@ -69,11 +67,6 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
             AND movie.title <> ''
             AND movie.posterUrl IS NOT NULL
             AND movie.posterUrl <> ''
-            AND NOT EXISTS (
-                SELECT 1 FROM RatedMovie ratedMovie
-                WHERE ratedMovie.movie = movie
-                AND ratedMovie.deletableState.deleted = true
-            )
             ORDER BY movie.rating DESC NULLS LAST, movie.id ASC
             """)
     Slice<Movie> findRecommendedMoviesSlice(
@@ -82,11 +75,9 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
     );
 
     @Query("""
-            SELECT DISTINCT movie
+            SELECT movie
             FROM Movie movie
-            LEFT JOIN movie.ratings ratedMovie
             WHERE movie.genre = :genre
-            AND (ratedMovie IS NULL OR ratedMovie.deletableState.deleted = false)
             """)
     Page<Movie> findAllDistinctByGenre(Pageable pageable, @Param("genre") String genre);
 

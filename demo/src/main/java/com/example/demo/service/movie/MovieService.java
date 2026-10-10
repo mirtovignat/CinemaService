@@ -2,8 +2,6 @@ package com.example.demo.service.movie;
 
 import com.example.demo.dto.catalog.ReviewViewDTO;
 import com.example.demo.dto.movie.*;
-import com.example.demo.exception.BusinessException;
-import com.example.demo.exception.ErrorCode;
 import com.example.demo.filter.MovieFilter;
 import com.example.demo.mapper.entity.MovieMapper;
 import com.example.demo.model.entity.Movie;
@@ -51,7 +49,7 @@ public class MovieService {
         return enrichWithStatuses(moviePage, userId);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public MovieForUser<MovieDetailsViewDTO> getCard(Long movieId, Long userId) {
         Movie movie = movieRepository.findByIdOrThrow(movieId);
         MovieDetailsViewDTO dto = movieMapper.toDetails(movie);
@@ -66,7 +64,7 @@ public class MovieService {
 
     public Double getMovieRating(Long id) {
         return movieRepository.findRatingById(id)
-                .orElseThrow(() -> BusinessException.of(ErrorCode.ENTITY_NOT_FOUND));
+                .orElse(null);
     }
 
     public List<MovieSearchDTO> getMovieSearchDTO(String movieSearchQuery) {

@@ -104,17 +104,14 @@ public class UserCommandService {
     }
 
     public String prepareAndValidatePassword(PasswordChangingDTO passwordChangingDTO, Long userId) {
-        User user = userQueryService.getUser(userId);
-        passwordChangingDTO.isMismatch();
-        passwordChangingDTO.isCoincidence();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> BusinessException.of(ErrorCode.USER_NOT_FOUND, userId));
         if (!passwordEncoder.matches(passwordChangingDTO.currentPassword(), user.getPasswordHash())) {
             throw BusinessException.of(ErrorCode.PASSWORD_INVALID);
         }
-        return encodePassword(passwordChangingDTO.rawPassword());
-    }
-
-    private String encodePassword(String rawPassword) {
-        return passwordEncoder.encode(rawPassword);
+        passwordChangingDTO.isMismatch();
+        passwordChangingDTO.isCoincidence();
+        return passwordEncoder.encode(passwordChangingDTO.rawPassword());
     }
 
     @Transactional

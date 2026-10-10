@@ -19,7 +19,13 @@ public final class PhoneNormalizer {
         if (!cleaned.startsWith("+")) {
             return null;
         }
+        if (cleaned.indexOf('+', 1) != -1) {
+            return null;
+        }
         String digits = cleaned.substring(1);
+        if (!digits.matches("\\d+")) {
+            return null;
+        }
         if (digits.length() < MIN_DIGITS || digits.length() > MAX_DIGITS) {
             return null;
         }

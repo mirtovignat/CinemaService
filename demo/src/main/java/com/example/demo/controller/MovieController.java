@@ -67,10 +67,10 @@ public class MovieController {
     @GetMapping("/recommendations")
     @ResponseBody
     public Slice<MovieCardViewDTO> getRecommendationsAjax(
-            @RequestParam Long userId,
-            @RequestParam(defaultValue = "0") int page
+            @RequestParam(defaultValue = "0") int page,
+            SessionUser sessionUser
     ) {
-        return movieRecommendationService.getRecommendedMoviesSlice(userId, page);
+        return movieRecommendationService.getRecommendedMoviesSlice(sessionUser.id(), page);
     }
 
     @GetMapping("/movies/{id}")
@@ -117,8 +117,9 @@ public class MovieController {
 
     @GetMapping("/movies/{id}/rating")
     @ResponseBody
-    public ResponseEntity<Map<String, Double>> getMovieRating(@PathVariable Long id) {
-        return ResponseEntity.ok(Map.of("rating", movieService.getMovieRating(id)));
+    public ResponseEntity<Map<String, Object>> getMovieRating(@PathVariable Long id) {
+        Double rating = movieService.getMovieRating(id);
+        return ResponseEntity.ok(Map.of("rating", rating != null ? rating : "-"));
     }
 
     @GetMapping("/movies/suggestions")

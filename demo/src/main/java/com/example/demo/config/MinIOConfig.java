@@ -2,11 +2,13 @@ package com.example.demo.config;
 
 import io.minio.MinioClient;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Getter
+@Slf4j
 @Configuration
 public class MinIOConfig {
 
@@ -60,7 +62,7 @@ public class MinIOConfig {
                             .build()
             );
         } catch (Exception exception) {
-            exception.printStackTrace();
+            log.error("Не удалось инициализировать бакет MinIO: {}", bucketName, exception);
         }
         return minioClient;
     }

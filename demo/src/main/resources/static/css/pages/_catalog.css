@@ -11,6 +11,17 @@ main.catalog-wrapper {
     min-height: 0;
 }
 
+.catalog-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0.75rem 0 0;
+    box-sizing: border-box;
+    flex: 0 0 auto;
+}
+
 .poster-rating-badge {
     position: absolute;
     top: 10px;

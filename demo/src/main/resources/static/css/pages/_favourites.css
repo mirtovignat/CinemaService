@@ -45,14 +45,6 @@ main.catalog-wrapper::-webkit-scrollbar-thumb:hover {
     flex: 0 0 auto;
 }
 
-.page-header-row .page-header-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    flex-shrink: 0;
-    margin-left: auto;
-}
-
 .favourites-container {
     display: grid;
     grid-template-columns: repeat(4, 1fr);

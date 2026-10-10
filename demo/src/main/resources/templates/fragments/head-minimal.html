@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="">
+<head th:fragment="head">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
+    <link rel="icon" type="image/x-icon" th:href="@{/favicon.ico}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800;900&display=swap"
+          rel="stylesheet">
+
+    <link rel="stylesheet" th:href="@{/css/base/_variables.css}">
+    <link rel="stylesheet" th:href="@{/css/base/_reset.css}">
+    <link rel="stylesheet" th:href="@{/css/base/_base.css}">
+    <link rel="stylesheet" th:href="@{/css/base/_typography.css}">
+    <link rel="stylesheet" th:href="@{/css/components/_flash-messages.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/_auth.css}">
+
+    <script th:src="@{/js/core/theme-init.js}"></script>
+    <script th:src="@{/js/core/http.js}" defer></script>
+    <script th:src="@{/js/core/api.js}" defer></script>
+    <script th:src="@{/js/core/flash.js}" defer></script>
+    <script th:src="@{/js/core/dom.js}" defer></script>
+    <script th:src="@{/js/core/auth.js}" defer></script>
+    <script th:src="@{/js/core/store.js}" defer></script>
+    <script th:src="@{/js/core/modal.js}" defer></script>
+    <script th:src="@{/js/core/ui.js}" defer></script>
+    <script th:src="@{/js/core/actions.js}" defer></script>
+
+    <script th:src="@{/js/modules/validators.js}" defer></script>
+    <script th:src="@{/js/modules/phone-mask.js}" defer></script>
+    <script th:src="@{/js/modules/inputs.js}" defer></script>
+    <script th:src="@{/js/modules/password-tools.js}" defer></script>
+    <script th:src="@{/js/modules/date-mask.js}" defer></script>
+    <script th:src="@{/js/modules/form-persist.js}" defer></script>
+    <script th:src="@{/js/modules/form-guard.js}" defer></script>
+    <script th:src="@{/js/modules/hard-clear.js}" defer></script>
+</head>
+</html>

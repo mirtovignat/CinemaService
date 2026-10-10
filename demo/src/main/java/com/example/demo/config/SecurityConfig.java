@@ -36,7 +36,6 @@ public class SecurityConfig {
                                 "/",
                                 "/movies/**",
                                 "/filters/**",
-                                "/recommendations",
                                 "/login",
                                 "/register",
                                 "/auth/status",
