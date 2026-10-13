@@ -49,7 +49,9 @@
             var num = parseFloat(cleaned);
             if (!isNaN(num)) {
                 var val = Math.min(Math.max(num, 0.1), 10);
-                this.value = Number.isInteger(val) ? val.toString() : val.toFixed(1);
+                this.value = Math.round(val * 10) / 10 === val
+                    ? val.toFixed(1)
+                    : val.toFixed(1);
             } else if (cleaned === '.') {
                 this.value = '0.';
             } else {
@@ -58,7 +60,10 @@
         });
 
         input.addEventListener('blur', function () {
-            if (this.value.trim() === '') return;
+            if (this.value.trim() === '') {
+                this.value = '5.0';
+                return;
+            }
             if (this.value === '.' || this.value === '0.') {
                 this.value = '0.1';
                 return;
@@ -72,9 +77,7 @@
                 this.value = '10.0';
                 return;
             }
-            if (Number.isInteger(num) && num >= 1 && num <= 10) {
-                this.value = num.toString();
-            }
+            this.value = (Math.round(num * 10) / 10).toFixed(1);
         });
     }
 

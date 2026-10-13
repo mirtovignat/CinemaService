@@ -8,11 +8,9 @@ import com.example.demo.model.entity.User;
 import com.example.demo.service.user.UserCommandService;
 import com.example.demo.service.user.UserQueryService;
 import com.example.demo.util.MessageUtils;
-import com.example.demo.web.util.ReturnUrlHelper;
-import com.example.demo.web.util.SessionAuthenticator;
+import com.example.demo.web.security.SessionAuthenticator;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -35,12 +33,7 @@ public class WalletController {
     private final SessionAuthenticator sessionAuthenticator;
 
     @GetMapping("/top-up")
-    public String getTopUpForm(HttpServletRequest httpServletRequest,
-                               HttpSession httpSession,
-                               ReturnUrlHelper returnUrlHelper,
-                               SessionUser sessionUser,
-                               Model model) {
-        returnUrlHelper.saveReturnUrlIfNotExists(httpSession, httpServletRequest, "/wallet/top-up");
+    public String getTopUpForm(SessionUser sessionUser, Model model) {
         Long userId = sessionUser.id();
         if (!model.containsAttribute("topUpFormDTO")) {
             model.addAttribute("topUpFormDTO", TopUpFormDTO.builder().build());
@@ -51,8 +44,7 @@ public class WalletController {
 
     @GetMapping("/balance")
     @ResponseBody
-    public ResponseEntity<WalletForOwnerViewDTO> balance(
-            SessionUser sessionUser) {
+    public ResponseEntity<WalletForOwnerViewDTO> balance(SessionUser sessionUser) {
         Long userId = sessionUser.id();
         return ResponseEntity.ok(userQueryService.getWalletForOwner(userId));
     }
@@ -63,9 +55,7 @@ public class WalletController {
                         SessionUser sessionUser,
                         HttpServletRequest httpServletRequest,
                         HttpServletResponse httpServletResponse,
-                        HttpSession httpSession,
                         RedirectAttributes redirectAttributes,
-                        ReturnUrlHelper returnUrlHelper,
                         Model model) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("wallet", userQueryService.getWalletForOwner(sessionUser.id()));
@@ -74,14 +64,13 @@ public class WalletController {
         User user = userQueryService.getUser(sessionUser.id());
         userCommandService.saveTopUp(topUpFormDTO.amount(), user);
         BigDecimal newBalance = userQueryService.getBalance(sessionUser.id());
-        sessionAuthenticator.updatePrincipal(
+        sessionAuthenticator.updateSessionUser(
                 sessionUser.withBalance(newBalance),
                 httpServletRequest,
                 httpServletResponse
         );
         String message = messageUtils.getSuccess(SuccessCode.TOPPED_UP);
         redirectAttributes.addFlashAttribute("successMessage", message);
-        String redirectUrl = returnUrlHelper.getReturnUrlOrDefault(httpSession, "/personal-account");
-        return "redirect:" + redirectUrl;
+        return "redirect:/personal-account";
     }
 }

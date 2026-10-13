@@ -173,6 +173,15 @@
                 return;
             }
 
+            var isUsernameChange =
+                fieldType === 'USERNAME'
+                && typeof window.AccountSwitcher !== 'undefined'
+                && typeof window.AccountSwitcher.rename === 'function';
+
+            if (isUsernameChange) {
+                window.AccountSwitcher.rename(oldValueRaw, value);
+            }
+
             API.request('/settings/change/field', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
@@ -192,6 +201,13 @@
                 var isEmpty = !storedValue;
                 if (editTrigger) editTrigger.style.display = isEmpty ? 'none' : 'inline-flex';
                 if (emptyElement) emptyElement.style.display = isEmpty ? 'inline-flex' : 'none';
+
+                if (isUsernameChange
+                    && maybeUser
+                    && maybeUser.username
+                    && maybeUser.username !== value) {
+                    window.AccountSwitcher.rename(value, maybeUser.username);
+                }
 
                 var patchedUser = {};
                 if (fieldType === 'USERNAME') patchedUser.username = value;
@@ -213,6 +229,9 @@
                 }
             })
             .catch(function (error) {
+                if (isUsernameChange) {
+                    window.AccountSwitcher.rename(value, oldValueRaw);
+                }
                 errorElement.textContent = (error && error.message) || 'Ошибка обновления';
                 errorElement.classList.add('show');
                 input.classList.add('has-error');

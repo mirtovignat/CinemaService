@@ -212,6 +212,68 @@
         return first.substring(0, len);
     }
 
+    var LAST_SEARCH_KEY = 'lastSearchQuery';
+    var LAST_SEARCH_AT_KEY = 'lastSearchAt';
+    var PENDING_KEY = 'pendingSearchRedirect';
+
+    function saveLastSearch(query) {
+        if (!query) return;
+        try {
+            sessionStorage.setItem(LAST_SEARCH_KEY, query);
+            sessionStorage.setItem(LAST_SEARCH_AT_KEY, String(Date.now()));
+        } catch (e) {}
+    }
+
+    function readLastSearch() {
+        try {
+            var value = sessionStorage.getItem(LAST_SEARCH_KEY);
+            if (!value) return null;
+            return value;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function clearLastSearch() {
+        try {
+            sessionStorage.removeItem(LAST_SEARCH_KEY);
+            sessionStorage.removeItem(LAST_SEARCH_AT_KEY);
+        } catch (e) {}
+    }
+
+    function markPending() {
+        try {
+            sessionStorage.setItem(PENDING_KEY, '1');
+        } catch (e) {}
+    }
+
+    function consumePending() {
+        try {
+            var v = sessionStorage.getItem(PENDING_KEY);
+            if (v === '1') {
+                sessionStorage.removeItem(PENDING_KEY);
+                return true;
+            }
+        } catch (e) {}
+        return false;
+    }
+
+    function clearPending() {
+        try {
+            sessionStorage.removeItem(PENDING_KEY);
+        } catch (e) {}
+    }
+
+    function isMovieDetailsPage() {
+        return !!document.querySelector('.movie-details-container');
+    }
+
+    (function clearStaleSearchStateOnNonShowPages() {
+        if (isMovieDetailsPage()) return;
+        clearPending();
+        clearLastSearch();
+    })();
+
     function initCatalogSearch() {
         var input = document.querySelector('[data-catalog-search-input]');
         var clearBtn = document.querySelector('[data-catalog-search-clear]');
@@ -390,8 +452,58 @@
             input.setSelectionRange(normalized.length, normalized.length);
         }
 
+        var activeSuggestionIndex = -1;
+
+        function getSuggestionEls() {
+            if (!box) return [];
+            return Array.prototype.slice.call(box.querySelectorAll('.catalog-search-suggestion'));
+        }
+
+        function setActiveSuggestion(index) {
+            var els = getSuggestionEls();
+            els.forEach(function (el) { el.classList.remove('is-active'); });
+            activeSuggestionIndex = index;
+            if (index >= 0 && index < els.length) {
+                els[index].classList.add('is-active');
+                try {
+                    els[index].scrollIntoView({ block: 'nearest' });
+                } catch (e) {}
+            }
+        }
+
+        function resetActiveSuggestion() {
+            activeSuggestionIndex = -1;
+            getSuggestionEls().forEach(function (el) { el.classList.remove('is-active'); });
+        }
+
+        function handleArrow(direction) {
+            var els = getSuggestionEls();
+            if (!box || els.length === 0 || !box.classList.contains('show')) {
+                return false;
+            }
+            var next;
+            if (direction === 'down') {
+                if (activeSuggestionIndex < 0) {
+                    next = 0;
+                } else {
+                    next = activeSuggestionIndex + 1;
+                    if (next >= els.length) next = els.length - 1;
+                }
+            } else {
+                if (activeSuggestionIndex < 0) {
+                    next = els.length - 1;
+                } else {
+                    next = activeSuggestionIndex - 1;
+                    if (next < 0) next = 0;
+                }
+            }
+            setActiveSuggestion(next);
+            return true;
+        }
+
         input.addEventListener('input', function () {
             unlock();
+            resetActiveSuggestion();
 
             if (isTruncated(input.value)) {
                 input.value = stripEllipsis(input.value);
@@ -454,6 +566,11 @@
                             input.blur();
                         });
 
+                        el.addEventListener('mouseenter', function () {
+                            var idx = getSuggestionEls().indexOf(el);
+                            if (idx >= 0) setActiveSuggestion(idx);
+                        });
+
                         box.appendChild(el);
                     });
                     box.classList.add('show');
@@ -469,8 +586,42 @@
         });
 
         input.addEventListener('keydown', function (e) {
+            if (e.key === 'ArrowDown') {
+                if (handleArrow('down')) {
+                    e.preventDefault();
+                    return;
+                }
+            }
+
+            if (e.key === 'ArrowUp') {
+                if (handleArrow('up')) {
+                    e.preventDefault();
+                    return;
+                }
+            }
+
             if (e.key === 'Enter') {
                 e.preventDefault();
+
+                if (activeSuggestionIndex >= 0) {
+                    var activeEl = getSuggestionEls()[activeSuggestionIndex];
+                    if (activeEl) {
+                        var key = activeEl.getAttribute('data-suggestion-key');
+                        var title = activeEl.querySelector('.catalog-search-suggestion-title');
+                        var text = title ? title.textContent.trim() : '';
+                        if (text) {
+                            input.value = text;
+                            input.setSelectionRange(text.length, text.length);
+                            updateClearVisibility();
+                            hideSuggestions();
+                            hideAutocomplete();
+                            lockByUniqueKey(key);
+                            applyFilterByUniqueKey(key);
+                            resetActiveSuggestion();
+                            return;
+                        }
+                    }
+                }
 
                 var raw = String(input.value || '').trim();
 
@@ -488,6 +639,7 @@
                 updateClearVisibility();
                 hideSuggestions();
                 hideAutocomplete();
+                resetActiveSuggestion();
                 return;
             }
 
@@ -507,6 +659,7 @@
             if (e.key === 'Escape') {
                 hideSuggestions();
                 hideAutocomplete();
+                resetActiveSuggestion();
             }
         });
 
@@ -554,40 +707,14 @@
         if (!input || !box || !form || !wrapper || !typedEl || !hintEl) return;
 
         var ELLIPSIS = '…';
-        var SUBMITTED_KEY = 'headerSearchSubmitted';
 
-        function clearUrlTitle() {
+        function getUrlTitle() {
             try {
-                var url = new URL(window.location.href);
-                if (url.searchParams.has('title')) {
-                    url.searchParams.delete('title');
-                    window.history.replaceState({}, '', url.toString());
-                }
-            } catch (e) {}
-        }
-
-        function getStoredQuery() {
-            try { return sessionStorage.getItem('headerSearchQuery') || ''; } catch (e) { return ''; }
-        }
-
-        function setStoredQuery(value) {
-            try { sessionStorage.setItem('headerSearchQuery', value || ''); } catch (e) {}
-        }
-
-        function clearStoredQuery() {
-            try { sessionStorage.removeItem('headerSearchQuery'); } catch (e) {}
-        }
-
-        function setSubmitted() {
-            try { sessionStorage.setItem(SUBMITTED_KEY, '1'); } catch (e) {}
-        }
-
-        function isSubmitted() {
-            try { return sessionStorage.getItem(SUBMITTED_KEY) === '1'; } catch (e) { return false; }
-        }
-
-        function clearSubmitted() {
-            try { sessionStorage.removeItem(SUBMITTED_KEY); } catch (e) {}
+                var params = new URLSearchParams(window.location.search);
+                return params.get('title') || '';
+            } catch (e) {
+                return '';
+            }
         }
 
         function isTruncated(value) {
@@ -605,6 +732,20 @@
                 .filter(function (t) { return t.length > 0; });
         }
 
+        function findSingleCardMatch(query) {
+            var cards = getCardTitles();
+            if (cards.length === 0) return null;
+            var q = normalize(query);
+            if (!q) return null;
+
+            var matches = cards.filter(function (t) {
+                return normalize(t).indexOf(q) === 0;
+            });
+
+            if (matches.length === 1) return matches[0];
+            return null;
+        }
+
         function updateClearVisibility() {
             wrapper.classList.toggle('has-value', input.value.trim().length > 0);
         }
@@ -620,49 +761,44 @@
             return prefix + ELLIPSIS;
         }
 
-        function restoreQuery() {
-            var urlParams = new URLSearchParams(window.location.search);
-            var urlTitle = urlParams.get('title') || '';
-            var path = window.location.pathname;
-            var stored = getStoredQuery();
-            var submitted = isSubmitted();
+        function hideAutocomplete() {
+            currentTopMatch = null;
+            wrapper.classList.remove('has-autocomplete');
+            typedEl.textContent = '';
+            hintEl.textContent  = '';
+        }
 
-            if (path === '/' && urlTitle) {
-                var source = urlTitle || stored;
-                if (!source) return;
-                setStoredQuery(source);
-                input.value = buildTruncatedFromCards(source);
-                clearSubmitted();
+        function hideDropdown() {
+            box.style.display = 'none';
+            box.textContent = '';
+        }
+
+        function resetSearchState() {
+            input.value = '';
+            updateClearVisibility();
+            hideDropdown();
+            hideAutocomplete();
+        }
+
+        function restoreQuery() {
+            var urlTitle = getUrlTitle();
+            if (urlTitle) {
+                input.value = buildTruncatedFromCards(urlTitle);
                 return;
             }
 
-            if (/^\/movies\/\d+/.test(path)) {
-                if (submitted && stored) {
-                    input.value = stored;
+            if (isMovieDetailsPage()) {
+                var saved = readLastSearch();
+                if (saved) {
+                    input.value = saved;
+                    updateClearVisibility();
                     return;
                 }
-                clearStoredQuery();
-                input.value = '';
+                resetSearchState();
                 return;
             }
 
-            if (path === '/') {
-                clearStoredQuery();
-                clearSubmitted();
-                input.value = '';
-                return;
-            }
-
-            if (submitted) {
-                clearStoredQuery();
-                clearSubmitted();
-                input.value = '';
-                return;
-            }
-
-            if (stored) {
-                input.value = stored;
-            }
+            resetSearchState();
         }
 
         restoreQuery();
@@ -671,13 +807,8 @@
         var debounceTimer = null;
         var currentTopMatch = null;
         var pointerDownInsideBox = false;
-
-        function hideAutocomplete() {
-            currentTopMatch = null;
-            wrapper.classList.remove('has-autocomplete');
-            typedEl.textContent = '';
-            hintEl.textContent  = '';
-        }
+        var activeSuggestionIndex = -1;
+        var pendingMoveToList = false;
 
         function normalizeForMatch(value) {
             return String(value || '')
@@ -715,15 +846,9 @@
             if (!currentTopMatch) return false;
             input.value = currentTopMatch;
             input.setSelectionRange(input.value.length, input.value.length);
-            setStoredQuery(currentTopMatch);
             hideAutocomplete();
             updateClearVisibility();
             return true;
-        }
-
-        function hideDropdown() {
-            box.style.display = 'none';
-            box.textContent = '';
         }
 
         function renderDropdownItems(list) {
@@ -738,8 +863,81 @@
                 t.textContent = item.title || '';
                 row.appendChild(t);
 
+                row.addEventListener('mouseenter', function () {
+                    var idx = getSuggestionEls().indexOf(row);
+                    if (idx >= 0) setActiveSuggestion(idx);
+                });
+
                 box.appendChild(row);
             });
+        }
+
+        function getSuggestionEls() {
+            return Array.prototype.slice.call(box.querySelectorAll('.suggestion-item'));
+        }
+
+        function setActiveSuggestion(index) {
+            var els = getSuggestionEls();
+            els.forEach(function (el) { el.classList.remove('is-active'); });
+            activeSuggestionIndex = index;
+            if (index >= 0 && index < els.length) {
+                els[index].classList.add('is-active');
+                try {
+                    els[index].scrollIntoView({ block: 'nearest' });
+                } catch (e) {}
+            }
+        }
+
+        function resetActiveSuggestion() {
+            activeSuggestionIndex = -1;
+            getSuggestionEls().forEach(function (el) { el.classList.remove('is-active'); });
+        }
+
+        function handleArrow(direction) {
+            var els = getSuggestionEls();
+            if (els.length === 0) return false;
+            if (box.style.display !== 'flex') return false;
+            var next;
+            if (direction === 'down') {
+                if (activeSuggestionIndex < 0) {
+                    next = 0;
+                } else {
+                    next = activeSuggestionIndex + 1;
+                    if (next >= els.length) next = els.length - 1;
+                }
+            } else {
+                if (activeSuggestionIndex < 0) {
+                    next = els.length - 1;
+                } else {
+                    next = activeSuggestionIndex - 1;
+                    if (next < 0) next = 0;
+                }
+            }
+            setActiveSuggestion(next);
+            return true;
+        }
+
+        function applyActiveSuggestion() {
+            if (activeSuggestionIndex < 0) return false;
+            var row = getSuggestionEls()[activeSuggestionIndex];
+            if (!row) return false;
+
+            var titleEl = row.querySelector('.suggestion-title');
+            var text = titleEl ? titleEl.textContent.trim() : '';
+            if (!text) return false;
+
+            input.value = text;
+            input.setSelectionRange(text.length, text.length);
+            hideAutocomplete();
+            hideDropdown();
+            updateClearVisibility();
+            resetActiveSuggestion();
+            input.focus();
+
+            if (typeof validateSearchQuery === 'function' && validateSearchQuery()) {
+                commitAndSubmit();
+            }
+            return true;
         }
 
         function commitAndSubmit() {
@@ -762,11 +960,13 @@
                     clean = currentTopMatch;
                 }
             } else {
-                clean = capitalizeFirst(clean);
+                var cardMatch = findSingleCardMatch(clean);
+                if (cardMatch) {
+                    clean = cardMatch;
+                } else {
+                    clean = capitalizeFirst(clean);
+                }
             }
-
-            setStoredQuery(clean);
-            setSubmitted();
 
             input.value = clean;
             input.setSelectionRange(clean.length, clean.length);
@@ -783,6 +983,9 @@
                 hideAutocomplete();
             }
 
+            saveLastSearch(clean);
+            markPending();
+
             window.setTimeout(function () {
                 form.submit();
             }, 120);
@@ -796,11 +999,10 @@
 
             input.value = text;
             input.setSelectionRange(text.length, text.length);
-            setStoredQuery(text);
-            setSubmitted();
             hideAutocomplete();
             hideDropdown();
             updateClearVisibility();
+            resetActiveSuggestion();
             input.focus();
 
             if (typeof validateSearchQuery === 'function' && validateSearchQuery()) {
@@ -821,6 +1023,7 @@
             if (!query || !hasMeaningfulChars(query)) {
                 hideDropdown();
                 hideAutocomplete();
+                resetActiveSuggestion();
                 return;
             }
 
@@ -830,10 +1033,13 @@
                     if (!data || data.length === 0) {
                         hideDropdown();
                         hideAutocomplete();
+                        resetActiveSuggestion();
+                        pendingMoveToList = false;
                         return;
                     }
                     renderDropdownItems(data);
                     box.style.display = 'flex';
+                    resetActiveSuggestion();
 
                     var typedVal = input.value;
                     var q = normalizeForMatch(typedVal);
@@ -851,10 +1057,17 @@
                     } else {
                         hideAutocomplete();
                     }
+
+                    if (pendingMoveToList) {
+                        pendingMoveToList = false;
+                        setActiveSuggestion(0);
+                    }
                 })
                 .catch(function () {
                     hideDropdown();
                     hideAutocomplete();
+                    resetActiveSuggestion();
+                    pendingMoveToList = false;
                 });
         }
 
@@ -876,14 +1089,12 @@
                 this.value = val;
             }
 
-            setStoredQuery(val);
-            clearSubmitted();
             hideAutocomplete();
             updateClearVisibility();
+            resetActiveSuggestion();
+            pendingMoveToList = false;
 
             if (val === '') {
-                clearStoredQuery();
-                clearUrlTitle();
                 hideDropdown();
                 return;
             }
@@ -898,6 +1109,27 @@
         });
 
         input.addEventListener('keydown', function (e) {
+            if (e.key === 'ArrowDown') {
+                if (handleArrow('down')) {
+                    e.preventDefault();
+                    return;
+                }
+                if (hasMeaningfulChars(input.value)) {
+                    e.preventDefault();
+                    pendingMoveToList = true;
+                    clearTimeout(debounceTimer);
+                    fetchSuggestions(input.value.trim());
+                    return;
+                }
+            }
+
+            if (e.key === 'ArrowUp') {
+                if (handleArrow('up')) {
+                    e.preventDefault();
+                    return;
+                }
+            }
+
             if (currentTopMatch && (e.key === 'ArrowRight' || e.key === 'Tab')) {
                 var caretAtEnd = input.selectionStart === input.value.length
                     && input.selectionEnd === input.value.length;
@@ -910,10 +1142,15 @@
             if (e.key === 'Escape') {
                 hideAutocomplete();
                 hideDropdown();
+                resetActiveSuggestion();
+                pendingMoveToList = false;
                 return;
             }
             if (e.key === 'Enter') {
                 e.preventDefault();
+                if (activeSuggestionIndex >= 0) {
+                    if (applyActiveSuggestion()) return;
+                }
                 if (typeof validateSearchQuery === 'function' && !validateSearchQuery()) return;
                 commitAndSubmit();
             }
@@ -926,6 +1163,8 @@
                     return;
                 }
                 hideDropdown();
+                resetActiveSuggestion();
+                pendingMoveToList = false;
             }, 200);
         });
 
@@ -960,16 +1199,19 @@
             clearBtn.addEventListener('click', function (e) {
                 e.preventDefault();
                 input.value = '';
-                setStoredQuery('');
-                clearStoredQuery();
-                clearUrlTitle();
-                clearSubmitted();
+                clearPending();
                 hideAutocomplete();
                 hideDropdown();
+                resetActiveSuggestion();
+                pendingMoveToList = false;
                 updateClearVisibility();
                 input.focus();
             });
         }
+
+        window.addEventListener('pageshow', function (e) {
+            if (e.persisted) restoreQuery();
+        });
     }
 
     window.catalogSearchNormalize = normalize;

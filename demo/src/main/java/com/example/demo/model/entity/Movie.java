@@ -7,11 +7,16 @@ import jakarta.validation.constraints.DecimalMin;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.Formula;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -22,6 +27,9 @@ import java.util.Set;
 @Entity
 @Table(name = "movies")
 public class Movie extends IdentifiableEntity {
+
+    @Formula("COALESCE(rating, 0)")
+    private BigDecimal ratingSort;
 
     @Column(name = "poster_url")
     private String posterUrl;
@@ -78,6 +86,10 @@ public class Movie extends IdentifiableEntity {
     @BatchSize(size = 20)
     @OneToMany(mappedBy = "movie", fetch = FetchType.LAZY)
     private Set<RatedMovie> ratings = new LinkedHashSet<>();
+
+    @Column(name = "actors", columnDefinition = "text[]")
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    private List<String> actors = new ArrayList<>();
 
     @Column(name = "tmdb_id")
     private Long tmdbId;

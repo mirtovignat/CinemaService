@@ -16,15 +16,24 @@ svg {
 }
 
 input[type="number"] {
-    -webkit-appearance: textfield;
+    -webkit-appearance: none;
     -moz-appearance: textfield;
     appearance: textfield;
 }
 
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    margin: 0 !important;
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    opacity: 0 !important;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield !important;
 }
 
 input {
@@ -78,6 +87,7 @@ textarea:-webkit-autofill:focus {
     box-shadow: 0 0 0 1000px rgba(10, 13, 28, 0.75) inset !important;
     background-color: transparent !important;
 }
+
 .hidden {
     display: none !important;
 }

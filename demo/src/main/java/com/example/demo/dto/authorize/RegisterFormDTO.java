@@ -16,6 +16,10 @@ import java.util.Objects;
 public record RegisterFormDTO(
         @NotBlank(message = "Никнейм не может быть пустым")
         @Size(min = 6, max = 20, message = "Никнейм должен содержать от 6 до 20 символов")
+        @Pattern(
+                regexp = "^[A-Za-zА-Яа-яЁё0-9_-]+$",
+                message = "Никнейм может содержать буквы (латиница и кириллица), цифры, _ и -"
+        )
         String username,
 
         @NotNull(message = "Заполните пол")

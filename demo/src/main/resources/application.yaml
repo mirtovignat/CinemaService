@@ -4,7 +4,6 @@ spring:
     encoding: UTF-8
     fallback-to-system-locale: false
     always-use-message-format: false
-    use-code-as-default-message: true
 
   thymeleaf:
     cache: false

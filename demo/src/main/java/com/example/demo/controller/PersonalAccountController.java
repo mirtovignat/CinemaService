@@ -13,8 +13,8 @@ import com.example.demo.service.movie.FilterMetaService;
 import com.example.demo.service.user.UserCommandService;
 import com.example.demo.service.user.UserQueryService;
 import com.example.demo.util.MessageUtils;
-import com.example.demo.web.util.ReturnUrlHelper;
-import com.example.demo.web.util.SessionAuthenticator;
+import com.example.demo.web.interceptor.NavigationHistoryInterceptor;
+import com.example.demo.web.security.SessionAuthenticator;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -33,13 +33,14 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PersonalAccountController {
 
+    private static final String DEFAULT_RETURN_PATH = "/personal-account";
+
     private final UserCommandService userCommandService;
     private final UserQueryService userQueryService;
     private final MessageUtils messageUtils;
     private final WatchedHistoryService watchHistoryService;
     private final FilterMetaService filterMetaService;
     private final SessionAuthenticator sessionAuthenticator;
-    private final ReturnUrlHelper returnUrlHelper;
 
     @GetMapping("/personal-account")
     public String getPersonalAccount(SessionUser sessionUser, Model model) {
@@ -61,13 +62,13 @@ public class PersonalAccountController {
         return "profile";
     }
 
-    // Раньше был GET /settings -> "settings". Теперь сразу редирект на смену пароля.
     @GetMapping("/settings")
     public String getSettings() {
         return "redirect:/settings/change/pwd";
     }
 
     @PatchMapping("/settings/change/field")
+    @ResponseBody
     public ResponseEntity<ApiResponse> updateField(
             @Valid @RequestBody ProfileFieldUpdateDTO profileFieldUpdateDTO,
             SessionUser sessionUser,
@@ -81,7 +82,7 @@ public class PersonalAccountController {
         SessionUser updatedSessionUser = sessionUser;
         if (validatedDto.identifier() == Identifier.USERNAME) {
             updatedSessionUser = sessionUser.withUsername(validatedDto.field());
-            sessionAuthenticator.updatePrincipal(updatedSessionUser, httpServletRequest, httpServletResponse);
+            sessionAuthenticator.updateSessionUser(updatedSessionUser, httpServletRequest, httpServletResponse);
         }
         UserForOwnerViewDTO updatedUser = userQueryService.getUserForOwner(userId);
         return respond(SuccessCode.UPDATED, Map.of(
@@ -98,12 +99,7 @@ public class PersonalAccountController {
     }
 
     @GetMapping("/settings/change/pwd")
-    public String getChangePasswordForm(
-            HttpServletRequest httpServletRequest,
-            HttpSession httpSession,
-            Model model
-    ) {
-        returnUrlHelper.saveReturnUrlIfNotExists(httpSession, httpServletRequest, "/settings/change/pwd");
+    public String getChangePasswordForm(Model model) {
         if (!model.containsAttribute("passwordChangingDTO")) {
             model.addAttribute("passwordChangingDTO", PasswordChangingDTO.builder().build());
         }
@@ -115,8 +111,8 @@ public class PersonalAccountController {
             @Valid @ModelAttribute("passwordChangingDTO") PasswordChangingDTO passwordChangingDTO,
             BindingResult bindingResult,
             SessionUser sessionUser,
-            RedirectAttributes redirectAttributes,
-            HttpSession httpSession
+            HttpSession httpSession,
+            RedirectAttributes redirectAttributes
     ) {
         if (bindingResult.hasErrors()) {
             return "change-password";
@@ -126,8 +122,9 @@ public class PersonalAccountController {
         userCommandService.updatePassword(newPasswordHash, userId);
         String message = messageUtils.getSuccess(SuccessCode.PASSWORD_HAS_BEEN_CHANGED);
         redirectAttributes.addFlashAttribute("successMessage", message);
-        String redirectUrl = returnUrlHelper.getReturnUrlOrDefault(httpSession, "/personal-account");
-        return "redirect:" + redirectUrl;
+
+        String target = resolveReturnPath(httpSession);
+        return "redirect:" + target;
     }
 
     @PostMapping("/profile/delete")
@@ -141,6 +138,31 @@ public class PersonalAccountController {
         String message = messageUtils.getSuccess(SuccessCode.ACCOUNT_HAS_BEEN_REMOVED);
         redirectAttributes.addFlashAttribute("successMessage", message);
         return "redirect:/login";
+    }
+
+    private String resolveReturnPath(HttpSession httpSession) {
+        if (httpSession == null) return DEFAULT_RETURN_PATH;
+
+        Object stored = httpSession.getAttribute(NavigationHistoryInterceptor.PREVIOUS_PAGE_ATTR);
+        httpSession.removeAttribute(NavigationHistoryInterceptor.PREVIOUS_PAGE_ATTR);
+
+        if (stored instanceof String storedPath && isSafeLocalPath(storedPath)) {
+            return storedPath;
+        }
+        return DEFAULT_RETURN_PATH;
+    }
+
+    private boolean isSafeLocalPath(String path) {
+        if (path == null || path.isBlank()) {
+            return false;
+        }
+        if (!path.startsWith("/")) {
+            return false;
+        }
+        if (path.startsWith("//")) {
+            return false;
+        }
+        return !path.startsWith("/\\");
     }
 
     private ResponseEntity<ApiResponse> respond(SuccessCode successCode, Map<String, Object> data) {

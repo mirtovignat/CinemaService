@@ -7,10 +7,6 @@
 </head>
 <body>
 
-<div class="header-wrapper">
-    <th:block th:replace="~{fragments/header :: header}"></th:block>
-</div>
-
 <main class="policy-wrapper">
     <div class="policy-card">
 
@@ -80,7 +76,7 @@
             <li><strong>+7 (999) 929-04-60</strong></li>
         </ul>
 
-        <a href="/" class="policy-back">← Вернуться назад</a>
+        <a th:href="@{/back(fallback='/')}" class="policy-back">← Вернуться назад</a>
 
     </div>
 </main>

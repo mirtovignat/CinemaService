@@ -1,6 +1,18 @@
 (function () {
     'use strict';
 
+    var REGISTER_DRAFT_KEY = 'registerFormDraft';
+
+    function getNavType() {
+        try {
+            if (performance && performance.getEntriesByType) {
+                var nav = performance.getEntriesByType('navigation')[0];
+                if (nav && nav.type) return nav.type;
+            }
+        } catch (e) {}
+        return 'navigate';
+    }
+
     function showError(inputId, errorId, message) {
         var input = document.getElementById(inputId);
         var error = document.getElementById(errorId);
@@ -42,47 +54,57 @@
         clearAllErrors();
         var hasErrors = false;
 
-        var surname = document.getElementById('surname').value.trim();
+        var surnameEl = document.getElementById('surname');
+        var surname = surnameEl ? surnameEl.value.trim() : '';
         var rSurname = Validators.name(surname, 'фамилию');
         if (!rSurname.ok) { showError('surname', 'surnameError', rSurname.error); hasErrors = true; }
 
-        var name = document.getElementById('name').value.trim();
+        var nameEl = document.getElementById('name');
+        var name = nameEl ? nameEl.value.trim() : '';
         var rName = Validators.name(name, 'имя');
         if (!rName.ok) { showError('name', 'nameError', rName.error); hasErrors = true; }
 
-        var patronymic = document.getElementById('patronymic').value.trim();
+        var patronymicEl = document.getElementById('patronymic');
+        var patronymic = patronymicEl ? patronymicEl.value.trim() : '';
         if (patronymic && !/^[А-Яа-яЁёA-Za-z\-]+$/.test(patronymic)) {
             showError('patronymic', 'patronymicError', 'Только буквы и дефис');
             hasErrors = true;
         }
 
-        var sex = document.getElementById('sex').value;
+        var sexEl = document.getElementById('sex');
+        var sex = sexEl ? sexEl.value : '';
         if (sex !== 'true' && sex !== 'false') {
             showError('sex', 'sexError', 'Выберите пол');
             hasErrors = true;
         }
 
-        var birthDate = document.getElementById('birthDate').value;
+        var birthEl = document.getElementById('birthDate');
+        var birthDate = birthEl ? birthEl.value : '';
         var rBirth = Validators.birthDate(birthDate, 14, 120);
         if (!rBirth.ok) { showError('birthDate', 'birthDateError', rBirth.error); hasErrors = true; }
 
-        var username = document.getElementById('username').value.trim();
+        var usernameEl = document.getElementById('username');
+        var username = usernameEl ? usernameEl.value.trim() : '';
         var rUsername = Validators.username(username);
         if (!rUsername.ok) { showError('username', 'usernameError', rUsername.error); hasErrors = true; }
 
-        var email = document.getElementById('email').value.trim();
+        var emailEl = document.getElementById('email');
+        var email = emailEl ? emailEl.value.trim() : '';
         var rEmail = Validators.email(email);
         if (!rEmail.ok) { showError('email', 'emailError', rEmail.error); hasErrors = true; }
 
-        var phone = document.getElementById('phone').value.trim();
+        var phoneEl = document.getElementById('phone');
+        var phone = phoneEl ? phoneEl.value.trim() : '';
         var rPhone = Validators.phone(phone);
         if (!rPhone.ok) { showError('phone', 'phoneError', rPhone.error); hasErrors = true; }
 
-        var rawPassword = document.getElementById('rawPassword').value;
+        var rawPwdEl = document.getElementById('rawPassword');
+        var rawPassword = rawPwdEl ? rawPwdEl.value : '';
         var rPwd = Validators.password(rawPassword, 8);
         if (!rPwd.ok) { showError('rawPassword', 'rawPasswordError', rPwd.error); hasErrors = true; }
 
-        var repeat = document.getElementById('repeatRawPassword').value;
+        var repeatEl = document.getElementById('repeatRawPassword');
+        var repeat = repeatEl ? repeatEl.value : '';
         if (!repeat) {
             showError('repeatRawPassword', 'repeatRawPasswordError', 'Повторите пароль');
             hasErrors = true;
@@ -153,6 +175,7 @@
                 input.dispatchEvent(new Event('change', { bubbles: true }));
                 input.focus();
                 sync();
+                saveRegisterDraft();
             });
             input.addEventListener('input', sync);
             input.addEventListener('change', sync);
@@ -196,37 +219,84 @@
         });
     }
 
-    function scheduleHardClear() {
-        if (window.__registerHardClearScheduled) return;
-        window.__registerHardClearScheduled = true;
+    function saveRegisterDraft() {
+        var form = document.getElementById('registerForm');
+        if (!form) return;
+        try {
+            var data = {};
+            form.querySelectorAll('input[name]:not([type="hidden"]):not([type="submit"])').forEach(function (el) {
+                if (el.type === 'password') return;
+                if (el.name === '_csrf') return;
+                if (el.type === 'checkbox' || el.type === 'radio') {
+                    data[el.name + '::' + el.value] = el.checked;
+                } else {
+                    data[el.name] = el.value;
+                }
+            });
+            form.querySelectorAll('select[name]').forEach(function (el) {
+                data[el.name] = el.value;
+            });
+            sessionStorage.setItem(REGISTER_DRAFT_KEY, JSON.stringify(data));
+        } catch (e) {}
+    }
 
-        clearRegisterFields();
+    function restoreRegisterDraft() {
+        var form = document.getElementById('registerForm');
+        if (!form) return;
+        try {
+            var raw = sessionStorage.getItem(REGISTER_DRAFT_KEY);
+            if (!raw) return;
+            var data = JSON.parse(raw);
+            if (!data || typeof data !== 'object') return;
 
-        setTimeout(clearRegisterFields, 50);
-        setTimeout(clearRegisterFields, 250);
+            form.querySelectorAll('input[name]:not([type="hidden"]):not([type="submit"])').forEach(function (el) {
+                if (el.type === 'password') return;
+                if (el.type === 'checkbox' || el.type === 'radio') {
+                    var key = el.name + '::' + el.value;
+                    if (key in data) el.checked = !!data[key];
+                } else if (el.name in data) {
+                    el.value = data[el.name];
+                }
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+                el.dispatchEvent(new Event('change', { bubbles: true }));
+                var wrapper = el.closest('.input-wrapper');
+                if (wrapper) wrapper.classList.toggle('has-value', el.value.length > 0);
+            });
 
-        setTimeout(function () {
-            window.__registerHardClearScheduled = false;
-        }, 400);
+            form.querySelectorAll('select[name]').forEach(function (el) {
+                if (el.name in data) {
+                    el.value = data[el.name];
+                    el.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            });
+        } catch (e) {}
+    }
+
+    function clearRegisterDraft() {
+        try { sessionStorage.removeItem(REGISTER_DRAFT_KEY); } catch (e) {}
     }
 
     function installClearOnEveryEntry() {
-        window.addEventListener('pageshow', scheduleHardClear);
-        window.addEventListener('popstate', scheduleHardClear);
-        window.addEventListener('beforeunload', clearRegisterFields);
+        var navType = getNavType();
 
-        if (performance && performance.getEntriesByType) {
-            var nav = performance.getEntriesByType('navigation')[0];
-            if (nav && (nav.type === 'back_forward' || nav.type === 'reload' || nav.type === 'navigate')) {
-                scheduleHardClear();
-            }
-        }
-
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', scheduleHardClear, { once: true });
+        if (navType === 'reload') {
+            restoreRegisterDraft();
         } else {
-            scheduleHardClear();
+            clearRegisterDraft();
+            clearRegisterFields();
         }
+
+        var form = document.getElementById('registerForm');
+        if (form) {
+            form.addEventListener('input', saveRegisterDraft);
+            form.addEventListener('change', saveRegisterDraft);
+            form.addEventListener('submit', clearRegisterDraft);
+        }
+
+        window.addEventListener('pageshow', function (e) {
+            if (!e.persisted) return;
+            restoreRegisterDraft();
+        });
     }
 
     function autoHideFlash() {
@@ -244,9 +314,33 @@
 
         installClearOnEveryEntry();
         initClearButtons();
-        autoInitPhoneMasks();
+        if (typeof window.autoInitPhoneMasks === 'function') {
+            window.autoInitPhoneMasks(document);
+        }
         bindLiveValidation();
+        bindSubmit();
         autoHideFlash();
+    }
+
+    function bindSubmit() {
+        var form = document.getElementById('registerForm');
+        if (!form) return;
+        if (form.dataset.validateBound === '1') return;
+        form.dataset.validateBound = '1';
+
+        form.addEventListener('submit', function (e) {
+            if (typeof window.Validators === 'undefined') return;
+            if (!validateForm()) {
+                e.preventDefault();
+                var firstError = form.querySelector('.has-error');
+                if (firstError) {
+                    try { firstError.focus(); } catch (err) {}
+                    try {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    } catch (err) {}
+                }
+            }
+        });
     }
 
     window.clearRegisterFields = clearRegisterFields;

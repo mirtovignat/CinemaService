@@ -15,6 +15,22 @@
 
     const SORT_STORAGE_KEY = 'cinemaReviewsSortOrder';
 
+    function normalizeRating(value) {
+        if (value == null) return null;
+        var num = parseFloat(String(value).replace(',', '.'));
+        if (isNaN(num)) return null;
+        num = Math.round(num * 10) / 10;
+        if (num < 0.1) num = 0.1;
+        if (num > 10) num = 10;
+        return num;
+    }
+
+    function formatRating(value) {
+        var num = normalizeRating(value);
+        if (num == null) return '—';
+        return num.toFixed(1);
+    }
+
     (function ensureSortFromStorage() {
         var params = new URLSearchParams(window.location.search);
         if (params.has('sort')) {
@@ -69,11 +85,17 @@
             }
             editBtn.onclick = function () {
                 if (typeof window.showRatingModal !== 'function') return;
+                var raw = (this.dataset.reviewRating || '').replace(',', '.');
+                var parsed = parseFloat(raw);
+                if (isNaN(parsed)) parsed = 5.0;
+                parsed = Math.round(parsed * 10) / 10;
+                if (parsed < 0.1) parsed = 0.1;
+                if (parsed > 10) parsed = 10;
                 window.showRatingModal(
                     this.dataset.movieId,
                     this.dataset.movieTitle || '',
                     'edit',
-                    parseFloat(this.dataset.reviewRating),
+                    parsed.toFixed(1),
                     this.dataset.reviewText || ''
                 );
             };
@@ -94,7 +116,7 @@
     function fillCardFromReview(card, review, isNew, isOwn) {
         const username = review.username || 'Пользователь';
         const letter = username.trim().charAt(0).toUpperCase() || 'U';
-        const ratingText = review.ratingValue != null ? Number(review.ratingValue).toFixed(1) : '—';
+        const ratingText = formatRating(review.ratingValue);
         const dateText = isNew
             ? 'Только что'
             : (review.addedAt ? window.formatDateTime(review.addedAt) : '');
@@ -167,7 +189,7 @@
 
         const ratingEl = card.querySelector('.review-rating-value');
         if (ratingEl && review.ratingValue != null) {
-            ratingEl.textContent = Number(review.ratingValue).toFixed(1);
+            ratingEl.textContent = formatRating(review.ratingValue);
         }
 
         const textEl = card.querySelector('.review-text');
@@ -184,7 +206,7 @@
         const editBtn = card.querySelector('.btn-edit');
         if (editBtn) {
             if (review.ratingValue != null) {
-                editBtn.dataset.reviewRating = Number(review.ratingValue).toFixed(1);
+                editBtn.dataset.reviewRating = formatRating(review.ratingValue);
             }
             if (review.reviewText != null) {
                 editBtn.dataset.reviewText = review.reviewText;
@@ -337,8 +359,9 @@
                 if (ownCard) {
                     var ratingEl = ownCard.querySelector('.review-rating-value');
                     var textEl = ownCard.querySelector('.review-text');
+                    var parsed = ratingEl ? parseFloat((ratingEl.textContent || '').replace(',', '.')) : NaN;
                     own = {
-                        rating: ratingEl ? parseFloat(ratingEl.textContent) : 0,
+                        rating: isNaN(parsed) ? null : parsed,
                         review: textEl ? textEl.textContent.trim() : ''
                     };
                 }
@@ -346,13 +369,13 @@
 
             return Promise.all([
                 fetch('/rated/rating/' + encodeURIComponent(targetMovieId) + '?_=' + Date.now(), {
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
                 })
                 .then(function (r) { return r.ok ? r.json() : null; })
                 .catch(function () { return null; }),
 
                 fetch('/rated/count/' + encodeURIComponent(targetMovieId), {
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
                 })
                 .then(function (r) { return r.ok ? r.text() : null; })
                 .catch(function () { return null; })
@@ -361,7 +384,7 @@
                 var avgRating = null;
                 if (avgDto && avgDto.rating != null && avgDto.rating !== '-' && avgDto.rating !== '—') {
                     var n = parseFloat(avgDto.rating);
-                    if (!isNaN(n)) avgRating = n;
+                    if (!isNaN(n)) avgRating = Math.round(n * 10) / 10;
                 }
 
                 var totalReviews = null;

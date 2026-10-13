@@ -14,8 +14,8 @@
 
     function validateUsername(username) {
         if (!username) return { ok: false, error: 'Введите username' };
-        if (!/^[a-zA-Z0-9_-]{3,30}$/.test(username)) {
-            return { ok: false, error: '3-30 символов: латиница, цифры, _ и -' };
+        if (!/^[A-Za-zА-Яа-яЁё0-9_-]{3,30}$/.test(username)) {
+            return { ok: false, error: '3-30 символов: буквы (латиница и кириллица), цифры, _ и -' };
         }
         return { ok: true, error: '' };
     }

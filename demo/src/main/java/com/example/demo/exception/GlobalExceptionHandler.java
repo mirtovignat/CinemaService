@@ -36,32 +36,6 @@ public class GlobalExceptionHandler {
 
     private final MessageUtils messageUtils;
 
-    private String fallbackPath(HttpServletRequest httpServletRequest) {
-        String referer = httpServletRequest.getHeader("Referer");
-        return (referer != null && !referer.isBlank()) ? referer : "/";
-    }
-
-    private String resolveFormView(HttpServletRequest httpServletRequest) {
-        String uri = httpServletRequest.getRequestURI();
-        return FORM_VIEWS.get(uri);
-    }
-
-    private void restoreFormModel(String view, Model model) {
-        if ("register".equals(view) && !model.containsAttribute("registerForm")) {
-            model.addAttribute("registerForm", RegisterFormDTO.getForm());
-        }
-        if ("login".equals(view) && !model.containsAttribute("loginForm")) {
-            model.addAttribute("loginForm", LoginFormDTO.builder().build());
-        }
-        if ("change-password".equals(view) && !model.containsAttribute("passwordChangingDTO")) {
-            model.addAttribute("passwordChangingDTO", PasswordChangingDTO.builder().build());
-        }
-    }
-
-    private boolean canUseFlash(HttpServletRequest httpServletRequest) {
-        return httpServletRequest.getSession(false) != null;
-    }
-
     @ExceptionHandler(ClientAbortException.class)
     public void handleClientAbort(ClientAbortException clientAbortException) {
     }
@@ -74,22 +48,7 @@ public class GlobalExceptionHandler {
         ErrorCode errorCode = businessException.getCode();
         String message = messageUtils.getError(errorCode, businessException.getArgs());
         HttpStatus status = mapErrorCodeToHttpStatus(errorCode);
-
-        if (RequestUtils.isAjaxRequest(httpServletRequest)) {
-            return ResponseEntity.status(status).body(ApiResponse.error(errorCode, message));
-        }
-
-        String formView = resolveFormView(httpServletRequest);
-        if (formView != null) {
-            restoreFormModel(formView, model);
-            model.addAttribute("errorMessage", message);
-            return formView;
-        }
-
-        if (canUseFlash(httpServletRequest)) {
-            redirectAttributes.addFlashAttribute("errorMessage", message);
-        }
-        return "redirect:" + fallbackPath(httpServletRequest);
+        return respond(httpServletRequest, model, redirectAttributes, errorCode, message, status);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -122,10 +81,8 @@ public class GlobalExceptionHandler {
                 .findFirst()
                 .map(FieldError::getDefaultMessage)
                 .orElse("Ошибка валидации");
-        if (canUseFlash(httpServletRequest)) {
-            redirectAttributes.addFlashAttribute("errorMessage", message);
-        }
-        return "redirect:" + fallbackPath(httpServletRequest);
+        return respond(httpServletRequest, model, redirectAttributes,
+                ErrorCode.VALIDATION_ERROR, message, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
@@ -158,6 +115,55 @@ public class GlobalExceptionHandler {
         model.addAttribute("error", "Внутренняя ошибка");
         model.addAttribute("message", "Что-то пошло не так. Мы уже работаем над этим.");
         return "error";
+    }
+
+    private Object respond(HttpServletRequest httpServletRequest,
+                           Model model,
+                           RedirectAttributes redirectAttributes,
+                           ErrorCode errorCode,
+                           String message,
+                           HttpStatus status) {
+        if (RequestUtils.isAjaxRequest(httpServletRequest)) {
+            return ResponseEntity.status(status)
+                    .body(ApiResponse.error(errorCode, message));
+        }
+
+        String formView = resolveFormView(httpServletRequest);
+        if (formView != null) {
+            restoreFormModel(formView, model);
+            model.addAttribute("errorMessage", message);
+            return formView;
+        }
+
+        if (canUseFlash(httpServletRequest)) {
+            redirectAttributes.addFlashAttribute("errorMessage", message);
+        }
+        return "redirect:" + fallbackPath(httpServletRequest);
+    }
+
+    private String fallbackPath(HttpServletRequest httpServletRequest) {
+        String referer = httpServletRequest.getHeader("Referer");
+        return (referer != null && !referer.isBlank()) ? referer : "/";
+    }
+
+    private String resolveFormView(HttpServletRequest httpServletRequest) {
+        return FORM_VIEWS.get(httpServletRequest.getRequestURI());
+    }
+
+    private void restoreFormModel(String view, Model model) {
+        if ("register".equals(view) && !model.containsAttribute("registerForm")) {
+            model.addAttribute("registerForm", RegisterFormDTO.getForm());
+        }
+        if ("login".equals(view) && !model.containsAttribute("loginForm")) {
+            model.addAttribute("loginForm", LoginFormDTO.builder().build());
+        }
+        if ("change-password".equals(view) && !model.containsAttribute("passwordChangingDTO")) {
+            model.addAttribute("passwordChangingDTO", PasswordChangingDTO.builder().build());
+        }
+    }
+
+    private boolean canUseFlash(HttpServletRequest httpServletRequest) {
+        return httpServletRequest.getSession(false) != null;
     }
 
     private HttpStatus mapErrorCodeToHttpStatus(ErrorCode errorCode) {

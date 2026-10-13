@@ -3,7 +3,7 @@ package com.example.demo.controller.auth;
 import com.example.demo.dto.authorize.RegisterFormDTO;
 import com.example.demo.dto.user.SessionUser;
 import com.example.demo.service.user.AuthorizeService;
-import com.example.demo.web.util.SessionAuthenticator;
+import com.example.demo.web.security.SessionAuthenticator;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -37,7 +37,7 @@ public class RegistrationController {
                            HttpServletResponse httpServletResponse) {
         authorizeService.validateRegister(registerFormDTO);
         SessionUser sessionUser = authorizeService.register(registerFormDTO);
-        sessionAuthenticator.authenticate(sessionUser, registerFormDTO.rawPassword(),
+        sessionAuthenticator.authenticate(sessionUser.username(),
                 httpServletRequest, httpServletResponse);
         return "redirect:/";
     }

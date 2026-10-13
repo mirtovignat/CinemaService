@@ -151,10 +151,18 @@
             </div>
 
             <div th:if="${response == null or response.catalog == null or #lists.isEmpty(response.catalog)}"
-                 class="empty-state">
-                <p>Ваша коллекция пуста</p>
-                <a href="/" class="watch-btn-empty">Перейти в главное меню</a>
+                 class="empty-message">
+                <div class="empty-icon">
+                    <th:block th:replace="~{fragments/icons :: icon-film}"></th:block>
+                </div>
+                <h2>Ваша коллекция пуста</h2>
+                <p>Купите первый фильм — и он появится здесь. Вся ваша коллекция всегда под рукой.</p>
+                <a th:href="@{/}" class="browse-movies-btn">Перейти в главное меню</a>
             </div>
+
+            <th:block th:if="${response == null or response.catalog == null or #lists.isEmpty(response.catalog)}">
+                <th:block th:insert="~{fragments/recommendations :: recommendations}"></th:block>
+            </th:block>
 
         </div>
     </div>

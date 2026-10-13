@@ -27,6 +27,20 @@ public class MinIOConfig {
     @Value("${minio.bucket-name}")
     private String bucketName;
 
+    private final String policy = """
+            {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": {"AWS": ["*"]},
+                  "Action": ["s3:GetObject"],
+                  "Resource": ["arn:aws:s3:::%s/*"]
+                }
+              ]
+            }
+            """;
+
     @Bean
     public MinioClient minioClient() {
         MinioClient minioClient = MinioClient.builder()
@@ -42,19 +56,7 @@ public class MinIOConfig {
                         io.minio.MakeBucketArgs.builder().bucket(bucketName).build()
                 );
             }
-            String policy = """
-                {
-                  "Version": "2012-10-17",
-                  "Statement": [
-                    {
-                      "Effect": "Allow",
-                      "Principal": {"AWS": ["*"]},
-                      "Action": ["s3:GetObject"],
-                      "Resource": ["arn:aws:s3:::%s/*"]
-                    }
-                  ]
-                }
-                """.formatted(bucketName);
+            String policy = getPolicy().formatted(bucketName);
             minioClient.setBucketPolicy(
                     io.minio.SetBucketPolicyArgs.builder()
                             .bucket(bucketName)

@@ -14,6 +14,21 @@
         }
     }
 
+    function syncRecommendationsVisibility(doc) {
+        var main = document.querySelector('#catalogMain');
+        if (!main) return;
+
+        var newRec = doc.querySelector('.recommendations-section');
+        var oldRec = main.querySelector('.recommendations-section');
+
+        if (newRec && !oldRec) {
+            var content = main.querySelector('.catalog-content');
+            if (content) content.appendChild(newRec);
+        } else if (!newRec && oldRec) {
+            oldRec.remove();
+        }
+    }
+
     function initCatalogPage() {
         refreshCatalogBadges();
         refreshCatalogStatuses();
@@ -56,6 +71,8 @@
                     var oldPagination = document.querySelector('.pagination-wrapper');
                     if (oldPagination) oldPagination.innerHTML = newPagination.innerHTML;
                 }
+
+                syncRecommendationsVisibility(doc);
 
                 history.pushState({}, '', href);
                 refreshCatalogBadges();

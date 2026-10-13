@@ -11,10 +11,9 @@ import org.springframework.web.servlet.HandlerInterceptor;
 public class CacheControlInterceptor implements HandlerInterceptor {
 
     @Override
-    public void afterCompletion(@NotNull HttpServletRequest httpServletRequest,
-                                @NotNull HttpServletResponse httpServletResponse,
-                                @NotNull Object handler,
-                                Exception exception) {
+    public boolean preHandle(@NotNull HttpServletRequest httpServletRequest,
+                             @NotNull HttpServletResponse httpServletResponse,
+                             @NotNull Object handler) {
         String uri = httpServletRequest.getRequestURI();
 
         if (uri.startsWith("/js/")
@@ -22,9 +21,10 @@ public class CacheControlInterceptor implements HandlerInterceptor {
                 || uri.startsWith("/images/")
                 || uri.startsWith("/webjars/")
                 || uri.equals("/favicon.ico")) {
-            return;
+            return true;
         }
 
         NoCacheHeaders.apply(httpServletResponse);
+        return true;
     }
 }

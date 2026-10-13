@@ -6,11 +6,16 @@
     <th:block th:replace="~{fragments/head :: head}"></th:block>
     <link rel="stylesheet" th:href="@{/css/pages/_catalog.css}">
 </head>
-<body>
+<body class="index-page">
 <th:block th:replace="~{fragments/header :: header}"></th:block>
 <th:block th:replace="~{fragments/flash-messages :: flashMessages}"></th:block>
 
 <div id="authStatus" th:data-authenticated="${sessionUser != null}" style="display:none;"></div>
+
+<div id="userIdHolder"
+     th:if="${sessionUser != null}"
+     th:data-user-id="${sessionUser.id()}"
+     style="display:none;"></div>
 
 <main class="catalog-wrapper" id="catalogMain">
     <div class="catalog-header">
@@ -23,15 +28,27 @@
         <h1 th:unless="${response.isSearch()}" style="text-align:center;">Лучшие фильмы и сериалы СПЕЦИАЛЬНО ДЛЯ
             ВАС!</h1>
     </div>
-    <div id="catalogContent">
-        <th:block th:replace="~{fragments/movie-grid :: grid(response=${response})}"></th:block>
-    </div>
-    <div class="pagination-wrapper" id="paginationWrapper">
-        <th:block th:replace="~{fragments/pagination :: pager(page=${response.cardsPage()}, url='/movies')}"></th:block>
+
+    <div class="catalog-content">
+        <div id="catalogContent">
+            <th:block th:replace="~{fragments/movie-grid :: grid(response=${response})}"></th:block>
+        </div>
+
+        <div class="pagination-wrapper" id="paginationWrapper">
+            <th:block
+                    th:replace="~{fragments/pagination :: pager(page=${response.cardsPage()}, url='/movies')}"></th:block>
+        </div>
+
+        <th:block th:if="${response.isSearch() and (response.cardsPage() == null or response.cardsPage().empty)}">
+            <th:block th:with="visible=9">
+                <th:block th:insert="~{fragments/recommendations :: recommendations}"></th:block>
+            </th:block>
+        </th:block>
     </div>
 </main>
 
-<th:block th:replace="~{fragments/app-modal :: appModal}"></th:block>
+<th:block th:replace="~{fragments/modals/cart-modals :: cartModals}"></th:block>
+<th:block th:replace="~{fragments/modals/favourites-modals :: favouritesModals}"></th:block>
 <th:block th:replace="~{fragments/modals/ratings-modals :: ratingsModals}"></th:block>
 
 <script th:src="@{/js/pages/page-catalog.js}" defer></script>

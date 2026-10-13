@@ -78,8 +78,8 @@ public class ProfileFieldValidator implements ConstraintValidator<ValidProfileFi
                     setError(constraintValidatorContext, "field", "Username должен быть от 3 до 30 символов");
                     return false;
                 }
-                if (!trimmed.matches("^[a-zA-Z0-9_-]+$")) {
-                    setError(constraintValidatorContext, "field", "Username может содержать только буквы, цифры, _ и -");
+                if (!trimmed.matches("^[A-Za-zА-Яа-яЁё0-9_-]+$")) {
+                    setError(constraintValidatorContext, "field", "Username может содержать буквы (латиница и кириллица), цифры, _ и -");
                     return false;
                 }
             }

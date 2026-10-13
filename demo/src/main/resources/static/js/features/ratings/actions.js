@@ -66,7 +66,7 @@
 
     function fetchOwn(movieId) {
         return fetch('/rated/form/' + encodeURIComponent(movieId), {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
         })
         .then(function (r) { return r.ok ? r.json() : null; })
         .catch(function () { return null; });
@@ -74,7 +74,7 @@
 
     function fetchAvg(movieId) {
         return fetch('/rated/rating/' + encodeURIComponent(movieId) + '?_=' + Date.now(), {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
         })
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (dto) {
@@ -87,7 +87,7 @@
 
     function fetchCount(movieId) {
         return fetch('/rated/count/' + encodeURIComponent(movieId), {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
         })
         .then(function (r) { return r.ok ? r.text() : null; })
         .then(function (raw) {

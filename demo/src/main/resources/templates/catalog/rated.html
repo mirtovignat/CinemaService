@@ -6,9 +6,7 @@
     <link rel="stylesheet" th:href="@{/css/pages/_rated-history.css}">
 </head>
 <body class="layout-fixed">
-<div class="header-wrapper">
-    <th:block th:replace="~{fragments/header :: header}"></th:block>
-</div>
+<th:block th:replace="~{fragments/header :: header}"></th:block>
 <th:block th:replace="~{fragments/flash-messages :: flashMessages}"></th:block>
 <div id="authStatus" th:data-authenticated="${sessionUser != null}" style="display:none;"></div>
 <main class="profile-wrapper">
@@ -106,10 +104,19 @@
             </div>
 
             <div th:if="${groupedResponse == null or groupedResponse.groupedItems == null or groupedResponse.groupedItems.isEmpty()}"
-                 class="empty-state">
-                <p>Вы не оценили ни один фильм</p>
-                <a href="/" class="watch-btn-empty">Перейти в главное меню</a>
+                 class="empty-message">
+                <div class="empty-icon">
+                    <th:block th:replace="~{fragments/icons :: icon-star}"></th:block>
+                </div>
+                <h2>Вы пока не оценили ни один фильм</h2>
+                <p>Поставьте оценку фильму — и он появится здесь, чтобы вы могли вернуться к своим впечатлениям.</p>
+                <a th:href="@{/}" class="browse-movies-btn">Перейти в главное меню</a>
             </div>
+
+            <th:block
+                    th:if="${groupedResponse == null or groupedResponse.groupedItems == null or groupedResponse.groupedItems.isEmpty()}">
+                <th:block th:insert="~{fragments/recommendations :: recommendations}"></th:block>
+            </th:block>
 
         </div>
     </div>

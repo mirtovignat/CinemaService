@@ -63,7 +63,7 @@
                     <span>Главная</span>
                 </a>
 
-                <a th:href="@{/wallet/top-up}"
+                <a th:href="@{/wallet/top-up(from=${currentUri})}"
                    class="nav-link"
                    th:classappend="${currentPage == 'wallet'} ? 'active' : ''">
                     <th:block th:replace="~{fragments/icons :: icon-wallet}"></th:block>
@@ -120,8 +120,6 @@
         </div>
 
     </div>
-
-    <th:block th:replace="~{fragments/modals/delete-account-modal :: deleteAccountModal}"></th:block>
 </th:block>
 </body>
 </html>

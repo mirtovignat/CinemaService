@@ -20,6 +20,13 @@
     <div class="reviews-container" th:data-movie-id="${response.movieId}">
 
         <div class="reviews-header">
+
+            <a th:href="@{/back(fallback='/')}"
+               class="back-btn-reviews">
+                <th:block th:replace="~{fragments/icons :: icon-arrow-left}"></th:block>
+                <span>Назад</span>
+            </a>
+
             <h1>
                 <a th:href="@{/movies/{id}(id=${response.movieId})}"
                    th:text="${'🎬 Отзывы к «' + response.movieTitle + '»'}">Отзывы к фильму</a>
@@ -106,7 +113,7 @@
                         <button class="btn-edit" type="button"
                                 th:attr="data-movie-id=${response.movieId},
                                          data-movie-title=${response.movieTitle},
-                                         data-review-rating=${response.ownReview.ratingValue},
+                                         data-review-rating=${#numbers.formatDecimal(response.ownReview.ratingValue, 1, 1)},
                                          data-review-text=${response.ownReview.reviewText}">
                             <th:block th:replace="~{fragments/icons :: icon-edit}"></th:block>
                             Редактировать

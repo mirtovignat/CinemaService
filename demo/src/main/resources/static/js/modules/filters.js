@@ -12,6 +12,11 @@
 
     var MAX_SELECTED_PER_DROPDOWN = 200;
 
+    var AJAX_HEADERS = {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+    };
+
     function formatPriceValue(v) {
         var n = Number(v);
         if (isNaN(n)) return '';
@@ -221,63 +226,130 @@
         });
     }
 
+    function getSurname(fullName) {
+        var s = String(fullName || '').trim();
+        if (!s) return '';
+        var idx = s.indexOf(' ');
+        if (idx === -1) return s;
+        var rest = s.substring(idx + 1).trim();
+        return rest || s;
+    }
+
+    function normalizeForSort(s) {
+        return String(s || '')
+            .toLocaleLowerCase('ru-RU')
+            .replace(/ё/g, 'е');
+    }
+
+    function displayDirector(fullName) {
+        var s = String(fullName || '').trim();
+        if (!s) return '';
+        var idx = s.indexOf(' ');
+        if (idx === -1) return s;
+        var first = s.substring(0, idx).trim();
+        var rest = s.substring(idx + 1).trim();
+        if (!rest) return s;
+        return rest + ' ' + first;
+    }
+
+    function sortDirectorsBySurname(list) {
+        return list.slice().sort(function (a, b) {
+            var sa = normalizeForSort(getSurname(a));
+            var sb = normalizeForSort(getSurname(b));
+            if (sa !== sb) return sa.localeCompare(sb, 'ru-RU');
+            return normalizeForSort(a).localeCompare(normalizeForSort(b), 'ru-RU');
+        });
+    }
+
+    function sortGenresAlphabetically(list) {
+        return list.slice().sort(function (a, b) {
+            return normalizeForSort(a).localeCompare(normalizeForSort(b), 'ru-RU');
+        });
+    }
+
+    function buildAccordionCheckbox(name, value, displayText) {
+        var label = document.createElement('label');
+        label.className = 'accordion-item';
+        var input = document.createElement('input');
+        input.type = 'checkbox';
+        input.name = name;
+        input.className = 'accordion-checkbox';
+        input.value = value;
+        var span = document.createElement('span');
+        span.textContent = displayText != null ? displayText : value;
+        label.appendChild(input);
+        label.appendChild(span);
+        return label;
+    }
+
+    function fillAccordionList(dropdown, name, items, displayFn) {
+        if (!dropdown) return;
+        var list = dropdown.querySelector('[data-accordion-list]');
+        var empty = dropdown.querySelector('[data-accordion-empty]');
+        if (!list) return;
+
+        list.innerHTML = '';
+        (items || []).forEach(function (item) {
+            var display = displayFn ? displayFn(item) : item;
+            list.appendChild(buildAccordionCheckbox(name, item, display));
+        });
+
+        if (empty) empty.classList.remove('show');
+
+        var selectedAttr = dropdown.getAttribute('data-selected');
+        if (selectedAttr && selectedAttr.trim() !== '') {
+            var selected = selectedAttr.split(',').map(function (s) { return s.trim(); });
+            list.querySelectorAll('input[name="' + name + '"]').forEach(function (cb) {
+                cb.checked = selected.indexOf(cb.value) !== -1;
+            });
+        }
+
+        if (window.FiltersSearch) {
+            window.FiltersSearch.init(dropdown.closest('[data-accordion]') || dropdown);
+        }
+    }
+
     function loadFilterOptions() {
         var directorsDropdown = document.getElementById('directorsDropdown');
         var genresDropdown = document.getElementById('genresDropdown');
-
-        function buildCheckbox(name, value) {
-            var label = document.createElement('label');
-            label.className = 'accordion-item';
-            var input = document.createElement('input');
-            input.type = 'checkbox';
-            input.name = name;
-            input.className = 'accordion-checkbox';
-            input.value = value;
-            var span = document.createElement('span');
-            span.textContent = value;
-            label.appendChild(input);
-            label.appendChild(span);
-            return label;
-        }
-
-        function fill(dropdown, name, items) {
-            if (!dropdown) return;
-            dropdown.innerHTML = '';
-            items.forEach(function (item) {
-                dropdown.appendChild(buildCheckbox(name, item));
-            });
-
-            var selectedAttr = dropdown.getAttribute('data-selected');
-            if (selectedAttr && selectedAttr.trim() !== '') {
-                var selected = selectedAttr.split(',').map(function (s) { return s.trim(); });
-                dropdown.querySelectorAll('input[name="' + name + '"]').forEach(function (cb) {
-                    cb.checked = selected.indexOf(cb.value) !== -1;
-                });
-            }
-        }
 
         var requests = [];
 
         if (directorsDropdown) {
             requests.push(
-                fetch('/filters/directors', { headers: { 'Accept': 'application/json' } })
+                fetch('/filters/directors', { headers: AJAX_HEADERS })
                     .then(function (r) { return r.ok ? r.json() : []; })
-                    .then(function (list) { fill(directorsDropdown, 'directors', list || []); })
-                    .catch(function () { fill(directorsDropdown, 'directors', []); })
+                    .then(function (list) {
+                        fillAccordionList(
+                            directorsDropdown,
+                            'directors',
+                            sortDirectorsBySurname(list || []),
+                            displayDirector
+                        );
+                    })
+                    .catch(function () {
+                        fillAccordionList(directorsDropdown, 'directors', [], displayDirector);
+                    })
             );
         }
 
         if (genresDropdown) {
             requests.push(
-                fetch('/filters/genres', { headers: { 'Accept': 'application/json' } })
+                fetch('/filters/genres', { headers: AJAX_HEADERS })
                     .then(function (r) { return r.ok ? r.json() : []; })
-                    .then(function (list) { fill(genresDropdown, 'genres', list || []); })
-                    .catch(function () { fill(genresDropdown, 'genres', []); })
+                    .then(function (list) {
+                        fillAccordionList(
+                            genresDropdown,
+                            'genres',
+                            sortGenresAlphabetically(list || [])
+                        );
+                    })
+                    .catch(function () { fillAccordionList(genresDropdown, 'genres', []); })
             );
         }
 
         requests.push(
-            fetch('/filters/min-max/price', { headers: { 'Accept': 'application/json' } })
+            fetch('/filters/min-max/price', { headers: AJAX_HEADERS })
                 .then(function (r) { return r.ok ? r.json() : null; })
                 .then(function (dto) {
                     if (!dto) return;
@@ -289,7 +361,7 @@
         );
 
         requests.push(
-            fetch('/filters/min-max/duration', { headers: { 'Accept': 'application/json' } })
+            fetch('/filters/min-max/duration', { headers: AJAX_HEADERS })
                 .then(function (r) { return r.ok ? r.json() : null; })
                 .then(function (dto) {
                     if (!dto) return;
@@ -301,7 +373,7 @@
         );
 
         requests.push(
-            fetch('/filters/min-max/release-date', { headers: { 'Accept': 'application/json' } })
+            fetch('/filters/min-max/release-date', { headers: AJAX_HEADERS })
                 .then(function (r) { return r.ok ? r.json() : null; })
                 .then(function (dto) {
                     if (!dto) return;
@@ -555,6 +627,9 @@
         if (fromValue) isWideFilter = false;
         if (toValue) isWideFilter = false;
 
+        var sortByField = getHiddenSortField('sortBy');
+        if (sortByField && sortByField.value.trim() !== '') isWideFilter = false;
+
         if (isWideFilter) {
             toggleFiltersModal(false);
             if (typeof showFlashMessage === 'function') {
@@ -621,33 +696,53 @@
         wrap.appendChild(cb);
         wrap.appendChild(span);
 
+        function getVisibleItems() {
+            return Array.prototype.slice.call(
+                dropdown.querySelectorAll('.accordion-item:not(.is-hidden)')
+            );
+        }
+
+        function getVisibleCheckboxes() {
+            return getVisibleItems().map(function (item) {
+                return item.querySelector('input[name="' + name + '"]');
+            }).filter(Boolean);
+        }
+
         function updateState() {
-            var all = dropdown.querySelectorAll('input[name="' + name + '"]');
-            var checked = dropdown.querySelectorAll('input[name="' + name + '"]:checked');
-            var allChecked = all.length > 0 && checked.length === all.length;
-            var noneChecked = checked.length === 0;
+            var visibleCbs = getVisibleCheckboxes();
+            if (visibleCbs.length === 0) {
+                cb.checked = false;
+                cb.indeterminate = false;
+                return;
+            }
+            var checkedCount = visibleCbs.filter(function (x) { return x.checked; }).length;
+            var allChecked = checkedCount === visibleCbs.length;
+            var noneChecked = checkedCount === 0;
             cb.checked = allChecked;
             cb.indeterminate = !allChecked && !noneChecked;
         }
 
         wrap.addEventListener('click', function (e) {
             e.preventDefault();
-            var all = dropdown.querySelectorAll('input[name="' + name + '"]');
-            var checked = dropdown.querySelectorAll('input[name="' + name + '"]:checked');
-            var allChecked = all.length > 0 && checked.length === all.length;
 
-            if (!allChecked && all.length > MAX_SELECTED_PER_DROPDOWN) {
+            var visibleCbs = getVisibleCheckboxes();
+            if (visibleCbs.length === 0) return;
+
+            var checkedCount = visibleCbs.filter(function (x) { return x.checked; }).length;
+            var allChecked = checkedCount === visibleCbs.length;
+
+            if (!allChecked && visibleCbs.length > MAX_SELECTED_PER_DROPDOWN) {
                 if (typeof showFlashMessage === 'function') {
                     showFlashMessage(
                         'Можно выбрать не более ' + MAX_SELECTED_PER_DROPDOWN + ' значений',
                         'warning'
                     );
                 }
-                all.forEach(function (item, index) {
+                visibleCbs.forEach(function (item, index) {
                     item.checked = index < MAX_SELECTED_PER_DROPDOWN;
                 });
             } else {
-                all.forEach(function (item) { item.checked = !allChecked; });
+                visibleCbs.forEach(function (item) { item.checked = !allChecked; });
             }
             updateState();
         });
@@ -658,8 +753,17 @@
             }
         });
 
-        dropdown.insertBefore(wrap, dropdown.firstChild);
+        var list = dropdown.querySelector('[data-accordion-list]');
+        if (list) {
+            list.insertBefore(wrap, list.firstChild);
+        } else {
+            dropdown.insertBefore(wrap, dropdown.firstChild);
+        }
+
         updateState();
+
+        window.__selectAllState = window.__selectAllState || {};
+        window.__selectAllState[dropdownId] = updateState;
     }
 
     function resetFiltersForm() {
@@ -694,6 +798,31 @@
         document.querySelectorAll('.filter-input-with-clear.has-value').forEach(function (el) {
             el.classList.remove('has-value');
         });
+
+        document.querySelectorAll('.accordion-search.has-value').forEach(function (el) {
+            el.classList.remove('has-value');
+        });
+
+        document.querySelectorAll('[data-accordion-search-input]').forEach(function (input) {
+            input.value = '';
+        });
+
+        document.querySelectorAll('[data-accordion-list] .accordion-item.is-hidden').forEach(function (item) {
+            item.classList.remove('is-hidden');
+        });
+
+        document.querySelectorAll('[data-accordion-empty]').forEach(function (empty) {
+            empty.classList.remove('show');
+        });
+
+        if (window.__selectAllState) {
+            Object.keys(window.__selectAllState).forEach(function (key) {
+                try { window.__selectAllState[key](); } catch (e) {}
+            });
+        }
+
+        updateSortButtons(null);
+        syncHiddenSortFields(null);
     }
 
     function initFilterMasks() {
@@ -739,11 +868,106 @@
         });
     }
 
+    function readSortFromUrl() {
+        var search = window.location.search || '';
+        if (search.charAt(0) === '?') search = search.substring(1);
+        if (!search) return null;
+
+        var parts = search.split('&');
+        var key = null;
+        var dir = null;
+
+        for (var i = 0; i < parts.length; i++) {
+            var kv = parts[i].split('=');
+            var name = decodeURIComponent(kv[0] || '');
+            var value = decodeURIComponent(kv[1] || '');
+            if (name === 'sortBy') key = value;
+            if (name === 'sortDir') dir = value;
+        }
+
+        if (!key || !dir) return null;
+        if (dir !== 'asc' && dir !== 'desc') return null;
+        return { key: key, dir: dir };
+    }
+
+    function getHiddenSortField(name) {
+        var all = document.querySelectorAll('input[name="' + name + '"]');
+        return all.length ? all[0] : null;
+    }
+
+    function updateSortButtons(state) {
+        var btns = document.querySelectorAll('.sort-filter-btn');
+        for (var i = 0; i < btns.length; i++) {
+            var btn = btns[i];
+            var key = btn.getAttribute('data-sort-key');
+            var dir = btn.getAttribute('data-sort-dir');
+            if (state && state.key === key && state.dir === dir) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        }
+    }
+
+    function syncHiddenSortFields(state) {
+        var byEl = getHiddenSortField('sortBy');
+        var dirEl = getHiddenSortField('sortDir');
+        if (byEl) byEl.value = state ? state.key : '';
+        if (dirEl) dirEl.value = state ? state.dir : '';
+    }
+
+    function getCurrentSortSelection() {
+        var byEl = getHiddenSortField('sortBy');
+        var dirEl = getHiddenSortField('sortDir');
+        if (!byEl || !dirEl) return null;
+        var key = (byEl.value || '').trim();
+        var dir = (dirEl.value || '').trim();
+        if (!key || !dir) return null;
+        if (dir !== 'asc' && dir !== 'desc') return null;
+        return { key: key, dir: dir };
+    }
+
+    function initFilterSort() {
+        if (window.__filterSortInitDone) return;
+        window.__filterSortInitDone = true;
+
+        var urlState = readSortFromUrl();
+        updateSortButtons(urlState);
+        syncHiddenSortFields(urlState);
+
+        document.addEventListener('click', function (e) {
+            var target = e.target;
+            while (target && target !== document) {
+                if (target.classList && target.classList.contains('sort-filter-btn')) break;
+                target = target.parentNode;
+            }
+            if (!target || target === document) return;
+
+            e.preventDefault();
+
+            var key = target.getAttribute('data-sort-key');
+            var dir = target.getAttribute('data-sort-dir');
+            if (!key || !dir) return;
+
+            var current = getCurrentSortSelection();
+            var isSame = current && current.key === key && current.dir === dir;
+
+            if (isSame) {
+                updateSortButtons(null);
+                syncHiddenSortFields(null);
+            } else {
+                updateSortButtons({ key: key, dir: dir });
+                syncHiddenSortFields({ key: key, dir: dir });
+            }
+        });
+    }
+
     function initAll() {
-        initFilterMasks();
-        initFilterAccordions();
-        initFilterClearButtons();
-        initFormSubmit();
+        try { initFilterSort(); } catch (e) { console.error('[filters] sort init failed', e); }
+        try { initFilterMasks(); } catch (e) { console.error('[filters] masks init failed', e); }
+        try { initFilterAccordions(); } catch (e) { console.error('[filters] accordions init failed', e); }
+        try { initFilterClearButtons(); } catch (e) { console.error('[filters] clear buttons init failed', e); }
+        try { initFormSubmit(); } catch (e) { console.error('[filters] form submit init failed', e); }
     }
 
     if (document.readyState === 'loading') {

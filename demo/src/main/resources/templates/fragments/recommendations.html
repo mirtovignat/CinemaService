@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<body>
+
+<section th:fragment="recommendations"
+         class="recommendations-section"
+         th:attr="data-current-uri=${currentUri}"
+         th:style="${visible != null} ? '--rec-visible: ' + ${visible} + ';' : ''"
+         data-recommendations-carousel>
+    <div class="section-label">
+        <span>Вам могло бы понравиться (ПРОЛИСТЫВАЙТЕ ВПРАВО)</span>
+    </div>
+    <div class="rec-scroll-wrapper">
+        <div class="rec-grid" data-recommendations-grid></div>
+    </div>
+</section>
+
+</body>
+</html>

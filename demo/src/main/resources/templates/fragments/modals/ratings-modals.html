@@ -7,62 +7,79 @@
     <div id="ratingModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Оценить фильм</h2>
-                <button class="modal-x"
-                        type="button"
-                        data-action="hide-rating-modal">✕</button>
+                <h2 id="ratingModalHeading">
+                    <th:block th:replace="~{fragments/icons :: icon-star}"></th:block>
+                    Оценить фильм
+                </h2>
+                <button type="button" class="modal-x"
+                        data-action="hide-rating-modal" aria-label="Закрыть">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="1.8"
+                         stroke-linecap="round" aria-hidden="true">
+                        <path d="M7 7l10 10M17 7L7 17"/>
+                    </svg>
+                </button>
             </div>
-            <p style="font-weight:600; color:#3b82f6;" id="ratingModalMovieTitle"></p>
+
+            <p id="ratingModalMovieTitle"
+               style="font-weight:600; color:#c4b5fd; margin-bottom:16px;"></p>
 
             <div id="ratingForm">
                 <input type="hidden" name="id" id="ratingFormTitle" value="">
 
                 <div class="rating-input">
-                    <label for="ratingValue"
-                           style="display:block; margin-bottom:4px; font-weight:500; color:#e2e8f0;">
-                        Оценка (0.0–10.0):
-                    </label>
+                    <label for="ratingValue">Оценка (0.1–10.0)</label>
                     <div class="rating-input-with-stepper">
                         <input type="number"
                                id="ratingValue"
                                name="rating"
                                step="0.1"
-                               min="0"
+                               min="0.1"
                                max="10"
                                value="5.0"
                                required>
                         <div class="stepper-buttons">
                             <button type="button" class="stepper-btn up"
                                     data-action="rating-step-up"
-                                    title="Увеличить на 0.1">▲</button>
+                                    aria-label="Увеличить"></button>
                             <button type="button" class="stepper-btn down"
                                     data-action="rating-step-down"
-                                    title="Уменьшить на 0.1">▼</button>
+                                    aria-label="Уменьшить"></button>
                         </div>
                     </div>
                 </div>
 
                 <div class="comment-input">
-                    <label for="ratingComment"
-                           style="display:block; margin-bottom:4px; font-weight:500; color:#e2e8f0;">
-                        Комментарий (необязательно):
-                    </label>
-                    <textarea id="ratingComment"
-                              name="review"
-                              rows="3"
-                              placeholder="Ваш отзыв..."
-                              maxlength="2000"></textarea>
+                    <label for="ratingComment">Комментарий (необязательно)</label>
+                    <div class="comment-textarea-wrapper" data-comment-wrapper>
+                        <textarea id="ratingComment"
+                                  name="review"
+                                  rows="3"
+                                  placeholder="Ваш отзыв..."
+                                  maxlength="350"
+                                  data-comment-textarea></textarea>
+                        <button type="button"
+                                class="comment-clear-btn"
+                                data-comment-clear
+                                aria-label="Очистить"
+                                title="Очистить">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="1.8"
+                                 stroke-linecap="round" aria-hidden="true">
+                                <path d="M7 7l10 10M17 7L7 17"/>
+                            </svg>
+                        </button>
+                        <div class="comment-counter" data-comment-counter>0 / 350</div>
+                    </div>
                 </div>
 
                 <div id="ratingModalError" class="modal-error" style="display:none;"></div>
 
                 <div class="modal-buttons">
                     <button type="button"
-                            class="modal-cancel-btn"
-                            data-action="hide-rating-modal">Отмена</button>
-                    <button type="button"
                             class="modal-confirm-btn"
-                            data-action="submit-rating">Отправить</button>
+                            data-action="submit-rating">Отправить
+                    </button>
                 </div>
             </div>
         </div>
@@ -71,21 +88,27 @@
     <div id="confirmDeleteModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Удаление отзыва</h2>
-                <button class="modal-x"
-                        type="button"
-                        data-action="hide-confirm-delete-modal">✕</button>
+                <h2>
+                    <th:block th:replace="~{fragments/icons :: icon-trash}"></th:block>
+                    Удаление отзыва
+                </h2>
+                <button type="button" class="modal-x"
+                        data-action="hide-confirm-delete-modal" aria-label="Закрыть">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="1.8"
+                         stroke-linecap="round" aria-hidden="true">
+                        <path d="M7 7l10 10M17 7L7 17"/>
+                    </svg>
+                </button>
             </div>
             <p>Вы уверены, что хотите удалить свой отзыв?</p>
-            <p style="color:#94a3b8; font-size:0.9rem;">Это действие нельзя отменить.</p>
+            <p style="color:#94a3b8; font-size:0.85rem;">Это действие нельзя отменить.</p>
             <div class="modal-buttons">
-                <button class="modal-cancel-btn"
-                        type="button"
-                        data-action="hide-confirm-delete-modal">Отмена</button>
                 <button class="modal-confirm-btn danger"
                         id="confirmDeleteBtn"
                         type="button"
-                        data-action="execute-delete">Удалить</button>
+                        data-action="execute-delete">Удалить
+                </button>
             </div>
         </div>
     </div>

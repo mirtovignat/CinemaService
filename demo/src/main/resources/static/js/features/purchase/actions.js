@@ -51,9 +51,7 @@
         if (err.code === 'INSUFFICIENT_FUNDS') {
             var shortage = extractShortage(err.message);
             if (shortage != null) {
-                try {
-                    sessionStorage.setItem('topUpAmount', shortage.toFixed(2));
-                } catch (e) {}
+                try { sessionStorage.setItem('topUpAmount', shortage.toFixed(2)); } catch (e) {}
             }
             return { text: 'Перейти к пополнению', url: '/wallet/top-up' };
         }
@@ -64,77 +62,21 @@
         showFlashMessage(errorMessage(err), 'error', undefined, buildActionForError(err));
     }
 
-    function buildWatchButton(movieId, movieTitle, posterUrl) {
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'watch-btn-neon watch-btn-neon--md';
-        btn.setAttribute('data-action', 'watch-movie');
-        btn.setAttribute('data-movie-id', movieId);
-        btn.setAttribute('data-movie-title', movieTitle || '');
-        btn.setAttribute('data-poster-url', posterUrl || '');
-        btn.setAttribute('data-watched', 'false');
-
-        var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.setAttribute('viewBox', '0 0 24 24');
-        svg.setAttribute('fill', 'currentColor');
-        var poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-        poly.setAttribute('points', '5 3 19 12 5 21 5 3');
-        svg.appendChild(poly);
-
-        btn.appendChild(svg);
-        btn.appendChild(document.createTextNode(' Смотреть'));
-        return btn;
+    function openModal(id) {
+        return Modal.openById(id);
     }
 
-    function addWatchButtonOptimistic(movieId, movieTitle, posterUrl) {
-        var card = document.querySelector(
-            '.movie-card[data-movie-id="' + CSS.escape(movieId) + '"]'
-        );
+    function closeModal(id) {
+        Modal.closeById(id);
+    }
 
-        if (card) {
-            var posterLink = card.querySelector('.movie-poster-link');
-            if (!posterLink) return null;
-
-            var existing = posterLink.querySelector('.poster-overlay');
-            if (existing) {
-                if (existing.querySelector('.watch-btn-neon')) return null;
-                existing.appendChild(buildWatchButton(movieId, movieTitle, posterUrl));
-                return null;
-            }
-
-            var overlay = document.createElement('div');
-            overlay.className = 'poster-overlay';
-            overlay.appendChild(buildWatchButton(movieId, movieTitle, posterUrl));
-            posterLink.appendChild(overlay);
-
-            return function rollback() {
-                if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-            };
-        }
-
-        var details = document.querySelector('.movie-details-container');
-        if (details && String(details.getAttribute('data-movie-id')) === String(movieId)) {
-            var posterWrapper = details.querySelector('.poster-wrapper');
-            if (!posterWrapper) return null;
-
-            var existingOverlay = posterWrapper.querySelector('.poster-overlay');
-            if (existingOverlay) {
-                if (existingOverlay.querySelector('.watch-btn-neon')) return null;
-                existingOverlay.appendChild(buildWatchButton(movieId, movieTitle, posterUrl));
-                return null;
-            }
-
-            var newOverlay = document.createElement('div');
-            newOverlay.className = 'poster-overlay';
-            newOverlay.appendChild(buildWatchButton(movieId, movieTitle, posterUrl));
-            posterWrapper.appendChild(newOverlay);
-
-            return function rollback() {
-                if (newOverlay.parentNode) newOverlay.parentNode.removeChild(newOverlay);
-            };
-        }
-
-        return null;
+    function bindOneTimeConfirm(modal, handler) {
+        if (!modal) return;
+        var btn = modal.querySelector('[data-modal-confirm]');
+        if (!btn) return;
+        if (btn.__purchaseBound) btn.removeEventListener('click', btn.__purchaseBound);
+        btn.__purchaseBound = handler;
+        btn.addEventListener('click', handler);
     }
 
     function onBuyNow(el) {
@@ -149,56 +91,34 @@
             return;
         }
 
-        Modal.open({
-            title: 'Подтверждение покупки',
-            message: 'Вы уверены, что хотите купить фильм:',
-            summaryHtml:
-                '<p style="font-weight:600;">' +
-                    escapeHtml(getMovieTitle(el)) +
-                '</p><div class="modal-price">' +
-                    escapeHtml(getMoviePrice(el)) + ' ₽' +
-                '</div>',
-            confirmText: 'Купить',
-            onConfirm: function () {
-                var movieTitle = getMovieTitle(el);
-                var card = document.querySelector(
-                    '.movie-card[data-movie-id="' + CSS.escape(movieId) + '"]'
-                );
-                var posterUrl = '';
-                if (card) {
-                    var posterImg = card.querySelector('.movie-poster-img');
-                    if (posterImg) posterUrl = posterImg.getAttribute('src') || '';
-                } else {
-                    var details = document.querySelector('.movie-details-container');
-                    if (details && String(details.getAttribute('data-movie-id')) === String(movieId)) {
-                        var pimg = details.querySelector('.movie-poster-img');
-                        if (pimg) posterUrl = pimg.getAttribute('src') || '';
+        var modal = openModal('cartBuyOneModal');
+        if (!modal) return;
+
+        var titleEl = modal.querySelector('[data-modal-movie-title]');
+        if (titleEl) titleEl.textContent = getMovieTitle(el) || '';
+
+        var priceEl = modal.querySelector('[data-modal-price]');
+        if (priceEl) priceEl.textContent = UI.formatPrice(getMoviePrice(el)) + ' ₽';
+
+        bindOneTimeConfirm(modal, function () {
+            closeModal('cartBuyOneModal');
+            PurchaseFeature.buyOne(movieId)
+                .then(function (data) {
+                    showFlashMessage((data && data.message) || 'Фильм куплен', 'success');
+                    markAsBought(movieId);
+
+                    var cartCard = document.querySelector(
+                        '.cart-card[data-movie-id="' + CSS.escape(movieId) + '"]'
+                    );
+                    if (cartCard) {
+                        UI.animateRemoveCard(cartCard, function () {
+                            if (document.querySelectorAll('.cart-card').length === 0) {
+                                window.location.reload();
+                            }
+                        });
                     }
-                }
-
-                var rollbackWatch = addWatchButtonOptimistic(movieId, movieTitle, posterUrl);
-
-                PurchaseFeature.buyOne(movieId)
-                    .then(function (data) {
-                        showFlashMessage((data && data.message) || 'Фильм куплен', 'success');
-                        markAsBought(movieId);
-
-                        var cartCard = document.querySelector(
-                            '.cart-card[data-movie-id="' + CSS.escape(movieId) + '"]'
-                        );
-                        if (cartCard) {
-                            UI.animateRemoveCard(cartCard, function () {
-                                if (document.querySelectorAll('.cart-card').length === 0) {
-                                    window.location.reload();
-                                }
-                            });
-                        }
-                    })
-                    .catch(function (err) {
-                        if (typeof rollbackWatch === 'function') rollbackWatch();
-                        handleError(err);
-                    });
-            }
+                })
+                .catch(handleError);
         });
     }
 

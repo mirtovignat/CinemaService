@@ -1,21 +1,23 @@
 package com.example.demo.dto.user;
 
 import lombok.Builder;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 @Builder
-@Getter
-@RequiredArgsConstructor
-public class AppUserDetails implements UserDetails {
+public record AppUserDetails(
+        SessionUser sessionUser,
+        String passwordHash
+) implements UserDetails {
 
-    private final SessionUser sessionUser;
-    private final String passwordHash;
+    public AppUserDetails {
+        Objects.requireNonNull(sessionUser, "sessionUser must not be null");
+        Objects.requireNonNull(passwordHash, "passwordHash must not be null");
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -30,5 +32,9 @@ public class AppUserDetails implements UserDetails {
     @Override
     public String getUsername() {
         return sessionUser.username();
+    }
+
+    public AppUserDetails withSessionUser(SessionUser updated) {
+        return new AppUserDetails(updated, passwordHash);
     }
 }

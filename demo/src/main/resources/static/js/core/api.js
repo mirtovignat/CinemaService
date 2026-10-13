@@ -25,7 +25,7 @@
 
         var method = options.method || 'GET';
         var headers = Object.assign(
-            { 'X-Requested-With': 'XMLHttpRequest' },
+            { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
             options.headers || {}
         );
 

@@ -8,6 +8,7 @@ import com.example.demo.exception.SuccessCode;
 import com.example.demo.service.catalog.WatchedHistoryService;
 import com.example.demo.service.movie.FilterMetaService;
 import com.example.demo.util.MessageUtils;
+import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+@AllArgsConstructor
 @Controller
 @RequestMapping("/watched")
 public class WatchedHistoryController {
@@ -22,14 +24,6 @@ public class WatchedHistoryController {
     private final WatchedHistoryService watchedHistoryService;
     private final MessageUtils messageUtils;
     private final FilterMetaService filterMetaService;
-
-    public WatchedHistoryController(WatchedHistoryService watchedHistoryService,
-                                    MessageUtils messageUtils,
-                                    FilterMetaService filterMetaService) {
-        this.watchedHistoryService = watchedHistoryService;
-        this.messageUtils = messageUtils;
-        this.filterMetaService = filterMetaService;
-    }
 
     @GetMapping
     public String getWatchedHistory(Model model, SessionUser sessionUser) {

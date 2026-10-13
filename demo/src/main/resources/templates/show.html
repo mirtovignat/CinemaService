@@ -22,6 +22,11 @@
          th:data-movie-title="${card.movie.title}"
          th:data-movie-price="${card.movie.price}">
 
+        <a th:href="@{/back(fallback='/')}" class="back-btn-floating">
+            <th:block th:replace="~{fragments/icons :: icon-arrow-left}"></th:block>
+            <span>Назад</span>
+        </a>
+
         <h1 class="movie-title"
             th:text="${card.movie.title}">
             Название фильма
@@ -144,6 +149,21 @@
 
             </div>
 
+            <div class="movie-cast-block"
+                 th:if="${card.movie.actors != null and !#lists.isEmpty(card.movie.actors)}">
+                <div class="cast-label">
+                    <th:block th:replace="~{fragments/icons :: icon-user}"></th:block>
+                    В главных ролях
+                </div>
+                <div class="cast-list">
+                    <span class="cast-chip"
+                          th:each="actor : ${card.movie.actors}"
+                          th:text="${actor}">
+                        Имя актёра
+                    </span>
+                </div>
+            </div>
+
             <div class="price-description-row">
 
                 <div class="movie-description"
@@ -259,9 +279,11 @@
     </div>
 </main>
 
-<th:block th:replace="~{fragments/app-modal :: appModal}"></th:block>
+<th:block th:replace="~{fragments/modals/cart-modals :: cartModals}"></th:block>
+<th:block th:replace="~{fragments/modals/favourites-modals :: favouritesModals}"></th:block>
 <th:block th:replace="~{fragments/modals/ratings-modals :: ratingsModals}"></th:block>
 
+<script th:src="@{/js/pages/page-show.js}" defer></script>
 <script th:src="@{/js/main.js}" defer></script>
 
 <th:block th:replace="~{fragments/footer :: footer}"></th:block>

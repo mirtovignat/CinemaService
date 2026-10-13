@@ -20,6 +20,23 @@
         showFlashMessage(errorMessage(err), 'error', undefined, buildActionForError(err));
     }
 
+    function openModal(id) {
+        return Modal.openById(id);
+    }
+
+    function closeModal(id) {
+        Modal.closeById(id);
+    }
+
+    function bindOneTimeConfirm(modal, handler) {
+        if (!modal) return;
+        var btn = modal.querySelector('[data-modal-confirm]');
+        if (!btn) return;
+        if (btn.__favBound) btn.removeEventListener('click', btn.__favBound);
+        btn.__favBound = handler;
+        btn.addEventListener('click', handler);
+    }
+
     function onToggle(el) {
         var movieId = getMovieId(el);
         var current = el.getAttribute('data-state') || 'add';
@@ -43,53 +60,45 @@
         var movieId = getMovieId(el);
         if (!movieId) return;
 
-        Modal.open({
-            title: 'Удаление из избранного',
-            message: 'Вы уверены, что хотите удалить фильм из избранного?',
-            summaryHtml:
-                '<p style="font-weight:600; margin-top:0.5rem;">' +
-                    escapeHtml(getMovieTitle(el)) +
-                '</p>',
-            confirmText: 'Удалить',
-            danger: true,
-            onConfirm: function () {
-                FavouritesFeature.remove(movieId)
-                    .then(function (data) {
-                        showFlashMessage((data && data.message) || 'Удалено', 'success');
-                        var card = document.querySelector(
-                            '.favourites-card[data-movie-id="' + CSS.escape(movieId) + '"]'
-                        );
-                        UI.animateRemoveCard(card, function () {
-                            if (document.querySelectorAll('.favourites-card').length === 0) {
-                                window.location.reload();
-                            }
-                        });
-                    })
-                    .catch(handleError);
-            }
+        var modal = openModal('favouritesRemoveModal');
+        if (!modal) return;
+
+        var titleEl = modal.querySelector('[data-modal-movie-title]');
+        if (titleEl) titleEl.textContent = getMovieTitle(el) || '';
+
+        bindOneTimeConfirm(modal, function () {
+            closeModal('favouritesRemoveModal');
+            FavouritesFeature.remove(movieId)
+                .then(function (data) {
+                    showFlashMessage((data && data.message) || 'Удалено', 'success');
+                    var card = document.querySelector(
+                        '.favourites-card[data-movie-id="' + CSS.escape(movieId) + '"]'
+                    );
+                    UI.animateRemoveCard(card, function () {
+                        if (document.querySelectorAll('.favourites-card').length === 0) {
+                            window.location.reload();
+                        }
+                    });
+                })
+                .catch(handleError);
         });
     }
 
     function onClearFavourites() {
-        var countEl = document.getElementById('favouritesItemsCount');
-        var count = countEl ? countEl.textContent : '0';
+        var modal = openModal('favouritesClearModal');
+        if (!modal) return;
 
-        Modal.open({
-            title: 'Очистка избранного',
-            message: 'Вы уверены, что хотите удалить все фильмы из избранного? Будет удалено ' + count + ' фильмов.',
-            confirmText: 'Очистить избранное',
-            danger: true,
-            onConfirm: function () {
-                FavouritesFeature.clear()
-                    .then(function (data) {
-                        saveFlashAndRedirect(
-                            (data && data.message) || 'Избранное очищено',
-                            'success',
-                            '/favourites'
-                        );
-                    })
-                    .catch(handleError);
-            }
+        bindOneTimeConfirm(modal, function () {
+            closeModal('favouritesClearModal');
+            FavouritesFeature.clear()
+                .then(function (data) {
+                    saveFlashAndRedirect(
+                        (data && data.message) || 'Избранное очищено',
+                        'success',
+                        '/favourites'
+                    );
+                })
+                .catch(handleError);
         });
     }
 

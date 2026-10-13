@@ -189,7 +189,7 @@ main.wallet-main {
     font-size: 18px !important;
     font-weight: 700 !important;
     color: #ffffff !important;
-    padding-right: 6px !important;
+    padding-right: 2px !important;
     user-select: none !important;
     flex-shrink: 0 !important;
     line-height: 1 !important;
@@ -202,6 +202,7 @@ main.wallet-main {
     align-items: center !important;
     flex: 1 !important;
     height: 100% !important;
+    margin-left: -77px !important;
 }
 .amount-input-with-stepper input {
     flex: 1 !important;

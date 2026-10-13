@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<body>
+
+<div th:fragment="favouritesModals">
+
+    <div id="favouritesRemoveModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>
+                    <th:block th:replace="~{fragments/icons :: icon-trash}"></th:block>
+                    Удаление из избранного
+                </h3>
+                <button type="button" class="modal-x" data-modal-close aria-label="Закрыть">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="1.8"
+                         stroke-linecap="round" aria-hidden="true">
+                        <path d="M7 7l10 10M17 7L7 17"/>
+                    </svg>
+                </button>
+            </div>
+            <p>Вы уверены, что хотите удалить фильм из избранного?</p>
+            <p style="font-weight:600; color:#e2e8f0;" data-modal-movie-title></p>
+            <div class="modal-buttons">
+                <button type="button" class="modal-confirm-btn danger" data-modal-confirm>
+                    Удалить
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="favouritesClearModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>
+                    <th:block th:replace="~{fragments/icons :: icon-trash}"></th:block>
+                    Очистка избранного
+                </h3>
+                <button type="button" class="modal-x" data-modal-close aria-label="Закрыть">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="1.8"
+                         stroke-linecap="round" aria-hidden="true">
+                        <path d="M7 7l10 10M17 7L7 17"/>
+                    </svg>
+                </button>
+            </div>
+            <p>Вы уверены, что хотите удалить все фильмы из избранного?</p>
+            <p style="color:#94a3b8; font-size:0.85rem;">Это действие нельзя отменить.</p>
+            <div class="modal-buttons">
+                <button type="button" class="modal-confirm-btn danger" data-modal-confirm>
+                    Очистить избранное
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

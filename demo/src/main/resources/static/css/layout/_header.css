@@ -439,3 +439,8 @@
         margin-left: 0.5rem;
     }
 }
+.suggestion-item.is-active {
+    background: rgba(99, 102, 241, 0.25);
+    border-color: rgba(168, 85, 247, 0.5);
+    transform: translateX(3px);
+}

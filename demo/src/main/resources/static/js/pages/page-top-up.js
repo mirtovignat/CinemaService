@@ -146,7 +146,7 @@
     function refreshBalanceFromServer() {
         fetch('/wallet/balance?_=' + Date.now(), {
             method: 'GET',
-            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
             cache: 'no-store'
         })
         .then(function (r) {

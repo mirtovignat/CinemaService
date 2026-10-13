@@ -12,5 +12,4 @@ public class FooterController {
     public String getPrivacyPolicy() {
         return "privacy-policy";
     }
-
 }

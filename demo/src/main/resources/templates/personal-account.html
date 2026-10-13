@@ -31,7 +31,8 @@
                 th:replace="~{fragments/sidebar :: sidebar(currentPage='personal-account', genres=${response.genres}, userForOwner=${response.userForOwner})}">
         </th:block>
 
-        <div class="profile-right">
+        <div class="profile-right"
+             th:classappend="${#lists.isEmpty(response.topThreeRatedMovies)} ? 'no-scroll' : ''">
 
             <div class="profile-right-header">
                 <div>
@@ -65,17 +66,14 @@
 
                     <div class="favorites-grid"
                          th:if="${#lists.isEmpty(response.topThreeRatedMovies)}">
-
                         <div class="favorites-empty-card">
                             <th:block th:replace="~{fragments/icons :: icon-film}"></th:block>
-
                             <div class="empty-title">
                                 Вы пока не оценили ни одного фильма
                             </div>
-
                             <div class="empty-link">
                                 <a th:href="@{/movies}">
-                                    Перейти в каталог
+                                    Перейти в главное меню
                                 </a>
                             </div>
                         </div>
@@ -83,44 +81,34 @@
 
                     <div class="favorites-grid"
                          th:unless="${#lists.isEmpty(response.topThreeRatedMovies)}">
-
                         <div class="fav-card"
                              th:each="ratedMovie, iterStat : ${response.topThreeRatedMovies}">
-
                             <div class="fav-poster"
                                  style="background:#0d1322;">
-
-                                <a th:href="@{/movies/{id}(id=${ratedMovie.id})}"
+                                <a th:href="@{/movies/{id}(id=${ratedMovie.id}, from=${currentUri})}"
                                    style="display:block;width:100%;height:100%;position:relative;text-decoration:none;">
-
                                     <img th:if="${ratedMovie.posterUrl != null and !ratedMovie.posterUrl.isEmpty()}"
                                          th:src="${ratedMovie.posterUrl}"
                                          th:alt="${ratedMovie.title}"
                                          src=""
                                          alt="">
-
                                     <div th:unless="${ratedMovie.posterUrl != null and !ratedMovie.posterUrl.isEmpty()}"
                                          style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:.75rem;background:#1a1f2b;">
                                         Нет постера
                                     </div>
-
                                     <span class="fav-rank">
                                         #<span th:text="${iterStat.index + 1}">1</span>
                                     </span>
                                 </a>
                             </div>
-
                             <div class="fav-info">
-
                                 <div class="fav-title"
                                      th:text="${ratedMovie.title} ?: 'Без названия'">
                                 </div>
-
                                 <div class="fav-meta">
                                     <span th:text="${ratedMovie.releaseDate != null ? ratedMovie.releaseDate.year : ''}">
                                         Год
                                     </span>
-
                                     <span class="fav-score">
                                         <th:block th:replace="~{fragments/icons :: icon-star}"></th:block>
                                         <span th:text="${ratedMovie.ratingValue}">
@@ -129,98 +117,22 @@
                                         /10
                                     </span>
                                 </div>
-
                                 <div style="font-size:.6rem;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:.1rem;"
                                      th:text="${ratedMovie.review} ?: 'Без отзыва'">
                                 </div>
-
                             </div>
                         </div>
                     </div>
                 </section>
 
-                <section class="recommendations-section"
-                         id="recommendationsSection"
-                         th:if="${!response.recommendedMovies.isEmpty()}">
-
-                    <div class="section-label">
-
-                        <span>
-                            Вам могло бы понравиться (ПРОЛИСТЫВАЙТЕ ВПРАВО)
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                                 stroke="currentColor" class="size-6">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                      d="M19.5 13.5 12 21m0 0-7.5-7.5M12 21V3"/>
-                            </svg>
-                        </span>
-
-                    </div>
-
-                    <div class="rec-scroll-wrapper"
-                         id="recScrollWrapper">
-
-                        <div class="rec-grid"
-                             id="recGrid">
-
-                            <div class="rec-card"
-                                 th:each="movie : ${response.recommendedMovies}"
-                                 th:data-movie-id="${movie.id}">
-
-                                <a th:href="@{/movies/{id}(id=${movie.id})}"
-                                   style="display:block;text-decoration:none;color:inherit;">
-
-                                    <div class="rec-poster"
-                                         style="background:#0d1322;">
-
-                                        <img th:if="${movie.posterUrl != null and !movie.posterUrl.isEmpty()}"
-                                             th:src="${movie.posterUrl}"
-                                             th:alt="${movie.title}"
-                                             src=""
-                                             alt="">
-
-                                        <div th:unless="${movie.posterUrl != null and !movie.posterUrl.isEmpty()}"
-                                             style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:.6rem;background:#1a1f2b;">
-                                            Нет постера
-                                        </div>
-
-                                    </div>
-
-                                    <div class="rec-info">
-                                        <div class="rec-title"
-                                             th:text="${movie.title}">
-                                        </div>
-
-                                        <div class="rec-year"
-                                             th:text="${movie.releaseDate != null ? movie.releaseDate.year : ''}">
-                                        </div>
-                                    </div>
-
-                                </a>
-                            </div>
-
-                        </div>
-                    </div>
-
-                </section>
+                <th:block th:if="${!response.recommendedMovies.isEmpty()}"
+                          th:replace="~{fragments/recommendations :: recommendations}"></th:block>
             </div>
         </div>
     </div>
 </main>
 
-<template id="recCardTemplate">
-    <div class="rec-card">
-        <a class="rec-card-link">
-            <div class="rec-poster">
-                <img class="rec-poster-img" alt="">
-                <div class="rec-poster-empty" style="display:none;">Нет постера</div>
-            </div>
-            <div class="rec-info">
-                <div class="rec-title"></div>
-                <div class="rec-year"></div>
-            </div>
-        </a>
-    </div>
-</template>
+<th:block th:replace="~{fragments/modals/profile-modals :: profileModals}"></th:block>
 
 <script th:src="@{/js/pages/page-personal-account.js}" defer></script>
 <script th:src="@{/js/main.js}" defer></script>

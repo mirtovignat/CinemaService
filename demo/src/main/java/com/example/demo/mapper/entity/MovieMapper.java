@@ -22,6 +22,7 @@ public interface MovieMapper {
     @Mapping(target = "inCart", ignore = true)
     @Mapping(target = "inFavourites", ignore = true)
     @Mapping(target = "ownRating", ignore = true)
+    @Mapping(target = "actors", source = "actors")
     MovieDetailsViewDTO toDetails(Movie movie);
 
     MovieSearchDTO toMovieSearch(Movie movie);

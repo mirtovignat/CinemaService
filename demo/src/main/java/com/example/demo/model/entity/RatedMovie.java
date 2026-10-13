@@ -26,7 +26,7 @@ public class RatedMovie extends AbstractCatalogItem {
     @Builder.Default
     private DeletableState deletableState = DeletableState.builder().build();
 
-    @Column(name = "review")
+    @Column(name = "review", length = 350)
     private String review;
 
     @DecimalMin(value = "0.1", message = "Оценка не может быть меньше 0.1")

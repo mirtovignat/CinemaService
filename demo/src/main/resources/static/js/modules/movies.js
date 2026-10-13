@@ -39,7 +39,8 @@
         if (rating === null || rating === undefined) return null;
         if (rating === '-' || rating === '—' || rating === 'undefined') return null;
         var n = parseFloat(rating);
-        return isNaN(n) ? null : n.toFixed(1);
+        if (isNaN(n)) return null;
+        return n.toFixed(1);
     }
 
     function updateRatingBadge(movieId, rating) {
@@ -50,27 +51,39 @@
         RATING_TARGETS.forEach(function (target) {
             document.querySelectorAll(target.root + '[data-movie-id="' + id + '"]').forEach(function (rootEl) {
                 if (!target.value) {
-                    rootEl.textContent = target.format(value);
+                    var newText = target.format(value);
+                    if (rootEl.textContent !== newText) {
+                        rootEl.textContent = newText;
+                    }
                     return;
                 }
                 if (target.hideWhenNull) {
                     rootEl.style.display = value == null ? 'none' : '';
                 }
                 var valueEl = rootEl.querySelector(target.value);
-                if (valueEl) valueEl.textContent = target.format(value);
+                if (valueEl) {
+                    var newValue = target.format(value);
+                    if (valueEl.textContent !== newValue) {
+                        valueEl.textContent = newValue;
+                    }
+                }
             });
         });
 
         var pageMovieId = (window.location.pathname.match(/\/movies\/(\d+)/) || [])[1];
         if (pageMovieId && String(pageMovieId) === String(movieId)) {
             var single = document.querySelector('.rating-value:not([data-movie-id])');
-            if (single) single.textContent = value == null ? '—' : formatRating(value) + ' / 10';
+            if (single) {
+                single.textContent = value == null ? '—' : formatRating(value) + ' / 10';
+            }
         }
     }
 
     function updateMovieRating(movieId) {
         if (!movieId) return Promise.resolve();
-        return fetch('/movies/' + encodeURIComponent(movieId) + '/rating?_=' + Date.now())
+        return fetch('/movies/' + encodeURIComponent(movieId) + '/rating?_=' + Date.now(), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+        })
             .then(function (r) {
                 if (!r.ok) throw new Error('Ошибка получения рейтинга');
                 return r.json();
@@ -94,7 +107,9 @@
 
     function updateReviewsCount(movieId) {
         if (!movieId) return;
-        fetch('/rated/count/' + encodeURIComponent(movieId))
+        fetch('/rated/count/' + encodeURIComponent(movieId), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+        })
             .then(r => {
                 if (!r.ok) throw new Error('Ошибка получения количества отзывов');
                 return r.text();

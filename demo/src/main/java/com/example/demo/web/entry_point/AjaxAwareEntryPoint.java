@@ -1,19 +1,20 @@
-package com.example.demo.config;
+package com.example.demo.web.entry_point;
 
+import com.example.demo.dto.response.ApiResponse;
+import com.example.demo.exception.ErrorCode;
 import com.example.demo.web.util.RequestUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.Map;
 
 @Component
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class AjaxAwareEntryPoint implements AuthenticationEntryPoint {
 
     private final ObjectMapper objectMapper;
@@ -27,7 +28,7 @@ public class AjaxAwareEntryPoint implements AuthenticationEntryPoint {
             httpServletResponse.setContentType("application/json;charset=UTF-8");
             objectMapper.writeValue(
                     httpServletResponse.getWriter(),
-                    Map.of("code", "NOT_AUTHORIZED")
+                    ApiResponse.error(ErrorCode.NOT_AUTHORIZED, null)
             );
         } else {
             httpServletResponse.sendRedirect("/login");

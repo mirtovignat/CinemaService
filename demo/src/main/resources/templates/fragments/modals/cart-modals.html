@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<body>
+
+<div th:fragment="cartModals">
+
+    <div id="cartRemoveModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>
+                    <th:block th:replace="~{fragments/icons :: icon-trash}"></th:block>
+                    Удаление из корзины
+                </h3>
+                <button type="button" class="modal-x" data-modal-close aria-label="Закрыть">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="1.8"
+                         stroke-linecap="round" aria-hidden="true">
+                        <path d="M7 7l10 10M17 7L7 17"/>
+                    </svg>
+                </button>
+            </div>
+            <p>Вы уверены, что хотите удалить фильм из корзины?</p>
+            <p style="font-weight:600; color:#e2e8f0;" data-modal-movie-title></p>
+            <div class="modal-buttons">
+                <button type="button" class="modal-confirm-btn danger" data-modal-confirm>
+                    Удалить
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="cartClearModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>
+                    <th:block th:replace="~{fragments/icons :: icon-trash}"></th:block>
+                    Очистка корзины
+                </h3>
+                <button type="button" class="modal-x" data-modal-close aria-label="Закрыть">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="1.8"
+                         stroke-linecap="round" aria-hidden="true">
+                        <path d="M7 7l10 10M17 7L7 17"/>
+                    </svg>
+                </button>
+            </div>
+            <p>Вы уверены, что хотите удалить все фильмы из корзины?</p>
+            <p style="color:#94a3b8; font-size:0.85rem;">Это действие нельзя отменить.</p>
+            <div class="modal-buttons">
+                <button type="button" class="modal-confirm-btn danger" data-modal-confirm>
+                    Очистить корзину
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="cartBuyOneModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>
+                    <th:block th:replace="~{fragments/icons :: icon-cart}"></th:block>
+                    Подтверждение покупки
+                </h3>
+                <button type="button" class="modal-x" data-modal-close aria-label="Закрыть">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="1.8"
+                         stroke-linecap="round" aria-hidden="true">
+                        <path d="M7 7l10 10M17 7L7 17"/>
+                    </svg>
+                </button>
+            </div>
+            <p>Вы покупаете фильм:</p>
+            <p style="font-weight:600; color:#e2e8f0; margin-bottom:12px;" data-modal-movie-title></p>
+            <div class="modal-price" data-modal-price></div>
+            <div class="modal-buttons">
+                <button type="button" class="modal-confirm-btn" data-modal-confirm>
+                    Купить
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="cartBuyBulkModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>
+                    <th:block th:replace="~{fragments/icons :: icon-cart}"></th:block>
+                    Покупка всех фильмов
+                </h3>
+                <button type="button" class="modal-x" data-modal-close aria-label="Закрыть">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="1.8"
+                         stroke-linecap="round" aria-hidden="true">
+                        <path d="M7 7l10 10M17 7L7 17"/>
+                    </svg>
+                </button>
+            </div>
+            <p>Вы покупаете все фильмы из корзины:</p>
+            <div class="modal-summary" data-modal-summary></div>
+            <div class="modal-buttons">
+                <button type="button" class="modal-confirm-btn" data-modal-confirm>
+                    Купить всё
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -12,6 +12,17 @@ main.catalog-wrapper {
     overflow-x: hidden;
 }
 
+main.catalog-wrapper.no-scroll {
+    overflow: hidden;
+    padding-bottom: 0;
+    margin-bottom: 0;
+}
+
+main.catalog-wrapper.no-scroll .catalog-content {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
 main.catalog-wrapper::-webkit-scrollbar {
     width: 8px;
 }

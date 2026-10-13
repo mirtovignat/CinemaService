@@ -10,9 +10,16 @@
 <th:block th:replace="~{fragments/flash-messages :: flashMessages}"></th:block>
 <div id="authStatus" th:data-authenticated="${sessionUser != null}" style="display:none;"></div>
 
-<main class="catalog-wrapper">
+<main class="catalog-wrapper"
+      th:classappend="${catalog == null or #lists.size(catalog) <= 4} ? 'no-scroll' : ''">
 
     <div class="page-header-row">
+
+        <a th:href="@{/back(fallback='/')}" class="back-btn-header">
+            <th:block th:replace="~{fragments/icons :: icon-arrow-left}"></th:block>
+            <span>Назад</span>
+        </a>
+
         <div class="profile-right-header">
             <h1>
                 <th:block th:replace="~{fragments/icons :: icon-cart}"></th:block>
@@ -155,10 +162,16 @@
             <a th:href="@{/}" class="browse-movies-btn">Перейти в главное меню</a>
         </div>
 
+        <th:block th:if="${catalog == null or catalog.isEmpty()}">
+            <th:block th:with="visible=9">
+                <th:block th:insert="~{fragments/recommendations :: recommendations}"></th:block>
+            </th:block>
+        </th:block>
+
     </div>
 </main>
 
-<th:block th:replace="~{fragments/app-modal :: appModal}"></th:block>
+<th:block th:replace="~{fragments/modals/cart-modals :: cartModals}"></th:block>
 <th:block th:replace="~{fragments/modals/ratings-modals :: ratingsModals}"></th:block>
 
 <script th:src="@{/js/pages/highlight.js}" defer></script>

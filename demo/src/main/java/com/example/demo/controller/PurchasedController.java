@@ -5,7 +5,7 @@ import com.example.demo.dto.user.SessionUser;
 import com.example.demo.exception.SuccessCode;
 import com.example.demo.service.purchased.PurchasedCommandService;
 import com.example.demo.util.MessageUtils;
-import com.example.demo.web.util.SessionAuthenticator;
+import com.example.demo.web.security.SessionAuthenticator;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -53,7 +53,7 @@ public class PurchasedController {
                                                 BigDecimal newBalance,
                                                 HttpServletRequest httpServletRequest,
                                                 HttpServletResponse httpServletResponse) {
-        sessionAuthenticator.updatePrincipal(
+        sessionAuthenticator.updateSessionUser(
                 sessionUser.withBalance(newBalance),
                 httpServletRequest,
                 httpServletResponse

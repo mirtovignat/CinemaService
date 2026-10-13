@@ -19,6 +19,7 @@
     }
 
     var _pendingHistoryId = null;
+    var _clearHistoryHasItems = false;
 
     var ICON_CALENDAR =
         '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" ' +
@@ -609,14 +610,16 @@
         _pendingHistoryId = historyId;
         var titleEl = document.getElementById('deleteItemTitle');
         if (titleEl) titleEl.textContent = title;
-        var modal = document.getElementById('deleteHistoryItemModal');
-        if (modal) modal.classList.add('active');
+        if (window.Modal && typeof Modal.openById === 'function') {
+            Modal.openById('watchedRemoveModal');
+        }
         closeAllDropdowns();
     }
 
     function closeDeleteItemModal() {
-        var modal = document.getElementById('deleteHistoryItemModal');
-        if (modal) modal.classList.remove('active');
+        if (window.Modal && typeof Modal.closeById === 'function') {
+            Modal.closeById('watchedRemoveModal');
+        }
         _pendingHistoryId = null;
     }
 
@@ -674,18 +677,39 @@
         });
     }
 
+    function hasHistoryNow() {
+        var btn = document.querySelector('[data-action="open-clear-history-modal"]');
+        if (btn) {
+            var attr = btn.getAttribute('data-has-history');
+            if (attr === 'true') return true;
+            if (attr === 'false') return false;
+        }
+        if (document.querySelector('.history-item')) return true;
+        if (document.querySelector('.history-day-group')) return true;
+        if (document.querySelector('.history-container')) return true;
+        return false;
+    }
+
     function openClearHistoryModal() {
-        var modal = document.getElementById('clearHistoryModal');
-        if (modal) modal.classList.add('active');
+        _clearHistoryHasItems = hasHistoryNow();
+        if (window.Modal && typeof Modal.openById === 'function') {
+            Modal.openById('watchedClearModal');
+        }
     }
 
     function closeClearHistoryModal() {
-        var modal = document.getElementById('clearHistoryModal');
-        if (modal) modal.classList.remove('active');
+        if (window.Modal && typeof Modal.closeById === 'function') {
+            Modal.closeById('watchedClearModal');
+        }
     }
 
     function confirmClearHistory() {
-        var btn = document.querySelector('#clearHistoryModal .btn-danger');
+        if (!hasHistoryNow()) {
+            closeClearHistoryModal();
+            return;
+        }
+
+        var btn = document.querySelector('#watchedClearModal [data-action="confirm-clear-history"]');
         if (btn) {
             btn.disabled = true;
             btn.textContent = 'Удаляем...';

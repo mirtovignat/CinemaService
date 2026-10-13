@@ -12,7 +12,7 @@ import com.example.demo.service.rated.RatedQueryService;
 import com.example.demo.service.rated.ReviewsQueryService;
 import com.example.demo.service.user.UserQueryService;
 import com.example.demo.util.MessageUtils;
-import com.example.demo.web.util.ReviewSortResolver;
+import com.example.demo.web.resolver.ReviewSortResolver;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;

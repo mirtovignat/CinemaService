@@ -46,9 +46,7 @@
         if (err.code === 'INSUFFICIENT_FUNDS') {
             var shortage = extractShortage(err.message);
             if (shortage != null) {
-                try {
-                    sessionStorage.setItem('topUpAmount', shortage.toFixed(2));
-                } catch (e) {}
+                try { sessionStorage.setItem('topUpAmount', shortage.toFixed(2)); } catch (e) {}
             }
             return { text: 'Перейти к пополнению', url: '/wallet/top-up' };
         }
@@ -59,77 +57,45 @@
         showFlashMessage(errorMessage(err), 'error', undefined, buildActionForError(err));
     }
 
-    function buildWatchButton(movieId, movieTitle, posterUrl) {
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'watch-btn-neon watch-btn-neon--md';
-        btn.setAttribute('data-action', 'watch-movie');
-        btn.setAttribute('data-movie-id', movieId);
-        btn.setAttribute('data-movie-title', movieTitle || '');
-        btn.setAttribute('data-poster-url', posterUrl || '');
-        btn.setAttribute('data-watched', 'false');
-
-        var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.setAttribute('viewBox', '0 0 24 24');
-        svg.setAttribute('fill', 'currentColor');
-        var poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-        poly.setAttribute('points', '5 3 19 12 5 21 5 3');
-        svg.appendChild(poly);
-
-        btn.appendChild(svg);
-        btn.appendChild(document.createTextNode(' Смотреть'));
-        return btn;
+    function setModalTitle(modal, title) {
+        if (!modal) return;
+        var el = modal.querySelector('[data-modal-movie-title]');
+        if (el) el.textContent = title || '';
     }
 
-    function addWatchButtonOptimistic(movieId, movieTitle, posterUrl) {
-        var card = document.querySelector(
-            '.movie-card[data-movie-id="' + CSS.escape(movieId) + '"]'
-        );
+    function setModalPrice(modal, price) {
+        if (!modal) return;
+        var el = modal.querySelector('[data-modal-price]');
+        if (el) el.textContent = price ? UI.formatPrice(price) + ' ₽' : '';
+    }
 
-        if (card) {
-            var posterLink = card.querySelector('.movie-poster-link');
-            if (!posterLink) return null;
+    function setModalSummary(modal, html) {
+        if (!modal) return;
+        var el = modal.querySelector('[data-modal-summary]');
+        if (el) el.innerHTML = html || '';
+    }
 
-            var existing = posterLink.querySelector('.poster-overlay');
-            if (existing) {
-                if (existing.querySelector('.watch-btn-neon')) return null;
-                existing.appendChild(buildWatchButton(movieId, movieTitle, posterUrl));
-                return null;
-            }
+    function getConfirmButton(modal) {
+        return modal ? modal.querySelector('[data-modal-confirm]') : null;
+    }
 
-            var overlay = document.createElement('div');
-            overlay.className = 'poster-overlay';
-            overlay.appendChild(buildWatchButton(movieId, movieTitle, posterUrl));
-            posterLink.appendChild(overlay);
-
-            return function rollback() {
-                if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-            };
+    function bindOneTimeConfirm(modal, handler) {
+        if (!modal) return;
+        var btn = getConfirmButton(modal);
+        if (!btn) return;
+        if (btn.__cartBound) {
+            btn.removeEventListener('click', btn.__cartBound);
         }
+        btn.__cartBound = handler;
+        btn.addEventListener('click', handler);
+    }
 
-        var details = document.querySelector('.movie-details-container');
-        if (details && String(details.getAttribute('data-movie-id')) === String(movieId)) {
-            var posterWrapper = details.querySelector('.poster-wrapper');
-            if (!posterWrapper) return null;
+    function openModal(id) {
+        return Modal.openById(id);
+    }
 
-            var existingOverlay = posterWrapper.querySelector('.poster-overlay');
-            if (existingOverlay) {
-                if (existingOverlay.querySelector('.watch-btn-neon')) return null;
-                existingOverlay.appendChild(buildWatchButton(movieId, movieTitle, posterUrl));
-                return null;
-            }
-
-            var newOverlay = document.createElement('div');
-            newOverlay.className = 'poster-overlay';
-            newOverlay.appendChild(buildWatchButton(movieId, movieTitle, posterUrl));
-            posterWrapper.appendChild(newOverlay);
-
-            return function rollback() {
-                if (newOverlay.parentNode) newOverlay.parentNode.removeChild(newOverlay);
-            };
-        }
-
-        return null;
+    function closeModal(id) {
+        Modal.closeById(id);
     }
 
     async function onAdd(el) {
@@ -178,96 +144,85 @@
 
     function onConfirmRemove(el) {
         var movieId = getMovieId(el);
-        Modal.open({
-            title: 'Удаление из корзины',
-            message: 'Вы уверены, что хотите удалить фильм из корзины?',
-            summaryHtml:
-                '<p style="font-weight:600; margin-top:0.5rem;">' +
-                    escapeHtml(getMovieTitle(el)) +
-                '</p>',
-            confirmText: 'Удалить',
-            danger: true,
-            onConfirm: function () {
-                CartFeature.remove(movieId)
-                    .then(function (data) {
-                        showFlashMessage((data && data.message) || 'Удалено', 'success');
-                        var card = document.querySelector(
-                            '.cart-card[data-movie-id="' + CSS.escape(movieId) + '"]'
-                        );
-                        UI.animateRemoveCard(card, function () {
-                            if (document.querySelectorAll('.cart-card').length === 0) {
-                                window.location.reload();
-                            }
-                        });
-                    })
-                    .catch(handleError);
-            }
+        if (!movieId) return;
+
+        var modal = openModal('cartRemoveModal');
+        if (!modal) return;
+
+        setModalTitle(modal, getMovieTitle(el));
+
+        bindOneTimeConfirm(modal, function () {
+            closeModal('cartRemoveModal');
+            CartFeature.remove(movieId)
+                .then(function (data) {
+                    showFlashMessage((data && data.message) || 'Удалено', 'success');
+                    var card = document.querySelector(
+                        '.cart-card[data-movie-id="' + CSS.escape(movieId) + '"]'
+                    );
+                    UI.animateRemoveCard(card, function () {
+                        if (document.querySelectorAll('.cart-card').length === 0) {
+                            window.location.reload();
+                        }
+                    });
+                })
+                .catch(handleError);
         });
     }
 
     function onClearCart() {
-        Modal.open({
-            title: 'Очистка корзины',
-            message: 'Вы уверены, что хотите удалить все фильмы из корзины?',
-            confirmText: 'Очистить корзину',
-            danger: true,
-            onConfirm: function () {
-                CartFeature.clear()
-                    .then(function (data) {
-                        saveFlashAndRedirect(
-                            (data && data.message) || 'Корзина очищена',
-                            'success',
-                            '/cart'
-                        );
-                    })
-                    .catch(handleError);
-            }
+        var modal = openModal('cartClearModal');
+        if (!modal) return;
+
+        bindOneTimeConfirm(modal, function () {
+            closeModal('cartClearModal');
+            CartFeature.clear()
+                .then(function (data) {
+                    saveFlashAndRedirect(
+                        (data && data.message) || 'Корзина очищена',
+                        'success',
+                        '/cart'
+                    );
+                })
+                .catch(handleError);
         });
     }
 
     function onSingleBuy(el) {
         var movieId = getMovieId(el);
         if (!movieId) return;
-        Modal.open({
-            title: 'Подтверждение покупки',
-            message: 'Вы уверены, что хотите купить фильм:',
-            summaryHtml:
-                '<p style="font-weight:600;">' +
-                    escapeHtml(getMovieTitle(el)) +
-                '</p><div class="modal-price">' +
-                    escapeHtml(getMoviePrice(el)) + ' ₽' +
-                '</div>',
-            confirmText: 'Купить',
-            onConfirm: function () {
-                var movieTitle = getMovieTitle(el);
-                var cartCard = document.querySelector(
-                    '.cart-card[data-movie-id="' + CSS.escape(movieId) + '"]'
-                );
-                var posterUrl = '';
-                if (cartCard) {
-                    var posterImg = cartCard.querySelector('.media-card-poster-img');
-                    if (posterImg) posterUrl = posterImg.getAttribute('src') || '';
-                }
 
-                var rollbackWatch = addWatchButtonOptimistic(movieId, movieTitle, posterUrl);
+        var modal = openModal('cartBuyOneModal');
+        if (!modal) return;
 
-                CartFeature.buyOne(movieId)
-                    .then(function (data) {
-                        showFlashMessage((data && data.message) || 'Фильм куплен', 'success');
-                        var card = document.querySelector(
-                            '.cart-card[data-movie-id="' + CSS.escape(movieId) + '"]'
-                        );
-                        UI.animateRemoveCard(card, function () {
-                            if (document.querySelectorAll('.cart-card').length === 0) {
-                                window.location.reload();
-                            }
-                        });
-                    })
-                    .catch(function (err) {
-                        if (typeof rollbackWatch === 'function') rollbackWatch();
-                        handleError(err);
-                    });
+        setModalTitle(modal, getMovieTitle(el));
+        setModalPrice(modal, getMoviePrice(el));
+
+        bindOneTimeConfirm(modal, function () {
+            closeModal('cartBuyOneModal');
+
+            var movieTitle = getMovieTitle(el);
+            var cartCard = document.querySelector(
+                '.cart-card[data-movie-id="' + CSS.escape(movieId) + '"]'
+            );
+            var posterUrl = '';
+            if (cartCard) {
+                var posterImg = cartCard.querySelector('.media-card-poster-img');
+                if (posterImg) posterUrl = posterImg.getAttribute('src') || '';
             }
+
+            CartFeature.buyOne(movieId)
+                .then(function (data) {
+                    showFlashMessage((data && data.message) || 'Фильм куплен', 'success');
+                    var card = document.querySelector(
+                        '.cart-card[data-movie-id="' + CSS.escape(movieId) + '"]'
+                    );
+                    UI.animateRemoveCard(card, function () {
+                        if (document.querySelectorAll('.cart-card').length === 0) {
+                            window.location.reload();
+                        }
+                    });
+                })
+                .catch(handleError);
         });
     }
 
@@ -277,60 +232,41 @@
             showFlashMessage('Корзина пуста', 'error');
             return;
         }
+
         var html = '';
         var total = 0;
         var movieIds = [];
-        var movieTitles = {};
-        var moviePosters = {};
         cards.forEach(function (card) {
             var id = card.getAttribute('data-movie-id');
             if (id) movieIds.push(id);
             var titleEl = card.querySelector('.media-card-title a');
             var title = titleEl ? titleEl.textContent : 'Фильм';
-            if (id) movieTitles[id] = title;
-            if (id) {
-                var pimg = card.querySelector('.media-card-poster-img');
-                moviePosters[id] = pimg ? (pimg.getAttribute('src') || '') : '';
-            }
             var price = UI.getCardPrice(card);
             total += price;
             html +=
                 '<div class="item"><span>' + escapeHtml(title) +
-                '</span><span>' + price.toFixed(0) + ' ₽</span></div>';
+                '</span><span>' + UI.formatPrice(price) + ' ₽</span></div>';
         });
         html +=
             '<div class="item total"><span>Итого:</span><span>' +
-            total.toFixed(0) + ' ₽</span></div>';
+            UI.formatPrice(total) + ' ₽</span></div>';
 
-        Modal.open({
-            title: 'Подтверждение покупки',
-            message: 'Вы покупаете все фильмы из корзины:',
-            summaryHtml: html,
-            confirmText: 'Купить всё',
-            onConfirm: function () {
-                var rollbacks = movieIds.map(function (id) {
-                    return addWatchButtonOptimistic(
-                        id,
-                        movieTitles[id] || '',
-                        moviePosters[id] || ''
+        var modal = openModal('cartBuyBulkModal');
+        if (!modal) return;
+
+        setModalSummary(modal, html);
+
+        bindOneTimeConfirm(modal, function () {
+            closeModal('cartBuyBulkModal');
+            CartFeature.buyBulk(movieIds)
+                .then(function (data) {
+                    saveFlashAndRedirect(
+                        (data && data.message) || 'Покупка прошла успешно',
+                        'success',
+                        '/'
                     );
-                });
-
-                CartFeature.buyBulk(movieIds)
-                    .then(function (data) {
-                        saveFlashAndRedirect(
-                            (data && data.message) || 'Покупка прошла успешно',
-                            'success',
-                            '/'
-                        );
-                    })
-                    .catch(function (err) {
-                        rollbacks.forEach(function (r) {
-                            if (typeof r === 'function') r();
-                        });
-                        handleError(err);
-                    });
-            }
+                })
+                .catch(handleError);
         });
     }
 

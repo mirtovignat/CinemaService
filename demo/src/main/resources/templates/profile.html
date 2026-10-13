@@ -142,11 +142,11 @@
                                       class="editable-text"
                                       th:text="${response.userForOwner.phone} ?: ''"
                                       th:attr="data-raw-phone=${response.userForOwner.phone} ?: ''"></span>
-                                                            <span class="detail-value-empty"
-                                                                  id="panelPhoneEmpty"
-                                                                  th:style="${#strings.isEmpty(response.userForOwner.phone)} ? 'display:inline-flex' : 'display:none'"
-                                                                  data-edit-group="phoneGroup"
-                                                                  data-edit-field="PHONE">
+                                    <span class="detail-value-empty"
+                                          id="panelPhoneEmpty"
+                                          th:style="${#strings.isEmpty(response.userForOwner.phone)} ? 'display:inline-flex' : 'display:none'"
+                                          data-edit-group="phoneGroup"
+                                          data-edit-field="PHONE">
                                     <th:block th:replace="~{fragments/icons :: icon-edit}"></th:block>
                                     Добавить номер
                                 </span>

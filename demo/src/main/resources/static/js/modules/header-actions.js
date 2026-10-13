@@ -1,33 +1,29 @@
 (function () {
     'use strict';
 
-    function resolveActiveUsername() {
-        var el = document.getElementById('currentUserData');
-        return el && el.dataset.username ? el.dataset.username : '';
-    }
-
     function bindHeaderActions() {
         var favBtn = document.getElementById('headerFavouritesBtn');
         if (favBtn) {
             favBtn.addEventListener('click', function () {
-                if (typeof navigateProtected === 'function') navigateProtected('/favourites');
+                if (typeof navigateProtected === 'function') {
+                    navigateProtected('/favourites');
+                }
             });
         }
 
         var cartBtn = document.getElementById('headerCartBtn');
         if (cartBtn) {
             cartBtn.addEventListener('click', function () {
-                if (typeof navigateProtected === 'function') navigateProtected('/cart');
+                if (typeof navigateProtected === 'function') {
+                    navigateProtected('/cart');
+                }
             });
         }
 
         var userMenuAddAccount = document.getElementById('userMenuAddAccount');
         if (userMenuAddAccount) {
             userMenuAddAccount.addEventListener('click', function () {
-                var active = resolveActiveUsername();
-                window.location.href = active
-                    ? '/login?switch=' + encodeURIComponent(active)
-                    : '/login';
+                window.location.href = '/login';
             });
         }
 

@@ -1,8 +1,6 @@
 .header-wrapper { flex-shrink: 0; z-index: 50; }
 
-.history-item:hover {
-    border-color: rgba(167, 139, 250, 0.2);
-}
+.history-item:hover { border-color: rgba(167, 139, 250, 0.2); }
 
 .history-item-icon {
     width: 40px;
@@ -40,12 +38,7 @@
     border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.history-item-rating svg {
-    width: 14px;
-    height: 14px;
-    stroke: #fbbf24;
-    fill: #fbbf24;
-}
+.history-item-rating svg { width: 14px; height: 14px; stroke: #fbbf24; fill: #fbbf24; }
 
 .history-review {
     font-size: 0.75rem;
@@ -66,22 +59,10 @@
     font-weight: 600;
 }
 
-.history-item-meta-value-max {
-    color: #94a3b8;
-    font-weight: 400;
-}
+.history-item-meta-value-max { color: #94a3b8; font-weight: 400; }
 
-.history-item-rating-star {
-    display: inline-flex;
-    align-items: center;
-}
-
-.history-item-rating-star svg {
-    width: 14px;
-    height: 14px;
-}
-
-/* === Выравнивание карточек истории оценок === */
+.history-item-rating-star { display: inline-flex; align-items: center; }
+.history-item-rating-star svg { width: 14px; height: 14px; }
 
 .history-item {
     display: grid;
@@ -156,12 +137,26 @@
     white-space: nowrap;
 }
 
-/* === Приглушённый текст «Пользователь не оставил отзыва» === */
-
 .history-item-meta--rated .history-item-meta-value.history-item-meta-value--muted {
     color: #64748b;
     font-style: italic;
     opacity: 0.75;
+}
+
+.profile-wrapper .profile-right {
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-wrapper .profile-right > .empty-message {
+    margin-top: 1.5rem;
+}
+
+.profile-wrapper .profile-right > .recommendations-section {
+    margin-top: 2.5rem !important;
+    padding-top: 0;
+    padding-bottom: 1.5rem;
+    margin-bottom: 0;
 }
 
 @media (max-width: 900px) {
@@ -177,16 +172,11 @@
 }
 
 @media (max-width: 480px) {
-    .history-item {
-        column-gap: 10px;
-        padding: 12px;
-    }
+    .history-item { column-gap: 10px; padding: 12px; }
     .history-item-meta--rated .history-item-meta-row {
         grid-template-columns: 58px minmax(0, 1fr);
         gap: 6px;
         font-size: 0.8rem;
     }
-    .history-item-time {
-        font-size: 0.75rem;
-    }
+    .history-item-time { font-size: 0.75rem; }
 }

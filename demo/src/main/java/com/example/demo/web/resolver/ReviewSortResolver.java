@@ -1,4 +1,4 @@
-package com.example.demo.web.util;
+package com.example.demo.web.resolver;
 
 import com.example.demo.dto.catalog.ReviewsQueryDTO;
 import jakarta.servlet.http.Cookie;
@@ -21,8 +21,7 @@ public class ReviewSortResolver {
     public ReviewsQueryDTO.SortDirection resolveAndPersist(ReviewsQueryDTO reviewsQueryDTO,
                                                            String cookieValue,
                                                            HttpServletResponse httpServletResponse) {
-        ReviewsQueryDTO.SortDirection sortDirection =
-                resolve(reviewsQueryDTO.sort(), cookieValue);
+        ReviewsQueryDTO.SortDirection sortDirection = resolve(reviewsQueryDTO.sort(), cookieValue);
 
         if (isExplicit(reviewsQueryDTO.sort())) {
             writeCookie(httpServletResponse, sortDirection);
@@ -55,7 +54,6 @@ public class ReviewSortResolver {
         Cookie cookie = new Cookie(SORT_COOKIE_NAME, sortDirection.name());
         cookie.setPath(SORT_COOKIE_PATH);
         cookie.setMaxAge(sortCookieMaxAge);
-        cookie.setHttpOnly(true);
         httpServletResponse.addCookie(cookie);
     }
 }

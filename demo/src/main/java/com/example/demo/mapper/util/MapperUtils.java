@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import org.mapstruct.Named;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.Period;
 
@@ -14,17 +16,20 @@ public class MapperUtils {
 
     private final SecurityConfig securityConfig;
 
-    @Named("yearFromLocalDate")
-    public Integer yearFromLocalDate(LocalDate localDate) {
-        return localDate == null ? null : localDate.getYear();
-    }
-
     @Named("rawToEncoded")
     public String encodePassword(String rawPassword) {
         if (rawPassword == null) {
             return null;
         }
         return securityConfig.passwordEncoder().encode(rawPassword);
+    }
+
+    @Named("normalizeRating")
+    public static BigDecimal normalizeRating(BigDecimal value) {
+        if (value == null) {
+            return null;
+        }
+        return value.setScale(1, RoundingMode.HALF_UP);
     }
 
     public static String toFullName(String surname, String name, String patronymic) {

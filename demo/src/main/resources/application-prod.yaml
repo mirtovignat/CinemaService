@@ -1,0 +1,16 @@
+spring:
+  messages:
+    use-code-as-default-message: false
+
+  thymeleaf:
+    cache: true
+
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: validate
+
+logging:
+  level:
+    com.example.demo: INFO
+    org.springframework.security: WARN

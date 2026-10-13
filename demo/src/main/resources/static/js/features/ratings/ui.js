@@ -1,6 +1,8 @@
 (function () {
     'use strict';
 
+    var REVIEW_MAX_LENGTH = 350;
+
     function errorMessage(err) {
         if (!err) return 'Ошибка';
         if (err.status === 401) return 'Авторизуйтесь!';
@@ -27,6 +29,29 @@
         }
     }
 
+    function parseRating(value, fallback) {
+        if (value == null) return fallback;
+        var num = parseFloat(String(value).replace(',', '.'));
+        if (isNaN(num)) return fallback;
+        return num;
+    }
+
+    function normalizeRatingString(value, fallback) {
+        var num = parseRating(value, fallback != null ? fallback : 5.0);
+        var rounded = Math.round(num * 10) / 10;
+        if (rounded < 0.1) rounded = 0.1;
+        if (rounded > 10) rounded = 10;
+        return rounded.toFixed(1);
+    }
+
+    function updateCommentCounter(wrapper, textarea, counter) {
+        if (!wrapper || !textarea || !counter) return;
+        var len = textarea.value.length;
+        counter.textContent = len + ' / ' + REVIEW_MAX_LENGTH;
+        counter.classList.toggle('warn', len >= Math.floor(REVIEW_MAX_LENGTH * 0.8) && len < REVIEW_MAX_LENGTH);
+        counter.classList.toggle('limit', len >= REVIEW_MAX_LENGTH);
+    }
+
     function openModalInternal(movieId, movieTitle, mode, existingRating, existingReview) {
         var modal = ensureModalInDom();
         if (!modal) return;
@@ -49,10 +74,31 @@
             titleEl.innerText = movieTitle || 'Рейтинг фильма';
             titleEl.dataset.movieId = movieId;
         }
-        if (ratingInput) ratingInput.value = existingRating != null ? existingRating : 5.0;
-        if (reviewInput) reviewInput.value = existingReview || '';
+
+        if (ratingInput) {
+            ratingInput.value = normalizeRatingString(existingRating, 5.0);
+        }
+
+        if (reviewInput) {
+            var rv = existingReview || '';
+            if (rv.length > REVIEW_MAX_LENGTH) {
+                rv = rv.substring(0, REVIEW_MAX_LENGTH);
+            }
+            reviewInput.value = rv;
+        }
+
         if (heading) {
             heading.innerText = (mode === 'edit') ? 'Редактировать отзыв' : 'Оценить фильм';
+        }
+
+        var commentWrapper = modal.querySelector('[data-comment-wrapper]');
+        if (commentWrapper && reviewInput) {
+            commentWrapper.classList.toggle('has-value', reviewInput.value.length > 0);
+            updateCommentCounter(
+                commentWrapper,
+                reviewInput,
+                commentWrapper.querySelector('[data-comment-counter]')
+            );
         }
 
         modal.classList.add('show');
@@ -92,28 +138,50 @@
             : null;
 
         Promise.resolve(load).then(function (current) {
-            var realMode = mode || 'add';
-            var realRating = existingRating != null ? existingRating : 5.0;
-            var realReview = existingReview || '';
+            var hasOwn = !!(current && current.own && current.own.rating != null);
 
-            if (current && current.own && current.own.rating != null) {
+            var realMode;
+            var realRating;
+            var realReview;
+
+            if (hasOwn) {
                 realMode = 'edit';
-                realRating = Number(current.own.rating);
+                realRating = parseRating(current.own.rating, 5.0);
                 realReview = current.own.review || '';
+            } else {
+                realMode = 'add';
+                realReview = '';
+                if (current && current.avgRating != null) {
+                    realRating = parseRating(current.avgRating, 5.0);
+                } else if (existingRating != null) {
+                    realRating = parseRating(existingRating, 5.0);
+                } else {
+                    realRating = 5.0;
+                }
             }
+
+            realRating = Math.round(realRating * 10) / 10;
+            if (realRating < 0.1) realRating = 0.1;
+            if (realRating > 10) realRating = 10;
 
             window._ratingModalMode = realMode;
             window._ratingModalOriginalRating = realRating;
             window._ratingModalOriginalReview = realReview;
 
-            openModalInternal(movieId, movieTitle, realMode, realRating, realReview);
+            openModalInternal(movieId, movieTitle, realMode, realRating.toFixed(1), realReview);
             window.__ratingModalOpening = false;
         }).catch(function () {
+            var fallbackRating = parseRating(existingRating, 5.0);
+            fallbackRating = Math.round(fallbackRating * 10) / 10;
+            if (fallbackRating < 0.1) fallbackRating = 0.1;
+            if (fallbackRating > 10) fallbackRating = 10;
+
             window._ratingModalMode = mode || 'add';
-            window._ratingModalOriginalRating = existingRating != null ? existingRating : 5.0;
+            window._ratingModalOriginalRating = fallbackRating;
             window._ratingModalOriginalReview = existingReview || '';
+
             openModalInternal(movieId, movieTitle, mode || 'add',
-                existingRating != null ? existingRating : 5.0,
+                fallbackRating.toFixed(1),
                 existingReview || '');
             window.__ratingModalOpening = false;
         });
@@ -178,7 +246,15 @@
             return;
         }
 
-        var ratingValue = parseFloat(rating);
+        if (review && review.length > REVIEW_MAX_LENGTH) {
+            if (errorDiv) {
+                errorDiv.innerText = 'Отзыв не может превышать ' + REVIEW_MAX_LENGTH + ' символов';
+                errorDiv.style.display = 'block';
+            }
+            return;
+        }
+
+        var ratingValue = Math.round(parseFloat(rating) * 10) / 10;
         var submitBtn = modal.querySelector('.modal-confirm-btn');
         var cancelBtn = modal.querySelector('.modal-cancel-btn');
         var originalText = submitBtn ? submitBtn.textContent : 'Отправить';
@@ -246,6 +322,10 @@
         showFlashMessage(data.message, 'success');
 
         if (typeof applyRatingResponse === 'function') applyRatingResponse(data, movieId);
+
+        if (typeof window.updateMovieRating === 'function') {
+            window.updateMovieRating(movieId);
+        }
 
         var payload = (data && data.data) || data || {};
         if (ctx && typeof ctx.onCountUpdate === 'function' && payload.totalReviews != null) {
@@ -393,7 +473,51 @@
         executeDelete();
     }
 
+    function initCommentTools() {
+        var wrapper = document.querySelector('[data-comment-wrapper]');
+        if (!wrapper) return;
+        if (wrapper.dataset.commentToolsBound === '1') return;
+        wrapper.dataset.commentToolsBound = '1';
+
+        var textarea = wrapper.querySelector('textarea');
+        var clearBtn = wrapper.querySelector('[data-comment-clear]');
+        var counter = wrapper.querySelector('[data-comment-counter]');
+        if (!textarea) return;
+
+        if (textarea.getAttribute('maxlength') == null) {
+            textarea.setAttribute('maxlength', String(REVIEW_MAX_LENGTH));
+        }
+
+        function sync() {
+            wrapper.classList.toggle('has-value', textarea.value.length > 0);
+            updateCommentCounter(wrapper, textarea, counter);
+        }
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                textarea.value = '';
+                textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                textarea.dispatchEvent(new Event('change', { bubbles: true }));
+                textarea.focus();
+                sync();
+            });
+        }
+
+        textarea.addEventListener('input', function () {
+            if (textarea.value.length > REVIEW_MAX_LENGTH) {
+                textarea.value = textarea.value.substring(0, REVIEW_MAX_LENGTH);
+            }
+            sync();
+        });
+
+        textarea.addEventListener('change', sync);
+        sync();
+    }
+
     function init() {
+        initCommentTools();
         document.addEventListener('keydown', onRatingModalKeydown);
         document.addEventListener('keydown', onDeleteModalKeydown);
     }

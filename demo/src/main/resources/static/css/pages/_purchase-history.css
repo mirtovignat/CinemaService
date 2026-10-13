@@ -1,8 +1,6 @@
 .header-wrapper { flex-shrink: 0; z-index: 50; }
 
-.history-item:hover {
-    border-color: rgba(52, 211, 153, 0.2);
-}
+.history-item:hover { border-color: rgba(52, 211, 153, 0.2); }
 
 .history-item-icon {
     width: 40px;
@@ -37,4 +35,20 @@
     padding: 0.25rem 0.6rem;
     border-radius: 6px;
     border: 1px solid rgba(16, 185, 129, 0.15);
+}
+
+.profile-wrapper .profile-right {
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-wrapper .profile-right > .empty-message {
+    margin-top: 1.5rem;
+}
+
+.profile-wrapper .profile-right > .recommendations-section {
+    margin-top: 2.5rem !important;
+    padding-top: 0;
+    padding-bottom: 1.5rem;
+    margin-bottom: 0;
 }

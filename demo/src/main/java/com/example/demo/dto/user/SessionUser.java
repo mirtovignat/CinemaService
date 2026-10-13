@@ -20,19 +20,7 @@ public record SessionUser(
         return username.substring(0, 1).toUpperCase(Locale.ROOT);
     }
 
-    public static SessionUser empty() {
-        return SessionUser.builder()
-                .id(null)
-                .balance(BigDecimal.ZERO)
-                .currencyCode("₽")
-                .username("username")
-                .build();
-    }
-
     public static SessionUser from(User user) {
-        if (user == null) {
-            return empty();
-        }
         return SessionUser.builder()
                 .id(user.getId())
                 .balance(user.getBalance())

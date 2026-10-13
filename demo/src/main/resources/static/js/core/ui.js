@@ -12,6 +12,16 @@
         ) || 0;
     }
 
+    function formatPrice(value) {
+        var n = Number(value);
+        if (!isFinite(n)) return '0';
+        var rounded = Math.round(n * 100) / 100;
+        var s = rounded.toFixed(2);
+        s = s.replace(/\.00$/, '');
+        s = s.replace(/(\.\d)0$/, '$1');
+        return s;
+    }
+
     function getCardPrice(card) {
         if (!card) return 0;
         var attr = card.getAttribute('data-movie-price');
@@ -138,6 +148,7 @@
     window.UI = {
         requireAuth: requireAuth,
         parsePrice: parsePrice,
+        formatPrice: formatPrice,
         getCardPrice: getCardPrice,
         showModal: showModal,
         hideModal: hideModal,

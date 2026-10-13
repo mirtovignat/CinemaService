@@ -15,7 +15,7 @@ public record RatedMovieFormDTO(
         @Digits(integer = 2, fraction = 1, message = "Оценка должна быть от 0.0 до 10.0 с шагом 0.1")
         BigDecimal rating,
 
-        @Size(max = 2000, message = "Отзыв не может превышать 2000 символов")
+        @Size(max = 350, message = "Отзыв не может превышать 350 символов")
         String review
 ) {
 }

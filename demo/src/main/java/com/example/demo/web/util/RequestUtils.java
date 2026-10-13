@@ -13,11 +13,14 @@ public final class RequestUtils {
         }
 
         String requestedWith = httpServletRequest.getHeader("X-Requested-With");
+        if ("XMLHttpRequest".equalsIgnoreCase(requestedWith)) {
+            return true;
+        }
+
         String accept = httpServletRequest.getHeader("Accept");
         String contentType = httpServletRequest.getHeader("Content-Type");
 
-        return "XMLHttpRequest".equalsIgnoreCase(requestedWith)
-                || (accept != null && accept.contains("application/json"))
+        return (accept != null && accept.contains("application/json"))
                 || (contentType != null && contentType.contains("application/json"));
     }
 }

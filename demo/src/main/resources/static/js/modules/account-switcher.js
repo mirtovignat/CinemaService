@@ -59,6 +59,47 @@
         write(list);
     }
 
+    function rename(oldUsername, newUsername) {
+        if (!oldUsername || !newUsername) return;
+        if (oldUsername === newUsername) return;
+
+        var list = read();
+        var oldLower = oldUsername.toLowerCase();
+        var newLower = newUsername.toLowerCase();
+
+        var entry = list.find(function (a) {
+            return a.username.toLowerCase() === oldLower;
+        });
+
+        if (!entry) {
+            entry = list.find(function (a) { return a.active; });
+        }
+
+        if (!entry) {
+            upsert(newUsername);
+            render();
+            return;
+        }
+
+        var duplicate = list.find(function (a) {
+            return a !== entry && a.username.toLowerCase() === newLower;
+        });
+
+        if (duplicate) {
+            list = list.filter(function (a) { return a !== duplicate; });
+        }
+
+        entry.username = newUsername;
+        entry.avatarLetter = firstLetter(newUsername);
+
+        list.forEach(function (a) {
+            a.active = (a === entry);
+        });
+
+        write(list);
+        render();
+    }
+
     function remove(username) {
         if (!username) return;
         if (username.toLowerCase() === activeUsername().toLowerCase()) return;
@@ -431,13 +472,37 @@
 
     function init() {
         var current = activeUsername();
-        if (current) upsert(current);
+        if (!current) {
+            render();
+            return;
+        }
+
+        var list = read();
+
+        var index = list.findIndex(function (a) {
+            return a.username.toLowerCase() === current.toLowerCase();
+        });
+
+        if (index === -1) {
+            list.unshift({
+                username: current,
+                avatarLetter: firstLetter(current),
+                active: true
+            });
+        }
+
+        list.forEach(function (a) {
+            a.active = a.username.toLowerCase() === current.toLowerCase();
+        });
+
+        write(list);
         render();
     }
 
     window.AccountSwitcher = {
         init: init,
         upsert: upsert,
+        rename: rename,
         remove: remove,
         clearAllExceptActive: clearAllExceptActive,
         render: render,

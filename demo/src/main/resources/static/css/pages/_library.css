@@ -12,8 +12,8 @@
     overflow: visible;
 }
 
-.empty-state {
-    margin-top: 6rem;
+.empty-message {
+    margin-top: 1.5rem;
 }
 
 .profile-wrapper .profile-right {

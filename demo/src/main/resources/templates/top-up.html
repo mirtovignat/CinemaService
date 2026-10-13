@@ -11,7 +11,7 @@
 <main class="wallet-main">
     <div class="wallet-rect">
 
-        <a href="/personal-account" class="back-link">
+        <a th:href="@{/back(fallback='/')}" class="back-link">
             <th:block th:replace="~{fragments/icons :: icon-arrow-left}"></th:block>
             Назад
         </a>
