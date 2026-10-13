@@ -19,7 +19,7 @@ import java.util.stream.Stream;
 @Component
 public class MovieSpecifications {
 
-    private static final int IN_CHUNK_SIZE = 500;
+    private static final int IN_CLAUSE_CHUNK_SIZE = 500;
 
     private static final String[] CHARS_TO_REMOVE = {
             " ", "-", ":", ",", ".", "!", "?", "—", "'", "\"", "«", "»"
@@ -29,17 +29,25 @@ public class MovieSpecifications {
         if (movieFilter == null) {
             return Specification.unrestricted();
         }
-        validateRanges(movieFilter);
+        validateFilterRanges(movieFilter);
 
         return Stream.of(
-                        movieFilter.priceFrom() != null ? greaterThanOrEqualTo("price", movieFilter.priceFrom()) : null,
-                        movieFilter.priceTo() != null ? lessThanOrEqualTo("price", movieFilter.priceTo()) : null,
-                        movieFilter.releaseDateFrom() != null ? greaterThanOrEqualTo("releaseDate", movieFilter.releaseDateFrom()) : null,
-                        movieFilter.releaseDateTo() != null ? lessThanOrEqualTo("releaseDate", movieFilter.releaseDateTo()) : null,
-                        movieFilter.durationFrom() != null ? greaterThanOrEqualTo("duration", Duration.ofSeconds(movieFilter.durationFrom())) : null,
-                        movieFilter.durationTo() != null ? lessThanOrEqualTo("duration", Duration.ofSeconds(movieFilter.durationTo())) : null,
-                        movieFilter.ratingFrom() != null ? greaterThanOrEqualTo("rating", movieFilter.ratingFrom()) : null,
-                        movieFilter.ratingTo() != null ? lessThanOrEqualTo("rating", movieFilter.ratingTo()) : null,
+                        movieFilter.priceFrom() != null
+                                ? greaterThanOrEqualTo("price", movieFilter.priceFrom()) : null,
+                        movieFilter.priceTo() != null
+                                ? lessThanOrEqualTo("price", movieFilter.priceTo()) : null,
+                        movieFilter.releaseDateFrom() != null
+                                ? greaterThanOrEqualTo("releaseDate", movieFilter.releaseDateFrom()) : null,
+                        movieFilter.releaseDateTo() != null
+                                ? lessThanOrEqualTo("releaseDate", movieFilter.releaseDateTo()) : null,
+                        movieFilter.durationFrom() != null
+                                ? greaterThanOrEqualTo("duration", Duration.ofSeconds(movieFilter.durationFrom())) : null,
+                        movieFilter.durationTo() != null
+                                ? lessThanOrEqualTo("duration", Duration.ofSeconds(movieFilter.durationTo())) : null,
+                        movieFilter.ratingFrom() != null
+                                ? greaterThanOrEqualTo("rating", movieFilter.ratingFrom()) : null,
+                        movieFilter.ratingTo() != null
+                                ? lessThanOrEqualTo("rating", movieFilter.ratingTo()) : null,
                         (movieFilter.genres() != null && !movieFilter.genres().isEmpty())
                                 ? isInCollection("genre", movieFilter.genres()) : null,
                         (movieFilter.directors() != null && !movieFilter.directors().isEmpty())
@@ -49,7 +57,7 @@ public class MovieSpecifications {
                 .reduce(Specification.unrestricted(), Specification::and);
     }
 
-    private void validateRanges(MovieFilter movieFilter) {
+    private void validateFilterRanges(MovieFilter movieFilter) {
         if (movieFilter.priceFrom() != null && movieFilter.priceTo() != null
                 && movieFilter.priceFrom().compareTo(movieFilter.priceTo()) > 0) {
             throw BusinessException.of(ErrorCode.VALIDATION_ERROR);
@@ -68,45 +76,49 @@ public class MovieSpecifications {
         }
     }
 
-    public Specification<Movie> titleStartsWith(String rawQuery) {
-        if (rawQuery == null || rawQuery.isBlank()) {
+    public Specification<Movie> titleStartsWith(String rawSearchQuery) {
+        if (rawSearchQuery == null || rawSearchQuery.isBlank()) {
             return Specification.unrestricted();
         }
-        String sanitized = sanitizeSearchString(rawQuery);
-        if (sanitized.isEmpty()) {
+        String sanitizedSearchQuery = sanitizeSearchString(rawSearchQuery);
+        if (sanitizedSearchQuery.isEmpty()) {
             return Specification.unrestricted();
         }
-        return titleStartsWithNormalized(sanitized);
+        return titleStartsWithNormalized(sanitizedSearchQuery);
     }
 
-    private String sanitizeSearchString(String input) {
-        if (input == null) return "";
-        String string = input.toLowerCase().replace('ё', 'е');
-        for (String c : CHARS_TO_REMOVE) {
-            string = string.replace(c, "");
+    private String sanitizeSearchString(String inputString) {
+        if (inputString == null) return "";
+        String sanitizedString = inputString.toLowerCase().replace('ё', 'е');
+        for (String charToRemove : CHARS_TO_REMOVE) {
+            sanitizedString = sanitizedString.replace(charToRemove, "");
         }
-        return string;
+        return sanitizedString;
     }
 
     private Specification<Movie> titleStartsWithNormalized(String sanitizedSearchQuery) {
         return (root, query, criteriaBuilder) -> {
-            Expression<String> expression = criteriaBuilder.lower(root.get("title"));
-            for (String c : CHARS_TO_REMOVE) {
-                expression = criteriaBuilder.function("replace", String.class, expression,
-                        criteriaBuilder.literal(c), criteriaBuilder.literal(""));
+            Expression<String> titleExpression = criteriaBuilder.lower(root.get("title"));
+            for (String charToRemove : CHARS_TO_REMOVE) {
+                titleExpression = criteriaBuilder.function("replace", String.class, titleExpression,
+                        criteriaBuilder.literal(charToRemove), criteriaBuilder.literal(""));
             }
-            expression = criteriaBuilder.function("replace", String.class, expression,
+            titleExpression = criteriaBuilder.function("replace", String.class, titleExpression,
                     criteriaBuilder.literal("ё"), criteriaBuilder.literal("е"));
-            return criteriaBuilder.like(expression, sanitizedSearchQuery + "%");
+            return criteriaBuilder.like(titleExpression, sanitizedSearchQuery + "%");
         };
     }
 
-    private <Y extends Comparable<? super Y>> Specification<Movie> greaterThanOrEqualTo(String fieldName, Y value) {
-        return (root, query, criteriaBuilder) -> criteriaBuilder.greaterThanOrEqualTo(root.get(fieldName), value);
+    private <Y extends Comparable<? super Y>> Specification<Movie> greaterThanOrEqualTo(
+            String fieldName, Y value) {
+        return (root, query, criteriaBuilder) ->
+                criteriaBuilder.greaterThanOrEqualTo(root.get(fieldName), value);
     }
 
-    private <Y extends Comparable<? super Y>> Specification<Movie> lessThanOrEqualTo(String fieldName, Y value) {
-        return (root, query, criteriaBuilder) -> criteriaBuilder.lessThanOrEqualTo(root.get(fieldName), value);
+    private <Y extends Comparable<? super Y>> Specification<Movie> lessThanOrEqualTo(
+            String fieldName, Y value) {
+        return (root, query, criteriaBuilder) ->
+                criteriaBuilder.lessThanOrEqualTo(root.get(fieldName), value);
     }
 
     private <Y> Specification<Movie> isInCollection(String fieldName, Collection<Y> collection) {
@@ -114,16 +126,17 @@ public class MovieSpecifications {
             return null;
         }
         List<Y> values = new ArrayList<>(collection);
-        if (values.size() <= IN_CHUNK_SIZE) {
+        if (values.size() <= IN_CLAUSE_CHUNK_SIZE) {
             return (root, query, criteriaBuilder) -> root.get(fieldName).in(values);
         }
         return (root, query, criteriaBuilder) -> {
-            List<Predicate> ors = new ArrayList<>();
-            for (int i = 0; i < values.size(); i += IN_CHUNK_SIZE) {
-                List<Y> chunk = values.subList(i, Math.min(i + IN_CHUNK_SIZE, values.size()));
-                ors.add(root.get(fieldName).in(chunk));
+            List<Predicate> orPredicates = new ArrayList<>();
+            for (int index = 0; index < values.size(); index += IN_CLAUSE_CHUNK_SIZE) {
+                List<Y> chunk = values.subList(index,
+                        Math.min(index + IN_CLAUSE_CHUNK_SIZE, values.size()));
+                orPredicates.add(root.get(fieldName).in(chunk));
             }
-            return criteriaBuilder.or(ors.toArray(new Predicate[0]));
+            return criteriaBuilder.or(orPredicates.toArray(new Predicate[0]));
         };
     }
 }

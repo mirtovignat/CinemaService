@@ -294,14 +294,21 @@
     gap: 0.4rem;
     max-height: 320px;
     overflow-y: auto;
+    overflow-x: hidden;
     box-sizing: border-box;
     pointer-events: auto;
+    scrollbar-gutter: stable;
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.35) rgba(255, 255, 255, 0.05);
 }
 
+.header-suggestions.show {
+    display: flex;
+}
+
 .header-suggestions::-webkit-scrollbar {
     width: 6px;
+    height: 0;
 }
 
 .header-suggestions::-webkit-scrollbar-track {
@@ -316,6 +323,11 @@
 
 .header-suggestions::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.6);
+}
+
+.header-suggestions::-webkit-scrollbar:horizontal {
+    display: none;
+    height: 0;
 }
 
 .suggestion-item {
@@ -334,6 +346,12 @@
 }
 
 .suggestion-item:hover {
+    background: rgba(99, 102, 241, 0.25);
+    border-color: rgba(168, 85, 247, 0.5);
+    transform: translateX(3px);
+}
+
+.suggestion-item.is-active {
     background: rgba(99, 102, 241, 0.25);
     border-color: rgba(168, 85, 247, 0.5);
     transform: translateX(3px);
@@ -438,9 +456,4 @@
         transform: none !important;
         margin-left: 0.5rem;
     }
-}
-.suggestion-item.is-active {
-    background: rgba(99, 102, 241, 0.25);
-    border-color: rgba(168, 85, 247, 0.5);
-    transform: translateX(3px);
 }

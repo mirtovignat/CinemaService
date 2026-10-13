@@ -31,8 +31,13 @@ public class MovieService {
     private final FavouritesService favouritesService;
     private final CartService cartService;
     private final RatedQueryService ratedQueryService;
-    private final MovieUserStatusHelper userStatusHelper;
+    private final MovieUserStatusHelper movieUserStatusHelper;
     private final MovieSearchHelper movieSearchHelper;
+
+    @Transactional
+    public void save(Movie movie) {
+        movieRepository.save(movie);
+    }
 
     public Page<MovieForUser<MovieCardViewDTO>> getMovies(MovieFilter movieFilter,
                                                           String title,
@@ -52,13 +57,13 @@ public class MovieService {
     @Transactional(readOnly = true)
     public MovieForUser<MovieDetailsViewDTO> getCard(Long movieId, Long userId) {
         Movie movie = movieRepository.findByIdOrThrow(movieId);
-        MovieDetailsViewDTO dto = movieMapper.toDetails(movie);
-        MovieUserStatus status = (userId != null)
+        MovieDetailsViewDTO movieDetails = movieMapper.toDetails(movie);
+        MovieUserStatus movieUserStatus = (userId != null)
                 ? calculateUserStatus(movieId, userId)
                 : MovieUserStatus.builder().build();
         return MovieForUser.<MovieDetailsViewDTO>builder()
-                .movie(dto)
-                .status(status)
+                .movie(movieDetails)
+                .status(movieUserStatus)
                 .build();
     }
 
@@ -77,7 +82,8 @@ public class MovieService {
             return Page.empty(moviePage.getPageable());
         }
         if (userId != null) {
-            return userStatusHelper.enrichWithUserStatuses(moviePage, userId, movieMapper::toCard);
+            return movieUserStatusHelper.enrichWithUserStatuses(
+                    moviePage, userId, movieMapper::toCard);
         }
         return moviePage.map(movie -> MovieForUser.<MovieCardViewDTO>builder()
                 .movie(movieMapper.toCard(movie))
@@ -86,24 +92,19 @@ public class MovieService {
     }
 
     private MovieUserStatus calculateUserStatus(Long movieId, Long userId) {
-        boolean isBought = purchasedQueryService.isMoviePurchasedByUser(movieId, userId);
-        boolean isInCart = !isBought && cartService.existsInCollection(movieId, userId);
-        boolean isInFavourites = favouritesService.existsInCollection(movieId, userId);
-        ReviewViewDTO ownRating = ratedQueryService.getRating(movieId, userId);
+        boolean isMovieBought = purchasedQueryService.isMoviePurchasedByUser(movieId, userId);
+        boolean isMovieInCart = !isMovieBought && cartService.existsInCollection(movieId, userId);
+        boolean isMovieInFavourites = favouritesService.existsInCollection(movieId, userId);
+        ReviewViewDTO ownReview = ratedQueryService.getRating(movieId, userId);
         return MovieUserStatus.builder()
-                .bought(isBought)
-                .inCart(isInCart)
-                .inFavourites(isInFavourites)
-                .ownRating(ownRating)
+                .bought(isMovieBought)
+                .inCart(isMovieInCart)
+                .inFavourites(isMovieInFavourites)
+                .ownRating(ownReview)
                 .build();
     }
 
     public Movie getMovie(Long movieId) {
         return movieRepository.findByIdOrThrow(movieId);
-    }
-
-    @Transactional
-    public void save(Movie movie) {
-        movieRepository.save(movie);
     }
 }

@@ -1,8 +1,8 @@
 package com.example.demo.mapper.util;
 
-import com.example.demo.config.SecurityConfig;
 import lombok.AllArgsConstructor;
 import org.mapstruct.Named;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -14,22 +14,22 @@ import java.time.Period;
 @AllArgsConstructor
 public class MapperUtils {
 
-    private final SecurityConfig securityConfig;
+    private final PasswordEncoder passwordEncoder;
 
     @Named("rawToEncoded")
     public String encodePassword(String rawPassword) {
         if (rawPassword == null) {
             return null;
         }
-        return securityConfig.passwordEncoder().encode(rawPassword);
+        return passwordEncoder.encode(rawPassword);
     }
 
     @Named("normalizeRating")
-    public static BigDecimal normalizeRating(BigDecimal value) {
-        if (value == null) {
+    public static BigDecimal normalizeRating(BigDecimal ratingValue) {
+        if (ratingValue == null) {
             return null;
         }
-        return value.setScale(1, RoundingMode.HALF_UP);
+        return ratingValue.setScale(1, RoundingMode.HALF_UP);
     }
 
     public static String toFullName(String surname, String name, String patronymic) {
@@ -47,8 +47,8 @@ public class MapperUtils {
         if (fullName == null || fullName.isBlank()) {
             return "";
         }
-        String[] parts = fullName.trim().split("\\s+");
-        return parts.length > 0 ? parts[0] : "";
+        String[] fullNameParts = fullName.trim().split("\\s+");
+        return fullNameParts.length > 0 ? fullNameParts[0] : "";
     }
 
     @Named("extractName")
@@ -56,8 +56,8 @@ public class MapperUtils {
         if (fullName == null || fullName.isBlank()) {
             return "";
         }
-        String[] parts = fullName.trim().split("\\s+");
-        return parts.length > 1 ? parts[1] : "";
+        String[] fullNameParts = fullName.trim().split("\\s+");
+        return fullNameParts.length > 1 ? fullNameParts[1] : "";
     }
 
     @Named("extractPatronymic")
@@ -65,8 +65,8 @@ public class MapperUtils {
         if (fullName == null || fullName.isBlank()) {
             return "";
         }
-        String[] parts = fullName.trim().split("\\s+");
-        return parts.length > 2 ? parts[2] : "";
+        String[] fullNameParts = fullName.trim().split("\\s+");
+        return fullNameParts.length > 2 ? fullNameParts[2] : "";
     }
 
     @Named("calculateAge")

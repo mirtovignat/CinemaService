@@ -28,8 +28,8 @@ public class PurchaseHistoryManager
     }
 
     @Override
-    protected List<HistoricalMovieViewDTO> convertToDtos(List<PurchasedMovie> entities) {
-        return entities.stream()
+    protected List<HistoricalMovieViewDTO> convertToDtos(List<PurchasedMovie> purchasedMovies) {
+        return purchasedMovies.stream()
                 .map(purchasedMapper::toOwnerViewFromHistorical)
                 .toList();
     }

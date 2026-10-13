@@ -16,31 +16,31 @@ public abstract class RatedMapper {
         if (ratedMovie == null) {
             return null;
         }
-        String username = getUsername(ratedMovie);
-        boolean isOwn = ratedMovie.getUser() != null &&
-                ratedMovie.getUser().getId().equals(currentUserId);
+        String reviewAuthorUsername = resolveReviewAuthorUsername(ratedMovie);
+        boolean isOwnReview = ratedMovie.getUser() != null
+                && ratedMovie.getUser().getId().equals(currentUserId);
         return ReviewViewDTO.builder()
                 .movieId(ratedMovie.getMovie() != null ? ratedMovie.getMovie().getId() : null)
-                .username(username)
+                .username(reviewAuthorUsername)
                 .ratingValue(MapperUtils.normalizeRating(ratedMovie.getRatingValue()))
                 .reviewText(ratedMovie.getReview())
                 .addedAt(ratedMovie.getAddedAt())
-                .own(isOwn)
+                .own(isOwnReview)
                 .build();
     }
 
-    public String getUsername(RatedMovie ratedMovie) {
+    public String resolveReviewAuthorUsername(RatedMovie ratedMovie) {
         if (ratedMovie == null) {
             return "Удалённый аккаунт";
         }
-        User user = ratedMovie.getUser();
-        if (user == null || user.getDeletableState().isDeleted()) {
+        User reviewAuthor = ratedMovie.getUser();
+        if (reviewAuthor == null || reviewAuthor.getDeletableState().isDeleted()) {
             return "Удалённый аккаунт";
         }
-        return user.getUsername();
+        return reviewAuthor.getUsername();
     }
 
-    public RatedMovieViewDTO toOwnerView(RatedMovie ratedMovie, Long currentUserId) {
+    public RatedMovieViewDTO toOwnerView(RatedMovie ratedMovie) {
         if (ratedMovie == null) {
             return null;
         }

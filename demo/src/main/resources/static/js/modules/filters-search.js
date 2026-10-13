@@ -95,6 +95,27 @@
         return getItemSearchKey(accordion, item);
     }
 
+    function getDirectorSearchWords(accordion, item) {
+        var display = getItemDisplay(item);
+        if (!isDirectorAccordion(accordion)) {
+            return [display];
+        }
+        return display
+            .split(/\s+/)
+            .map(function (part) { return part.trim(); })
+            .filter(function (part) { return part.length > 0; });
+    }
+
+    function itemMatchesQuery(accordion, item, normalizedQuery) {
+        if (!normalizedQuery) return true;
+        var words = getDirectorSearchWords(accordion, item);
+        for (var i = 0; i < words.length; i++) {
+            var wordNorm = normalizeTight(words[i]);
+            if (wordNorm.indexOf(normalizedQuery) === 0) return true;
+        }
+        return false;
+    }
+
     function applyFilter(accordion, query) {
         var items = getItems(accordion);
         var empty = accordion.querySelector('[data-accordion-empty]');
@@ -102,8 +123,7 @@
         var visible = 0;
 
         items.forEach(function (item) {
-            var key = normalizeTight(getItemSearchKey(accordion, item));
-            var match = q === '' || key.indexOf(q) === 0;
+            var match = itemMatchesQuery(accordion, item, q);
             item.classList.toggle('is-hidden', !match);
             if (match) visible++;
         });
@@ -126,8 +146,7 @@
         var items = getItems(accordion);
         var found = null;
         items.forEach(function (item) {
-            var key = normalizeTight(getItemSearchKey(accordion, item));
-            if (key.indexOf(typedNorm) === 0) {
+            if (itemMatchesQuery(accordion, item, typedNorm)) {
                 if (found == null) found = getItemDisplay(item);
             }
         });
@@ -147,8 +166,7 @@
 
         var items = getItems(accordion);
         var matches = items.filter(function (item) {
-            var key = normalizeTight(getItemSearchKey(accordion, item));
-            return key.indexOf(typedNorm) === 0;
+            return itemMatchesQuery(accordion, item, typedNorm);
         });
 
         if (matches.length !== 1) {
@@ -157,22 +175,25 @@
         }
 
         var display = getItemDisplay(matches[0]);
-        var displayNorm = normalize(display);
+        var displayLower = display.toLocaleLowerCase('ru-RU').replace(/ё/g, 'е');
         var typedLower = normalize(typed);
+        var matchIdx = displayLower.indexOf(typedLower);
 
-        if (displayNorm.indexOf(typedLower) !== 0) {
+        if (matchIdx === -1) {
             hideAutocomplete(ui);
             return;
         }
 
-        var rest = display.substring(typed.length);
-        if (!rest) {
+        var typedPart = display.substring(matchIdx, matchIdx + typed.length);
+        var restPart = display.substring(matchIdx + typed.length);
+
+        if (!restPart) {
             hideAutocomplete(ui);
             return;
         }
 
-        ui.typedEl.textContent = typed;
-        ui.hintEl.textContent = rest;
+        ui.typedEl.textContent = typedPart;
+        ui.hintEl.textContent = restPart;
         ui.wrapper.classList.add('has-autocomplete');
     }
 
@@ -186,17 +207,18 @@
         if (!cleanNorm) return clean;
 
         var items = getItems(accordion);
-        var keys = [];
+        var displayStrings = [];
         items.forEach(function (item) {
-            var key = getItemSearchKey(accordion, item);
-            var n = normalizeTight(key);
-            if (n.indexOf(cleanNorm) === 0) keys.push(key);
+            if (itemMatchesQuery(accordion, item, cleanNorm)) {
+                var display = getItemDisplay(item);
+                if (display) displayStrings.push(display);
+            }
         });
 
-        if (keys.length === 0) return clean;
-        if (keys.length === 1) return keys[0];
+        if (displayStrings.length === 0) return clean;
+        if (displayStrings.length === 1) return displayStrings[0];
 
-        var prefix = longestCommonPrefix(keys);
+        var prefix = longestCommonPrefix(displayStrings);
         if (!prefix || prefix.length <= clean.length) return clean + ELLIPSIS;
         return prefix + ELLIPSIS;
     }
@@ -232,8 +254,7 @@
             var q = normalizeTight(value);
             if (!q) return [];
             return getItems(accordion).filter(function (item) {
-                var key = normalizeTight(getItemSearchKey(accordion, item));
-                return key.indexOf(q) === 0;
+                return itemMatchesQuery(accordion, item, q);
             });
         }
 
@@ -241,12 +262,12 @@
             var matches = matchesForTyped(value);
             if (matches.length === 0) return null;
             var best = matches[0];
-            var bestKey = getItemSearchKey(accordion, best);
+            var bestDisplay = getItemDisplay(best);
             matches.forEach(function (item) {
-                var key = getItemSearchKey(accordion, item);
-                if (key.length < bestKey.length) {
+                var display = getItemDisplay(item);
+                if (display.length < bestDisplay.length) {
                     best = item;
-                    bestKey = key;
+                    bestDisplay = display;
                 }
             });
             return best;
@@ -361,7 +382,7 @@
                 var clean = stripEllipsis(input.value.trim());
                 var matches = matchesForTyped(clean);
                 if (matches.length === 1) {
-                    input.value = getItemSearchKey(accordion, matches[0]);
+                    input.value = getItemDisplay(matches[0]);
                 } else if (matches.length > 1) {
                     input.value = buildTruncatedQuery(accordion, clean);
                 }

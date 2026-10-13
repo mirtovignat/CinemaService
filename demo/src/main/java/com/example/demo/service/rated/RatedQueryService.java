@@ -70,7 +70,7 @@ public class RatedQueryService {
                         userId,
                         PageRequest.of(0, ratingsToLimit)
                 ).stream()
-                .map(ratedMovie -> ratedMapper.toOwnerView(ratedMovie, userId))
+                .map(ratedMapper::toOwnerView)
                 .toList();
     }
 

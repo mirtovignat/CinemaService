@@ -114,7 +114,9 @@
     gap: 0.25rem;
     max-height: 320px;
     overflow-y: auto;
+    overflow-x: hidden;
     box-sizing: border-box;
+    scrollbar-gutter: stable;
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.35) rgba(255, 255, 255, 0.05);
 }
@@ -125,6 +127,7 @@
 
 .catalog-search-suggestions::-webkit-scrollbar {
     width: 6px;
+    height: 0;
 }
 
 .catalog-search-suggestions::-webkit-scrollbar-track {
@@ -141,6 +144,11 @@
     background: rgba(255, 255, 255, 0.6);
 }
 
+.catalog-search-suggestions::-webkit-scrollbar:horizontal {
+    display: none;
+    height: 0;
+}
+
 .catalog-search-suggestion {
     padding: 0.55rem 0.8rem;
     background: rgba(255, 255, 255, 0.04);
@@ -153,6 +161,12 @@
 }
 
 .catalog-search-suggestion:hover {
+    background: rgba(99, 102, 241, 0.25);
+    border-color: rgba(168, 85, 247, 0.5);
+    transform: translateX(3px);
+}
+
+.catalog-search-suggestion.is-active {
     background: rgba(99, 102, 241, 0.25);
     border-color: rgba(168, 85, 247, 0.5);
     transform: translateX(3px);
@@ -194,9 +208,6 @@
         max-width: 100%;
         margin: 0.5rem 0 1rem;
     }
-}
-.catalog-search-input-wrapper {
-    position: relative;
 }
 
 .catalog-search-input-wrapper input {
@@ -255,9 +266,4 @@
     -webkit-text-fill-color: #6b7280 !important;
     white-space: pre;
     font-weight: 400;
-}
-.catalog-search-suggestion.is-active {
-    background: rgba(99, 102, 241, 0.25);
-    border-color: rgba(168, 85, 247, 0.5);
-    transform: translateX(3px);
 }

@@ -4,7 +4,6 @@ import com.example.demo.dto.movie.range.RangesSnapshot;
 import com.example.demo.mapper.entity.RangesSnapshotMapper;
 import com.example.demo.repository.entity.MovieRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,17 +17,14 @@ public class FilterMetaService {
     private final MovieRepository movieRepository;
     private final RangesSnapshotMapper rangesSnapshotMapper;
 
-    @Cacheable("filterMeta.directors")
     public List<String> getAllDirectors() {
         return movieRepository.findAllDistinctDirectors();
     }
 
-    @Cacheable("filterMeta.genres")
     public List<String> getAllGenres() {
         return movieRepository.findAllDistinctGenres();
     }
 
-    @Cacheable("filterMeta.ranges")
     public RangesSnapshot getRanges() {
         return rangesSnapshotMapper.toSnapshot(movieRepository.findRanges());
     }

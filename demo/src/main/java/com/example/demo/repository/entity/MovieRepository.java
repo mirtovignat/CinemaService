@@ -49,7 +49,7 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
             SELECT movie
             FROM Movie movie
             """)
-    Page<Movie> findAllWithActiveRatings(Pageable pageable);
+    Page<Movie> findAllPaged(Pageable pageable);
 
     @Query("""
             SELECT movie

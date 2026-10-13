@@ -28,8 +28,8 @@ public class WatchedHistoryManager
     }
 
     @Override
-    protected List<LibrarianMovieViewDTO> convertToDtos(List<PurchasedMovie> entities) {
-        return entities.stream()
+    protected List<LibrarianMovieViewDTO> convertToDtos(List<PurchasedMovie> purchasedMovies) {
+        return purchasedMovies.stream()
                 .flatMap(purchasedMovie -> purchasedMovie.getWatchedHistory().stream()
                         .map(purchasedMapper::toLibrarianViewFromHistoryItem))
                 .toList();

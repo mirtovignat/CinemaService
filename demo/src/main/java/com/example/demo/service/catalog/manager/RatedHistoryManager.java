@@ -28,9 +28,9 @@ public class RatedHistoryManager
     }
 
     @Override
-    protected List<RatedMovieViewDTO> convertToDtos(List<RatedMovie> entities) {
-        return entities.stream()
-                .map(ratedMovie -> ratedMapper.toOwnerView(ratedMovie, ratedMovie.getUser().getId()))
+    protected List<RatedMovieViewDTO> convertToDtos(List<RatedMovie> ratedMovies) {
+        return ratedMovies.stream()
+                .map(ratedMapper::toOwnerView)
                 .toList();
     }
 }

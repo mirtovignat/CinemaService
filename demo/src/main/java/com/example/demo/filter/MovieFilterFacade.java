@@ -31,10 +31,23 @@ public class MovieFilterFacade {
                          int size,
                          Long userId) {
 
-        Pageable pageable = sortResolver.resolve(page, size, context.sortBy(), context.sortDir());
+        int safePage = Math.max(page, 0);
+        int safeSize = size > 0 ? size : 35;
+
+        Pageable pageable = sortResolver.resolve(safePage, safeSize, context.sortBy(), context.sortDir());
 
         Page<MovieForUser<MovieCardViewDTO>> result =
                 movieService.getMovies(filter, context.title(), pageable, userId);
+
+        result = clampToLastExistingPage(
+                result,
+                safePage,
+                lastPage -> {
+                    Pageable lastPageable = sortResolver.resolve(
+                            lastPage, safeSize, context.sortBy(), context.sortDir());
+                    return movieService.getMovies(filter, context.title(), lastPageable, userId);
+                }
+        );
 
         String filterQuery = queryBuilder.build(filter, context);
 
@@ -52,14 +65,42 @@ public class MovieFilterFacade {
             return Optional.empty();
         }
 
-        Pageable pageable = sortResolver.resolve(page, size, sortBy, sortDir);
+        int safePage = Math.max(page, 0);
+        int safeSize = size > 0 ? size : 15;
+
+        Pageable pageable = sortResolver.resolve(safePage, safeSize, sortBy, sortDir);
 
         Page<MovieForUser<MovieCardViewDTO>> result =
                 movieService.getMoviesByGenre(genre, pageable, userId);
+
+        result = clampToLastExistingPage(
+                result,
+                safePage,
+                lastPage -> {
+                    Pageable lastPageable = sortResolver.resolve(lastPage, safeSize, sortBy, sortDir);
+                    return movieService.getMoviesByGenre(genre, lastPageable, userId);
+                }
+        );
 
         MovieSearchContext context = MovieSearchContext.ofGenre(genre, sortBy, sortDir);
         String filterQuery = queryBuilder.build(null, context);
 
         return Optional.of(new Result(result, filterQuery));
+    }
+
+    private Page<MovieForUser<MovieCardViewDTO>> clampToLastExistingPage(
+            Page<MovieForUser<MovieCardViewDTO>> result,
+            int requestedPage,
+            java.util.function.IntFunction<Page<MovieForUser<MovieCardViewDTO>>> reloadWithPage
+    ) {
+        int totalPages = result.getTotalPages();
+        if (totalPages <= 0) {
+            return result;
+        }
+        if (requestedPage < totalPages) {
+            return result;
+        }
+        int lastPage = totalPages - 1;
+        return reloadWithPage.apply(lastPage);
     }
 }

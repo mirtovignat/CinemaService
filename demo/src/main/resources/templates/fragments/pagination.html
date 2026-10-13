@@ -4,20 +4,18 @@
 
 <div th:fragment="pager(page, url)" class="pagination" th:if="${page != null and page.totalPages > 1}">
 
-    <!-- Предыдущая -->
-    <th:block th:if="${page.hasPrevious()}">
-        <a th:with="prevPage=${page.number - 1}"
-           th:href="@{${url} + '?page=' + ${prevPage} + ${filterQuery}}"
-           class="page-nav"
-           th:attr="data-page=${prevPage}">
-            <th:block th:replace="~{fragments/icons :: icon-chevron-left}"></th:block>
-        </a>
-    </th:block>
-
     <th:block th:with="total=${page.totalPages}, current=${page.number}">
 
-        <a th:if="${total > 0}"
-           th:href="@{${url} + '?page=0' + ${filterQuery}}"
+        <th:block th:if="${current > 0}">
+            <a th:with="prevPage=${current - 1}"
+               th:href="@{${url} + '?page=' + ${prevPage} + ${filterQuery}}"
+               class="page-nav"
+               th:attr="data-page=${prevPage}">
+                <th:block th:replace="~{fragments/icons :: icon-chevron-left}"></th:block>
+            </a>
+        </th:block>
+
+        <a th:href="@{${url} + '?page=0' + ${filterQuery}}"
            class="page-nav"
            th:classappend="${current == 0} ? 'active' : ''"
            data-page="0">1</a>
@@ -28,31 +26,47 @@
            th:classappend="${current == 1} ? 'active' : ''"
            data-page="1">2</a>
 
-        <span th:if="${total > 4 and current > 3}" class="page-dots">…</span>
+        <span th:if="${total > 5 and current > 3}" class="page-dots">…</span>
 
-        <th:block th:each="p : ${#numbers.sequence(
-            (current - 1 > 2) ? current - 1 : 2,
-            (current + 1 < total) ? current + 1 : total - 1
-        )}">
-            <a th:if="${p >= 2}"
-               th:href="@{${url} + '?page=' + ${p} + ${filterQuery}}"
-               class="page-nav"
-               th:classappend="${p == current} ? 'active' : ''"
-               th:text="${p + 1}"
-               th:attr="data-page=${p}"></a>
+        <th:block th:with="from=${(current - 1 > 2) ? current - 1 : 2},
+                           to=${(current + 1 < total - 2) ? current + 1 : total - 3}">
+            <th:block th:each="p : ${#numbers.sequence(from, to)}">
+                <a th:if="${p >= 2 and p <= total - 2}"
+                   th:href="@{${url} + '?page=' + ${p} + ${filterQuery}}"
+                   class="page-nav"
+                   th:classappend="${p == current} ? 'active' : ''"
+                   th:text="${p + 1}"
+                   th:attr="data-page=${p}"></a>
+            </th:block>
         </th:block>
 
-        <span th:if="${total > 4 and current < total - 2}" class="page-dots">…</span>
-    </th:block>
+        <span th:if="${total > 5 and current < total - 3}" class="page-dots">…</span>
 
-    <!-- Следующая -->
-    <th:block th:if="${page.hasNext()}">
-        <a th:with="nextPage=${page.number + 1}"
-           th:href="@{${url} + '?page=' + ${nextPage} + ${filterQuery}}"
+        <a th:if="${total > 3}"
+           th:with="penultimate=${total - 2}"
+           th:href="@{${url} + '?page=' + ${penultimate} + ${filterQuery}}"
            class="page-nav"
-           th:attr="data-page=${nextPage}">
-            <th:block th:replace="~{fragments/icons :: icon-chevron-right}"></th:block>
-        </a>
+           th:classappend="${current == penultimate} ? 'active' : ''"
+           th:text="${total - 1}"
+           th:attr="data-page=${penultimate}"></a>
+
+        <a th:if="${total > 2}"
+           th:with="last=${total - 1}"
+           th:href="@{${url} + '?page=' + ${last} + ${filterQuery}}"
+           class="page-nav"
+           th:classappend="${current == last} ? 'active' : ''"
+           th:text="${total}"
+           th:attr="data-page=${last}"></a>
+
+        <th:block th:if="${current < total - 1}">
+            <a th:with="nextPage=${current + 1}"
+               th:href="@{${url} + '?page=' + ${nextPage} + ${filterQuery}}"
+               class="page-nav"
+               th:attr="data-page=${nextPage}">
+                <th:block th:replace="~{fragments/icons :: icon-chevron-right}"></th:block>
+            </a>
+        </th:block>
+
     </th:block>
 
 </div>

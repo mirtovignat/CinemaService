@@ -10,7 +10,8 @@ import com.example.demo.repository.entity.UserRepository;
 import org.springframework.stereotype.Service;
 
 @Service
-public class FavouritesService extends AbstractLinkedCollectionService<FavouriteMovie, FavouriteMovieViewDTO> {
+public class FavouritesService
+        extends AbstractLinkedCollectionService<FavouriteMovie, FavouriteMovieViewDTO> {
 
     public FavouritesService(FavouriteMovieRepository favouriteMovieRepository,
                              UserRepository userRepository,

@@ -486,15 +486,13 @@
                 if (activeSuggestionIndex < 0) {
                     next = 0;
                 } else {
-                    next = activeSuggestionIndex + 1;
-                    if (next >= els.length) next = els.length - 1;
+                    next = (activeSuggestionIndex + 1) % els.length;
                 }
             } else {
                 if (activeSuggestionIndex < 0) {
                     next = els.length - 1;
                 } else {
-                    next = activeSuggestionIndex - 1;
-                    if (next < 0) next = 0;
+                    next = (activeSuggestionIndex - 1 + els.length) % els.length;
                 }
             }
             setActiveSuggestion(next);
@@ -902,15 +900,13 @@
                 if (activeSuggestionIndex < 0) {
                     next = 0;
                 } else {
-                    next = activeSuggestionIndex + 1;
-                    if (next >= els.length) next = els.length - 1;
+                    next = (activeSuggestionIndex + 1) % els.length;
                 }
             } else {
                 if (activeSuggestionIndex < 0) {
                     next = els.length - 1;
                 } else {
-                    next = activeSuggestionIndex - 1;
-                    if (next < 0) next = 0;
+                    next = (activeSuggestionIndex - 1 + els.length) % els.length;
                 }
             }
             setActiveSuggestion(next);

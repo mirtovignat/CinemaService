@@ -9,8 +9,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Component;
 
@@ -19,33 +17,19 @@ import org.springframework.stereotype.Component;
 public class SessionAuthenticator {
 
     private final SecurityContextRepository securityContextRepository;
-    private final UserDetailsService userDetailsService;
-
-    public void authenticate(String username,
-                             HttpServletRequest httpServletRequest,
-                             HttpServletResponse httpServletResponse) {
-        UserDetails loaded = userDetailsService.loadUserByUsername(username);
-        if (!(loaded instanceof AppUserDetails userDetails)) {
-            throw new IllegalStateException(
-                    "UserDetailsService must return AppUserDetails, got: "
-                            + loaded.getClass().getName());
-        }
-        Authentication authentication = new UsernamePasswordAuthenticationToken(
-                userDetails, null, userDetails.getAuthorities());
-        saveAuthentication(authentication, httpServletRequest, httpServletResponse);
-    }
 
     public void updateSessionUser(SessionUser updatedSessionUser,
                                   HttpServletRequest httpServletRequest,
                                   HttpServletResponse httpServletResponse) {
-        Authentication current = SecurityContextHolder.getContext().getAuthentication();
-        if (current == null || !(current.getPrincipal() instanceof AppUserDetails currentPrincipal)) {
+        Authentication currentAuthentication = SecurityContextHolder.getContext().getAuthentication();
+        if (currentAuthentication == null
+                || !(currentAuthentication.getPrincipal() instanceof AppUserDetails currentAppUserDetails)) {
             throw new IllegalStateException("No authenticated AppUserDetails in SecurityContext");
         }
-        AppUserDetails updatedPrincipal = currentPrincipal.withSessionUser(updatedSessionUser);
-        Authentication updated = new UsernamePasswordAuthenticationToken(
-                updatedPrincipal, null, updatedPrincipal.getAuthorities());
-        saveAuthentication(updated, httpServletRequest, httpServletResponse);
+        AppUserDetails updatedAppUserDetails = currentAppUserDetails.withSessionUser(updatedSessionUser);
+        Authentication updatedAuthentication = new UsernamePasswordAuthenticationToken(
+                updatedAppUserDetails, null, updatedAppUserDetails.getAuthorities());
+        saveAuthentication(updatedAuthentication, httpServletRequest, httpServletResponse);
     }
 
     private void saveAuthentication(Authentication authentication,

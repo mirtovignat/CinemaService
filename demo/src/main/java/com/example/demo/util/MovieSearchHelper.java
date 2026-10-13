@@ -31,36 +31,36 @@ public class MovieSearchHelper {
         boolean hasTitle = title != null && !title.isBlank();
 
         if (!hasFilter && !hasTitle) {
-            return movieRepository.findAllWithActiveRatings(pageable);
+            return movieRepository.findAllPaged(pageable);
         }
 
-        Specification<Movie> spec = Specification.unrestricted();
+        Specification<Movie> specification = Specification.unrestricted();
         if (hasFilter) {
-            spec = spec.and(movieSpecifications.byFilter(movieFilter));
+            specification = specification.and(movieSpecifications.byFilter(movieFilter));
         }
         if (hasTitle) {
-            spec = spec.and(movieSpecifications.titleStartsWith(title));
+            specification = specification.and(movieSpecifications.titleStartsWith(title));
         }
-        return movieRepository.findAll(spec, pageable);
+        return movieRepository.findAll(specification, pageable);
     }
 
-    public List<MovieSearchDTO> getSuggestions(String query) {
-        if (query == null || query.isBlank()) {
+    public List<MovieSearchDTO> getSuggestions(String searchQuery) {
+        if (searchQuery == null || searchQuery.isBlank()) {
             return Collections.emptyList();
         }
 
-        String sanitized = query.toLowerCase()
+        String sanitizedSearchQuery = searchQuery.toLowerCase()
                 .replace('ё', 'е')
                 .replaceAll("[^a-zа-я0-9]", "");
 
-        if (sanitized.isEmpty()) {
+        if (sanitizedSearchQuery.isEmpty()) {
             return Collections.emptyList();
         }
 
-        Pageable limit = PageRequest.of(0, 10);
+        Pageable limitPageable = PageRequest.of(0, 10);
         return movieRepository.findAll(
-                        movieSpecifications.titleStartsWith(sanitized),
-                        limit
+                        movieSpecifications.titleStartsWith(sanitizedSearchQuery),
+                        limitPageable
                 )
                 .getContent()
                 .stream()

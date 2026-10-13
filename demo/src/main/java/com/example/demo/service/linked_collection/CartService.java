@@ -8,7 +8,6 @@ import com.example.demo.repository.entity.CartItemRepository;
 import com.example.demo.repository.entity.MovieRepository;
 import com.example.demo.repository.entity.PurchasedMovieRepository;
 import com.example.demo.repository.entity.UserRepository;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,9 +35,6 @@ public class CartService extends AbstractLinkedCollectionService<CartItem, CartI
         if (purchasedMovieRepository.existsByMovieIdAndUserId(movieId, userId)) {
             return;
         }
-        try {
-            super.add(movieId, userId);
-        } catch (DataIntegrityViolationException ignored) {
-        }
+        super.add(movieId, userId);
     }
 }
