@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 
@@ -56,7 +57,7 @@ public class FavouritesCatalogService extends AbstractCursorService<FavouriteMov
 
     private static PageCursor extractCursor(FavouriteMovie item) {
         return PageCursor.builder()
-                .addedAt(item.getAddedAt())
+                .addedAt(item.getAddedAt().toInstant(ZoneOffset.UTC))
                 .entityId(item.getId().getMovieId())
                 .build();
     }
@@ -72,7 +73,7 @@ public class FavouritesCatalogService extends AbstractCursorService<FavouriteMov
                     : favouriteMovieRepository.findPageDescFirst(userId, pageable);
         }
         return isAscending
-                ? favouriteMovieRepository.findPageAscAfter(userId, pageCursor.addedAt(), pageCursor.entityId(), pageable)
-                : favouriteMovieRepository.findPageDescAfter(userId, pageCursor.addedAt(), pageCursor.entityId(), pageable);
+                ? favouriteMovieRepository.findPageAscAfter(userId, pageCursor.addedAtUtc(), pageCursor.entityId(), pageable)
+                : favouriteMovieRepository.findPageDescAfter(userId, pageCursor.addedAtUtc(), pageCursor.entityId(), pageable);
     }
 }

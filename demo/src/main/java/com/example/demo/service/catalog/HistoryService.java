@@ -13,6 +13,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 
+import java.time.ZoneOffset;
+
 @Service
 public class HistoryService extends AbstractCursorService<PurchasedMovie, HistoricalMovieViewDTO> {
 
@@ -35,7 +37,7 @@ public class HistoryService extends AbstractCursorService<PurchasedMovie, Histor
 
     private static PageCursor extractCursor(PurchasedMovie purchasedMovie) {
         return PageCursor.builder()
-                .addedAt(purchasedMovie.getAddedAt())
+                .addedAt(purchasedMovie.getAddedAt().toInstant(ZoneOffset.UTC))
                 .entityId(purchasedMovie.getId().getMovieId())
                 .build();
     }
@@ -51,7 +53,7 @@ public class HistoryService extends AbstractCursorService<PurchasedMovie, Histor
                     : purchasedMovieRepository.findPageDescFirst(userId, pageable);
         }
         return isAscending
-                ? purchasedMovieRepository.findPageAscAfter(userId, pageCursor.addedAt(), pageCursor.entityId(), pageable)
-                : purchasedMovieRepository.findPageDescAfter(userId, pageCursor.addedAt(), pageCursor.entityId(), pageable);
+                ? purchasedMovieRepository.findPageAscAfter(userId, pageCursor.addedAtUtc(), pageCursor.entityId(), pageable)
+                : purchasedMovieRepository.findPageDescAfter(userId, pageCursor.addedAtUtc(), pageCursor.entityId(), pageable);
     }
 }

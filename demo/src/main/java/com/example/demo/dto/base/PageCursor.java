@@ -2,38 +2,39 @@ package com.example.demo.dto.base;
 
 import lombok.Builder;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.Base64;
 
 @Builder
 public record PageCursor(
-        LocalDateTime addedAt,
+        Instant addedAt,
         Long entityId
 ) {
 
     public String encode() {
-        if (addedAt == null || entityId == null) {
-            return null;
-        }
-        return addedAt + "_" + entityId;
+        if (addedAt == null || entityId == null) return null;
+        String raw = addedAt.toEpochMilli() + "|" + entityId;
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(raw.getBytes());
     }
 
     public static PageCursor decode(String rawCursor) {
-        if (rawCursor == null || rawCursor.isBlank()) {
-            return null;
-        }
-        int separatorIndex = rawCursor.lastIndexOf('_');
-        if (separatorIndex <= 0 || separatorIndex == rawCursor.length() - 1) {
-            return null;
-        }
+        if (rawCursor == null || rawCursor.isBlank()) return null;
         try {
-            LocalDateTime addedAt = LocalDateTime.parse(rawCursor.substring(0, separatorIndex));
-            Long entityId = Long.parseLong(rawCursor.substring(separatorIndex + 1));
+            String decoded = new String(Base64.getUrlDecoder().decode(rawCursor));
+            int idx = decoded.indexOf('|');
+            if (idx <= 0 || idx == decoded.length() - 1) return null;
             return PageCursor.builder()
-                    .addedAt(addedAt)
-                    .entityId(entityId)
+                    .addedAt(Instant.ofEpochMilli(Long.parseLong(decoded.substring(0, idx))))
+                    .entityId(Long.parseLong(decoded.substring(idx + 1)))
                     .build();
-        } catch (Exception exception) {
+        } catch (Exception e) {
             return null;
         }
+    }
+
+    public LocalDateTime addedAtUtc() {
+        return LocalDateTime.ofInstant(addedAt, ZoneOffset.UTC);
     }
 }

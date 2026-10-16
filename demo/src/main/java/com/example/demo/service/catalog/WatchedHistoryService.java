@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 @Service
@@ -49,7 +50,7 @@ public class WatchedHistoryService extends AbstractCursorService<WatchHistoryIte
 
     private static PageCursor extractCursor(WatchHistoryItem item) {
         return PageCursor.builder()
-                .addedAt(item.getWatchedAt())
+                .addedAt(item.getWatchedAt().toInstant(ZoneOffset.UTC))
                 .entityId(item.getId())
                 .build();
     }
@@ -65,8 +66,8 @@ public class WatchedHistoryService extends AbstractCursorService<WatchHistoryIte
                     : watchHistoryItemRepository.findPageDescFirst(userId, pageable);
         }
         return isAscending
-                ? watchHistoryItemRepository.findPageAscAfter(userId, pageCursor.addedAt(), pageCursor.entityId(), pageable)
-                : watchHistoryItemRepository.findPageDescAfter(userId, pageCursor.addedAt(), pageCursor.entityId(), pageable);
+                ? watchHistoryItemRepository.findPageAscAfter(userId, pageCursor.addedAtUtc(), pageCursor.entityId(), pageable)
+                : watchHistoryItemRepository.findPageDescAfter(userId, pageCursor.addedAtUtc(), pageCursor.entityId(), pageable);
     }
 
     @Transactional
@@ -74,7 +75,7 @@ public class WatchedHistoryService extends AbstractCursorService<WatchHistoryIte
         PurchasedMovie purchasedMovie = purchasedMovieRepository
                 .findByMovieIdAndUserId(movieId, userId)
                 .orElseThrow(() -> BusinessException.of(ErrorCode.MOVIE_NOT_PURCHASED));
-        purchasedMovie.addWatchHistory(LocalDateTime.now());
+        purchasedMovie.addWatchHistory(LocalDateTime.now(ZoneOffset.UTC));
         purchasedMovieRepository.saveAndFlush(purchasedMovie);
     }
 

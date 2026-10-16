@@ -44,20 +44,25 @@ public abstract class AbstractCursorService<Entity, DTO> {
         boolean ascending = "asc".equals(normalizedSort);
 
         int pageSize = resolvePageSize(requestedPageSize);
-        Pageable pageable = PageRequest.of(0, pageSize);
+        Pageable pageable = PageRequest.of(0, pageSize + 1);
 
         Slice<Entity> slice = fetchSlice(userId, pageCursor, ascending, pageable);
 
-        List<Entity> contentEntities = slice.getContent();
+        List<Entity> rawContent = slice.getContent();
+        boolean hasMore = rawContent.size() > pageSize;
+        List<Entity> contentEntities = hasMore
+                ? rawContent.subList(0, pageSize)
+                : rawContent;
+
         List<DTO> content = contentMapper.map(contentEntities);
 
-        String nextCursor = slice.hasNext() && !contentEntities.isEmpty()
+        String nextCursor = hasMore && !contentEntities.isEmpty()
                 ? resolveNextCursor(contentEntities.get(contentEntities.size() - 1))
                 : null;
 
         return CursorPageResponse.<DTO>builder()
                 .content(content)
-                .hasMore(slice.hasNext())
+                .hasMore(hasMore)
                 .nextCursor(nextCursor)
                 .sort(normalizedSort)
                 .build();

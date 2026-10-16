@@ -13,6 +13,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 
+import java.time.ZoneOffset;
+
 @Service
 public class RatedCatalogService extends AbstractCursorService<RatedMovie, RatedMovieViewDTO> {
 
@@ -35,7 +37,7 @@ public class RatedCatalogService extends AbstractCursorService<RatedMovie, Rated
 
     private static PageCursor extractCursor(RatedMovie ratedMovie) {
         return PageCursor.builder()
-                .addedAt(ratedMovie.getAddedAt())
+                .addedAt(ratedMovie.getAddedAt().toInstant(ZoneOffset.UTC))
                 .entityId(ratedMovie.getId().getMovieId())
                 .build();
     }
@@ -51,7 +53,7 @@ public class RatedCatalogService extends AbstractCursorService<RatedMovie, Rated
                     : ratedMovieRepository.findRatedPageDescFirst(userId, pageable);
         }
         return isAscending
-                ? ratedMovieRepository.findRatedPageAscAfter(userId, pageCursor.addedAt(), pageCursor.entityId(), pageable)
-                : ratedMovieRepository.findRatedPageDescAfter(userId, pageCursor.addedAt(), pageCursor.entityId(), pageable);
+                ? ratedMovieRepository.findRatedPageAscAfter(userId, pageCursor.addedAtUtc(), pageCursor.entityId(), pageable)
+                : ratedMovieRepository.findRatedPageDescAfter(userId, pageCursor.addedAtUtc(), pageCursor.entityId(), pageable);
     }
 }

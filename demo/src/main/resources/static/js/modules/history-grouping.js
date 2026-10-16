@@ -64,11 +64,12 @@
         return isNaN(d.getTime()) ? null : d;
     }
 
-    function getSentinel(container) {
-        var direct = container.querySelector(':scope > [aria-hidden="true"]');
-        if (direct) return direct;
-        var all = container.querySelectorAll('[aria-hidden="true"]');
-        return all.length ? all[all.length - 1] : null;
+    function findTail(container) {
+        var sentinel = container.querySelector('[data-cursor-sentinel]');
+        if (sentinel && sentinel.parentNode === container) return sentinel;
+        var loader = container.querySelector('[data-cursor-loader]');
+        if (loader && loader.parentNode === container) return loader;
+        return null;
     }
 
     function collectItems(container) {
@@ -79,19 +80,31 @@
         return items;
     }
 
-    function removeGroups(container) {
-        container.querySelectorAll(':scope > .history-day-group').forEach(function (g) {
-            g.remove();
-        });
-    }
-
     function detachItems(items) {
         items.forEach(function (item) {
             if (item.parentNode) item.parentNode.removeChild(item);
         });
     }
 
-    function buildGroups(container, items, sentinel) {
+    function removeGroups(container) {
+        var tail = findTail(container);
+
+        container.querySelectorAll('.history-day-group').forEach(function (g) {
+            var children = Array.prototype.slice.call(g.children);
+            children.forEach(function (child) {
+                if (child.classList && child.classList.contains('history-item')) {
+                    if (tail && tail.parentNode === container) {
+                        container.insertBefore(child, tail);
+                    } else {
+                        container.appendChild(child);
+                    }
+                }
+            });
+            g.remove();
+        });
+    }
+
+    function buildGroups(container, items) {
         if (!items.length) return;
 
         var groups = new Map();
@@ -102,7 +115,18 @@
             groups.get(key).push(item);
         });
 
-        if (groups.size === 0) return;
+        var tail = findTail(container);
+
+        if (groups.size === 0) {
+            items.forEach(function (item) {
+                if (tail && tail.parentNode === container) {
+                    container.insertBefore(item, tail);
+                } else {
+                    container.appendChild(item);
+                }
+            });
+            return;
+        }
 
         var sort = container.getAttribute('data-cursor-sort') || 'desc';
         var keys = Array.from(groups.keys()).sort(function (a, b) {
@@ -128,20 +152,10 @@
             frag.appendChild(group);
         });
 
-        if (sentinel && sentinel.parentNode === container) {
-            container.insertBefore(frag, sentinel);
+        if (tail && tail.parentNode === container) {
+            container.insertBefore(frag, tail);
         } else {
             container.appendChild(frag);
-        }
-    }
-
-    function ensureTail(container, sentinel) {
-        if (sentinel && sentinel.parentNode === container) {
-            container.appendChild(sentinel);
-        }
-        var loader = container.querySelector('[data-cursor-loader]');
-        if (loader && loader.parentNode === container) {
-            container.appendChild(loader);
         }
     }
 
@@ -152,12 +166,10 @@
 
         applying = true;
         try {
-            var sentinel = getSentinel(container);
-            var items = collectItems(container);
             removeGroups(container);
+            var items = collectItems(container);
             detachItems(items);
-            buildGroups(container, items, sentinel);
-            ensureTail(container, sentinel);
+            buildGroups(container, items);
         } finally {
             applying = false;
         }
@@ -177,4 +189,6 @@
     } else {
         init();
     }
+
+    window.addEventListener('load', init);
 })();

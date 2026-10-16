@@ -34,28 +34,9 @@
         return (s === 'asc' || s === 'desc') ? s : null;
     }
 
-    function remountContainer(order) {
-        var container = document.querySelector('[data-cursor-container]');
-        if (!container) return;
-        container.setAttribute('data-cursor-sort', order);
-        container.setAttribute('data-cursor-next', '');
-        container.setAttribute('data-cursor-has-more', 'true');
-        container.innerHTML = '';
-        container.dataset.cursorMounted = '';
-        if (window.CursorPagination && typeof window.CursorPagination.mount === 'function') {
-            window.CursorPagination.mount(container);
-        }
-    }
-
     function setSort(order) {
         if (order !== 'asc' && order !== 'desc') return;
         try { localStorage.setItem(STORAGE_KEY, order); } catch (e) {}
-
-        if (isCursorPage()) {
-            remountContainer(order);
-            applyActive(order);
-            return;
-        }
 
         var url = new URL(window.location.href);
         url.searchParams.set('sort', order);
