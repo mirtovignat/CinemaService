@@ -27,22 +27,32 @@
         });
     }
 
+    function getCurrentContainerSort() {
+        var container = document.querySelector('[data-cursor-container]');
+        if (!container) return null;
+        var s = (container.getAttribute('data-cursor-sort') || '').toLowerCase();
+        return (s === 'asc' || s === 'desc') ? s : null;
+    }
+
+    function remountContainer(order) {
+        var container = document.querySelector('[data-cursor-container]');
+        if (!container) return;
+        container.setAttribute('data-cursor-sort', order);
+        container.setAttribute('data-cursor-next', '');
+        container.setAttribute('data-cursor-has-more', 'true');
+        container.innerHTML = '';
+        container.dataset.cursorMounted = '';
+        if (window.CursorPagination && typeof window.CursorPagination.mount === 'function') {
+            window.CursorPagination.mount(container);
+        }
+    }
+
     function setSort(order) {
         if (order !== 'asc' && order !== 'desc') return;
         try { localStorage.setItem(STORAGE_KEY, order); } catch (e) {}
 
         if (isCursorPage()) {
-            var container = document.querySelector('[data-cursor-container]');
-            if (container) {
-                container.setAttribute('data-cursor-sort', order);
-                container.setAttribute('data-cursor-next', '');
-                container.setAttribute('data-cursor-has-more', 'true');
-                container.innerHTML = '';
-                container.dataset.cursorMounted = '';
-                if (window.CursorPagination && typeof window.CursorPagination.mount === 'function') {
-                    window.CursorPagination.mount(container);
-                }
-            }
+            remountContainer(order);
             applyActive(order);
             return;
         }
@@ -62,21 +72,21 @@
 
         if (urlSort) {
             try { localStorage.setItem(STORAGE_KEY, urlSort); } catch (e) {}
-        } else if (storedSort) {
-            if (isCursorPage()) {
-                var container = document.querySelector('[data-cursor-container]');
-                if (container) container.setAttribute('data-cursor-sort', storedSort);
-                applyActive(storedSort);
-            } else {
+        }
+
+        if (isCursorPage()) {
+            var containerSort = getCurrentContainerSort() || urlSort || storedSort || 'desc';
+            applyActive(containerSort);
+        } else {
+            if (!urlSort && storedSort) {
                 var url = new URL(window.location.href);
                 url.searchParams.set('sort', storedSort);
                 url.searchParams.delete('cursor');
                 window.location.replace(url.toString());
                 return;
             }
+            applyActive(urlSort || storedSort || 'desc');
         }
-
-        applyActive(urlSort || storedSort || 'desc');
 
         group.querySelectorAll('.sort-option').forEach(function (btn) {
             if (btn.dataset.sortBound === '1') return;

@@ -88,7 +88,9 @@
 </main>
 
 <template id="historyItemTemplate">
-    <div class="history-item" data-attr="data-movie-id:id;data-added-at:addedAt">
+    <div class="history-item"
+         data-action="navigate"
+         data-attr="data-movie-id:id;data-added-at:addedAt;data-href:/movies/{id}">
         <div class="history-item-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
                  stroke="currentColor" stroke-width="2.2" stroke-linecap="round"

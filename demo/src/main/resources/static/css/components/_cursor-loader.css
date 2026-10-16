@@ -1,0 +1,11 @@
+.cursor-loader {
+    grid-column: 1 / -1;
+    width: 100%;
+    height: 1px;
+    pointer-events: none;
+    opacity: 0;
+}
+
+.cursor-loader.is-loading {
+    opacity: 1;
+}

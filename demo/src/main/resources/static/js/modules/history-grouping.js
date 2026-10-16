@@ -9,11 +9,17 @@
 
     var ICON_CALENDAR =
         '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" ' +
-        'stroke-width="1.5" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>' +
-        '<line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>' +
+        'stroke-width="1.5" stroke="currentColor">' +
+        '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>' +
+        '<line x1="16" y1="2" x2="16" y2="6"/>' +
+        '<line x1="8" y1="2" x2="8" y2="6"/>' +
         '<line x1="3" y1="10" x2="21" y2="10"/></svg>';
 
     var applying = false;
+
+    function pad2(n) {
+        return String(n).padStart(2, '0');
+    }
 
     function startOfDay(d) {
         var x = new Date(d);
@@ -23,12 +29,6 @@
 
     function dayDiff(a, b) {
         return Math.round((startOfDay(a).getTime() - startOfDay(b).getTime()) / 86400000);
-    }
-
-    function parseDate(raw) {
-        if (!raw) return null;
-        var d = new Date(raw);
-        return isNaN(d.getTime()) ? null : d;
     }
 
     function humanize(date) {
@@ -47,22 +47,102 @@
         return dayMonth + ' ' + date.getFullYear();
     }
 
-    function dateKey(date) {
-        return date.getFullYear() + '-' +
-            String(date.getMonth() + 1).padStart(2, '0') + '-' +
-            String(date.getDate()).padStart(2, '0');
+    function extractDayKey(raw) {
+        if (!raw) return '';
+        var s = String(raw).trim();
+        var m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (m) return m[1] + '-' + m[2] + '-' + m[3];
+        var d = new Date(s);
+        if (isNaN(d.getTime())) return '';
+        return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
     }
 
-    function ungroupAll() {
-        var groups = document.querySelectorAll('.history-day-group');
-        groups.forEach(function (g) {
-            var parent = g.parentNode;
-            if (!parent) return;
-            while (g.firstChild) {
-                parent.insertBefore(g.firstChild, g);
-            }
+    function keyToDate(key) {
+        var p = key.split('-');
+        if (p.length !== 3) return null;
+        var d = new Date(+p[0], +p[1] - 1, +p[2]);
+        return isNaN(d.getTime()) ? null : d;
+    }
+
+    function getSentinel(container) {
+        var direct = container.querySelector(':scope > [aria-hidden="true"]');
+        if (direct) return direct;
+        var all = container.querySelectorAll('[aria-hidden="true"]');
+        return all.length ? all[all.length - 1] : null;
+    }
+
+    function collectItems(container) {
+        var items = [];
+        container.querySelectorAll('.history-item').forEach(function (el) {
+            items.push(el);
+        });
+        return items;
+    }
+
+    function removeGroups(container) {
+        container.querySelectorAll(':scope > .history-day-group').forEach(function (g) {
             g.remove();
         });
+    }
+
+    function detachItems(items) {
+        items.forEach(function (item) {
+            if (item.parentNode) item.parentNode.removeChild(item);
+        });
+    }
+
+    function buildGroups(container, items, sentinel) {
+        if (!items.length) return;
+
+        var groups = new Map();
+        items.forEach(function (item) {
+            var key = extractDayKey(item.getAttribute('data-added-at'));
+            if (!key) return;
+            if (!groups.has(key)) groups.set(key, []);
+            groups.get(key).push(item);
+        });
+
+        if (groups.size === 0) return;
+
+        var sort = container.getAttribute('data-cursor-sort') || 'desc';
+        var keys = Array.from(groups.keys()).sort(function (a, b) {
+            return sort === 'asc' ? a.localeCompare(b) : b.localeCompare(a);
+        });
+
+        var frag = document.createDocumentFragment();
+        keys.forEach(function (key) {
+            var date = keyToDate(key);
+            var group = document.createElement('div');
+            group.className = 'history-day-group';
+            group.setAttribute('data-date', key);
+
+            var label = document.createElement('div');
+            label.className = 'history-day-label';
+            label.innerHTML = ICON_CALENDAR + '<span class="day-label"></span>';
+            label.querySelector('.day-label').textContent = date ? humanize(date) : key;
+            group.appendChild(label);
+
+            groups.get(key).forEach(function (item) {
+                group.appendChild(item);
+            });
+            frag.appendChild(group);
+        });
+
+        if (sentinel && sentinel.parentNode === container) {
+            container.insertBefore(frag, sentinel);
+        } else {
+            container.appendChild(frag);
+        }
+    }
+
+    function ensureTail(container, sentinel) {
+        if (sentinel && sentinel.parentNode === container) {
+            container.appendChild(sentinel);
+        }
+        var loader = container.querySelector('[data-cursor-loader]');
+        if (loader && loader.parentNode === container) {
+            container.appendChild(loader);
+        }
     }
 
     function applyTo(container) {
@@ -72,55 +152,21 @@
 
         applying = true;
         try {
-            ungroupAll();
-
-            var items = Array.prototype.slice.call(container.querySelectorAll('[data-added-at]'));
-            if (items.length === 0) return;
-
-            var groups = new Map();
-            items.forEach(function (item) {
-                var d = parseDate(item.getAttribute('data-added-at'));
-                if (!d) return;
-                var key = dateKey(d);
-                if (!groups.has(key)) groups.set(key, { date: d, items: [] });
-                groups.get(key).items.push(item);
-            });
-
-            var sort = container.getAttribute('data-cursor-sort') || 'desc';
-            var sortedKeys = Array.from(groups.keys()).sort(function (a, b) {
-                return sort === 'asc' ? a.localeCompare(b) : b.localeCompare(a);
-            });
-
-            var frag = document.createDocumentFragment();
-            sortedKeys.forEach(function (key) {
-                var g = groups.get(key);
-                var group = document.createElement('div');
-                group.className = 'history-day-group';
-                group.setAttribute('data-date', key);
-
-                var label = document.createElement('div');
-                label.className = 'history-day-label';
-                label.innerHTML = ICON_CALENDAR + '<span class="day-label"></span>';
-                label.querySelector('.day-label').textContent = humanize(g.date);
-                group.appendChild(label);
-
-                g.items.forEach(function (item) { group.appendChild(item); });
-                frag.appendChild(group);
-            });
-
-            var loader = container.querySelector('[data-cursor-loader]');
-            if (loader && loader.parentNode === container) {
-                container.insertBefore(frag, loader);
-            } else {
-                container.appendChild(frag);
-            }
+            var sentinel = getSentinel(container);
+            var items = collectItems(container);
+            removeGroups(container);
+            detachItems(items);
+            buildGroups(container, items, sentinel);
+            ensureTail(container, sentinel);
         } finally {
             applying = false;
         }
     }
 
     window.applyHistoryGrouping = applyTo;
-    window.ungroupHistory = ungroupAll;
+    window.ungroupHistory = function (container) {
+        removeGroups(container || document);
+    };
 
     function init() {
         document.querySelectorAll('.history-container').forEach(applyTo);

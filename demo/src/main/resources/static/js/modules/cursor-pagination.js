@@ -25,6 +25,21 @@
         'data-poster-url': true
     };
 
+    function pad2(n) {
+        return String(n).padStart(2, '0');
+    }
+
+    function normalizeAddedAt(value) {
+        if (!value) return '';
+        var s = String(value).trim();
+        var m = s.match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2}:\d{2})/);
+        if (m) return m[1] + 'T' + m[2];
+        var d = new Date(s);
+        if (isNaN(d.getTime())) return '';
+        return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) +
+               'T' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds());
+    }
+
     function interpolateTemplate(tpl, item, isUrl) {
         return String(tpl).replace(/\{(\w+)\}/g, function (_, key) {
             var v = item[key];
@@ -51,6 +66,11 @@
                     value = item[key];
                 }
                 if (value === undefined || value === null) return;
+
+                if (attr === 'data-added-at') {
+                    value = normalizeAddedAt(value);
+                }
+
                 el.setAttribute(attr, String(value));
             });
         });
@@ -59,6 +79,23 @@
             var key = el.getAttribute('data-field');
             var value = item[key];
             if (value === undefined || value === null) return;
+
+            if (key === 'price' || key === 'priceSnapshot') {
+                var n = parseFloat(value);
+                if (!isNaN(n) && window.UI && typeof window.UI.formatPrice === 'function') {
+                    value = window.UI.formatPrice(n) + ' ₽';
+                }
+            }
+
+            if (key === 'addedAt' || key === 'watchedAt') {
+                if (typeof window.formatDateTime === 'function') {
+                    var formatted = window.formatDateTime(value);
+                    if (formatted) value = formatted;
+                } else {
+                    value = normalizeAddedAt(value);
+                }
+            }
+
             if (el.tagName === 'IMG') {
                 el.setAttribute('src', String(value));
                 el.setAttribute('data-poster-img', '');
@@ -103,6 +140,15 @@
         return node;
     }
 
+    function reorderTail(container, sentinel, loader) {
+        if (sentinel && sentinel.parentNode === container) {
+            container.appendChild(sentinel);
+        }
+        if (loader && loader.parentNode === container) {
+            container.appendChild(loader);
+        }
+    }
+
     function mount(container) {
         if (!container || container.dataset.cursorMounted === '1') return null;
         container.dataset.cursorMounted = '1';
@@ -130,7 +176,8 @@
             resizeObserver: null,
             sentinel: null,
             scrollRoot: null,
-            scrollHandler: null
+            scrollHandler: null,
+            autoFillTimer: null
         };
 
         var sentinel = document.createElement('div');
@@ -138,17 +185,55 @@
         sentinel.style.height = '1px';
         sentinel.style.width = '100%';
         sentinel.style.pointerEvents = 'none';
-        if (loader && loader.parentNode === container) {
-            container.insertBefore(sentinel, loader);
-        } else {
-            container.appendChild(sentinel);
-        }
+        container.appendChild(sentinel);
         state.sentinel = sentinel;
+
+        if (loader && loader.parentNode === container) {
+            container.appendChild(loader);
+        }
+
+        state.rebindScrollRoot = function () {
+            var newRoot = findScrollParent(container);
+            if (newRoot === state.scrollRoot) return;
+
+            if (state.scrollRoot && state.scrollHandler) {
+                state.scrollRoot.removeEventListener('scroll', state.scrollHandler);
+            } else if (state.scrollHandler) {
+                window.removeEventListener('scroll', state.scrollHandler);
+            }
+
+            state.scrollRoot = newRoot;
+
+            if (state.scrollRoot) {
+                state.scrollRoot.addEventListener('scroll', state.scrollHandler, { passive: true });
+            } else {
+                window.addEventListener('scroll', state.scrollHandler, { passive: true });
+            }
+
+            if (state.observer) {
+                state.observer.disconnect();
+                state.observer = new IntersectionObserver(function (entries) {
+                    for (var i = 0; i < entries.length; i++) {
+                        if (entries[i].isIntersecting) {
+                            state.fetchNext();
+                            return;
+                        }
+                    }
+                }, {
+                    root: state.scrollRoot,
+                    rootMargin: '0px 0px ' + LOAD_THRESHOLD_ROOT_MARGIN + ' 0px',
+                    threshold: 0
+                });
+                state.observer.observe(sentinel);
+            }
+        };
 
         state.fetchNext = function () {
             if (state.fetching || state.loading || !state.hasMore) return Promise.resolve(false);
             state.fetching = true;
             state.loading = true;
+
+            reorderTail(container, sentinel, loader);
 
             var params = new URLSearchParams();
             params.set('sort', state.sort);
@@ -171,6 +256,7 @@
                     var card = createCardFromTemplate(state.templateId, item);
                     if (card) frag.appendChild(card);
                 });
+
                 container.insertBefore(frag, sentinel);
 
                 state.nextCursor = page.nextCursor || null;
@@ -192,6 +278,11 @@
                 if (typeof window.applyStatusesFromSession === 'function') {
                     window.applyStatusesFromSession();
                 }
+
+                reorderTail(container, sentinel, loader);
+                state.rebindScrollRoot();
+
+                scheduleAutoFill();
 
                 return content.length > 0;
             })
@@ -218,6 +309,30 @@
             }
         };
 
+        function scheduleAutoFill() {
+            if (state.autoFillTimer) clearTimeout(state.autoFillTimer);
+            var attempts = 0;
+            function tryFill() {
+                if (state.loading || !state.hasMore) return;
+                if (attempts >= 8) return;
+                attempts++;
+                var rect = sentinel.getBoundingClientRect();
+                var rootRect = state.scrollRoot
+                    ? state.scrollRoot.getBoundingClientRect()
+                    : { top: 0, bottom: window.innerHeight || document.documentElement.clientHeight };
+                if (rect.top - rootRect.bottom < 200) {
+                    state.fetchNext().then(function (got) {
+                        if (got) {
+                            state.autoFillTimer = setTimeout(tryFill, 100);
+                        }
+                    });
+                }
+            }
+            state.autoFillTimer = setTimeout(tryFill, 150);
+        }
+
+        state.scrollRoot = findScrollParent(container);
+
         if ('IntersectionObserver' in window) {
             state.observer = new IntersectionObserver(function (entries) {
                 for (var i = 0; i < entries.length; i++) {
@@ -227,14 +342,13 @@
                     }
                 }
             }, {
-                root: null,
+                root: state.scrollRoot,
                 rootMargin: '0px 0px ' + LOAD_THRESHOLD_ROOT_MARGIN + ' 0px',
                 threshold: 0
             });
             state.observer.observe(sentinel);
         }
 
-        state.scrollRoot = findScrollParent(container);
         state.scrollHandler = function () { state.checkEdge(); };
         if (state.scrollRoot) {
             state.scrollRoot.addEventListener('scroll', state.scrollHandler, { passive: true });
@@ -243,11 +357,16 @@
         }
 
         requestAnimationFrame(function () {
-            requestAnimationFrame(function () { state.checkEdge(); });
+            requestAnimationFrame(function () {
+                state.rebindScrollRoot();
+                state.checkEdge();
+                scheduleAutoFill();
+            });
         });
 
         if ('ResizeObserver' in window) {
             state.resizeObserver = new ResizeObserver(function () {
+                state.rebindScrollRoot();
                 state.checkEdge();
             });
             state.resizeObserver.observe(container);
@@ -256,6 +375,7 @@
         state.destroy = function () {
             if (state.observer) state.observer.disconnect();
             if (state.resizeObserver) state.resizeObserver.disconnect();
+            if (state.autoFillTimer) clearTimeout(state.autoFillTimer);
             if (state.scrollRoot && state.scrollHandler) {
                 state.scrollRoot.removeEventListener('scroll', state.scrollHandler);
             } else if (state.scrollHandler) {

@@ -43,19 +43,21 @@ public abstract class AbstractCursorService<Entity, DTO> {
         String normalizedSort = normalizeSortDirection(sortDirection);
         boolean ascending = "asc".equals(normalizedSort);
 
-        Pageable pageable = PageRequest.of(0, resolvePageSize(requestedPageSize) + 1);
+        int pageSize = resolvePageSize(requestedPageSize);
+        Pageable pageable = PageRequest.of(0, pageSize);
+
         Slice<Entity> slice = fetchSlice(userId, pageCursor, ascending, pageable);
 
-        List<Entity> raw = slice.getContent();
-        boolean hasMore = slice.hasNext();
-        List<Entity> trimmed = hasMore ? raw.subList(0, raw.size() - 1) : raw;
+        List<Entity> contentEntities = slice.getContent();
+        List<DTO> content = contentMapper.map(contentEntities);
 
-        List<DTO> content = contentMapper.map(trimmed);
-        String nextCursor = hasMore ? resolveNextCursor(trimmed) : null;
+        String nextCursor = slice.hasNext() && !contentEntities.isEmpty()
+                ? resolveNextCursor(contentEntities.get(contentEntities.size() - 1))
+                : null;
 
         return CursorPageResponse.<DTO>builder()
                 .content(content)
-                .hasMore(hasMore)
+                .hasMore(slice.hasNext())
                 .nextCursor(nextCursor)
                 .sort(normalizedSort)
                 .build();
@@ -72,9 +74,9 @@ public abstract class AbstractCursorService<Entity, DTO> {
         return UserCursorPageResponse.of(page, sidebar);
     }
 
-    private String resolveNextCursor(List<Entity> content) {
-        if (content.isEmpty()) return null;
-        PageCursor cursor = pageCursorExtractor.apply(content.get(content.size() - 1));
+    private String resolveNextCursor(Entity lastEntity) {
+        if (lastEntity == null) return null;
+        PageCursor cursor = pageCursorExtractor.apply(lastEntity);
         return cursor != null ? cursor.encode() : null;
     }
 
