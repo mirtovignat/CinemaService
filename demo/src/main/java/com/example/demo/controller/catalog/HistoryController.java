@@ -1,7 +1,7 @@
 package com.example.demo.controller.catalog;
 
 import com.example.demo.dto.catalog.HistoricalMovieViewDTO;
-import com.example.demo.dto.response.CursorPageResponse;
+import com.example.demo.dto.response.UserCursorPageResponse;
 import com.example.demo.dto.user.SessionUser;
 import com.example.demo.service.catalog.HistoryService;
 import com.example.demo.service.movie.FilterMetaService;
@@ -35,10 +35,11 @@ public class HistoryController {
 
     @GetMapping("/more")
     @ResponseBody
-    public CursorPageResponse<HistoricalMovieViewDTO> more(@RequestParam(required = false) String cursor,
-                                                           @RequestParam(required = false) String sort,
-                                                           @RequestParam(required = false) Integer size,
-                                                           SessionUser sessionUser) {
-        return historyService.getPage(sessionUser.id(), cursor, sort, size);
+    public UserCursorPageResponse<HistoricalMovieViewDTO> more(
+            @RequestParam(required = false) String cursor,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) Integer size,
+            SessionUser sessionUser) {
+        return historyService.getPageWithSidebar(sessionUser.id(), cursor, sort, size);
     }
 }

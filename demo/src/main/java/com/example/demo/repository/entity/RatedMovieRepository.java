@@ -1,3 +1,4 @@
+// demo/src/main/java/com/example/demo/repository/entity/RatedMovieRepository.java
 package com.example.demo.repository.entity;
 
 import com.example.demo.model.entity.Movie;
@@ -222,10 +223,12 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
             JOIN FETCH item.user
             WHERE item.id.userId = :userId
             AND item.deletableState.deleted = false
-            ORDER BY item.addedAt DESC, item.id.movieId DESC
+            AND (:cursorMovieId IS NULL OR item.id.movieId < :cursorMovieId)
+            ORDER BY item.id.movieId DESC
             """)
-    Slice<RatedMovie> findRatedPageDescFirst(
+    Slice<RatedMovie> findRatedPageDesc(
             @Param("userId") Long userId,
+            @Param("cursorMovieId") Long cursorMovieId,
             Pageable pageable
     );
 
@@ -236,50 +239,12 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
             JOIN FETCH item.user
             WHERE item.id.userId = :userId
             AND item.deletableState.deleted = false
-            AND (
-                item.addedAt < :cursorAddedAt
-                OR (item.addedAt = :cursorAddedAt AND item.id.movieId < :cursorEntityId)
-            )
-            ORDER BY item.addedAt DESC, item.id.movieId DESC
+            AND (:cursorMovieId IS NULL OR item.id.movieId > :cursorMovieId)
+            ORDER BY item.id.movieId ASC
             """)
-    Slice<RatedMovie> findRatedPageDescAfter(
+    Slice<RatedMovie> findRatedPageAsc(
             @Param("userId") Long userId,
-            @Param("cursorAddedAt") LocalDateTime cursorAddedAt,
-            @Param("cursorEntityId") Long cursorEntityId,
-            Pageable pageable
-    );
-
-    @Query("""
-            SELECT item
-            FROM RatedMovie item
-            JOIN FETCH item.movie
-            JOIN FETCH item.user
-            WHERE item.id.userId = :userId
-            AND item.deletableState.deleted = false
-            ORDER BY item.addedAt ASC, item.id.movieId ASC
-            """)
-    Slice<RatedMovie> findRatedPageAscFirst(
-            @Param("userId") Long userId,
-            Pageable pageable
-    );
-
-    @Query("""
-            SELECT item
-            FROM RatedMovie item
-            JOIN FETCH item.movie
-            JOIN FETCH item.user
-            WHERE item.id.userId = :userId
-            AND item.deletableState.deleted = false
-            AND (
-                item.addedAt > :cursorAddedAt
-                OR (item.addedAt = :cursorAddedAt AND item.id.movieId > :cursorEntityId)
-            )
-            ORDER BY item.addedAt ASC, item.id.movieId ASC
-            """)
-    Slice<RatedMovie> findRatedPageAscAfter(
-            @Param("userId") Long userId,
-            @Param("cursorAddedAt") LocalDateTime cursorAddedAt,
-            @Param("cursorEntityId") Long cursorEntityId,
+            @Param("cursorMovieId") Long cursorMovieId,
             Pageable pageable
     );
 }

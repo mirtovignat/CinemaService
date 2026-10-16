@@ -166,10 +166,14 @@
 
         applying = true;
         try {
+            var tailBefore = findTail(container);
             removeGroups(container);
             var items = collectItems(container);
             detachItems(items);
             buildGroups(container, items);
+            if (tailBefore && tailBefore.parentNode !== container) {
+                container.appendChild(tailBefore);
+            }
         } finally {
             applying = false;
         }

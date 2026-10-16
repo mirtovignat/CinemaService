@@ -1,6 +1,6 @@
+// demo/src/main/java/com/example/demo/service/cursor/AbstractCursorService.java
 package com.example.demo.service.cursor;
 
-import com.example.demo.dto.base.PageCursor;
 import com.example.demo.dto.response.CursorPageResponse;
 import com.example.demo.dto.response.UserCursorPageResponse;
 import com.example.demo.dto.user.UserSidebarViewDTO;
@@ -19,18 +19,18 @@ public abstract class AbstractCursorService<Entity, DTO> {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final CursorContentMapper<Entity, DTO> contentMapper;
-    private final Function<Entity, PageCursor> pageCursorExtractor;
+    private final Function<Entity, Long> cursorExtractor;
     private final int defaultPageSize;
 
     protected AbstractCursorService(UserRepository userRepository,
                                     UserMapper userMapper,
                                     CursorContentMapper<Entity, DTO> contentMapper,
-                                    Function<Entity, PageCursor> pageCursorExtractor,
+                                    Function<Entity, Long> cursorExtractor,
                                     int defaultPageSize) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.contentMapper = contentMapper;
-        this.pageCursorExtractor = pageCursorExtractor;
+        this.cursorExtractor = cursorExtractor;
         this.defaultPageSize = defaultPageSize;
     }
 
@@ -39,14 +39,14 @@ public abstract class AbstractCursorService<Entity, DTO> {
                                            String rawCursor,
                                            String sortDirection,
                                            Integer requestedPageSize) {
-        PageCursor pageCursor = PageCursor.decode(rawCursor);
+        Long cursor = decodeCursor(rawCursor);
         String normalizedSort = normalizeSortDirection(sortDirection);
         boolean ascending = "asc".equals(normalizedSort);
 
         int pageSize = resolvePageSize(requestedPageSize);
         Pageable pageable = PageRequest.of(0, pageSize + 1);
 
-        Slice<Entity> slice = fetchSlice(userId, pageCursor, ascending, pageable);
+        Slice<Entity> slice = fetchSlice(userId, cursor, ascending, pageable);
 
         List<Entity> rawContent = slice.getContent();
         boolean hasMore = rawContent.size() > pageSize;
@@ -57,7 +57,7 @@ public abstract class AbstractCursorService<Entity, DTO> {
         List<DTO> content = contentMapper.map(contentEntities);
 
         String nextCursor = hasMore && !contentEntities.isEmpty()
-                ? resolveNextCursor(contentEntities.get(contentEntities.size() - 1))
+                ? encodeCursor(cursorExtractor.apply(contentEntities.get(contentEntities.size() - 1)))
                 : null;
 
         return CursorPageResponse.<DTO>builder()
@@ -79,10 +79,17 @@ public abstract class AbstractCursorService<Entity, DTO> {
         return UserCursorPageResponse.of(page, sidebar);
     }
 
-    private String resolveNextCursor(Entity lastEntity) {
-        if (lastEntity == null) return null;
-        PageCursor cursor = pageCursorExtractor.apply(lastEntity);
-        return cursor != null ? cursor.encode() : null;
+    private Long decodeCursor(String rawCursor) {
+        if (rawCursor == null || rawCursor.isBlank()) return null;
+        try {
+            return Long.parseLong(rawCursor.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private String encodeCursor(Long cursorValue) {
+        return cursorValue != null ? String.valueOf(cursorValue) : null;
     }
 
     private String normalizeSortDirection(String sortDirection) {
@@ -96,7 +103,7 @@ public abstract class AbstractCursorService<Entity, DTO> {
     }
 
     protected abstract Slice<Entity> fetchSlice(Long userId,
-                                                PageCursor pageCursor,
+                                                Long cursorValue,
                                                 boolean isAscending,
                                                 Pageable pageable);
 }

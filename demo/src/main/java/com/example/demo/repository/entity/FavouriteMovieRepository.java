@@ -1,3 +1,4 @@
+// demo/src/main/java/com/example/demo/repository/entity/FavouriteMovieRepository.java
 package com.example.demo.repository.entity;
 
 import com.example.demo.model.entity.FavouriteMovie;
@@ -8,8 +9,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
-
 @Repository
 public interface FavouriteMovieRepository extends AbstractCatalogItemRepository<FavouriteMovie> {
 
@@ -18,44 +17,22 @@ public interface FavouriteMovieRepository extends AbstractCatalogItemRepository<
             FROM FavouriteMovie item
             JOIN FETCH item.movie
             WHERE item.user.id = :userId
-            ORDER BY item.addedAt DESC, item.id.movieId DESC
+            AND (:cursorMovieId IS NULL OR item.id.movieId < :cursorMovieId)
+            ORDER BY item.id.movieId DESC
             """)
-    Slice<FavouriteMovie> findPageDescFirst(@Param("userId") Long userId, Pageable pageable);
+    Slice<FavouriteMovie> findPageDesc(@Param("userId") Long userId,
+                                       @Param("cursorMovieId") Long cursorMovieId,
+                                       Pageable pageable);
 
     @Query("""
             SELECT item
             FROM FavouriteMovie item
             JOIN FETCH item.movie
             WHERE item.user.id = :userId
-            ORDER BY item.addedAt ASC, item.id.movieId ASC
+            AND (:cursorMovieId IS NULL OR item.id.movieId > :cursorMovieId)
+            ORDER BY item.id.movieId ASC
             """)
-    Slice<FavouriteMovie> findPageAscFirst(@Param("userId") Long userId, Pageable pageable);
-
-    @Query("""
-            SELECT item
-            FROM FavouriteMovie item
-            JOIN FETCH item.movie
-            WHERE item.user.id = :userId
-            AND (item.addedAt < :addedAt
-                 OR (item.addedAt = :addedAt AND item.id.movieId < :entityId))
-            ORDER BY item.addedAt DESC, item.id.movieId DESC
-            """)
-    Slice<FavouriteMovie> findPageDescAfter(@Param("userId") Long userId,
-                                            @Param("addedAt") LocalDateTime addedAt,
-                                            @Param("entityId") Long entityId,
-                                            Pageable pageable);
-
-    @Query("""
-            SELECT item
-            FROM FavouriteMovie item
-            JOIN FETCH item.movie
-            WHERE item.user.id = :userId
-            AND (item.addedAt > :addedAt
-                 OR (item.addedAt = :addedAt AND item.id.movieId > :entityId))
-            ORDER BY item.addedAt ASC, item.id.movieId ASC
-            """)
-    Slice<FavouriteMovie> findPageAscAfter(@Param("userId") Long userId,
-                                           @Param("addedAt") LocalDateTime addedAt,
-                                           @Param("entityId") Long entityId,
-                                           Pageable pageable);
+    Slice<FavouriteMovie> findPageAsc(@Param("userId") Long userId,
+                                      @Param("cursorMovieId") Long cursorMovieId,
+                                      Pageable pageable);
 }

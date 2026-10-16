@@ -1,6 +1,6 @@
+// demo/src/main/java/com/example/demo/service/catalog/CartCatalogService.java
 package com.example.demo.service.catalog;
 
-import com.example.demo.dto.base.PageCursor;
 import com.example.demo.dto.base.UserStatus;
 import com.example.demo.dto.catalog.CartItemViewDTO;
 import com.example.demo.mapper.entity.CartItemMapper;
@@ -15,7 +15,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 
@@ -33,7 +32,7 @@ public class CartCatalogService extends AbstractCursorService<CartItem, CartItem
         super(userRepository,
                 userMapper,
                 entities -> mapWithStatuses(entities, userStatusResolver, cartItemMapper),
-                CartCatalogService::extractCursor,
+                cartItem -> cartItem.getId().getMovieId(),
                 defaultPageSize);
         this.cartItemRepository = cartItemRepository;
     }
@@ -55,25 +54,13 @@ public class CartCatalogService extends AbstractCursorService<CartItem, CartItem
                 .toList();
     }
 
-    private static PageCursor extractCursor(CartItem item) {
-        return PageCursor.builder()
-                .addedAt(item.getAddedAt().toInstant(ZoneOffset.UTC))
-                .entityId(item.getId().getMovieId())
-                .build();
-    }
-
     @Override
     protected Slice<CartItem> fetchSlice(Long userId,
-                                         PageCursor pageCursor,
+                                         Long cursorValue,
                                          boolean isAscending,
                                          Pageable pageable) {
-        if (pageCursor == null) {
-            return isAscending
-                    ? cartItemRepository.findPageAscFirst(userId, pageable)
-                    : cartItemRepository.findPageDescFirst(userId, pageable);
-        }
         return isAscending
-                ? cartItemRepository.findPageAscAfter(userId, pageCursor.addedAtUtc(), pageCursor.entityId(), pageable)
-                : cartItemRepository.findPageDescAfter(userId, pageCursor.addedAtUtc(), pageCursor.entityId(), pageable);
+                ? cartItemRepository.findPageAsc(userId, cursorValue, pageable)
+                : cartItemRepository.findPageDesc(userId, cursorValue, pageable);
     }
 }

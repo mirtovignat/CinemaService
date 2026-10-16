@@ -1,6 +1,6 @@
+// demo/src/main/java/com/example/demo/service/catalog/FavouritesCatalogService.java
 package com.example.demo.service.catalog;
 
-import com.example.demo.dto.base.PageCursor;
 import com.example.demo.dto.base.UserStatus;
 import com.example.demo.dto.catalog.FavouriteMovieViewDTO;
 import com.example.demo.mapper.entity.FavouritesMapper;
@@ -15,7 +15,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 
@@ -33,7 +32,7 @@ public class FavouritesCatalogService extends AbstractCursorService<FavouriteMov
         super(userRepository,
                 userMapper,
                 entities -> mapWithStatuses(entities, userStatusResolver, favouritesMapper),
-                FavouritesCatalogService::extractCursor,
+                favouriteMovie -> favouriteMovie.getId().getMovieId(),
                 defaultPageSize);
         this.favouriteMovieRepository = favouriteMovieRepository;
     }
@@ -55,25 +54,13 @@ public class FavouritesCatalogService extends AbstractCursorService<FavouriteMov
                 .toList();
     }
 
-    private static PageCursor extractCursor(FavouriteMovie item) {
-        return PageCursor.builder()
-                .addedAt(item.getAddedAt().toInstant(ZoneOffset.UTC))
-                .entityId(item.getId().getMovieId())
-                .build();
-    }
-
     @Override
     protected Slice<FavouriteMovie> fetchSlice(Long userId,
-                                               PageCursor pageCursor,
+                                               Long cursorValue,
                                                boolean isAscending,
                                                Pageable pageable) {
-        if (pageCursor == null) {
-            return isAscending
-                    ? favouriteMovieRepository.findPageAscFirst(userId, pageable)
-                    : favouriteMovieRepository.findPageDescFirst(userId, pageable);
-        }
         return isAscending
-                ? favouriteMovieRepository.findPageAscAfter(userId, pageCursor.addedAtUtc(), pageCursor.entityId(), pageable)
-                : favouriteMovieRepository.findPageDescAfter(userId, pageCursor.addedAtUtc(), pageCursor.entityId(), pageable);
+                ? favouriteMovieRepository.findPageAsc(userId, cursorValue, pageable)
+                : favouriteMovieRepository.findPageDesc(userId, cursorValue, pageable);
     }
 }

@@ -1,6 +1,6 @@
+// demo/src/main/java/com/example/demo/service/catalog/RatedCatalogService.java
 package com.example.demo.service.catalog;
 
-import com.example.demo.dto.base.PageCursor;
 import com.example.demo.dto.catalog.RatedMovieViewDTO;
 import com.example.demo.mapper.entity.RatedMapper;
 import com.example.demo.mapper.entity.UserMapper;
@@ -12,8 +12,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
-
-import java.time.ZoneOffset;
 
 @Service
 public class RatedCatalogService extends AbstractCursorService<RatedMovie, RatedMovieViewDTO> {
@@ -30,30 +28,18 @@ public class RatedCatalogService extends AbstractCursorService<RatedMovie, Rated
                 entities -> entities.stream()
                         .map(ratedMapper::toOwnerView)
                         .toList(),
-                RatedCatalogService::extractCursor,
+                ratedMovie -> ratedMovie.getId().getMovieId(),
                 defaultPageSize);
         this.ratedMovieRepository = ratedMovieRepository;
     }
 
-    private static PageCursor extractCursor(RatedMovie ratedMovie) {
-        return PageCursor.builder()
-                .addedAt(ratedMovie.getAddedAt().toInstant(ZoneOffset.UTC))
-                .entityId(ratedMovie.getId().getMovieId())
-                .build();
-    }
-
     @Override
     protected Slice<RatedMovie> fetchSlice(Long userId,
-                                           PageCursor pageCursor,
+                                           Long cursorValue,
                                            boolean isAscending,
                                            Pageable pageable) {
-        if (pageCursor == null) {
-            return isAscending
-                    ? ratedMovieRepository.findRatedPageAscFirst(userId, pageable)
-                    : ratedMovieRepository.findRatedPageDescFirst(userId, pageable);
-        }
         return isAscending
-                ? ratedMovieRepository.findRatedPageAscAfter(userId, pageCursor.addedAtUtc(), pageCursor.entityId(), pageable)
-                : ratedMovieRepository.findRatedPageDescAfter(userId, pageCursor.addedAtUtc(), pageCursor.entityId(), pageable);
+                ? ratedMovieRepository.findRatedPageAsc(userId, cursorValue, pageable)
+                : ratedMovieRepository.findRatedPageDesc(userId, cursorValue, pageable);
     }
 }

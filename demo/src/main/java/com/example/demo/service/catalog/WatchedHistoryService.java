@@ -1,6 +1,6 @@
+// demo/src/main/java/com/example/demo/service/catalog/WatchedHistoryService.java
 package com.example.demo.service.catalog;
 
-import com.example.demo.dto.base.PageCursor;
 import com.example.demo.dto.catalog.LibrarianMovieViewDTO;
 import com.example.demo.exception.BusinessException;
 import com.example.demo.exception.ErrorCode;
@@ -41,33 +41,21 @@ public class WatchedHistoryService extends AbstractCursorService<WatchHistoryIte
                 entities -> entities.stream()
                         .map(purchasedMapper::toLibrarianViewFromHistoryItem)
                         .toList(),
-                WatchedHistoryService::extractCursor,
+                WatchHistoryItem::getId,
                 defaultPageSize);
         this.purchasedMovieRepository = purchasedMovieRepository;
         this.watchHistoryItemRepository = watchHistoryItemRepository;
         this.userRepository = userRepository;
     }
 
-    private static PageCursor extractCursor(WatchHistoryItem item) {
-        return PageCursor.builder()
-                .addedAt(item.getWatchedAt().toInstant(ZoneOffset.UTC))
-                .entityId(item.getId())
-                .build();
-    }
-
     @Override
     protected Slice<WatchHistoryItem> fetchSlice(Long userId,
-                                                 PageCursor pageCursor,
+                                                 Long cursorValue,
                                                  boolean isAscending,
                                                  Pageable pageable) {
-        if (pageCursor == null) {
-            return isAscending
-                    ? watchHistoryItemRepository.findPageAscFirst(userId, pageable)
-                    : watchHistoryItemRepository.findPageDescFirst(userId, pageable);
-        }
         return isAscending
-                ? watchHistoryItemRepository.findPageAscAfter(userId, pageCursor.addedAtUtc(), pageCursor.entityId(), pageable)
-                : watchHistoryItemRepository.findPageDescAfter(userId, pageCursor.addedAtUtc(), pageCursor.entityId(), pageable);
+                ? watchHistoryItemRepository.findPageAsc(userId, cursorValue, pageable)
+                : watchHistoryItemRepository.findPageDesc(userId, cursorValue, pageable);
     }
 
     @Transactional

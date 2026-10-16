@@ -187,6 +187,10 @@
             scrollListeners: []
         };
 
+        function isHistoryContainer() {
+            return container.classList && container.classList.contains('history-container');
+        }
+
         function ensureSentinel() {
             var s = container.querySelector('[data-cursor-sentinel]');
             if (!s) {
@@ -297,6 +301,12 @@
                 }
 
                 ensureTail();
+
+                if (isHistoryContainer() &&
+                    typeof window.applyHistoryGrouping === 'function') {
+                    window.applyHistoryGrouping(container);
+                    ensureTail();
+                }
 
                 if (window.PosterFallback && typeof window.PosterFallback.scan === 'function') {
                     window.PosterFallback.scan(container);
