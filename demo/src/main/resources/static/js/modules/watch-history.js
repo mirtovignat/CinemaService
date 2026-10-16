@@ -19,7 +19,6 @@
     }
 
     var _pendingHistoryId = null;
-    var _clearHistoryHasItems = false;
 
     var ICON_CALENDAR =
         '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" ' +
@@ -27,8 +26,7 @@
         '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>' +
         '<line x1="16" y1="2" x2="16" y2="6"/>' +
         '<line x1="8" y1="2" x2="8" y2="6"/>' +
-        '<line x1="3" y1="10" x2="21" y2="10"/>' +
-        '</svg>';
+        '<line x1="3" y1="10" x2="21" y2="10"/></svg>';
 
     var ICON_TAG =
         '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" ' +
@@ -52,6 +50,19 @@
         'd="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z"/>' +
         '</svg>';
 
+    function pad2(n) {
+        return String(n).padStart(2, '0');
+    }
+
+    function buildIsoLocal(date) {
+        return date.getFullYear() + '-' +
+            pad2(date.getMonth() + 1) + '-' +
+            pad2(date.getDate()) + 'T' +
+            pad2(date.getHours()) + ':' +
+            pad2(date.getMinutes()) + ':' +
+            pad2(date.getSeconds());
+    }
+
     function watchMovie(button) {
         if (!isAuthenticated()) {
             showFlashMessage('Авторизуйтесь!', 'error');
@@ -61,13 +72,17 @@
         var posterUrl = button.getAttribute('data-poster-url') || '';
         var movieTitle = button.getAttribute('data-movie-title') || '';
         if (!movieId) return Promise.resolve();
+
         var rollback = applyOptimisticWatchUI(button, movieId, movieTitle, posterUrl);
+
         if (posterUrl && posterUrl.trim() !== '') {
             window.open(posterUrl, '_blank');
         } else {
             window.open('/movies/' + movieId, '_blank');
         }
+
         button.disabled = true;
+
         return fetch('/watched/add/' + encodeURIComponent(movieId), {
             method: 'POST',
             headers: csrfHeaders()
@@ -118,30 +133,15 @@
         };
     }
 
-    function getCurrentSortOrder() {
-        var activeBtn = document.querySelector('#sortToggleGroup .sort-option.active');
-        if (activeBtn) return activeBtn.getAttribute('data-order') || 'desc';
-        return 'desc';
-    }
-
     function extractRating(sourceItem) {
         if (!sourceItem) return null;
-
         var fromNew = sourceItem.querySelector('.history-item-meta-row--rating .history-item-meta-value');
         if (fromNew) {
             var t0 = (fromNew.textContent || '').trim();
             if (t0) return t0.replace(/\s*\/\s*10\s*$/, '');
         }
-
-        var historyRating = sourceItem.querySelector('.history-item-rating span:last-child');
-        if (historyRating) {
-            var t = (historyRating.textContent || '').trim();
-            if (t) return t;
-        }
-
         var candidates = sourceItem.querySelectorAll(
             '.media-card-rating-badge .rating-value, ' +
-            '.movie-card .js-rating-badge, ' +
             '.js-rating-badge, ' +
             '.js-rating-badge-max, ' +
             '.rating-value, ' +
@@ -151,37 +151,16 @@
             var raw = (candidates[i].textContent || '').replace(/[^\d.,]/g, '').trim();
             if (raw) return raw;
         }
-
         return null;
     }
 
     function extractGenre(sourceItem) {
         if (!sourceItem) return '';
-
         var fromNew = sourceItem.querySelector('.history-item-meta-row--genre .history-item-meta-value');
         if (fromNew) {
             var t0 = (fromNew.textContent || '').trim();
             if (t0) return t0;
         }
-
-        var fromHistory = sourceItem.querySelector('.history-item-meta .genre');
-        if (fromHistory) {
-            var t = (fromHistory.textContent || '').trim();
-            if (t) return t.replace(/^Жанр:\s*/i, '');
-        }
-
-        var fromGrid = sourceItem.querySelector('.badge.genre span:last-child, .badge.genre');
-        if (fromGrid) {
-            var g = (fromGrid.textContent || '').trim();
-            if (g) return g.replace(/^Жанр:\s*/i, '');
-        }
-
-        var fromMedia = sourceItem.querySelector('.media-card-details span[title="Жанр"]');
-        if (fromMedia) {
-            var m = (fromMedia.textContent || '').trim();
-            if (m) return m;
-        }
-
         var infoItems = sourceItem.querySelectorAll('.info-item');
         for (var i = 0; i < infoItems.length; i++) {
             var label = infoItems[i].querySelector('.info-label');
@@ -192,13 +171,11 @@
                 if (val) return (val.textContent || '').trim();
             }
         }
-
         return '';
     }
 
     function extractYear(sourceItem) {
         if (!sourceItem) return '';
-
         var fromNew = sourceItem.querySelector('.history-item-meta-row--year .history-item-meta-value');
         if (fromNew) {
             var t0 = (fromNew.textContent || '').trim();
@@ -207,33 +184,6 @@
                 if (m0) return m0[0];
             }
         }
-
-        var metaSpans = sourceItem.querySelectorAll('.history-item-meta > span:not(.genre):not(.dot)');
-        if (metaSpans.length > 0) {
-            var t = (metaSpans[0].textContent || '').trim();
-            if (t) {
-                var tYear = t.replace(/^Год:\s*/i, '');
-                var mY = tYear.match(/\d{4}/);
-                if (mY) return mY[0];
-            }
-        }
-
-        var fromGrid = sourceItem.querySelector('.badge.year span:last-child, .badge.year');
-        if (fromGrid) {
-            var g = (fromGrid.textContent || '').trim();
-            if (g) {
-                var gYear = g.replace(/^Год:\s*/i, '');
-                var mG = gYear.match(/\d{4}/);
-                if (mG) return mG[0];
-            }
-        }
-
-        var fromMedia = sourceItem.querySelector('.media-card-details span[title="Год выпуска"]');
-        if (fromMedia) {
-            var m = (fromMedia.textContent || '').trim();
-            if (m) return m;
-        }
-
         var infoItems = sourceItem.querySelectorAll('.info-item');
         for (var i = 0; i < infoItems.length; i++) {
             var label = infoItems[i].querySelector('.info-label');
@@ -248,37 +198,16 @@
                 }
             }
         }
-
         return '';
     }
 
     function extractDirector(sourceItem) {
         if (!sourceItem) return '';
-
         var fromNew = sourceItem.querySelector('.history-item-meta-row--director .history-item-meta-value');
         if (fromNew) {
             var t0 = (fromNew.textContent || '').trim();
             if (t0) return t0;
         }
-
-        var metaSpans = sourceItem.querySelectorAll('.history-item-meta > span:not(.genre):not(.dot)');
-        if (metaSpans.length > 1) {
-            var t = (metaSpans[1].textContent || '').trim();
-            if (t) return t.replace(/^Режиссёр:\s*/i, '');
-        }
-
-        var fromGrid = sourceItem.querySelector('.badge.director span:last-child, .badge.director');
-        if (fromGrid) {
-            var g = (fromGrid.textContent || '').trim();
-            if (g) return g.replace(/^Режиссёр:\s*/i, '');
-        }
-
-        var libraryRow = sourceItem.querySelector('.library-info-row .library-info-value');
-        if (libraryRow) {
-            var lr = (libraryRow.textContent || '').trim();
-            if (lr) return lr;
-        }
-
         var infoItems = sourceItem.querySelectorAll('.info-item');
         for (var i = 0; i < infoItems.length; i++) {
             var label = infoItems[i].querySelector('.info-label');
@@ -289,7 +218,6 @@
                 if (val) return (val.textContent || '').trim();
             }
         }
-
         return '';
     }
 
@@ -316,79 +244,6 @@
         return row;
     }
 
-    function applyOptimisticInHistory(sourceItem, movieId, movieTitle, posterUrl) {
-        var container = document.querySelector('.history-container');
-        var emptyState = document.querySelector('.empty-state');
-        if (!container && emptyState) {
-            emptyState.classList.remove('empty-state');
-            emptyState.classList.add('history-container');
-            emptyState.innerHTML = '';
-            container = emptyState;
-        }
-        if (!container) return function () {};
-
-        var genre = extractGenre(sourceItem);
-        var year = extractYear(sourceItem);
-        var director = extractDirector(sourceItem);
-        var rating = extractRating(sourceItem);
-
-        var now = new Date();
-        var dateKey =
-            now.getFullYear() + '-' +
-            String(now.getMonth() + 1).padStart(2, '0') + '-' +
-            String(now.getDate()).padStart(2, '0');
-
-        var createdGroup = !container.querySelector('.history-day-group[data-date="' + dateKey + '"]');
-        var group = getOrCreateHistoryGroup(container, dateKey, now);
-        var newItem = buildHistoryItem(movieId, movieTitle, posterUrl, genre, year, director, rating, now);
-
-        var currentOrder = getCurrentSortOrder();
-        if (currentOrder === 'asc') {
-            group.appendChild(newItem);
-        } else {
-            var firstItem = group.querySelector('.history-item');
-            if (firstItem) group.insertBefore(newItem, firstItem);
-            else group.appendChild(newItem);
-        }
-
-        sortHistoryGroups(container);
-
-        return function rollback() {
-            newItem.remove();
-            if (createdGroup && !group.querySelector('.history-item')) group.remove();
-            sortHistoryGroups(container);
-            if (!container.querySelector('.history-item') && !container.querySelector('.history-day-group')) {
-                container.classList.remove('history-container');
-                container.classList.add('empty-state');
-                container.innerHTML =
-                    '<p>У вас пока нет истории просмотров</p>' +
-                    '<a href="/" class="watch-btn-empty">Перейти в главное меню</a>';
-            }
-        };
-    }
-
-    function getOrCreateHistoryGroup(container, dateKey, date) {
-        var group = container.querySelector('.history-day-group[data-date="' + dateKey + '"]');
-        if (group) return group;
-        group = document.createElement('div');
-        group.className = 'history-day-group';
-        group.setAttribute('data-date', dateKey);
-        var label = document.createElement('div');
-        label.className = 'history-day-label';
-        label.innerHTML =
-            ICON_CALENDAR +
-            '<span class="day-label"></span>';
-        var months = ['января','февраля','марта','апреля','мая','июня',
-                      'июля','августа','сентября','октября','ноября','декабря'];
-        label.querySelector('.day-label').textContent =
-            String(date.getDate()).padStart(2, '0') + ' ' +
-            months[date.getMonth()] + ' ' +
-            date.getFullYear();
-        group.appendChild(label);
-        container.insertBefore(group, container.firstChild);
-        return group;
-    }
-
     function buildHistoryItem(movieId, movieTitle, posterUrl, genre, year, director, rating, date) {
         var template = document.getElementById('historyItemTemplate');
         if (!template) {
@@ -401,6 +256,8 @@
         item.setAttribute('data-movie-id', movieId);
         item.setAttribute('data-movie-title', movieTitle || '');
         item.setAttribute('data-poster-url', posterUrl || '');
+        item.setAttribute('data-added-at', buildIsoLocal(date));
+        item.setAttribute('data-history-id', '');
 
         var posterContainer = item.querySelector('.history-item-poster');
         if (posterContainer) {
@@ -413,10 +270,24 @@
         var noPoster = item.querySelector('.history-item-poster .no-poster');
         if (hasPoster) {
             if (posterImg) {
+                posterImg.setAttribute('data-poster-img', '');
                 posterImg.src = posterUrl;
                 posterImg.onclick = function () {
                     window.location.href = '/movies/' + movieId;
                 };
+                posterImg.addEventListener('error', function () {
+                    posterImg.style.display = 'none';
+                    var posterBox = item.querySelector('.history-item-poster');
+                    if (posterBox && !posterBox.querySelector('[data-poster-placeholder]')) {
+                        if (typeof window.buildPosterPlaceholder === 'function') {
+                            posterBox.appendChild(window.buildPosterPlaceholder());
+                        }
+                    }
+                    if (noPoster) noPoster.style.display = 'flex';
+
+                    var overlayEl = item.querySelector('.poster-overlay');
+                    if (overlayEl) overlayEl.style.display = 'none';
+                }, { once: true });
             }
             if (noPoster) noPoster.style.display = 'none';
         } else {
@@ -427,6 +298,11 @@
                     window.location.href = '/movies/' + movieId;
                 };
             }
+        }
+
+        var overlay = item.querySelector('.poster-overlay');
+        if (overlay) {
+            overlay.style.display = hasPoster ? '' : 'none';
         }
 
         var watchBtn = item.querySelector('.watch-btn-neon');
@@ -499,8 +375,8 @@
         if (timeSpan) {
             timeSpan.textContent =
                 'Просмотрено в ' +
-                String(date.getHours()).padStart(2, '0') + ':' +
-                String(date.getMinutes()).padStart(2, '0');
+                pad2(date.getHours()) + ':' +
+                pad2(date.getMinutes());
         }
 
         item.style.opacity = '0';
@@ -516,18 +392,37 @@
         return item;
     }
 
-    function sortHistoryGroups(container) {
-        if (!container) return;
-        try {
-            var currentOrder = getCurrentSortOrder();
-            var groups = Array.prototype.slice.call(container.querySelectorAll(':scope > .history-day-group'));
-            groups.sort(function (a, b) {
-                var da = a.getAttribute('data-date') || '';
-                var db = b.getAttribute('data-date') || '';
-                return currentOrder === 'asc' ? da.localeCompare(db) : db.localeCompare(da);
-            });
-            groups.forEach(function (g) { container.appendChild(g); });
-        } catch (e) {}
+    function applyOptimisticInHistory(sourceItem, movieId, movieTitle, posterUrl) {
+        var container = document.querySelector('.history-container');
+        if (!container) return function () {};
+
+        var genre = extractGenre(sourceItem);
+        var year = extractYear(sourceItem);
+        var director = extractDirector(sourceItem);
+        var rating = extractRating(sourceItem);
+
+        var now = new Date();
+        var newItem = buildHistoryItem(movieId, movieTitle, posterUrl, genre, year, director, rating, now);
+
+        var sort = container.getAttribute('data-cursor-sort') || 'desc';
+        var loader = container.querySelector('[data-cursor-loader]');
+
+        if (sort === 'asc') {
+            container.insertBefore(newItem, loader || null);
+        } else {
+            container.insertBefore(newItem, container.firstElementChild || null);
+        }
+
+        if (typeof window.applyHistoryGrouping === 'function') {
+            window.applyHistoryGrouping(container);
+        }
+
+        return function rollback() {
+            newItem.remove();
+            if (typeof window.applyHistoryGrouping === 'function') {
+                window.applyHistoryGrouping(container);
+            }
+        };
     }
 
     function handlePosterClick(el) {
@@ -646,15 +541,10 @@
                 item.style.opacity = '0';
                 item.style.transform = 'translateX(-20px)';
                 setTimeout(function () {
-                    var group = item.closest('.history-day-group');
                     item.remove();
-                    if (group && !group.querySelector('.history-item')) {
-                        group.remove();
-                    }
-                    var container = document.querySelector('.history-container');
-                    if (container && !container.querySelector('.history-item')) {
-                        var empty = document.querySelector('.empty-state');
-                        if (empty) empty.style.display = '';
+                    if (typeof window.applyHistoryGrouping === 'function') {
+                        var container = document.querySelector('.history-container');
+                        if (container) window.applyHistoryGrouping(container);
                     }
                 }, 300);
             }
@@ -691,7 +581,6 @@
     }
 
     function openClearHistoryModal() {
-        _clearHistoryHasItems = hasHistoryNow();
         if (window.Modal && typeof Modal.openById === 'function') {
             Modal.openById('watchedClearModal');
         }

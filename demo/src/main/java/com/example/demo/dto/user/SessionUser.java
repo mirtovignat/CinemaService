@@ -13,6 +13,17 @@ public record SessionUser(
         String currencyCode,
         String username
 ) {
+
+    public static final SessionUser ANONYMOUS = SessionUser.builder().build();
+
+    public boolean isAuthenticated() {
+        return id != null;
+    }
+
+    public Long idOrNull() {
+        return id;
+    }
+
     public String getFirstUsernameLetter() {
         if (username == null || username.isBlank()) {
             return "U";

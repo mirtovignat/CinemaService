@@ -6,20 +6,19 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-import java.util.Optional;
-
 @Component
 public class CurrentUserProvider {
 
-    public Optional<SessionUser> getOptional() {
+    public SessionUser getSessionUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !(authentication.getPrincipal() instanceof AppUserDetails details)) {
-            return Optional.empty();
+        if (authentication == null
+                || !(authentication.getPrincipal() instanceof AppUserDetails appUserDetails)) {
+            return SessionUser.ANONYMOUS;
         }
-        return Optional.of(details.sessionUser());
+        return appUserDetails.sessionUser();
     }
 
-    public SessionUser get() {
-        return getOptional().orElse(null);
+    public boolean isAuthenticated() {
+        return !SessionUser.ANONYMOUS.equals(getSessionUser());
     }
 }

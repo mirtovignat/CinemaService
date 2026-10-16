@@ -2,12 +2,16 @@ package com.example.demo.repository.base;
 
 import com.example.demo.model.base.AbstractCatalogItem;
 import com.example.demo.model.base.AbstractCatalogItemId;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 
 @NoRepositoryBean
@@ -15,17 +19,15 @@ public interface AbstractCatalogItemRepository<Entity extends AbstractCatalogIte
         extends JpaRepository<Entity, AbstractCatalogItemId> {
 
     @Query("""
-            SELECT DISTINCT item
-            FROM #{#entityName} item
+            SELECT item FROM #{#entityName} item
+            JOIN FETCH item.movie
             WHERE item.id.userId = :userId
             """)
     List<Entity> findAllByUserId(@Param("userId") Long userId);
 
     @Query("""
-            SELECT COUNT(item) > 0
-            FROM #{#entityName} item
-            WHERE item.id.movieId = :movieId
-            AND item.id.userId = :userId
+            SELECT COUNT(item) > 0 FROM #{#entityName} item
+            WHERE item.id.movieId = :movieId AND item.id.userId = :userId
             """)
     boolean existsByMovieIdAndUserId(@Param("movieId") Long movieId,
                                      @Param("userId") Long userId);
@@ -33,30 +35,68 @@ public interface AbstractCatalogItemRepository<Entity extends AbstractCatalogIte
     @Modifying
     @Query("""
             DELETE FROM #{#entityName} item
-            WHERE item.id.movieId = :movieId
-            AND item.id.userId = :userId
+            WHERE item.id.movieId = :movieId AND item.id.userId = :userId
             """)
     void deleteByMovieIdAndUserId(@Param("movieId") Long movieId,
                                   @Param("userId") Long userId);
 
     @Modifying
-    @Query("""
-            DELETE FROM #{#entityName} item
-            WHERE item.id.userId = :userId
-            """)
+    @Query("DELETE FROM #{#entityName} item WHERE item.id.userId = :userId")
     void deleteAllByUserId(@Param("userId") Long userId);
 
-    @Query("""
-            SELECT COUNT(item)
-            FROM #{#entityName} item
-            WHERE item.id.userId = :userId
-            """)
+    @Query("SELECT COUNT(item) FROM #{#entityName} item WHERE item.id.userId = :userId")
     Long countByUserId(@Param("userId") Long userId);
 
-    @Query("""
-            SELECT item.id.movieId
-            FROM #{#entityName} item
-            WHERE item.id.userId = :userId
-            """)
+    @Query("SELECT item.id.movieId FROM #{#entityName} item WHERE item.id.userId = :userId")
     List<Long> findMovieIdsByUserId(@Param("userId") Long userId);
+
+    @Query("""
+            SELECT item.id.movieId FROM #{#entityName} item
+            WHERE item.id.userId = :userId
+            AND item.id.movieId IN :movieIds
+            """)
+    List<Long> findMovieIdsByUserIdAndMovieIdIn(@Param("userId") Long userId,
+                                                @Param("movieIds") Collection<Long> movieIds);
+
+    @Query("""
+            SELECT item FROM #{#entityName} item
+            JOIN FETCH item.movie
+            WHERE item.id.userId = :userId
+            ORDER BY item.addedAt ASC, item.id.movieId ASC
+            """)
+    Slice<Entity> findPageAscFirst(@Param("userId") Long userId, Pageable pageable);
+
+    @Query("""
+            SELECT item FROM #{#entityName} item
+            JOIN FETCH item.movie
+            WHERE item.id.userId = :userId
+            ORDER BY item.addedAt DESC, item.id.movieId DESC
+            """)
+    Slice<Entity> findPageDescFirst(@Param("userId") Long userId, Pageable pageable);
+
+    @Query("""
+            SELECT item FROM #{#entityName} item
+            JOIN FETCH item.movie
+            WHERE item.id.userId = :userId
+            AND (item.addedAt > :cursorAddedAt
+                 OR (item.addedAt = :cursorAddedAt AND item.id.movieId > :cursorEntityId))
+            ORDER BY item.addedAt ASC, item.id.movieId ASC
+            """)
+    Slice<Entity> findPageAscAfter(@Param("userId") Long userId,
+                                   @Param("cursorAddedAt") LocalDateTime cursorAddedAt,
+                                   @Param("cursorEntityId") Long cursorEntityId,
+                                   Pageable pageable);
+
+    @Query("""
+            SELECT item FROM #{#entityName} item
+            JOIN FETCH item.movie
+            WHERE item.id.userId = :userId
+            AND (item.addedAt < :cursorAddedAt
+                 OR (item.addedAt = :cursorAddedAt AND item.id.movieId < :cursorEntityId))
+            ORDER BY item.addedAt DESC, item.id.movieId DESC
+            """)
+    Slice<Entity> findPageDescAfter(@Param("userId") Long userId,
+                                    @Param("cursorAddedAt") LocalDateTime cursorAddedAt,
+                                    @Param("cursorEntityId") Long cursorEntityId,
+                                    Pageable pageable);
 }

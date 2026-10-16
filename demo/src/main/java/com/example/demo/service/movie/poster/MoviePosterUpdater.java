@@ -15,7 +15,7 @@ public class MoviePosterUpdater {
     private final MovieRepository movieRepository;
 
     @Transactional
-    public void replacePosterFromTMDB(Long movieId) throws Exception {
+    public void replacePosterFromTMDB(Long movieId) {
         Movie movie = movieRepository.findById(movieId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Фильм не найден: " + movieId));

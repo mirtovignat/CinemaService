@@ -9,18 +9,18 @@
 <div class="header-wrapper">
     <th:block th:replace="~{fragments/header :: header}"></th:block>
 </div>
-
 <th:block th:replace="~{fragments/flash-messages :: flashMessages}"></th:block>
+<div id="authStatus" th:data-authenticated="${sessionUser.authenticated}" style="display:none;"></div>
 
-<div id="authStatus" th:data-authenticated="${sessionUser != null}" style="display:none;"></div>
 <main class="profile-wrapper">
     <div class="profile-grid">
-        <th:block
-                th:replace="~{fragments/sidebar :: sidebar(currentPage='library', userForOwner=${response.userForOwner})}">
-        </th:block>
+        <th:block th:replace="~{fragments/sidebar :: sidebar(
+            currentPage='library',
+            userSidebar=${response.userSidebar()},
+            genres=${genres}
+        )}"></th:block>
 
         <div class="profile-right">
-
             <div class="page-header-row">
                 <div class="profile-right-header">
                     <h1>
@@ -28,147 +28,147 @@
                         Моя коллекция
                     </h1>
                     <div class="greeting-sub"
-                         th:if="${response != null and response.catalog != null}">
-                        Всего фильмов:
-                        <strong th:text="${#lists.size(response.catalog)}">0</strong>
+                         th:if="${response != null and response.page() != null and response.page().content() != null}">
+                        Загружено: <strong th:text="${#lists.size(response.page().content())}">0</strong>
                     </div>
                 </div>
                 <th:block th:replace="~{fragments/sort-toggle :: sortToggle}"></th:block>
                 <th:block th:replace="~{fragments/catalog-search :: catalogSearch}"></th:block>
             </div>
 
-            <div th:if="${response != null and response.catalog != null and not #lists.isEmpty(response.catalog)}"
-                 class="library-container">
+            <div th:if="${response != null and response.page() != null and response.page().content() != null and !response.page().content().isEmpty()}"
+                 class="library-container"
+                 data-cursor-container
+                 data-cursor-endpoint="/library/more"
+                 data-cursor-template="libraryCardTemplate"
+                 th:attr="data-cursor-next=${response.page().nextCursor()},
+                          data-cursor-has-more=${response.page().hasMore()},
+                          data-cursor-sort=${response.page().sort()}">
 
-                <div th:each="item : ${response.catalog}"
+                <div th:each="item : ${response.page().content()}"
                      class="media-card library-card"
-                     th:classappend="${item.watched} ? 'watched' : ''"
-                     th:attr="data-movie-id=${item.id},
-                              data-added-at=${item.addedAt != null ? #temporals.format(item.addedAt, 'yyyy-MM-dd''T''HH:mm:ss') : ''},
-                              data-date=${item.addedAt != null ? #temporals.format(item.addedAt, 'yyyy-MM-dd''T''HH:mm:ss') : ''}">
+                     th:classappend="${item.watched()} ? 'watched' : ''"
+                     th:attr="data-movie-id=${item.id()},
+                              data-added-at=${item.addedAt() != null ? #temporals.format(item.addedAt(), 'yyyy-MM-dd''T''HH:mm:ss') : ''},
+                              data-date=${item.addedAt() != null ? #temporals.format(item.addedAt(), 'yyyy-MM-dd') : ''}">
 
                     <div class="media-card-poster-link">
-
-                        <a class="poster-link"
-                           href="javascript:void(0);"
+                        <a class="poster-link" href="javascript:void(0);"
                            data-action="watch-movie"
-                           th:data-movie-id="${item.id}"
-                           th:data-movie-title="${item.title}"
-                           th:data-poster-url="${item.posterUrl}">
-
-                            <img th:if="${item.posterUrl != null and !item.posterUrl.isEmpty()}"
-                                 th:src="${item.posterUrl}"
-                                 alt="Постер"
-                                 class="media-card-poster-img"
-                                 data-poster-img
-                                 src=""/>
-
+                           th:data-movie-id="${item.id()}"
+                           th:data-movie-title="${item.title()}"
+                           th:data-poster-url="${item.posterUrl()}">
+                            <img th:if="${item.posterUrl() != null and !item.posterUrl().isEmpty()}"
+                                 th:src="${item.posterUrl()}" alt="Постер"
+                                 class="media-card-poster-img" data-poster-img src=""/>
                             <div class="movie-poster-placeholder"
-                                 th:classappend="${item.posterUrl != null and !item.posterUrl.isEmpty()} ? 'hidden' : ''"
-                                 data-poster-placeholder>
-                                <span>Постер</span>
-                            </div>
-
+                                 th:classappend="${item.posterUrl() != null and !item.posterUrl().isEmpty()} ? 'hidden' : ''"
+                                 data-poster-placeholder><span>Постер</span></div>
                             <th:block th:replace="~{fragments/rating-badge :: ratingBadge(
-                                movieId=${item.id},
-                                rating=${item.rating}
-                            )}"></th:block>
-
+                                movieId=${item.id()}, rating=${item.rating()})}"></th:block>
                         </a>
-
                         <div class="poster-overlay">
                             <th:block th:replace="~{fragments/watch-button :: watchButton(
-                                movieId=${item.id},
-                                movieTitle=${item.title},
-                                posterUrl=${item.posterUrl},
-                                watched=${item.watched},
-                                variant='md'
-                            )}"></th:block>
+                                movieId=${item.id()}, movieTitle=${item.title()},
+                                posterUrl=${item.posterUrl()}, watched=${item.watched()}, variant='md')}"></th:block>
                         </div>
                     </div>
 
                     <div class="media-card-content">
                         <h3 class="media-card-title">
-                            <a th:href="@{/movies/{id}(id=${item.id})}"
-                               th:text="${item.title}">
-                                Название
-                            </a>
+                            <a th:href="@{/movies/{id}(id=${item.id()})}" th:text="${item.title()}">Название</a>
                         </h3>
-
                         <div class="media-card-info">
-
-                            <div class="library-genre-tag"
-                                 th:if="${item.genre != null and !item.genre.isEmpty()}">
+                            <div class="library-genre-tag" th:if="${item.genre() != null and !item.genre().isEmpty()}">
                                 <span class="genre-label">
-                                    <th:block th:replace="~{fragments/icons :: icon-tag}"></th:block>
-                                    Жанр:
+                                    <th:block th:replace="~{fragments/icons :: icon-tag}"></th:block> Жанр:
                                 </span>
-                                <span class="genre-value" th:text="${item.genre}">
-                                    Фантастика
-                                </span>
+                                <span class="genre-value" th:text="${item.genre()}">Фантастика</span>
                             </div>
-
-                            <div class="library-info-row"
-                                 th:if="${item.director != null and !item.director.isEmpty()}">
-                                <span class="library-info-icon">
-                                    <th:block th:replace="~{fragments/icons :: icon-video}"></th:block>
-                                </span>
+                            <div class="library-info-row" th:if="${item.director() != null and !item.director().isEmpty()}">
+                                <span class="library-info-icon"><th:block th:replace="~{fragments/icons :: icon-video}"></th:block></span>
                                 <span class="library-info-label">Режиссёр</span>
-                                <span class="library-info-value"
-                                      th:text="${item.director}"
-                                      th:title="${item.director}">
-                                    Кристофер Нолан
-                                </span>
+                                <span class="library-info-value" th:text="${item.director()}" th:title="${item.director()}">Режиссёр</span>
                             </div>
-
-                            <div class="library-info-row"
-                                 th:if="${item.ageRating != null}">
-                                <span class="library-info-icon">
-                                    <th:block th:replace="~{fragments/icons :: icon-lock}"></th:block>
-                                </span>
+                            <div class="library-info-row" th:if="${item.ageRating() != null}">
+                                <span class="library-info-icon"><th:block th:replace="~{fragments/icons :: icon-lock}"></th:block></span>
                                 <span class="library-info-label">Возрастной рейтинг</span>
-                                <span class="library-info-value"
-                                      th:text="${item.ageRating} + '+'">
-                                    18+
-                                </span>
+                                <span class="library-info-value" th:text="${item.ageRating()} + '+'">18+</span>
                             </div>
-
-                            <div class="library-info-row"
-                                 th:if="${item.releaseDate != null}">
-                                <span class="library-info-icon">
-                                    <th:block th:replace="~{fragments/icons :: icon-calendar}"></th:block>
-                                </span>
+                            <div class="library-info-row" th:if="${item.releaseDate() != null}">
+                                <span class="library-info-icon"><th:block th:replace="~{fragments/icons :: icon-calendar}"></th:block></span>
                                 <span class="library-info-label">Год выпуска</span>
-                                <span class="library-info-value"
-                                      th:text="${item.releaseDate.year}">
-                                    2024
-                                </span>
+                                <span class="library-info-value" th:text="${item.releaseDate().year}">2024</span>
                             </div>
-
                         </div>
                     </div>
                 </div>
+
+                <div class="cursor-loader" data-cursor-loader></div>
             </div>
 
-            <div th:if="${response == null or response.catalog == null or #lists.isEmpty(response.catalog)}"
+            <div th:if="${response == null or response.page() == null or response.page().content() == null or response.page().content().isEmpty()}"
                  class="empty-message">
-                <div class="empty-icon">
-                    <th:block th:replace="~{fragments/icons :: icon-film}"></th:block>
-                </div>
+                <div class="empty-icon"><th:block th:replace="~{fragments/icons :: icon-film}"></th:block></div>
                 <h2>Ваша коллекция пуста</h2>
-                <p>Купите первый фильм — и он появится здесь. Вся ваша коллекция всегда под рукой.</p>
+                <p>Купите первый фильм — и он появится здесь.</p>
                 <a th:href="@{/}" class="browse-movies-btn">Перейти в главное меню</a>
             </div>
 
-            <th:block th:if="${response == null or response.catalog == null or #lists.isEmpty(response.catalog)}">
+            <th:block th:if="${response == null or response.page() == null or response.page().content() == null or response.page().content().isEmpty()}">
                 <th:block th:insert="~{fragments/recommendations :: recommendations}"></th:block>
             </th:block>
-
         </div>
     </div>
 </main>
 
+<template id="libraryCardTemplate">
+    <div class="media-card library-card"
+         data-attr="data-movie-id:id;data-added-at:addedAt;data-date:addedAt">
+        <div class="media-card-poster-link">
+            <a class="poster-link" href="javascript:void(0);" data-action="watch-movie"
+               data-attr="data-movie-id:id;data-movie-title:title;data-poster-url:posterUrl">
+                <img class="media-card-poster-img" data-poster-img data-field="posterUrl" src="" alt="Постер"/>
+                <div class="movie-poster-placeholder hidden" data-poster-placeholder><span>Постер</span></div>
+            </a>
+            <div class="poster-overlay">
+                <button class="watch-btn-neon watch-btn-neon--md" type="button" data-action="watch-movie"
+                        data-attr="data-movie-id:id;data-movie-title:title;data-poster-url:posterUrl">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="5 3 19 12 5 21 5 3"/>
+                    </svg>
+                    Смотреть
+                </button>
+            </div>
+        </div>
+        <div class="media-card-content">
+            <h3 class="media-card-title">
+                <a data-attr="href:/movies/{id}" data-field="title"></a>
+            </h3>
+            <div class="media-card-info">
+                <div class="library-genre-tag">
+                    <span class="genre-label">Жанр:</span>
+                    <span class="genre-value" data-field="genre"></span>
+                </div>
+                <div class="library-info-row">
+                    <span class="library-info-label">Режиссёр</span>
+                    <span class="library-info-value" data-field="director"></span>
+                </div>
+                <div class="library-info-row">
+                    <span class="library-info-label">Возрастной рейтинг</span>
+                    <span class="library-info-value" data-field="ageRating"></span>
+                </div>
+                <div class="library-info-row">
+                    <span class="library-info-label">Год выпуска</span>
+                    <span class="library-info-value" data-field="releaseDate"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
 <script th:src="@{/js/pages/highlight.js}" defer></script>
+<script th:src="@{/js/modules/cursor-pagination.js}" defer></script>
 <script th:src="@{/js/main.js}" defer></script>
 
 <th:block th:replace="~{fragments/footer :: footer}"></th:block>

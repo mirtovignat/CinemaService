@@ -64,7 +64,7 @@ public class RatedController {
             HttpServletResponse httpServletResponse,
             Model model
     ) {
-        Long userId = sessionUser != null ? sessionUser.id() : null;
+        Long userId = sessionUser.idOrNull();
 
         ReviewsQueryDTO.SortDirection sortDirection =
                 reviewSortResolver.resolveAndPersist(reviewsQueryDTO, sortCookie, httpServletResponse);
@@ -92,7 +92,7 @@ public class RatedController {
             SessionUser sessionUser,
             @CookieValue(value = ReviewSortResolver.SORT_COOKIE_NAME, required = false) String sortCookie
     ) {
-        Long userId = sessionUser != null ? sessionUser.id() : null;
+        Long userId = sessionUser.idOrNull();
 
         ReviewsQueryDTO.SortDirection sortDirection =
                 reviewSortResolver.resolve(reviewsQueryDTO, sortCookie);

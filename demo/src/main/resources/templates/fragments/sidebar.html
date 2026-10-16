@@ -1,47 +1,37 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ru">
 <body>
-<th:block th:fragment="sidebar">
+<th:block th:fragment="sidebar(currentPage, userSidebar, genres)">
     <div class="profile-card">
 
-        <button class="sidebar-toggle"
-                type="button"
-                data-action="toggle-sidebar"
-                title="Свернуть/развернуть">
-        <span class="icon-menu">
-            <th:block th:replace="~{fragments/icons :: icon-menu}"></th:block>
-        </span>
-            <span class="icon-arrow">
-            <th:block th:replace="~{fragments/icons :: icon-arrow-left}"></th:block>
-        </span>
+        <button class="sidebar-toggle" type="button" data-action="toggle-sidebar" title="Свернуть/развернуть">
+            <span class="icon-menu"><th:block th:replace="~{fragments/icons :: icon-menu}"></th:block></span>
+            <span class="icon-arrow"><th:block th:replace="~{fragments/icons :: icon-arrow-left}"></th:block></span>
         </button>
 
         <div class="sidebar-content">
             <div class="sidebar-profile">
-                <div class="sidebar-avatar"
-                     id="sidebarAvatar"
-                     th:text="${sessionUser != null ? #strings.toUpperCase(#strings.substring(sessionUser.username, 0, 1)) : '?'}">
-                </div>
+                <div class="sidebar-avatar" id="sidebarAvatar"
+                     th:text="${sessionUser != null ? #strings.toUpperCase(#strings.substring(sessionUser.username, 0, 1)) : '?'}"></div>
 
-                <div class="sidebar-profile-name"
-                     id="sidebarName"
-                     th:text="${(response != null and response.userForOwner != null) ? (response.userForOwner.name != null ? response.userForOwner.name + (response.userForOwner.surname != null ? ' ' + #strings.substring(response.userForOwner.surname, 0, 1) + '.' : '') : response.userForOwner.username) : (groupedResponse != null and groupedResponse.userForOwner != null) ? (groupedResponse.userForOwner.name != null ? groupedResponse.userForOwner.name + (groupedResponse.userForOwner.surname != null ? ' ' + #strings.substring(groupedResponse.userForOwner.surname, 0, 1) + '.' : '') : groupedResponse.userForOwner.username) : sessionUser != null ? sessionUser.username : 'Гость'}">
-                </div>
+                <div class="sidebar-profile-name" id="sidebarName"
+                     th:text="${userSidebar != null
+                                ? (userSidebar.name != null and !#strings.isEmpty(userSidebar.name)
+                                    ? userSidebar.name + (userSidebar.surname != null and !#strings.isEmpty(userSidebar.surname)
+                                        ? ' ' + #strings.substring(userSidebar.surname, 0, 1) + '.'
+                                        : '')
+                                    : userSidebar.username)
+                                : (sessionUser != null ? sessionUser.username : 'Гость')}"></div>
 
-                <div class="sidebar-profile-phone"
-                     id="sidebarPhone"
-                     th:attr="data-raw-phone=${(response != null and response.userForOwner != null and response.userForOwner.phone != null) ? response.userForOwner.phone : (groupedResponse != null and groupedResponse.userForOwner != null and groupedResponse.userForOwner.phone != null) ? groupedResponse.userForOwner.phone : ''}">
-                </div>
+                <div class="sidebar-profile-phone" id="sidebarPhone"
+                     th:attr="data-raw-phone=${userSidebar != null and userSidebar.phone != null ? userSidebar.phone : ''}"></div>
 
-                <div class="sidebar-profile-email"
-                     id="sidebarEmail"
-                     th:text="${(response != null and response.userForOwner != null and response.userForOwner.email != null) ? response.userForOwner.email : (groupedResponse != null and groupedResponse.userForOwner != null and groupedResponse.userForOwner.email != null) ? groupedResponse.userForOwner.email : ''}">
-                </div>
+                <div class="sidebar-profile-email" id="sidebarEmail"
+                     th:text="${userSidebar != null and userSidebar.email != null ? userSidebar.email : ''}"></div>
             </div>
 
             <nav class="nav-menu">
-                <a th:href="@{/personal-account}"
-                   class="nav-link"
+                <a th:href="@{/personal-account}" class="nav-link"
                    th:classappend="${currentPage == 'personal-account'} ? 'active' : ''">
                     <th:block th:replace="~{fragments/icons :: icon-user}"></th:block>
                     <span>Личный кабинет</span>
@@ -49,22 +39,19 @@
 
                 <div class="nav-divider"></div>
 
-                <a th:href="@{/profile/edit}"
-                   class="nav-link"
+                <a th:href="@{/profile/edit}" class="nav-link"
                    th:classappend="${currentPage == 'profile'} ? 'active' : ''">
                     <th:block th:replace="~{fragments/icons :: icon-edit}"></th:block>
                     <span>Мой профиль</span>
                 </a>
 
-                <a th:href="@{/movies}"
-                   class="nav-link"
+                <a th:href="@{/movies}" class="nav-link"
                    th:classappend="${currentPage == 'catalog'} ? 'active' : ''">
                     <th:block th:replace="~{fragments/icons :: icon-home}"></th:block>
                     <span>Главная</span>
                 </a>
 
-                <a th:href="@{/wallet/top-up(from=${currentUri})}"
-                   class="nav-link"
+                <a th:href="@{/wallet/top-up(from=${currentUri})}" class="nav-link"
                    th:classappend="${currentPage == 'wallet'} ? 'active' : ''">
                     <th:block th:replace="~{fragments/icons :: icon-wallet}"></th:block>
                     <span>Пополнить баланс</span>
@@ -72,29 +59,25 @@
 
                 <div class="nav-divider"></div>
 
-                <a th:href="@{/library}"
-                   class="nav-link"
+                <a th:href="@{/library}" class="nav-link"
                    th:classappend="${currentPage == 'library'} ? 'active' : ''">
                     <th:block th:replace="~{fragments/icons :: icon-film}"></th:block>
                     <span>Моя коллекция</span>
                 </a>
 
-                <a th:href="@{/rated/history}"
-                   class="nav-link"
+                <a th:href="@{/rated/history}" class="nav-link"
                    th:classappend="${currentPage == 'rated'} ? 'active' : ''">
                     <th:block th:replace="~{fragments/icons :: icon-star}"></th:block>
                     <span>Мои оценки</span>
                 </a>
 
-                <a th:href="@{/watched}"
-                   class="nav-link"
+                <a th:href="@{/watched}" class="nav-link"
                    th:classappend="${currentPage == 'watched'} ? 'active' : ''">
                     <th:block th:replace="~{fragments/icons :: icon-watch-history}"></th:block>
                     <span>История просмотров</span>
                 </a>
 
-                <a th:href="@{/history}"
-                   class="nav-link"
+                <a th:href="@{/history}" class="nav-link"
                    th:classappend="${currentPage == 'history'} ? 'active' : ''">
                     <th:block th:replace="~{fragments/icons :: icon-clock}"></th:block>
                     <span>История покупок</span>
@@ -102,23 +85,18 @@
 
                 <div class="nav-divider"></div>
 
-                <a th:each="genre : ${genres}"
-                   th:href="@{/movies(genre=${genre})}"
-                   class="nav-link">
+                <a th:each="genre : ${genres}" th:href="@{/movies(genre=${genre})}" class="nav-link">
                     <span th:text="${genre}">Боевик</span>
                 </a>
 
                 <div class="nav-divider"></div>
 
-                <button class="delete-account-btn"
-                        type="button"
-                        data-action="open-delete-account-modal">
+                <button class="delete-account-btn" type="button" data-action="open-delete-account-modal">
                     <th:block th:replace="~{fragments/icons :: icon-user-delete}"></th:block>
                     <span>Удалить аккаунт</span>
                 </button>
             </nav>
         </div>
-
     </div>
 </th:block>
 </body>

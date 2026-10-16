@@ -12,14 +12,14 @@
 
 <th:block th:replace="~{fragments/flash-messages :: flashMessages}"></th:block>
 
-<div id="authStatus" th:data-authenticated="${sessionUser != null}" style="display:none;"></div>
+<div id="authStatus" th:data-authenticated="${sessionUser.authenticated}" style="display:none;"></div>
 <div id="userIdHolder" th:data-user-id="${response.userForOwner.id}" style="display:none;"></div>
 
 <main class="profile-wrapper">
     <div class="profile-grid" id="profileGrid">
 
         <th:block
-                th:replace="~{fragments/sidebar :: sidebar(currentPage='profile', genres=${response.genres}, userForOwner=${response.userForOwner})}">
+                th:replace="~{fragments/sidebar :: sidebar(currentPage='profile', genres=${response.genres}, userSidebar=${response.userSidebar()})}">
         </th:block>
 
         <div class="profile-right">

@@ -8,13 +8,17 @@
 <body class="layout-fixed">
 <th:block th:replace="~{fragments/header :: header}"></th:block>
 <th:block th:replace="~{fragments/flash-messages :: flashMessages}"></th:block>
-<div id="authStatus" th:data-authenticated="${sessionUser != null}" style="display:none;"></div>
+<div id="authStatus" th:data-authenticated="${sessionUser.authenticated}" style="display:none;"></div>
+
 <main class="profile-wrapper">
     <div class="profile-grid">
-        <th:block
-                th:replace="~{fragments/sidebar :: sidebar(currentPage='rated', userForOwner=${groupedResponse.userForOwner})}"></th:block>
-        <div class="profile-right">
+        <th:block th:replace="~{fragments/sidebar :: sidebar(
+            currentPage='rated',
+            userSidebar=${response.userSidebar()},
+            genres=${genres}
+        )}"></th:block>
 
+        <div class="profile-right">
             <div class="page-header-row">
                 <div class="profile-right-header">
                     <h1>
@@ -26,84 +30,81 @@
                 <th:block th:replace="~{fragments/catalog-search :: catalogSearch}"></th:block>
             </div>
 
-            <div th:if="${groupedResponse != null and groupedResponse.groupedItems != null and not groupedResponse.groupedItems.isEmpty()}"
-                 class="history-container">
-                <div th:each="entry : ${groupedResponse.groupedItems}"
-                     class="history-day-group"
-                     th:attr="data-date=${entry.key}">
-                    <div class="history-day-label">
-                        <th:block th:replace="~{fragments/icons :: icon-calendar}"></th:block>
-                        <span class="day-label" th:text="${#temporals.format(entry.key, 'dd MMMM yyyy')}"></span>
+            <div th:if="${response != null and response.page() != null and response.page().content() != null and !response.page().content().isEmpty()}"
+                 class="history-container"
+                 data-cursor-container
+                 data-cursor-endpoint="/rated/history/more"
+                 data-cursor-template="ratedItemTemplate"
+                 th:attr="data-cursor-next=${response.page().nextCursor()},
+                          data-cursor-has-more=${response.page().hasMore()},
+                          data-cursor-sort=${response.page().sort()}">
+
+                <div th:each="item : ${response.page().content()}"
+                     class="history-item"
+                     th:data-movie-id="${item.id()}"
+                     th:data-movie-title="${item.title()}"
+                     th:attr="data-added-at=${item.addedAt() != null ? #temporals.format(item.addedAt(), 'yyyy-MM-dd''T''HH:mm:ss') : ''}">
+
+                    <div class="history-item-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M12 2l2.9 6.9 7.1.6-5.4 4.7 1.6 7-6.2-3.7-6.2 3.7 1.6-7L2 9.5l7.1-.6L12 2z"/>
+                        </svg>
                     </div>
 
-                    <div th:each="item : ${entry.value}"
-                         class="history-item"
-                         th:data-movie-id="${item.id}"
-                         th:data-movie-title="${item.title}"
-                         th:attr="data-added-at=${item.addedAt != null ? #temporals.format(item.addedAt, 'yyyy-MM-dd''T''HH:mm:ss') : ''}">
+                    <div class="history-item-info"
+                         data-action="navigate"
+                         th:data-href="@{/movies/{id}(id=${item.id()})}">
+                        <a th:href="@{/movies/{id}(id=${item.id()})}"
+                           class="history-item-title"
+                           th:text="${item.title()}">Название</a>
 
-                        <div class="history-item-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg"
-                                 viewBox="0 0 24 24"
-                                 fill="currentColor"
-                                 aria-hidden="true">
-                                <path d="M12 2l2.9 6.9 7.1.6-5.4 4.7 1.6 7-6.2-3.7-6.2 3.7 1.6-7L2 9.5l7.1-.6L12 2z"/>
-                            </svg>
-                        </div>
+                        <div class="history-item-meta history-item-meta--rated">
+                            <div class="history-item-meta-row history-item-meta-row--genre">
+                                <span class="history-item-meta-label">Жанр:</span>
+                                <span class="history-item-meta-value"
+                                      th:text="${item.genre() != null and !item.genre().isEmpty()} ? ${item.genre()} : '—'">Фантастика</span>
+                            </div>
 
-                        <div class="history-item-info"
-                             data-action="navigate"
-                             th:data-href="@{/movies/{id}(id=${item.id})}">
-                            <a th:href="@{/movies/{id}(id=${item.id})}"
-                               class="history-item-title"
-                               th:text="${item.title}">Название</a>
+                            <div class="history-item-meta-row history-item-meta-row--review">
+                                <span class="history-item-meta-label">Отзыв:</span>
+                                <span class="history-item-meta-value"
+                                      th:if="${item.review() != null and !#strings.isEmpty(item.review())}"
+                                      th:text="${item.review()}">Отличный фильм!</span>
+                                <span class="history-item-meta-value history-item-meta-value--muted"
+                                      th:if="${item.review() == null or #strings.isEmpty(item.review())}">
+                                    Пользователь не оставил отзыва
+                                </span>
+                            </div>
 
-                            <div class="history-item-meta history-item-meta--rated">
-                                <div class="history-item-meta-row history-item-meta-row--genre">
-                                    <span class="history-item-meta-label">Жанр:</span>
-                                    <span class="history-item-meta-value"
-                                          th:text="${item.genre != null and !item.genre.isEmpty()} ? ${item.genre} : '—'">Фантастика</span>
-                                </div>
-
-                                <div class="history-item-meta-row history-item-meta-row--review">
-                                    <span class="history-item-meta-label">Отзыв:</span>
-                                    <span class="history-item-meta-value"
-                                          th:if="${item.review != null and !#strings.isEmpty(item.review)}"
-                                          th:text="${item.review}">Отличный фильм!</span>
-                                    <span class="history-item-meta-value history-item-meta-value--muted"
-                                          th:if="${item.review == null or #strings.isEmpty(item.review)}">
-                                        Пользователь не оставил отзыва
+                            <div class="history-item-meta-row history-item-meta-row--rating">
+                                <span class="history-item-meta-label">Оценка:</span>
+                                <span class="history-item-meta-value history-item-meta-value--rating">
+                                    <span th:text="${item.ratingValue() != null
+                                            ? #numbers.formatDecimal(item.ratingValue(), 1, 1).replace('.', ',')
+                                            : '—'}">0,0</span>
+                                    <span class="history-item-meta-value-max"> / 10</span>
+                                    <span class="history-item-rating-star">
+                                        <th:block th:replace="~{fragments/icons :: icon-star}"></th:block>
                                     </span>
-                                </div>
-
-                                <div class="history-item-meta-row history-item-meta-row--rating">
-                                    <span class="history-item-meta-label">Оценка:</span>
-                                    <span class="history-item-meta-value history-item-meta-value--rating">
-                                        <span th:text="${item.ratingValue != null
-                                                ? #numbers.formatDecimal(item.ratingValue, 1, 1).replace('.', ',')
-                                                : '—'}">0,0</span>
-                                        <span class="history-item-meta-value-max"> / 10</span>
-                                        <span class="history-item-rating-star">
-                                            <th:block th:replace="~{fragments/icons :: icon-star}"></th:block>
-                                        </span>
-                                    </span>
-                                </div>
+                                </span>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="history-item-time" th:if="${item.addedAt != null}">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                 stroke-width="1.5" stroke="currentColor">
-                                <circle cx="12" cy="12" r="10"/>
-                                <polyline points="12 6 12 12 16 14"/>
-                            </svg>
-                            <span th:text="${'Оценено: ' + #temporals.format(item.addedAt, 'HH:mm:ss')}">Оценено: 18:30:00</span>
-                        </div>
+                    <div class="history-item-time" th:if="${item.addedAt() != null}">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                             stroke-width="1.5" stroke="currentColor">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        <span th:text="${'Оценено: ' + #temporals.format(item.addedAt(), 'HH:mm:ss')}">Оценено: 18:30:00</span>
                     </div>
                 </div>
+
+                <div class="cursor-loader" data-cursor-loader></div>
             </div>
 
-            <div th:if="${groupedResponse == null or groupedResponse.groupedItems == null or groupedResponse.groupedItems.isEmpty()}"
+            <div th:if="${response == null or response.page() == null or response.page().content() == null or response.page().content().isEmpty()}"
                  class="empty-message">
                 <div class="empty-icon">
                     <th:block th:replace="~{fragments/icons :: icon-star}"></th:block>
@@ -113,17 +114,53 @@
                 <a th:href="@{/}" class="browse-movies-btn">Перейти в главное меню</a>
             </div>
 
-            <th:block
-                    th:if="${groupedResponse == null or groupedResponse.groupedItems == null or groupedResponse.groupedItems.isEmpty()}">
+            <th:block th:if="${response == null or response.page() == null or response.page().content() == null or response.page().content().isEmpty()}">
                 <th:block th:insert="~{fragments/recommendations :: recommendations}"></th:block>
             </th:block>
-
         </div>
     </div>
 </main>
 
+<template id="ratedItemTemplate">
+    <div class="history-item" data-attr="data-movie-id:id;data-movie-title:title;data-added-at:addedAt">
+        <div class="history-item-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12 2l2.9 6.9 7.1.6-5.4 4.7 1.6 7-6.2-3.7-6.2 3.7 1.6-7L2 9.5l7.1-.6L12 2z"/>
+            </svg>
+        </div>
+        <div class="history-item-info" data-action="navigate" data-attr="data-href:/movies/{id}">
+            <a class="history-item-title" data-attr="href:/movies/{id}" data-field="title"></a>
+            <div class="history-item-meta history-item-meta--rated">
+                <div class="history-item-meta-row history-item-meta-row--genre">
+                    <span class="history-item-meta-label">Жанр:</span>
+                    <span class="history-item-meta-value" data-field="genre"></span>
+                </div>
+                <div class="history-item-meta-row history-item-meta-row--review">
+                    <span class="history-item-meta-label">Отзыв:</span>
+                    <span class="history-item-meta-value" data-field="review"></span>
+                </div>
+                <div class="history-item-meta-row history-item-meta-row--rating">
+                    <span class="history-item-meta-label">Оценка:</span>
+                    <span class="history-item-meta-value history-item-meta-value--rating">
+                        <span data-field="ratingValue"></span>
+                        <span class="history-item-meta-value-max"> / 10</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="history-item-time">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                 stroke-width="1.5" stroke="currentColor">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span data-field="addedAt"></span>
+        </div>
+    </div>
+</template>
+
 <script th:src="@{/js/modules/sort-toggle.js}" defer></script>
-<script th:src="@{/js/modules/date-formatter.js}" defer></script>
+<script th:src="@{/js/modules/cursor-pagination.js}" defer></script>
 <script th:src="@{/js/main.js}" defer></script>
 
 <th:block th:replace="~{fragments/footer :: footer}"></th:block>

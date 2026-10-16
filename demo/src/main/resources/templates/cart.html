@@ -8,10 +8,10 @@
 <body class="layout-fixed">
 <th:block th:replace="~{fragments/header :: header}"></th:block>
 <th:block th:replace="~{fragments/flash-messages :: flashMessages}"></th:block>
-<div id="authStatus" th:data-authenticated="${sessionUser != null}" style="display:none;"></div>
+<div id="authStatus" th:data-authenticated="${sessionUser.authenticated}" style="display:none;"></div>
 
 <main class="catalog-wrapper"
-      th:classappend="${catalog == null or #lists.size(catalog) <= 4} ? 'no-scroll' : ''">
+      th:classappend="${response == null or response.content() == null or #lists.size(response.content()) <= 4} ? 'no-scroll' : ''">
 
     <div class="page-header-row">
 
@@ -25,31 +25,31 @@
                 <th:block th:replace="~{fragments/icons :: icon-cart}"></th:block>
                 Ваша корзина
             </h1>
-            <div class="greeting-sub" th:if="${catalog != null and !catalog.isEmpty()}">
-                Количество фильмов:
-                <strong th:text="${catalogCount}">0</strong>
+            <div class="greeting-sub" th:if="${catalogCount != null and catalogCount > 0}">
+                Количество фильмов: <strong th:text="${catalogCount}">0</strong>
             </div>
         </div>
 
         <div class="page-header-actions">
+            <th:block th:replace="~{fragments/sort-toggle :: sortToggle}"></th:block>
+
             <button type="button"
                     class="checkout-btn"
-                    th:with="totalPrice=${#aggregates.sum(catalog.![price])}"
+                    th:with="totalPrice=${response != null and response.content() != null
+                                         ? #aggregates.sum(response.content().![price()]) : 0}"
                     data-action="bulk-buy"
-                    th:if="${catalog != null and !catalog.isEmpty()}">
+                    th:if="${response != null and response.content() != null and !response.content().isEmpty()}">
                 <span class="btn-text">
                     <th:block th:replace="~{fragments/icons :: icon-cart}"></th:block>
                     Купить всё
                 </span>
-                <span class="btn-price"
-                      id="bulkTotalPrice"
-                      th:text="${totalPrice} + ' ₽'">0 ₽</span>
+                <span class="btn-price" id="bulkTotalPrice" th:text="${totalPrice} + ' ₽'">0 ₽</span>
             </button>
 
             <button type="button"
                     class="clear-cart-btn"
                     data-action="clear-cart"
-                    th:if="${catalog != null and !catalog.isEmpty()}">
+                    th:if="${response != null and response.content() != null and !response.content().isEmpty()}">
                 <th:block th:replace="~{fragments/icons :: icon-trash}"></th:block>
                 Очистить всю корзину
             </button>
@@ -60,90 +60,74 @@
 
     <div class="catalog-content">
 
-        <div class="cart-container" th:if="${catalog != null and !catalog.isEmpty()}">
+        <div class="cart-container"
+             th:if="${response != null and response.content() != null and !response.content().isEmpty()}"
+             data-cursor-container
+             data-cursor-endpoint="/cart/more"
+             data-cursor-template="cartCardTemplate"
+             th:attr="data-cursor-next=${response.nextCursor()},
+                      data-cursor-has-more=${response.hasMore()},
+                      data-cursor-sort=${response.sort()}">
+
             <div class="media-card cart-card"
-                 th:each="cartMovie : ${catalog}"
-                 th:data-movie-id="${cartMovie.id}"
-                 th:data-movie-price="${cartMovie.price}"
-                 th:data-movie-title="${cartMovie.title}">
+                 th:each="cartMovie : ${response.content()}"
+                 th:data-movie-id="${cartMovie.id()}"
+                 th:data-movie-price="${cartMovie.price()}"
+                 th:data-movie-title="${cartMovie.title()}">
                 <div class="media-card-poster-link">
-                    <a th:href="@{/movies/{id}(id=${cartMovie.id})}">
-                        <img th:if="${cartMovie.posterUrl != null and !cartMovie.posterUrl.isEmpty()}"
-                             th:src="${cartMovie.posterUrl}"
-                             alt="Постер"
-                             class="media-card-poster-img"
-                             data-poster-img
-                             src=""/>
+                    <a th:href="@{/movies/{id}(id=${cartMovie.id()})}">
+                        <img th:if="${cartMovie.posterUrl() != null and !cartMovie.posterUrl().isEmpty()}"
+                             th:src="${cartMovie.posterUrl()}"
+                             alt="Постер" class="media-card-poster-img" data-poster-img src=""/>
                         <div class="movie-poster-placeholder"
-                             th:classappend="${cartMovie.posterUrl != null and !cartMovie.posterUrl.isEmpty()} ? 'hidden' : ''"
+                             th:classappend="${cartMovie.posterUrl() != null and !cartMovie.posterUrl().isEmpty()} ? 'hidden' : ''"
                              data-poster-placeholder>
                             <span>Постер</span>
                         </div>
                         <th:block th:replace="~{fragments/rating-badge :: ratingBadge(
-                            movieId=${cartMovie.id},
-                            rating=${cartMovie.rating}
+                            movieId=${cartMovie.id()},
+                            rating=${cartMovie.rating()}
                         )}"></th:block>
                     </a>
                 </div>
                 <div class="media-card-content">
                     <h3 class="media-card-title">
-                        <a th:href="@{/movies/{id}(id=${cartMovie.id})}"
-                           th:text="${cartMovie.title}">Название</a>
+                        <a th:href="@{/movies/{id}(id=${cartMovie.id()})}" th:text="${cartMovie.title()}">Название</a>
                     </h3>
                     <div class="media-card-info">
-
                         <div class="media-card-info-rows">
-                            <div class="media-card-info-row media-card-info-row--year"
-                                 th:if="${cartMovie.releaseDate != null}">
+                            <div class="media-card-info-row media-card-info-row--year" th:if="${cartMovie.releaseDate() != null}">
                                 <th:block th:replace="~{fragments/icons :: icon-calendar}"></th:block>
                                 <span class="media-card-info-label">Год выпуска:</span>
-                                <span class="media-card-info-value"
-                                      th:text="${cartMovie.releaseDate.year}">2018</span>
+                                <span class="media-card-info-value" th:text="${cartMovie.releaseDate().year}">2018</span>
                             </div>
-
-                            <div class="media-card-info-row media-card-info-row--genre"
-                                 th:if="${cartMovie.genre != null and !cartMovie.genre.isEmpty()}">
+                            <div class="media-card-info-row media-card-info-row--genre" th:if="${cartMovie.genre() != null and !cartMovie.genre().isEmpty()}">
                                 <th:block th:replace="~{fragments/icons :: icon-tag}"></th:block>
                                 <span class="media-card-info-label">Жанр:</span>
-                                <span class="media-card-info-value"
-                                      th:text="${cartMovie.genre}">Фантастика</span>
+                                <span class="media-card-info-value" th:text="${cartMovie.genre()}">Фантастика</span>
                             </div>
-
-                            <div class="media-card-info-row media-card-info-row--duration"
-                                 th:if="${cartMovie.formattedDuration != null}">
+                            <div class="media-card-info-row media-card-info-row--duration" th:if="${cartMovie.formattedDuration() != null}">
                                 <th:block th:replace="~{fragments/icons :: icon-clock}"></th:block>
                                 <span class="media-card-info-label">Длительность:</span>
-                                <span class="media-card-info-value"
-                                      th:text="${cartMovie.formattedDuration}">1:40:00</span>
+                                <span class="media-card-info-value" th:text="${cartMovie.formattedDuration()}">1:40:00</span>
                             </div>
                         </div>
-
                         <div class="media-card-price-and-actions">
-                            <span class="media-card-price" th:text="${cartMovie.price} + ' ₽'">600 ₽</span>
+                            <span class="media-card-price" th:text="${cartMovie.price()} + ' ₽'">600 ₽</span>
                             <div class="media-card-actions">
-                                <button type="button"
-                                        class="icon-btn rating-btn"
-                                        data-action="show-rating"
-                                        th:data-movie-id="${cartMovie.id}"
-                                        th:data-movie-title="${cartMovie.title}"
+                                <button type="button" class="icon-btn rating-btn" data-action="show-rating"
+                                        th:data-movie-id="${cartMovie.id()}" th:data-movie-title="${cartMovie.title()}"
                                         title="Оценить фильм">
                                     <th:block th:replace="~{fragments/icons :: icon-star}"></th:block>
                                 </button>
-                                <button type="button"
-                                        class="remove-cart-btn"
-                                        data-action="confirm-remove-from-cart"
-                                        th:data-movie-id="${cartMovie.id}"
-                                        th:data-movie-title="${cartMovie.title}"
+                                <button type="button" class="remove-cart-btn" data-action="confirm-remove-from-cart"
+                                        th:data-movie-id="${cartMovie.id()}" th:data-movie-title="${cartMovie.title()}"
                                         title="Удалить из корзины">
                                     <th:block th:replace="~{fragments/icons :: icon-trash}"></th:block>
                                 </button>
-                                <button type="button"
-                                        class="buy-now-btn"
-                                        data-action="single-buy"
-                                        th:data-movie-id="${cartMovie.id}"
-                                        th:data-movie-title="${cartMovie.title}"
-                                        th:data-movie-price="${cartMovie.price}"
-                                        title="Купить сейчас">
+                                <button type="button" class="buy-now-btn" data-action="single-buy"
+                                        th:data-movie-id="${cartMovie.id()}" th:data-movie-title="${cartMovie.title()}"
+                                        th:data-movie-price="${cartMovie.price()}" title="Купить сейчас">
                                     Купить сейчас
                                 </button>
                             </div>
@@ -151,18 +135,19 @@
                     </div>
                 </div>
             </div>
+
+            <div class="cursor-loader" data-cursor-loader></div>
         </div>
 
-        <div th:if="${catalog == null or catalog.isEmpty()}" class="empty-message">
-            <div class="empty-icon">
-                <th:block th:replace="~{fragments/icons :: icon-cart}"></th:block>
-            </div>
+        <div th:if="${response == null or response.content() == null or response.content().isEmpty()}"
+             class="empty-message">
+            <div class="empty-icon"><th:block th:replace="~{fragments/icons :: icon-cart}"></th:block></div>
             <h2>Корзина пока пуста</h2>
             <p>Добавляйте фильмы, которые хотите приобрести, а здесь они будут аккуратно собраны в одном месте.</p>
             <a th:href="@{/}" class="browse-movies-btn">Перейти в главное меню</a>
         </div>
 
-        <th:block th:if="${catalog == null or catalog.isEmpty()}">
+        <th:block th:if="${response == null or response.content() == null or response.content().isEmpty()}">
             <th:block th:with="visible=9">
                 <th:block th:insert="~{fragments/recommendations :: recommendations}"></th:block>
             </th:block>
@@ -171,10 +156,62 @@
     </div>
 </main>
 
+<template id="cartCardTemplate">
+    <div class="media-card cart-card"
+         data-attr="data-movie-id:id;data-movie-price:price;data-movie-title:title">
+        <div class="media-card-poster-link">
+            <a data-attr="href:/movies/{id}">
+                <img class="media-card-poster-img" data-poster-img data-field="posterUrl" src="" alt="Постер"/>
+                <div class="movie-poster-placeholder hidden" data-poster-placeholder>
+                    <span>Постер</span>
+                </div>
+            </a>
+        </div>
+        <div class="media-card-content">
+            <h3 class="media-card-title">
+                <a data-attr="href:/movies/{id}" data-field="title"></a>
+            </h3>
+            <div class="media-card-info">
+                <div class="media-card-info-rows">
+                    <div class="media-card-info-row media-card-info-row--year">
+                        <span class="media-card-info-label">Год выпуска:</span>
+                        <span class="media-card-info-value" data-field="releaseDate"></span>
+                    </div>
+                    <div class="media-card-info-row media-card-info-row--genre">
+                        <span class="media-card-info-label">Жанр:</span>
+                        <span class="media-card-info-value" data-field="genre"></span>
+                    </div>
+                    <div class="media-card-info-row media-card-info-row--duration">
+                        <span class="media-card-info-label">Длительность:</span>
+                        <span class="media-card-info-value" data-field="formattedDuration"></span>
+                    </div>
+                </div>
+                <div class="media-card-price-and-actions">
+                    <span class="media-card-price" data-field="price"></span>
+                    <div class="media-card-actions">
+                        <button type="button" class="icon-btn rating-btn" data-action="show-rating"
+                                data-attr="data-movie-id:id;data-movie-title:title" title="Оценить фильм">
+                            <th:block th:replace="~{fragments/icons :: icon-star}"></th:block>
+                        </button>
+                        <button type="button" class="remove-cart-btn" data-action="confirm-remove-from-cart"
+                                data-attr="data-movie-id:id;data-movie-title:title" title="Удалить из корзины">
+                            <th:block th:replace="~{fragments/icons :: icon-trash}"></th:block>
+                        </button>
+                        <button type="button" class="buy-now-btn" data-action="single-buy"
+                                data-attr="data-movie-id:id;data-movie-title:title;data-movie-price:price"
+                                title="Купить сейчас">Купить сейчас</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
 <th:block th:replace="~{fragments/modals/cart-modals :: cartModals}"></th:block>
 <th:block th:replace="~{fragments/modals/ratings-modals :: ratingsModals}"></th:block>
 
 <script th:src="@{/js/pages/highlight.js}" defer></script>
+<script th:src="@{/js/modules/cursor-pagination.js}" defer></script>
 <script th:src="@{/js/main.js}" defer></script>
 
 <th:block th:replace="~{fragments/footer :: footer}"></th:block>

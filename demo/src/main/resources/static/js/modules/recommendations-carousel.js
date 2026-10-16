@@ -7,6 +7,28 @@
 
     var instances = [];
 
+    function buildPlaceholder() {
+        if (typeof window.buildPosterPlaceholder === 'function') {
+            return window.buildPosterPlaceholder();
+        }
+        var wrap = document.createElement('div');
+        wrap.className = 'movie-poster-placeholder';
+        wrap.setAttribute('data-poster-placeholder', '');
+        wrap.innerHTML =
+            '<div class="poster-placeholder-icon">' +
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" ' +
+                     'fill="none" stroke="currentColor" stroke-width="1.6" ' +
+                     'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+                    '<rect x="3" y="3" width="18" height="18" rx="3"/>' +
+                    '<circle cx="9" cy="9" r="2"/>' +
+                    '<path d="m21 15-4.35-4.35a1.5 1.5 0 0 0-2.12 0L7 18"/>' +
+                '</svg>' +
+            '</div>' +
+            '<div class="poster-placeholder-text">Нет постера</div>' +
+            '<div class="poster-placeholder-sub">Изображение недоступно</div>';
+        return wrap;
+    }
+
     function createCard(movie, currentUri) {
         if (!movie || !movie.id) return null;
 
@@ -25,17 +47,22 @@
         var poster = document.createElement('div');
         poster.className = 'rec-poster';
         var posterUrl = movie.posterUrl || movie.poster_url || '';
+
         if (posterUrl) {
             var img = document.createElement('img');
             img.className = 'rec-poster-img';
+            img.setAttribute('data-poster-img', '');
             img.src = posterUrl;
             img.alt = movie.title || '';
+            img.addEventListener('error', function () {
+                img.style.display = 'none';
+                if (!poster.querySelector('[data-poster-placeholder]')) {
+                    poster.appendChild(buildPlaceholder());
+                }
+            }, { once: true });
             poster.appendChild(img);
         } else {
-            var empty = document.createElement('div');
-            empty.className = 'rec-poster-empty';
-            empty.textContent = 'Нет постера';
-            poster.appendChild(empty);
+            poster.appendChild(buildPlaceholder());
         }
 
         var info = document.createElement('div');

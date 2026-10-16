@@ -5,6 +5,7 @@ import com.example.demo.model.base.WatchHistoryItem;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.BatchSize;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -25,6 +26,7 @@ public class PurchasedMovie extends AbstractCatalogItem {
     private BigDecimal priceSnapshot;
 
     @Builder.Default
+    @BatchSize(size = 20)
     @OneToMany(mappedBy = "purchasedMovie", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WatchHistoryItem> watchedHistory = new ArrayList<>();

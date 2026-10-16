@@ -20,6 +20,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MovieSearchHelper {
 
+    private static final int SUGGESTIONS_LIMIT = 10;
+
     private final MovieRepository movieRepository;
     private final MovieSpecifications movieSpecifications;
     private final MovieMapper movieMapper;
@@ -34,13 +36,10 @@ public class MovieSearchHelper {
             return movieRepository.findAllPaged(pageable);
         }
 
-        Specification<Movie> specification = Specification.unrestricted();
-        if (hasFilter) {
-            specification = specification.and(movieSpecifications.byFilter(movieFilter));
-        }
-        if (hasTitle) {
-            specification = specification.and(movieSpecifications.titleStartsWith(title));
-        }
+        Specification<Movie> specification = Specification.allOf(
+                movieSpecifications.byFilter(movieFilter),
+                movieSpecifications.titleStartsWith(title)
+        );
         return movieRepository.findAll(specification, pageable);
     }
 
@@ -49,15 +48,13 @@ public class MovieSearchHelper {
             return Collections.emptyList();
         }
 
-        String sanitizedSearchQuery = searchQuery.toLowerCase()
-                .replace('ё', 'е')
-                .replaceAll("[^a-zа-я0-9]", "");
+        String sanitizedSearchQuery = TitleNormalizer.normalize(searchQuery);
 
         if (sanitizedSearchQuery.isEmpty()) {
             return Collections.emptyList();
         }
 
-        Pageable limitPageable = PageRequest.of(0, 10);
+        Pageable limitPageable = PageRequest.of(0, SUGGESTIONS_LIMIT);
         return movieRepository.findAll(
                         movieSpecifications.titleStartsWith(sanitizedSearchQuery),
                         limitPageable

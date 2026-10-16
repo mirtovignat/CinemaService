@@ -44,7 +44,7 @@ public class MovieController {
             SessionUser sessionUser,
             Model model
     ) {
-        Long userId = userIdOf(sessionUser);
+        Long userId = sessionUser.idOrNull();
         MovieSearchContext movieSearchContext = MovieSearchContext.of(title, sortBy, sortDir);
 
         MovieFilterFacade.Result result =
@@ -77,7 +77,7 @@ public class MovieController {
             Model model,
             RedirectAttributes redirectAttributes
     ) {
-        Long userId = userIdOf(sessionUser);
+        Long userId = sessionUser.idOrNull();
 
         return movieFilterFacade.filterByGenre(genre, sortBy, sortDir, page, size, userId)
                 .map(result -> {
@@ -109,7 +109,7 @@ public class MovieController {
             @RequestParam(defaultValue = "0") int page,
             SessionUser sessionUser
     ) {
-        return movieRecommendationService.getRecommendedMoviesSlice(userIdOf(sessionUser), page);
+        return movieRecommendationService.getRecommendedMoviesSlice(sessionUser.idOrNull(), page);
     }
 
     @GetMapping("/movies/{id}")
@@ -119,7 +119,7 @@ public class MovieController {
             Model model
     ) {
         MovieForUser<MovieDetailsViewDTO> card =
-                movieService.getCard(id, userIdOf(sessionUser));
+                movieService.getCard(id, sessionUser.idOrNull());
         model.addAttribute("card", card);
         return "show";
     }
@@ -135,10 +135,6 @@ public class MovieController {
     @ResponseBody
     public ResponseEntity<List<MovieSearchDTO>> getSearchSuggestions(@RequestParam String query) {
         return ResponseEntity.ok(movieService.getMovieSearchDTO(query));
-    }
-
-    private Long userIdOf(SessionUser sessionUser) {
-        return sessionUser != null ? sessionUser.id() : null;
     }
 
     private boolean isSearch(String title, MovieFilter movieFilter) {

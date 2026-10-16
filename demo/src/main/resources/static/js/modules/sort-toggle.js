@@ -1,145 +1,98 @@
 (function () {
     'use strict';
 
-    var BASE_KEY = 'cinemaHistorySortOrder';
-    var currentOrder = 'desc';
+    var STORAGE_KEY = 'cinemaSortOrder';
 
-    function getStorageKey() {
-        return BASE_KEY + '_' + window.location.pathname;
+    function getUrlSort() {
+        var params = new URLSearchParams(window.location.search);
+        var s = (params.get('sort') || '').toLowerCase();
+        return (s === 'asc' || s === 'desc') ? s : null;
     }
 
-    function getSortableRoots() {
-        var roots = [];
-
-        var history = document.querySelector('.history-container');
-        if (history) {
-            roots.push({
-                root: history,
-                groupSelector: ':scope > .history-day-group',
-                itemSelector: ':scope > .history-item'
-            });
-        }
-
-        var reviews = document.getElementById('reviewsList');
-        if (reviews) {
-            roots.push({
-                root: reviews,
-                groupSelector: null,
-                itemSelector: ':scope > .review-card'
-            });
-        }
-
-        var library = document.querySelector('.library-container');
-        if (library) {
-            roots.push({
-                root: library,
-                groupSelector: null,
-                itemSelector: ':scope > .library-card'
-            });
-        }
-
-        return roots;
+    function getStoredSort() {
+        try {
+            var saved = localStorage.getItem(STORAGE_KEY);
+            if (saved === 'asc' || saved === 'desc') return saved;
+        } catch (e) {}
+        return null;
     }
 
-    function sortByAttr(items, attr, order) {
-        var hasData = items.some(function (el) {
-            return (el.getAttribute(attr) || '').trim() !== '';
-        });
-        if (!hasData) return;
+    function isCursorPage() {
+        return !!document.querySelector('[data-cursor-container]');
+    }
 
-        items.sort(function (a, b) {
-            var da = (a.getAttribute(attr) || '').trim();
-            var db = (b.getAttribute(attr) || '').trim();
-            if (da === db) return 0;
-            if (da === '') return 1;
-            if (db === '') return -1;
-            return order === 'asc' ? da.localeCompare(db) : db.localeCompare(da);
+    function applyActive(sort) {
+        document.querySelectorAll('#sortToggleGroup .sort-option').forEach(function (btn) {
+            btn.classList.toggle('active', btn.getAttribute('data-order') === sort);
         });
     }
 
-    function getItemTime(item) {
-        var el = item.querySelector('.history-item-time span:last-child');
-        return el ? (el.textContent || '').trim() : '';
-    }
+    function setSort(order) {
+        if (order !== 'asc' && order !== 'desc') return;
+        try { localStorage.setItem(STORAGE_KEY, order); } catch (e) {}
 
-    function getItemId(item) {
-        var id = item.getAttribute('data-movie-id') || item.getAttribute('data-history-id') || '';
-        return parseInt(id, 10) || 0;
-    }
-
-    function compareItems(a, b, order) {
-        var ta = getItemTime(a);
-        var tb = getItemTime(b);
-        if (ta !== tb) {
-            return order === 'asc' ? ta.localeCompare(tb) : tb.localeCompare(ta);
-        }
-        var ia = getItemId(a);
-        var ib = getItemId(b);
-        if (ia !== ib) {
-            return order === 'asc' ? ia - ib : ib - ia;
-        }
-        return 0;
-    }
-
-    function applyOrder(order) {
-        getSortableRoots().forEach(function (config) {
-            var root = config.root;
-
-            if (config.groupSelector) {
-                var groups = Array.prototype.slice.call(
-                    root.querySelectorAll(config.groupSelector)
-                );
-                sortByAttr(groups, 'data-date', order);
-                groups.forEach(function (group) { root.appendChild(group); });
-
-                root.querySelectorAll('.history-day-group').forEach(function (group) {
-                    var items = Array.prototype.slice.call(
-                        group.querySelectorAll(':scope > .history-item')
-                    );
-                    items.sort(function (a, b) { return compareItems(a, b, order); });
-                    items.forEach(function (item) { group.appendChild(item); });
-                });
-            } else {
-                var items = Array.prototype.slice.call(
-                    root.querySelectorAll(config.itemSelector)
-                );
-                sortByAttr(items, 'data-date', order);
-                items.forEach(function (item) { root.appendChild(item); });
+        if (isCursorPage()) {
+            var container = document.querySelector('[data-cursor-container]');
+            if (container) {
+                container.setAttribute('data-cursor-sort', order);
+                container.setAttribute('data-cursor-next', '');
+                container.setAttribute('data-cursor-has-more', 'true');
+                container.innerHTML = '';
+                container.dataset.cursorMounted = '';
+                if (window.CursorPagination && typeof window.CursorPagination.mount === 'function') {
+                    window.CursorPagination.mount(container);
+                }
             }
-        });
+            applyActive(order);
+            return;
+        }
+
+        var url = new URL(window.location.href);
+        url.searchParams.set('sort', order);
+        url.searchParams.delete('cursor');
+        window.location.href = url.toString();
     }
 
-    function updateActiveButton(order) {
+    function init() {
         var group = document.getElementById('sortToggleGroup');
         if (!group) return;
+
+        var urlSort = getUrlSort();
+        var storedSort = getStoredSort();
+
+        if (urlSort) {
+            try { localStorage.setItem(STORAGE_KEY, urlSort); } catch (e) {}
+        } else if (storedSort) {
+            if (isCursorPage()) {
+                var container = document.querySelector('[data-cursor-container]');
+                if (container) container.setAttribute('data-cursor-sort', storedSort);
+                applyActive(storedSort);
+            } else {
+                var url = new URL(window.location.href);
+                url.searchParams.set('sort', storedSort);
+                url.searchParams.delete('cursor');
+                window.location.replace(url.toString());
+                return;
+            }
+        }
+
+        applyActive(urlSort || storedSort || 'desc');
+
         group.querySelectorAll('.sort-option').forEach(function (btn) {
-            btn.classList.toggle('active', btn.getAttribute('data-order') === order);
+            if (btn.dataset.sortBound === '1') return;
+            btn.dataset.sortBound = '1';
+            btn.addEventListener('click', function () {
+                setSort(btn.getAttribute('data-order'));
+            });
         });
     }
 
-    function setHistorySortOrder(order) {
-        if (order !== 'asc' && order !== 'desc') return;
-        currentOrder = order;
-        try { localStorage.setItem(getStorageKey(), order); } catch (e) {}
-        applyOrder(order);
-        updateActiveButton(order);
-    }
-
-    function initSortToggle() {
-        if (!document.getElementById('sortToggleGroup')) return;
-        var saved = 'desc';
-        try { saved = localStorage.getItem(getStorageKey()) || 'desc'; } catch (e) {}
-        currentOrder = saved;
-        applyOrder(saved);
-        updateActiveButton(saved);
-    }
-
-    window.setHistorySortOrder = setHistorySortOrder;
-    window.__initSortToggle = initSortToggle;
+    window.setHistorySortOrder = setSort;
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initSortToggle, { once: true });
+        document.addEventListener('DOMContentLoaded', init, { once: true });
     } else {
-        initSortToggle();
+        init();
     }
+    window.addEventListener('pageshow', function (e) { if (e.persisted) init(); });
 })();

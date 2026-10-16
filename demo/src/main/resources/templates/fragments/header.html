@@ -73,18 +73,18 @@
                 title="Избранное">
             <th:block th:replace="~{fragments/icons :: icon-heart}"></th:block>
             <span id="favourites-count" class="count-badge"
-                  th:text="${favouritesCount != null ? favouritesCount : 0}"
-                  th:style="${favouritesCount == null || favouritesCount == 0} ? 'display: none;' : ''">0</span>
+                  th:text="${badges.favouritesCount}"
+                  th:style="${badges.favouritesCount == 0} ? 'display: none;' : ''">0</span>
         </button>
 
         <button type="button" class="action-button cart-btn" id="headerCartBtn" title="Корзина">
             <th:block th:replace="~{fragments/icons :: icon-cart}"></th:block>
             <span id="cart-count" class="count-badge"
-                  th:text="${cartCount != null ? cartCount : 0}"
-                  th:style="${cartCount == null || cartCount == 0} ? 'display: none;' : ''">0</span>
+                  th:text="${badges.cartCount}"
+                  th:style="${badges.cartCount == 0} ? 'display: none;' : ''">0</span>
         </button>
 
-        <div th:if="${sessionUser != null}" class="user-menu" id="userMenu">
+        <div th:if="${sessionUser.authenticated}" class="user-menu" id="userMenu">
             <div class="user-menu-toggle" id="userMenuToggle" data-action="toggle-user-menu">
                 <div class="user-avatar-letter"
                      th:text="${sessionUser.getFirstUsernameLetter()}"></div>
@@ -138,16 +138,16 @@
             </div>
         </div>
 
-        <a th:if="${sessionUser == null}" th:href="@{/login}" class="login-button">
+        <a th:unless="${sessionUser.authenticated}" th:href="@{/login}" class="login-button">
             <th:block th:replace="~{fragments/icons :: icon-user}"></th:block>
             Войти
         </a>
     </div>
 
     <input type="hidden" id="currentUserId"
-           th:value="${sessionUser != null ? sessionUser.id() : ''}">
+           th:value="${sessionUser.authenticated ? sessionUser.id() : ''}">
 
-    <div th:if="${sessionUser != null}"
+    <div th:if="${sessionUser.authenticated}"
          id="currentUserData"
          th:data-username="${sessionUser.username()}"
          style="display:none;"></div>

@@ -143,6 +143,17 @@
         if (flashError) flashError.remove();
     }
 
+    function maskPhoneElement(el) {
+        if (!el) return;
+        var raw = (el.textContent || '').trim();
+        if (!raw) return;
+        if (raw.indexOf('***') !== -1) return;
+        var digits = raw.replace(/\D/g, '');
+        if (digits.length < 5) return;
+        if (typeof window.maskPhone !== 'function') return;
+        el.textContent = window.maskPhone(raw);
+    }
+
     function refreshBalanceFromServer() {
         fetch('/wallet/balance?_=' + Date.now(), {
             method: 'GET',
@@ -418,12 +429,7 @@
         }
 
         var phoneEl = document.getElementById('userPhone');
-        if (phoneEl && phoneEl.textContent) {
-            var raw = phoneEl.textContent.trim();
-            if (raw.indexOf('***') === -1 && raw.match(/\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}/)) {
-                phoneEl.textContent = window.maskPhone(raw);
-            }
-        }
+        maskPhoneElement(phoneEl);
 
         var balanceEl = document.getElementById('balanceValue');
         if (balanceEl && balanceEl.textContent) {

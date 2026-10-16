@@ -73,27 +73,97 @@
         return 'отзывов';
     }
 
-    function installPosterErrorHandler() {
-        document.addEventListener('error', function (e) {
-            var target = e.target;
-            if (!target || !target.matches || !target.matches('[data-poster-img]')) return;
-            target.style.display = 'none';
-            var placeholder = target.parentNode
-                ? target.parentNode.querySelector('[data-poster-placeholder]')
-                : null;
-            if (placeholder) placeholder.classList.remove('hidden');
-        }, true);
+    var PLACEHOLDER_HTML =
+        '<div class="poster-placeholder-icon">' +
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" ' +
+                 'fill="none" stroke="currentColor" stroke-width="1.6" ' +
+                 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+                '<rect x="3" y="3" width="18" height="18" rx="3"/>' +
+                '<circle cx="9" cy="9" r="2"/>' +
+                '<path d="m21 15-4.35-4.35a1.5 1.5 0 0 0-2.12 0L7 18"/>' +
+            '</svg>' +
+        '</div>' +
+        '<div class="poster-placeholder-text">Нет постера</div>' +
+        '<div class="poster-placeholder-sub">Изображение недоступно</div>';
+
+    function buildPosterPlaceholder() {
+        var wrap = document.createElement('div');
+        wrap.className = 'movie-poster-placeholder';
+        wrap.setAttribute('data-poster-placeholder', '');
+        wrap.innerHTML = PLACEHOLDER_HTML;
+        return wrap;
+    }
+
+    function getPosterContainer(img) {
+        if (!img) return null;
+        return img.closest(
+            '.media-card-poster-link, .movie-poster-link, .poster-wrapper, ' +
+            '.history-item-poster, .fav-poster, .rec-poster'
+        ) || img.parentNode;
+    }
+
+    function hideOverlay(container) {
+        if (!container) return;
+        var overlay = container.querySelector('.poster-overlay');
+        if (overlay) {
+            overlay.style.display = 'none';
+        }
+    }
+
+    function showPlaceholderFor(img) {
+        if (!img || !img.parentNode) return;
+        var container = getPosterContainer(img);
+        if (!container) return;
+
+        img.classList.add('hidden');
+        img.setAttribute('aria-hidden', 'true');
+        img.style.display = 'none';
+
+        var placeholder = container.querySelector('[data-poster-placeholder]');
+        if (placeholder) {
+            placeholder.classList.remove('hidden');
+            placeholder.removeAttribute('style');
+        } else if (
+            container.classList.contains('rec-poster') ||
+            container.classList.contains('history-item-poster') ||
+            container.classList.contains('fav-poster') ||
+            container.classList.contains('poster-wrapper') ||
+            container.classList.contains('media-card-poster-link') ||
+            container.classList.contains('movie-poster-link')
+        ) {
+            container.appendChild(buildPosterPlaceholder());
+        }
+
+        hideOverlay(container);
+    }
+
+    document.addEventListener('error', function (e) {
+        var t = e.target;
+        if (!t || t.tagName !== 'IMG' || !t.hasAttribute('data-poster-img')) return;
+        showPlaceholderFor(t);
+    }, true);
+
+    function recheckBrokenImages() {
+        document.querySelectorAll('img[data-poster-img]').forEach(function (img) {
+            if (img.complete && img.naturalWidth === 0 && img.src) {
+                showPlaceholderFor(img);
+            }
+        });
     }
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', installPosterErrorHandler, { once: true });
+        document.addEventListener('DOMContentLoaded', recheckBrokenImages, { once: true });
     } else {
-        installPosterErrorHandler();
+        recheckBrokenImages();
     }
+
+    window.addEventListener('load', recheckBrokenImages);
 
     window.escapeHtml = escapeHtml;
     window.getMovieId = getMovieId;
     window.getMovieTitle = getMovieTitle;
     window.getMoviePrice = getMoviePrice;
     window.getDeclension = getDeclension;
+    window.buildPosterPlaceholder = buildPosterPlaceholder;
+    window.showPlaceholderFor = showPlaceholderFor;
 })();

@@ -30,6 +30,9 @@ public class CustomUserDetailsService implements UserDetailsService {
                             : Optional.empty();
                 })
                 .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден: " + login));
-        return new AppUserDetails(SessionUser.from(user), user.getPasswordHash());
+        return AppUserDetails.builder()
+                .sessionUser(SessionUser.from(user))
+                .passwordHash(user.getPasswordHash())
+                .build();
     }
 }

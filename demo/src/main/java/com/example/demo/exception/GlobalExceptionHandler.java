@@ -73,8 +73,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
-    public Object handleNoResourceFoundException(NoResourceFoundException noResourceFoundException,
-                                                 HttpServletRequest httpServletRequest,
+    public Object handleNoResourceFoundException(HttpServletRequest httpServletRequest,
                                                  Model model) {
         if (RequestUtils.isAjaxRequest(httpServletRequest)) {
             return ResponseEntity.notFound().build();
@@ -161,9 +160,6 @@ public class GlobalExceptionHandler {
         return "redirect:" + resolveFallbackLocalPath(httpServletRequest);
     }
 
-    /**
-     * Всегда возвращаем локальный путь. Referer из внешнего домена игнорируем.
-     */
     private String resolveFallbackLocalPath(HttpServletRequest httpServletRequest) {
         String refererHeader = httpServletRequest.getHeader("Referer");
         if (refererHeader == null || refererHeader.isBlank()) {

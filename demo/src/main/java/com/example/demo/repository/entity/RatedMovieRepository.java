@@ -214,4 +214,72 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
             ORDER BY item.addedAt DESC, item.id.userId DESC
             """)
     List<RatedMovie> findAllActiveByUserId(@Param("userId") Long userId);
+
+    @Query("""
+            SELECT item
+            FROM RatedMovie item
+            JOIN FETCH item.movie
+            JOIN FETCH item.user
+            WHERE item.id.userId = :userId
+            AND item.deletableState.deleted = false
+            ORDER BY item.addedAt DESC, item.id.movieId DESC
+            """)
+    Slice<RatedMovie> findRatedPageDescFirst(
+            @Param("userId") Long userId,
+            Pageable pageable
+    );
+
+    @Query("""
+            SELECT item
+            FROM RatedMovie item
+            JOIN FETCH item.movie
+            JOIN FETCH item.user
+            WHERE item.id.userId = :userId
+            AND item.deletableState.deleted = false
+            AND (
+                item.addedAt < :cursorAddedAt
+                OR (item.addedAt = :cursorAddedAt AND item.id.movieId < :cursorEntityId)
+            )
+            ORDER BY item.addedAt DESC, item.id.movieId DESC
+            """)
+    Slice<RatedMovie> findRatedPageDescAfter(
+            @Param("userId") Long userId,
+            @Param("cursorAddedAt") LocalDateTime cursorAddedAt,
+            @Param("cursorEntityId") Long cursorEntityId,
+            Pageable pageable
+    );
+
+    @Query("""
+            SELECT item
+            FROM RatedMovie item
+            JOIN FETCH item.movie
+            JOIN FETCH item.user
+            WHERE item.id.userId = :userId
+            AND item.deletableState.deleted = false
+            ORDER BY item.addedAt ASC, item.id.movieId ASC
+            """)
+    Slice<RatedMovie> findRatedPageAscFirst(
+            @Param("userId") Long userId,
+            Pageable pageable
+    );
+
+    @Query("""
+            SELECT item
+            FROM RatedMovie item
+            JOIN FETCH item.movie
+            JOIN FETCH item.user
+            WHERE item.id.userId = :userId
+            AND item.deletableState.deleted = false
+            AND (
+                item.addedAt > :cursorAddedAt
+                OR (item.addedAt = :cursorAddedAt AND item.id.movieId > :cursorEntityId)
+            )
+            ORDER BY item.addedAt ASC, item.id.movieId ASC
+            """)
+    Slice<RatedMovie> findRatedPageAscAfter(
+            @Param("userId") Long userId,
+            @Param("cursorAddedAt") LocalDateTime cursorAddedAt,
+            @Param("cursorEntityId") Long cursorEntityId,
+            Pageable pageable
+    );
 }

@@ -62,12 +62,15 @@ tmdb:
   api-url: https://api.themoviedb.org/3
   image-url: https://image.tmdb.org/t/p
   access-token: ${TMDB_ACCESS_TOKEN}
+  poster-size: w500
 
 app:
   rating:
     top-limit: 4
   reviews:
     sort-cookie-max-age: 31536000
-    page-size: 20
+    page-size: 5
   recommendations:
     page-size: 8
+  catalog:
+    page-size: 5

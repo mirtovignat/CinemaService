@@ -8,6 +8,7 @@ import com.example.demo.dto.user.ProfileFieldUpdateDTO;
 import com.example.demo.dto.user.SessionUser;
 import com.example.demo.dto.user.UserForOwnerViewDTO;
 import com.example.demo.exception.SuccessCode;
+import com.example.demo.model.entity.User;
 import com.example.demo.service.catalog.WatchedHistoryService;
 import com.example.demo.service.movie.FilterMetaService;
 import com.example.demo.service.user.UserCommandService;
@@ -45,8 +46,8 @@ public class PersonalAccountController {
     @GetMapping("/personal-account")
     public String getPersonalAccount(SessionUser sessionUser, Model model) {
         Long userId = sessionUser.id();
-        UserForOwnerViewDTO userForOwnerViewDTO = userQueryService.getUserForOwner(userId);
-        PersonalAccountResponse response = userQueryService.buildUserPage(userForOwnerViewDTO);
+        User user = userQueryService.getUser(userId);
+        PersonalAccountResponse response = userQueryService.buildUserPage(user);
         model.addAttribute("response", response);
         model.addAttribute("genres", filterMetaService.getAllGenres());
         return "personal-account";
@@ -55,8 +56,8 @@ public class PersonalAccountController {
     @GetMapping("/profile/edit")
     public String editProfile(SessionUser sessionUser, Model model) {
         Long userId = sessionUser.id();
-        UserForOwnerViewDTO updatedUser = userQueryService.getUserForOwner(userId);
-        PersonalAccountResponse response = userQueryService.buildUserPage(updatedUser);
+        User user = userQueryService.getUser(userId);
+        PersonalAccountResponse response = userQueryService.buildUserPage(user);
         model.addAttribute("response", response);
         model.addAttribute("genres", filterMetaService.getAllGenres());
         return "profile";

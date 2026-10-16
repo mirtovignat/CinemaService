@@ -15,8 +15,11 @@ public record AppUserDetails(
 ) implements UserDetails {
 
     public AppUserDetails {
-        Objects.requireNonNull(sessionUser, "sessionUser must not be null");
-        Objects.requireNonNull(passwordHash, "passwordHash must not be null");
+        Objects.requireNonNull(sessionUser, "sessionUser не должен быть равен null");
+        Objects.requireNonNull(passwordHash, "passwordHash не должен быть равен null");
+        if (!sessionUser.isAuthenticated()) {
+            throw new IllegalArgumentException("AppUserDetails не может быть создан для неаутентифицированного пользователя");
+        }
     }
 
     @Override
@@ -34,7 +37,10 @@ public record AppUserDetails(
         return sessionUser.username();
     }
 
-    public AppUserDetails withSessionUser(SessionUser updated) {
-        return new AppUserDetails(updated, passwordHash);
+    public AppUserDetails withSessionUser(SessionUser updatedSessionUser) {
+        return AppUserDetails.builder()
+                .sessionUser(updatedSessionUser)
+                .passwordHash(getPassword())
+                .build();
     }
 }

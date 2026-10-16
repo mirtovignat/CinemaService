@@ -25,9 +25,12 @@ public class UserStatusResolver {
             return Map.of();
         }
 
-        Set<Long> cartMovieIds = new LinkedHashSet<>(cartItemRepository.findMovieIdsByUserId(userId));
-        Set<Long> favouriteMovieIds = new LinkedHashSet<>(favouriteMovieRepository.findMovieIdsByUserId(userId));
-        Set<Long> purchasedMovieIds = new LinkedHashSet<>(purchasedMovieRepository.findMovieIdsByUserId(userId));
+        Set<Long> cartMovieIds = new LinkedHashSet<>(
+                cartItemRepository.findMovieIdsByUserIdAndMovieIdIn(userId, movieIds));
+        Set<Long> favouriteMovieIds = new LinkedHashSet<>(
+                favouriteMovieRepository.findMovieIdsByUserIdAndMovieIdIn(userId, movieIds));
+        Set<Long> purchasedMovieIds = new LinkedHashSet<>(
+                purchasedMovieRepository.findMovieIdsByUserIdAndMovieIdIn(userId, movieIds));
 
         Map<Long, UserStatus> userStatuses = new LinkedHashMap<>(movieIds.size());
         for (Long movieId : movieIds) {

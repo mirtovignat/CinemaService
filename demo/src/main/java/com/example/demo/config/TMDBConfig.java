@@ -17,4 +17,6 @@ public class TMDBConfig {
     @Value("${tmdb.access-token}")
     private String accessToken;
 
+    @Value("${tmdb.poster-size:w500}")
+    private String posterSize;
 }

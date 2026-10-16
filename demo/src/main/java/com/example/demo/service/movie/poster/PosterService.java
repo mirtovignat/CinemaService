@@ -3,19 +3,35 @@ package com.example.demo.service.movie.poster;
 import com.example.demo.config.MinIOConfig;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+
 @Service
-@RequiredArgsConstructor
 public class PosterService {
 
     private final MinioClient minioClient;
     private final MinIOConfig minIOConfig;
+    private final RestClient restClient;
 
-    public String uploadPosterFromUrl(String imageUrl, String fileName) throws Exception {
-        RestClient restClient = RestClient.create();
+    public PosterService(MinioClient minioClient,
+                         MinIOConfig minIOConfig,
+                         @Qualifier("fileRestClient") RestClient restClient) {
+        this.minioClient = minioClient;
+        this.minIOConfig = minIOConfig;
+        this.restClient = restClient;
+    }
+
+    public String uploadPosterFromUrl(String imageUrl, String fileName) {
+        byte[] bytes = download(imageUrl);
+        upload(bytes, fileName);
+        return getPublicUrl(fileName);
+    }
+
+    public byte[] download(String imageUrl) {
         byte[] bytes = restClient.get()
                 .uri(imageUrl)
                 .retrieve()
@@ -24,9 +40,11 @@ public class PosterService {
         if (bytes == null || bytes.length == 0) {
             throw new IllegalStateException("Не удалось скачать постер: " + imageUrl);
         }
+        return bytes;
+    }
 
-        try (java.io.ByteArrayInputStream inputStream =
-                     new java.io.ByteArrayInputStream(bytes)) {
+    public void upload(byte[] bytes, String fileName) {
+        try (InputStream inputStream = new ByteArrayInputStream(bytes)) {
             minioClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(minIOConfig.getBucketName())
@@ -35,13 +53,13 @@ public class PosterService {
                             .contentType("image/jpeg")
                             .build()
             );
+        } catch (Exception exception) {
+            throw new RuntimeException("Не удалось загрузить постер в MinIO: " + fileName, exception);
         }
-        return getPublicUrl(fileName);
     }
 
     public String getPublicUrl(String fileName) {
-        return minIOConfig.getExternalEndpoint()
-                + "/" + minIOConfig.getBucketName()
-                + "/" + fileName;
+        String endpoint = minIOConfig.getExternalEndpoint().replaceAll("/+$", "");
+        return endpoint + "/" + minIOConfig.getBucketName() + "/" + fileName;
     }
 }

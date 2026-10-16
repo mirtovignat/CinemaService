@@ -21,6 +21,8 @@ public interface CartItemMapper {
     @Mapping(target = "inFavourites", source = "status.inFavourites")
     @Mapping(target = "bought", source = "status.bought")
     @Mapping(target = "quantity", source = "cartItem.quantity")
-    @Mapping(target = "formattedDuration", source = "cartItem.movie.duration", qualifiedByName = "durationToString")
+    @Mapping(target = "formattedDuration",
+            source = "cartItem.movie.duration",
+            qualifiedByName = "durationToString")
     CartItemViewDTO toOwnerView(CartItem cartItem, UserStatus status);
 }

@@ -1,6 +1,7 @@
 package com.example.demo.util;
 
-import org.springframework.stereotype.Component;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -11,10 +12,10 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@Component
-public class HistoryGrouper {
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public final class HistoryGrouper {
 
-    public <T> Map<LocalDate, List<T>> groupByDateDesc(
+    public static <T> Map<LocalDate, List<T>> groupByDateDesc(
             List<T> items,
             Function<T, LocalDateTime> dateExtractor
     ) {
@@ -22,22 +23,12 @@ public class HistoryGrouper {
             return new LinkedHashMap<>();
         }
 
-        Map<LocalDate, List<T>> grouped = items.stream()
+        return items.stream()
+                .sorted(Comparator.comparing(dateExtractor).reversed())
                 .collect(Collectors.groupingBy(
                         item -> dateExtractor.apply(item).toLocalDate(),
                         LinkedHashMap::new,
                         Collectors.toList()
-                ));
-
-        return grouped.entrySet().stream()
-                .sorted(Map.Entry.<LocalDate, List<T>>comparingByKey().reversed())
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        entry -> entry.getValue().stream()
-                                .sorted(Comparator.comparing(dateExtractor).reversed())
-                                .toList(),
-                        (old, newVal) -> old,
-                        LinkedHashMap::new
                 ));
     }
 }

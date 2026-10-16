@@ -10,10 +10,10 @@
 <th:block th:replace="~{fragments/header :: header}"></th:block>
 <th:block th:replace="~{fragments/flash-messages :: flashMessages}"></th:block>
 
-<div id="authStatus" th:data-authenticated="${sessionUser != null}" style="display:none;"></div>
+<div id="authStatus" th:data-authenticated="${sessionUser.authenticated}" style="display:none;"></div>
 
 <div id="userIdHolder"
-     th:if="${sessionUser != null}"
+     th:if="${sessionUser.authenticated}"
      th:data-user-id="${sessionUser.id()}"
      style="display:none;"></div>
 

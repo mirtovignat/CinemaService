@@ -20,6 +20,8 @@ public interface FavouritesMapper {
     @Mapping(target = "currencyCode", ignore = true)
     @Mapping(target = "inCart", source = "status.inCart")
     @Mapping(target = "bought", source = "status.bought")
-    @Mapping(target = "formattedDuration", source = "favouriteMovie.movie.duration", qualifiedByName = "durationToString")
+    @Mapping(target = "formattedDuration",
+            source = "favouriteMovie.movie.duration",
+            qualifiedByName = "durationToString")
     FavouriteMovieViewDTO toOwnerView(FavouriteMovie favouriteMovie, UserStatus status);
 }

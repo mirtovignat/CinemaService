@@ -10,6 +10,7 @@ import com.example.demo.model.entity.User;
 import com.example.demo.repository.entity.UserRepository;
 import com.example.demo.util.PhoneNormalizer;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +22,7 @@ public class AuthorizeService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     public void validateRegister(RegisterFormDTO registerFormDTO) {
         registerFormDTO.ifMismatch();
@@ -46,6 +48,7 @@ public class AuthorizeService {
     @Transactional
     public SessionUser register(RegisterFormDTO registerFormDTO) {
         User user = userMapper.fromRegisterForm(registerFormDTO);
+        user.setPasswordHash(passwordEncoder.encode(registerFormDTO.rawPassword()));
         user.setPhone(PhoneNormalizer.normalizePhone(registerFormDTO.phone()));
         user.setBalance(BigDecimal.ZERO);
         user.setDeletableState(DeletableState.builder().build());

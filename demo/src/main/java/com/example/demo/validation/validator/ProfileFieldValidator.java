@@ -9,93 +9,97 @@ import jakarta.validation.ConstraintValidatorContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.regex.Pattern;
+
 @Component
 @RequiredArgsConstructor
-public class ProfileFieldValidator implements ConstraintValidator<ValidProfileField, ProfileFieldUpdateDTO> {
+public class ProfileFieldValidator
+        implements ConstraintValidator<ValidProfileField, ProfileFieldUpdateDTO> {
+
+    private static final String FIELD_PROPERTY = "field";
+
+    private static final Pattern EMAIL_PATTERN =
+            Pattern.compile("^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+
+    private static final Pattern USERNAME_PATTERN =
+            Pattern.compile("^[A-Za-zА-Яа-яЁё0-9_-]+$");
+
+    private static final int USERNAME_MIN_LENGTH = 3;
+    private static final int USERNAME_MAX_LENGTH = 30;
 
     private final ValidEmailDomainValidator emailDomainValidator;
 
     @Override
-    public boolean isValid(ProfileFieldUpdateDTO profileFieldUpdateDTO, ConstraintValidatorContext constraintValidatorContext) {
+    public boolean isValid(ProfileFieldUpdateDTO profileFieldUpdateDTO,
+                           ConstraintValidatorContext constraintValidatorContext) {
         if (profileFieldUpdateDTO == null) {
             return true;
         }
-        Identifier identifier = profileFieldUpdateDTO.identifier();
         String field = profileFieldUpdateDTO.field();
         if (field == null) {
             return true;
         }
 
-        String trimmed = field.trim();
+        Identifier identifier = profileFieldUpdateDTO.identifier();
+        String trimmedField = field.trim();
 
-        switch (identifier) {
-            case EMAIL -> {
-                if (trimmed.isEmpty()) {
-                    setError(constraintValidatorContext, "field", "Email не может быть пустым");
-                    return false;
-                }
-                String emailRegex = "^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
-                if (!trimmed.matches(emailRegex)) {
-                    setError(constraintValidatorContext, "field", "Некорректный формат email. Допустимы только латинские буквы, цифры, _ . -");
-                    return false;
-                }
-                String[] parts = trimmed.split("@");
-                if (parts.length != 2) {
-                    setError(constraintValidatorContext, "field", "Некорректный формат email");
-                    return false;
-                }
-                String local = parts[0];
-                String domain = parts[1];
-                if (!local.matches("^[a-zA-Z0-9+_.-]+$")) {
-                    setError(constraintValidatorContext, "field", "Локальная часть email содержит недопустимые символы");
-                    return false;
-                }
-                if (!domain.matches("^[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")) {
-                    setError(constraintValidatorContext, "field", "Домен email содержит недопустимые символы");
-                    return false;
-                }
-                if (!emailDomainValidator.isValid(trimmed, constraintValidatorContext)) {
-                    setError(constraintValidatorContext, "field", "Почтовый домен не существует или не принимает почту");
-                    return false;
-                }
-            }
-            case PHONE -> {
-                if (trimmed.isEmpty()) {
-                    return true;
-                }
-                if (!PhoneNormalizer.isValid(trimmed)) {
-                    setError(constraintValidatorContext, "field",
-                            "Некорректный номер телефона. Формат: +код (XXX) XXX-XX-XX");
-                    return false;
-                }
-            }
-            case USERNAME -> {
-                if (trimmed.isEmpty()) {
-                    setError(constraintValidatorContext, "field", "Username не может быть пустым");
-                    return false;
-                }
-                if (trimmed.length() < 3 || trimmed.length() > 30) {
-                    setError(constraintValidatorContext, "field", "Username должен быть от 3 до 30 символов");
-                    return false;
-                }
-                if (!trimmed.matches("^[A-Za-zА-Яа-яЁё0-9_-]+$")) {
-                    setError(constraintValidatorContext, "field", "Username может содержать буквы (латиница и кириллица), цифры, _ и -");
-                    return false;
-                }
-            }
-            default -> {
-                setError(constraintValidatorContext, "identifier", "Неизвестный тип поля: " + identifier);
-                return false;
-            }
+        return switch (identifier) {
+            case EMAIL -> validateEmail(trimmedField, constraintValidatorContext);
+            case PHONE -> validatePhone(trimmedField, constraintValidatorContext);
+            case USERNAME -> validateUsername(trimmedField, constraintValidatorContext);
+        };
+    }
+
+    private boolean validateEmail(String email,
+                                  ConstraintValidatorContext constraintValidatorContext) {
+        if (email.isEmpty()) {
+            return fail(constraintValidatorContext, "Email не может быть пустым");
         }
-
+        if (!EMAIL_PATTERN.matcher(email).matches()) {
+            return fail(constraintValidatorContext,
+                    "Некорректный формат email. Допустимы только латинские буквы, цифры, _ . -");
+        }
+        if (!emailDomainValidator.isValid(email, constraintValidatorContext)) {
+            return fail(constraintValidatorContext,
+                    "Почтовый домен не существует или не принимает почту");
+        }
         return true;
     }
 
-    private void setError(ConstraintValidatorContext context, String propertyNode, String message) {
-        context.disableDefaultConstraintViolation();
-        context.buildConstraintViolationWithTemplate(message)
-                .addPropertyNode(propertyNode)
+    private boolean validatePhone(String phone,
+                                  ConstraintValidatorContext constraintValidatorContext) {
+        if (phone.isEmpty()) {
+            return true;
+        }
+        if (!PhoneNormalizer.isValid(phone)) {
+            return fail(constraintValidatorContext,
+                    "Некорректный номер телефона. Формат: +код (XXX) XXX-XX-XX");
+        }
+        return true;
+    }
+
+    private boolean validateUsername(String username,
+                                     ConstraintValidatorContext constraintValidatorContext) {
+        if (username.isEmpty()) {
+            return fail(constraintValidatorContext, "Username не может быть пустым");
+        }
+        if (username.length() < USERNAME_MIN_LENGTH || username.length() > USERNAME_MAX_LENGTH) {
+            return fail(constraintValidatorContext,
+                    "Username должен быть от " + USERNAME_MIN_LENGTH
+                            + " до " + USERNAME_MAX_LENGTH + " символов");
+        }
+        if (!USERNAME_PATTERN.matcher(username).matches()) {
+            return fail(constraintValidatorContext,
+                    "Username может содержать буквы (латиница и кириллица), цифры, _ и -");
+        }
+        return true;
+    }
+
+    private boolean fail(ConstraintValidatorContext constraintValidatorContext, String message) {
+        constraintValidatorContext.disableDefaultConstraintViolation();
+        constraintValidatorContext.buildConstraintViolationWithTemplate(message)
+                .addPropertyNode(FIELD_PROPERTY)
                 .addConstraintViolation();
+        return false;
     }
 }

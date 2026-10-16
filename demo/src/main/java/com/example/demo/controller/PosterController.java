@@ -16,12 +16,7 @@ public class PosterController {
 
     @PostMapping("/fill-missing")
     public ResponseEntity<String> fillMissing() {
-        try {
-            int filled = moviePosterService.fillMissingPosters();
-            return ResponseEntity.ok("Заполнено постеров: " + filled);
-        } catch (Exception exception) {
-            return ResponseEntity.internalServerError()
-                    .body("Ошибка: " + exception.getMessage());
-        }
+        int filled = moviePosterService.fillMissingPosters();
+        return ResponseEntity.ok("Заполнено постеров: " + filled);
     }
 }

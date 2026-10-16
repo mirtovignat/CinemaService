@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 public class ReviewSortResolver {
 
     public static final String SORT_COOKIE_NAME = "reviewsSort";
-    private static final String SORT_COOKIE_PATH = "/rated";
 
     private final int sortCookieMaxAge;
 
@@ -52,7 +51,7 @@ public class ReviewSortResolver {
     private void writeCookie(HttpServletResponse httpServletResponse,
                              ReviewsQueryDTO.SortDirection sortDirection) {
         Cookie cookie = new Cookie(SORT_COOKIE_NAME, sortDirection.name());
-        cookie.setPath(SORT_COOKIE_PATH);
+        cookie.setPath("/rated");
         cookie.setMaxAge(sortCookieMaxAge);
         httpServletResponse.addCookie(cookie);
     }

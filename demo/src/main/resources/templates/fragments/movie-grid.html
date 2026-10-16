@@ -30,37 +30,46 @@
                      src=""/>
 
                 <div class="movie-poster-placeholder"
-                     th:classappend="${movie.movie.posterUrl != null and !movie.movie.posterUrl.isEmpty()} ? 'hidden' : ''"
-                     data-poster-placeholder>
-                    <span>Постер</span>
+                     data-poster-placeholder
+                     th:classappend="${movie.movie.posterUrl != null and !movie.movie.posterUrl.isEmpty()} ? 'hidden' : ''">
+                    <div class="poster-placeholder-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.6"
+                             stroke-linecap="round"
+                             stroke-linejoin="round"
+                             aria-hidden="true">
+                            <rect x="3" y="3" width="18" height="18" rx="3"/>
+                            <circle cx="9" cy="9" r="2"/>
+                            <path d="m21 15-4.35-4.35a1.5 1.5 0 0 0-2.12 0L7 18"/>
+                        </svg>
+                    </div>
+                    <div class="poster-placeholder-text">Нет постера</div>
+                    <div class="poster-placeholder-sub">Изображение недоступно</div>
                 </div>
 
                 <span class="poster-duration"
                       th:if="${movie.movie.formattedDuration != null and !movie.movie.formattedDuration.isEmpty()}">
-
                     <th:block th:replace="~{fragments/icons :: icon-clock}"></th:block>
-
-                    <span th:text="${movie.movie.formattedDuration}">
-                        1:40:00
-                    </span>
+                    <span th:text="${movie.movie.formattedDuration}">1:40:00</span>
                 </span>
 
                 <div class="poster-overlay"
-                     th:if="${sessionUser != null and movie.status.bought}">
-
+                     th:if="${sessionUser.authenticated
+                              and movie.status.bought
+                              and movie.movie.posterUrl != null
+                              and !movie.movie.posterUrl.isEmpty()}">
                     <button type="button"
                             class="watch-btn-neon watch-btn-neon--md"
                             data-action="watch-movie"
                             th:data-movie-id="${movie.movie.id}"
                             th:data-movie-title="${movie.movie.title}"
                             th:data-poster-url="${movie.movie.posterUrl}">
-
-                        <svg xmlns="http://www.w3.org/2000/svg"
-                             viewBox="0 0 24 24"
-                             fill="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                             <polygon points="5 3 19 12 5 21 5 3"/>
                         </svg>
-
                         Смотреть
                     </button>
                 </div>
@@ -69,106 +78,56 @@
             <div class="movie-card-content">
 
                 <h3 class="movie-card-title">
-
                     <a th:href="@{/movies/{id}(id=${movie.movie.id})}"
                        th:text="${movie.movie.title}">
                         Название
                     </a>
-
                 </h3>
 
                 <div class="badges">
 
                     <span class="badge director"
                           th:if="${movie.movie.director != null and !movie.movie.director.isEmpty()}">
-
                         <th:block th:replace="~{fragments/icons :: icon-video}"></th:block>
-
                         <span class="badge-text">
-
-                            <span class="badge-label">
-                                Режиссёр:
-                            </span>
-
-                            <span class="badge-value"
-                                  th:text="${movie.movie.director}">
-                                Гай Ричи
-                            </span>
-
+                            <span class="badge-label">Режиссёр:</span>
+                            <span class="badge-value" th:text="${movie.movie.director}">Гай Ричи</span>
                         </span>
                     </span>
 
                     <span class="badge year"
                           th:if="${movie.movie.releaseDate != null}">
-
                         <th:block th:replace="~{fragments/icons :: icon-calendar}"></th:block>
-
                         <span class="badge-text">
-
-                            <span class="badge-label">
-                                Год:
-                            </span>
-
-                            <span class="badge-value"
-                                  th:text="${movie.movie.releaseDate.year}">
-                                2024
-                            </span>
-
+                            <span class="badge-label">Год:</span>
+                            <span class="badge-value" th:text="${movie.movie.releaseDate.year}">2024</span>
                         </span>
                     </span>
 
                     <span class="badge genre"
                           th:if="${movie.movie.genre != null and !movie.movie.genre.isEmpty()}">
-
                         <th:block th:replace="~{fragments/icons :: icon-tag}"></th:block>
-
                         <span class="badge-text">
-
-                            <span class="badge-label">
-                                Жанр:
-                            </span>
-
-                            <span class="badge-value"
-                                  th:text="${movie.movie.genre}">
-                                Комедия
-                            </span>
-
+                            <span class="badge-label">Жанр:</span>
+                            <span class="badge-value" th:text="${movie.movie.genre}">Комедия</span>
                         </span>
                     </span>
 
                     <span class="badge age"
                           th:if="${movie.movie.ageRating != null}">
-
                         <th:block th:replace="~{fragments/icons :: icon-lock}"></th:block>
-
                         <span class="badge-text">
-
-                            <span class="badge-label">
-                                Возрастной рейтинг:
-                            </span>
-
-                            <span class="badge-value"
-                                  th:text="${movie.movie.ageRating} + '+'">
-                                18+
-                            </span>
-
+                            <span class="badge-label">Возрастной рейтинг:</span>
+                            <span class="badge-value" th:text="${movie.movie.ageRating} + '+'">18+</span>
                         </span>
                     </span>
 
                 </div>
 
                 <div class="price">
-
                     <th:block th:replace="~{fragments/icons :: icon-money}"></th:block>
-
-                    <span>
-                        Цена:
-                    </span>
-
-                    <span th:text="${movie.movie.price} + ' ₽'">
-                        100 ₽
-                    </span>
-
+                    <span>Цена:</span>
+                    <span th:text="${movie.movie.price} + ' ₽'">100 ₽</span>
                 </div>
 
                 <div class="movie-actions">
@@ -181,9 +140,7 @@
                             th:data-movie-title="${movie.movie.title}"
                             th:data-state="${movie.status.inFavourites} ? 'remove' : 'add'"
                             title="Избранное">
-
                         <th:block th:replace="~{fragments/icons :: icon-heart}"></th:block>
-
                     </button>
 
                     <button type="button"
@@ -192,30 +149,25 @@
                             th:data-movie-id="${movie.movie.id}"
                             th:data-movie-title="${movie.movie.title}"
                             title="Оценить">
-
                         <th:block th:replace="~{fragments/icons :: icon-star}"></th:block>
-
                     </button>
 
                     <a th:href="@{/rated/{id}/reviews(id=${movie.movie.id})}"
                        class="icon-btn comment-btn"
                        title="Отзывы">
-
                         <th:block th:replace="~{fragments/icons :: icon-comments}"></th:block>
-
                         <span class="reviews-count-text"
                               th:data-movie-id="${movie.movie.id}"
                               th:text="'Отзывы: ' + ${movie.movie.ratingsCount != null ? movie.movie.ratingsCount : 0} + ' шт.'">
                             Отзывы: 0 шт.
                         </span>
-
                     </a>
 
                 </div>
 
                 <div class="purchase-buttons">
 
-                    <th:block th:if="${sessionUser != null}">
+                    <th:block th:if="${sessionUser.authenticated}">
 
                         <button type="button"
                                 th:if="${!movie.status.bought and !movie.status.inCart}"
@@ -251,7 +203,7 @@
 
                     </th:block>
 
-                    <th:block th:unless="${sessionUser != null}">
+                    <th:block th:unless="${sessionUser.authenticated}">
 
                         <button type="button"
                                 class="cart-button to-cart-btn-details"
@@ -300,10 +252,7 @@
         </div>
         <h2>Ничего не найдено</h2>
         <p>Попробуйте изменить параметры поиска или вернуться в каталог.</p>
-        <a th:href="@{/}"
-           class="browse-movies-btn">
-            Вернуться в каталог
-        </a>
+        <a th:href="@{/}" class="browse-movies-btn">Вернуться в каталог</a>
     </div>
 
 </div>

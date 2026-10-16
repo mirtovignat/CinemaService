@@ -11,18 +11,21 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring", uses = {DurationMapper.class})
 public interface MovieMapper {
 
-    @Mapping(target = "formattedDuration", source = "duration", qualifiedByName = "durationToString")
+    @Mapping(target = "formattedDuration",
+            source = "duration",
+            qualifiedByName = "durationToString")
     @Mapping(target = "description", ignore = true)
     @Mapping(target = "currencyCode", ignore = true)
     MovieCardViewDTO toCard(Movie movie);
 
-    @Mapping(target = "formattedDuration", source = "duration", qualifiedByName = "durationToString")
+    @Mapping(target = "formattedDuration",
+            source = "duration",
+            qualifiedByName = "durationToString")
     @Mapping(target = "currencyCode", ignore = true)
     @Mapping(target = "bought", ignore = true)
     @Mapping(target = "inCart", ignore = true)
     @Mapping(target = "inFavourites", ignore = true)
     @Mapping(target = "ownRating", ignore = true)
-    @Mapping(target = "actors", source = "actors")
     MovieDetailsViewDTO toDetails(Movie movie);
 
     MovieSearchDTO toMovieSearch(Movie movie);

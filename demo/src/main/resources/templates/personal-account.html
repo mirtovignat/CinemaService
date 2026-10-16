@@ -15,7 +15,7 @@
 <th:block th:replace="~{fragments/flash-messages :: flashMessages}"></th:block>
 
 <div id="authStatus"
-     th:data-authenticated="${sessionUser != null}"
+     th:data-authenticated="${sessionUser.authenticated}"
      style="display:none;"></div>
 
 <div id="userIdHolder"
@@ -28,7 +28,7 @@
          id="profileGrid">
 
         <th:block
-                th:replace="~{fragments/sidebar :: sidebar(currentPage='personal-account', genres=${response.genres}, userForOwner=${response.userForOwner})}">
+                th:replace="~{fragments/sidebar :: sidebar(currentPage='personal-account', genres=${response.genres}, userSidebar=${response.userSidebar()})}">
         </th:block>
 
         <div class="profile-right"
@@ -83,19 +83,38 @@
                          th:unless="${#lists.isEmpty(response.topThreeRatedMovies)}">
                         <div class="fav-card"
                              th:each="ratedMovie, iterStat : ${response.topThreeRatedMovies}">
-                            <div class="fav-poster"
-                                 style="background:#0d1322;">
-                                <a th:href="@{/movies/{id}(id=${ratedMovie.id}, from=${currentUri})}"
-                                   style="display:block;width:100%;height:100%;position:relative;text-decoration:none;">
+                            <div class="fav-poster">
+                                <a th:href="@{/movies/{id}(id=${ratedMovie.id}, from=${currentUri})}">
+
                                     <img th:if="${ratedMovie.posterUrl != null and !ratedMovie.posterUrl.isEmpty()}"
                                          th:src="${ratedMovie.posterUrl}"
                                          th:alt="${ratedMovie.title}"
+                                         class="fav-poster-img"
+                                         data-poster-img
                                          src=""
-                                         alt="">
-                                    <div th:unless="${ratedMovie.posterUrl != null and !ratedMovie.posterUrl.isEmpty()}"
-                                         style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:.75rem;background:#1a1f2b;">
-                                        Нет постера
+                                         alt=""/>
+
+                                    <div class="movie-poster-placeholder"
+                                         data-poster-placeholder
+                                         th:classappend="${ratedMovie.posterUrl != null and !ratedMovie.posterUrl.isEmpty()} ? 'hidden' : ''">
+                                        <div class="poster-placeholder-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                 viewBox="0 0 24 24"
+                                                 fill="none"
+                                                 stroke="currentColor"
+                                                 stroke-width="1.6"
+                                                 stroke-linecap="round"
+                                                 stroke-linejoin="round"
+                                                 aria-hidden="true">
+                                                <rect x="3" y="3" width="18" height="18" rx="3"/>
+                                                <circle cx="9" cy="9" r="2"/>
+                                                <path d="m21 15-4.35-4.35a1.5 1.5 0 0 0-2.12 0L7 18"/>
+                                            </svg>
+                                        </div>
+                                        <div class="poster-placeholder-text">Нет постера</div>
+                                        <div class="poster-placeholder-sub">Изображение недоступно</div>
                                     </div>
+
                                     <span class="fav-rank">
                                         #<span th:text="${iterStat.index + 1}">1</span>
                                     </span>

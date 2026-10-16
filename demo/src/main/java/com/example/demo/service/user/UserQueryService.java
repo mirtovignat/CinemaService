@@ -34,13 +34,15 @@ public class UserQueryService {
     private final MovieRecommendationService movieRecommendationService;
     private final FilterMetaService filterMetaService;
 
-    public PersonalAccountResponse buildUserPage(UserForOwnerViewDTO userForOwner) {
-        Long userId = userForOwner.id();
+    public PersonalAccountResponse buildUserPage(User user) {
+        Long userId = user.getId();
 
-        Slice<MovieCardViewDTO> firstPage = movieRecommendationService.getFirstRecommendationsPage(userId);
+        Slice<MovieCardViewDTO> firstPage =
+                movieRecommendationService.getFirstRecommendationsPage(userId);
 
         return PersonalAccountResponse.builder()
-                .userForOwner(userForOwner)
+                .userForOwner(userMapper.toOwnerView(user))
+                .userSidebar(userMapper.toSidebarView(user))
                 .purchasesCount(purchasedMovieRepository.countByUserId(userId))
                 .ratingsCount(ratedQueryService.countByUserId(userId))
                 .favouritesCount(favouriteMovieRepository.countByUserId(userId))

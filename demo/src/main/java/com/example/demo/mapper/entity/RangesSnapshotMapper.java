@@ -3,12 +3,12 @@ package com.example.demo.mapper.entity;
 import com.example.demo.dto.movie.range.Range;
 import com.example.demo.dto.movie.range.RangesSnapshot;
 import com.example.demo.repository.projection.RangeProjection;
-import org.mapstruct.Mapper;
+import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 
-@Mapper(componentModel = "spring")
-public abstract class RangesSnapshotMapper {
+@Component
+public class RangesSnapshotMapper {
 
     public RangesSnapshot toSnapshot(RangeProjection projection) {
         if (projection == null) {

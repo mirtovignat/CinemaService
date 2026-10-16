@@ -13,7 +13,7 @@
 <th:block th:replace="~{fragments/flash-messages :: flashMessages}"></th:block>
 
 <div id="authStatus"
-     th:data-authenticated="${sessionUser != null}"
+     th:data-authenticated="${sessionUser.authenticated}"
      style="display:none;"></div>
 
 <main class="reviews-main">
@@ -65,7 +65,7 @@
                         id="topAddReviewBtn"
                         type="button"
                         th:attr="data-movie-id=${response.movieId}, data-movie-title=${response.movieTitle}"
-                        th:style="${(sessionUser != null and response.ownReview == null) ? '' : 'display:none;'}">
+                        th:style="${(sessionUser.authenticated and response.ownReview == null) ? '' : 'display:none;'}">
                     <th:block th:replace="~{fragments/icons :: icon-plus}"></th:block>
                     Написать отзыв
                 </button>
@@ -103,7 +103,7 @@
                             </span>
                             <span class="review-date"
                                   th:if="${response.ownReview.addedAt != null}"
-                                  th:text="${#temporals.format(response.ownReview.addedAt, 'dd.MM.yyyy, HH:mm')}">—</span>
+                                  th:text="${#temporals.format(response.ownReview.addedAt, 'd MMMM yyyy, HH:mm', #locale.forLanguageTag('ru'))}">—</span>
                         </div>
                     </div>
                     <p class="review-text"
@@ -150,7 +150,7 @@
                             </span>
                             <span class="review-date"
                                   th:if="${review.addedAt != null}"
-                                  th:text="${#temporals.format(review.addedAt, 'dd.MM.yyyy, HH:mm')}">—</span>
+                                  th:text="${#temporals.format(review.addedAt, 'd MMMM yyyy, HH:mm', #locale.forLanguageTag('ru'))}">—</span>
                         </div>
                     </div>
                     <p class="review-text"
@@ -170,6 +170,20 @@
                 <div class="empty-reviews-hint">
                     <span>✦</span>
                     <span>Раздел станет активнее с первым отзывом</span>
+                </div>
+            </div>
+
+            <div id="loadMoreWrapper"
+                 class="reviews-load-more"
+                 th:if="${response.hasMore}"
+                 th:attr="data-movie-id=${response.movieId},
+                          data-sort=${response.sort},
+                          data-cursor=${response.nextCursor},
+                          data-has-more=${response.hasMore}">
+                <div class="reviews-spinner-wrapper"
+                     id="reviewsSpinnerWrapper"
+                     style="display:none;">
+                    <div class="reviews-spinner"></div>
                 </div>
             </div>
 

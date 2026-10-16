@@ -36,7 +36,8 @@ public interface PurchasedMapper {
     @Mapping(target = "rating", source = "movie.rating")
     @Mapping(target = "releaseDate", source = "movie.releaseDate")
     @Mapping(target = "ageRating", source = "movie.ageRating")
-    @Mapping(target = "watched", expression = "java(!purchasedMovie.getWatchedHistory().isEmpty())")
+    @Mapping(target = "watched",
+            expression = "java(!purchasedMovie.getWatchedHistory().isEmpty())")
     @Mapping(target = "addedAt", source = "addedAt")
     @Mapping(target = "historyItemId", ignore = true)
     @Mapping(target = "director", source = "movie.director")

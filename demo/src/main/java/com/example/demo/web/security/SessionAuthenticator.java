@@ -24,7 +24,7 @@ public class SessionAuthenticator {
         Authentication currentAuthentication = SecurityContextHolder.getContext().getAuthentication();
         if (currentAuthentication == null
                 || !(currentAuthentication.getPrincipal() instanceof AppUserDetails currentAppUserDetails)) {
-            throw new IllegalStateException("No authenticated AppUserDetails in SecurityContext");
+            throw new IllegalStateException("AppUserDetails не аутентифицирован в SecurityContext");
         }
         AppUserDetails updatedAppUserDetails = currentAppUserDetails.withSessionUser(updatedSessionUser);
         Authentication updatedAuthentication = new UsernamePasswordAuthenticationToken(

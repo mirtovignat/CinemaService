@@ -8,13 +8,17 @@
 <body class="layout-fixed">
 <th:block th:replace="~{fragments/header :: header}"></th:block>
 <th:block th:replace="~{fragments/flash-messages :: flashMessages}"></th:block>
-<div id="authStatus" th:data-authenticated="${sessionUser != null}" style="display:none;"></div>
+<div id="authStatus" th:data-authenticated="${sessionUser.authenticated}" style="display:none;"></div>
+
 <main class="profile-wrapper">
     <div class="profile-grid">
-        <th:block
-                th:replace="~{fragments/sidebar :: sidebar(currentPage='history', userForOwner=${groupedResponse.userForOwner})}"></th:block>
-        <div class="profile-right">
+        <th:block th:replace="~{fragments/sidebar :: sidebar(
+            currentPage='history',
+            userSidebar=${response.userSidebar()},
+            genres=${genres}
+        )}"></th:block>
 
+        <div class="profile-right">
             <div class="page-header-row">
                 <div class="profile-right-header">
                     <h1>
@@ -26,76 +30,90 @@
                 <th:block th:replace="~{fragments/catalog-search :: catalogSearch}"></th:block>
             </div>
 
-            <div th:if="${groupedResponse != null and groupedResponse.groupedItems != null and not groupedResponse.groupedItems.isEmpty()}"
-                 class="history-container">
-                <div th:each="entry : ${groupedResponse.groupedItems}"
-                     class="history-day-group"
-                     th:attr="data-date=${entry.key}">
-                    <div class="history-day-label">
-                        <th:block th:replace="~{fragments/icons :: icon-calendar}"></th:block>
-                        <span class="day-label" th:text="${#temporals.format(entry.key, 'dd MMMM yyyy')}"></span>
+            <div th:if="${response != null and response.page() != null and response.page().content() != null and !response.page().content().isEmpty()}"
+                 class="history-container"
+                 data-cursor-container
+                 data-cursor-endpoint="/history/more"
+                 data-cursor-template="historyItemTemplate"
+                 th:attr="data-cursor-next=${response.page().nextCursor()},
+                          data-cursor-has-more=${response.page().hasMore()},
+                          data-cursor-sort=${response.page().sort()}">
+
+                <div th:each="item : ${response.page().content()}"
+                     class="history-item"
+                     th:data-movie-id="${item.id()}"
+                     th:attr="data-added-at=${item.addedAt() != null ? #temporals.format(item.addedAt(), 'yyyy-MM-dd''T''HH:mm:ss') : ''}"
+                     data-action="navigate"
+                     th:data-href="@{/movies/{id}(id=${item.id()})}">
+                    <div class="history-item-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                             stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.75l6 6 9-13.5"/></svg>
                     </div>
-                    <div th:each="item : ${entry.value}" class="history-item"
-                         th:data-movie-id="${item.id}"
-                         th:attr="data-added-at=${item.addedAt != null ? #temporals.format(item.addedAt, 'yyyy-MM-dd''T''HH:mm:ss') : ''}"
-                         data-action="navigate"
-                         th:data-href="@{/movies/{id}(id=${item.id})}">
-                        <div class="history-item-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg"
-                                 viewBox="0 0 24 24"
-                                 fill="none"
-                                 stroke="currentColor"
-                                 stroke-width="2.2"
-                                 stroke-linecap="round"
-                                 stroke-linejoin="round"
-                                 aria-hidden="true">
-                                <path d="M4.5 12.75l6 6 9-13.5"/>
-                            </svg>
+                    <div class="history-item-info">
+                        <a th:href="@{/movies/{id}(id=${item.id()})}" class="history-item-title"
+                           th:text="${item.title()}">Название</a>
+                        <div class="history-item-meta">
+                            <span class="history-item-time" th:if="${item.addedAt() != null}">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                     stroke-width="1.5" stroke="currentColor">
+                                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                                </svg>
+                                Куплено: <span th:text="${#temporals.format(item.addedAt(), 'HH:mm:ss')}">15:30:00</span>
+                            </span>
                         </div>
-                        <div class="history-item-info">
-                            <a th:href="@{/movies/{id}(id=${item.id})}" class="history-item-title"
-                               th:text="${item.title}">Название</a>
-                            <div class="history-item-meta">
-                                <span class="history-item-time" th:if="${item.addedAt != null}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                         stroke-width="1.5" stroke="currentColor">
-                                        <circle cx="12" cy="12" r="10"/>
-                                        <polyline points="12 6 12 12 16 14"/>
-                                    </svg>
-                                    Куплено: <span
-                                        th:text="${#temporals.format(item.addedAt, 'HH:mm:ss')}">15:30:00</span>
-                                </span>
-                            </div>
-                        </div>
-                        <div class="history-amount">
-                            <span th:if="${item.priceSnapshot != null}" th:text="${'- ' + item.priceSnapshot + ' ₽'}">- 329 ₽</span>
-                            <span style="color:#64748b;" th:if="${item.priceSnapshot == null}">—</span>
-                        </div>
+                    </div>
+                    <div class="history-amount">
+                        <span th:if="${item.priceSnapshot() != null}" th:text="${'- ' + item.priceSnapshot() + ' ₽'}">- 329 ₽</span>
+                        <span style="color:#64748b;" th:if="${item.priceSnapshot() == null}">—</span>
                     </div>
                 </div>
+
+                <div class="cursor-loader" data-cursor-loader></div>
             </div>
 
-            <div th:if="${groupedResponse == null or groupedResponse.groupedItems == null or groupedResponse.groupedItems.isEmpty()}"
+            <div th:if="${response == null or response.page() == null or response.page().content() == null or response.page().content().isEmpty()}"
                  class="empty-message">
-                <div class="empty-icon">
-                    <th:block th:replace="~{fragments/icons :: icon-clock}"></th:block>
-                </div>
+                <div class="empty-icon"><th:block th:replace="~{fragments/icons :: icon-clock}"></th:block></div>
                 <h2>Покупок пока нет</h2>
-                <p>Все ваши покупки будут аккуратно собраны здесь — с датой, суммой и названием фильма.</p>
+                <p>Все ваши покупки будут аккуратно собраны здесь.</p>
                 <a th:href="@{/}" class="browse-movies-btn">Перейти в главное меню</a>
             </div>
 
-            <th:block
-                    th:if="${groupedResponse == null or groupedResponse.groupedItems == null or groupedResponse.groupedItems.isEmpty()}">
+            <th:block th:if="${response == null or response.page() == null or response.page().content() == null or response.page().content().isEmpty()}">
                 <th:block th:insert="~{fragments/recommendations :: recommendations}"></th:block>
             </th:block>
-
         </div>
     </div>
 </main>
 
+<template id="historyItemTemplate">
+    <div class="history-item" data-attr="data-movie-id:id;data-added-at:addedAt">
+        <div class="history-item-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                 stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.75l6 6 9-13.5"/></svg>
+        </div>
+        <div class="history-item-info">
+            <a class="history-item-title" data-attr="href:/movies/{id}" data-field="title"></a>
+            <div class="history-item-meta">
+                <span class="history-item-time">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                         stroke-width="1.5" stroke="currentColor">
+                        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    Куплено: <span data-field="addedAt"></span>
+                </span>
+            </div>
+        </div>
+        <div class="history-amount">
+            <span data-field="priceSnapshot"></span>
+        </div>
+    </div>
+</template>
+
 <script th:src="@{/js/modules/sort-toggle.js}" defer></script>
-<script th:src="@{/js/modules/date-formatter.js}" defer></script>
+<script th:src="@{/js/modules/cursor-pagination.js}" defer></script>
 <script th:src="@{/js/main.js}" defer></script>
 
 <th:block th:replace="~{fragments/footer :: footer}"></th:block>
