@@ -5,7 +5,7 @@ import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.dto.response.CursorPageResponse;
 import com.example.demo.dto.user.SessionUser;
 import com.example.demo.exception.SuccessCode;
-import com.example.demo.service.catalog.FavouritesCatalogService;
+import com.example.demo.service.catalog.cursor.FavouritesCursorService;
 import com.example.demo.service.linked_collection.FavouritesService;
 import com.example.demo.util.MessageUtils;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ import java.util.Map;
 public class FavouritesController {
 
     private final FavouritesService favouritesService;
-    private final FavouritesCatalogService favouritesCatalogService;
+    private final FavouritesCursorService favouritesCursorService;
     private final MessageUtils messageUtils;
 
     @GetMapping
@@ -32,7 +32,7 @@ public class FavouritesController {
                                 SessionUser sessionUser,
                                 Model model) {
         Long userId = sessionUser.id();
-        model.addAttribute("response", favouritesCatalogService.getPage(userId, cursor, sort, size));
+        model.addAttribute("response", favouritesCursorService.page(cursor, sort, size, userId));
         model.addAttribute("catalogCount", favouritesService.getCount(userId));
         return "favourites";
     }
@@ -43,7 +43,7 @@ public class FavouritesController {
                                                           @RequestParam(required = false) String sort,
                                                           @RequestParam(required = false) Integer size,
                                                           SessionUser sessionUser) {
-        return favouritesCatalogService.getPage(sessionUser.id(), cursor, sort, size);
+        return favouritesCursorService.page(cursor, sort, size, sessionUser.id());
     }
 
     @GetMapping("/count")

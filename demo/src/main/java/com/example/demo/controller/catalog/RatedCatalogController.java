@@ -1,10 +1,12 @@
 package com.example.demo.controller.catalog;
 
 import com.example.demo.dto.catalog.RatedMovieViewDTO;
-import com.example.demo.dto.response.UserCursorPageResponse;
+import com.example.demo.dto.response.CursorPageResponse;
 import com.example.demo.dto.user.SessionUser;
-import com.example.demo.service.catalog.RatedCatalogService;
+import com.example.demo.mapper.entity.UserMapper;
+import com.example.demo.service.catalog.cursor.RatedCursorService;
 import com.example.demo.service.movie.FilterMetaService;
+import com.example.demo.service.user.UserQueryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,8 +20,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @RequiredArgsConstructor
 public class RatedCatalogController {
 
-    private final RatedCatalogService ratedCatalogService;
+    private final RatedCursorService ratedCursorService;
     private final FilterMetaService filterMetaService;
+    private final UserQueryService userQueryService;
+    private final UserMapper userMapper;
 
     @GetMapping
     public String getRatedHistory(@RequestParam(required = false) String cursor,
@@ -28,17 +32,19 @@ public class RatedCatalogController {
                                   SessionUser sessionUser,
                                   Model model) {
         model.addAttribute("response",
-                ratedCatalogService.getPageWithSidebar(sessionUser.id(), cursor, sort, size));
+                ratedCursorService.page(cursor, sort, size, sessionUser.id()));
+        model.addAttribute("userSidebar",
+                userMapper.toSidebarView(userQueryService.getUser(sessionUser.id())));
         model.addAttribute("genres", filterMetaService.getAllGenres());
         return "catalog/rated";
     }
 
     @GetMapping("/more")
     @ResponseBody
-    public UserCursorPageResponse<RatedMovieViewDTO> more(@RequestParam(required = false) String cursor,
-                                                          @RequestParam(required = false) String sort,
-                                                          @RequestParam(required = false) Integer size,
-                                                          SessionUser sessionUser) {
-        return ratedCatalogService.getPageWithSidebar(sessionUser.id(), cursor, sort, size);
+    public CursorPageResponse<RatedMovieViewDTO> more(@RequestParam(required = false) String cursor,
+                                                      @RequestParam(required = false) String sort,
+                                                      @RequestParam(required = false) Integer size,
+                                                      SessionUser sessionUser) {
+        return ratedCursorService.page(cursor, sort, size, sessionUser.id());
     }
 }

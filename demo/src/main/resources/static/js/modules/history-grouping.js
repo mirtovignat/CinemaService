@@ -47,14 +47,40 @@
         return dayMonth + ' ' + date.getFullYear();
     }
 
+    function parseLocalDateTime(s) {
+        var m = String(s).match(
+            /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?$/
+        );
+        if (!m) return null;
+        var d = new Date(
+            +m[1], +m[2] - 1, +m[3],
+            +m[4], +m[5], m[6] ? +m[6] : 0
+        );
+        return isNaN(d.getTime()) ? null : d;
+    }
+
     function extractDayKey(raw) {
         if (!raw) return '';
         var s = String(raw).trim();
-        var m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-        if (m) return m[1] + '-' + m[2] + '-' + m[3];
-        var d = new Date(s);
-        if (isNaN(d.getTime())) return '';
-        return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+
+        if (/Z$/.test(s) || /[+-]\d{2}:\d{2}$/.test(s)) {
+            var abs = new Date(s);
+            if (!isNaN(abs.getTime())) {
+                return abs.getFullYear() + '-' + pad2(abs.getMonth() + 1) + '-' + pad2(abs.getDate());
+            }
+        }
+
+        var local = parseLocalDateTime(s);
+        if (local) {
+            return local.getFullYear() + '-' + pad2(local.getMonth() + 1) + '-' + pad2(local.getDate());
+        }
+
+        var m2 = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (m2) return m2[1] + '-' + m2[2] + '-' + m2[3];
+
+        var fallback = new Date(s);
+        if (isNaN(fallback.getTime())) return '';
+        return fallback.getFullYear() + '-' + pad2(fallback.getMonth() + 1) + '-' + pad2(fallback.getDate());
     }
 
     function keyToDate(key) {
@@ -72,25 +98,157 @@
         return null;
     }
 
-    function collectItems(container) {
-        var items = [];
-        container.querySelectorAll('.history-item').forEach(function (el) {
-            items.push(el);
+    function makeGroupElement(key) {
+        var date = keyToDate(key);
+        var group = document.createElement('div');
+        group.className = 'history-day-group';
+        group.setAttribute('data-date', key);
+
+        var label = document.createElement('div');
+        label.className = 'history-day-label';
+        label.innerHTML = ICON_CALENDAR + '<span class="day-label"></span>';
+        label.querySelector('.day-label').textContent = date ? humanize(date) : key;
+        group.appendChild(label);
+
+        return group;
+    }
+
+    function getGroupKey(group) {
+        return group.getAttribute('data-date');
+    }
+
+    function collectItemsInOrder(container) {
+        var items = Array.prototype.slice.call(
+            container.querySelectorAll('.history-item')
+        );
+
+        var sort = container.getAttribute('data-cursor-sort') || 'desc';
+
+        items.sort(function (a, b) {
+            var ta = a.getAttribute('data-added-at') || '';
+            var tb = b.getAttribute('data-added-at') || '';
+            if (ta === tb) {
+                var ia = a.getAttribute('data-history-id') || '';
+                var ib = b.getAttribute('data-history-id') || '';
+                if (ia === ib) {
+                    return 0;
+                }
+                return sort === 'asc' ? ia.localeCompare(ib) : ib.localeCompare(ia);
+            }
+            return sort === 'asc' ? ta.localeCompare(tb) : tb.localeCompare(ta);
         });
+
         return items;
     }
 
-    function detachItems(items) {
-        items.forEach(function (item) {
-            if (item.parentNode) item.parentNode.removeChild(item);
-        });
+    function applyTo(container) {
+        if (!container) return;
+        if (!container.classList) return;
+        if (applying) return;
+
+        var isGroupable =
+            container.classList.contains('history-container') ||
+            container.classList.contains('watched-container') ||
+            container.hasAttribute('data-watched-container') ||
+            container.hasAttribute('data-group-history');
+
+        if (!isGroupable) return;
+
+        applying = true;
+        try {
+            var tail = findTail(container);
+
+            var items = collectItemsInOrder(container);
+
+            if (items.length === 0) {
+                container.querySelectorAll('.history-day-group').forEach(function (g) {
+                    g.remove();
+                });
+                return;
+            }
+
+            var itemsByKey = new Map();
+            var orderedKeys = [];
+
+            items.forEach(function (item) {
+                var key = extractDayKey(item.getAttribute('data-added-at'));
+                if (!key) {
+                    key = extractDayKey(new Date().toISOString());
+                }
+                if (!itemsByKey.has(key)) {
+                    itemsByKey.set(key, []);
+                    orderedKeys.push(key);
+                }
+                itemsByKey.get(key).push(item);
+            });
+
+            if (orderedKeys.length === 0) {
+                return;
+            }
+
+            var existingGroups = new Map();
+            container.querySelectorAll('.history-day-group').forEach(function (g) {
+                var key = getGroupKey(g);
+                if (key) {
+                    if (existingGroups.has(key)) {
+                        g.remove();
+                    } else {
+                        existingGroups.set(key, g);
+                    }
+                } else {
+                    g.remove();
+                }
+            });
+
+            var targetGroups = orderedKeys.map(function (key) {
+                var group = existingGroups.get(key);
+                if (!group) {
+                    group = makeGroupElement(key);
+                } else {
+                    var label = group.querySelector('.day-label');
+                    var date = keyToDate(key);
+                    if (label) label.textContent = date ? humanize(date) : key;
+                }
+                return { key: key, element: group, items: itemsByKey.get(key) };
+            });
+
+            var neededKeys = new Set(orderedKeys);
+
+            existingGroups.forEach(function (g, key) {
+                if (!neededKeys.has(key)) {
+                    g.remove();
+                }
+            });
+
+            var frag = document.createDocumentFragment();
+            targetGroups.forEach(function (t) {
+                frag.appendChild(t.element);
+            });
+
+            if (tail && tail.parentNode === container) {
+                container.insertBefore(frag, tail);
+            } else {
+                container.appendChild(frag);
+            }
+
+            targetGroups.forEach(function (t) {
+                t.items.forEach(function (item) {
+                    if (item.parentNode !== t.element) {
+                        t.element.appendChild(item);
+                    }
+                });
+            });
+        } finally {
+            applying = false;
+        }
     }
 
-    function removeGroups(container) {
-        var tail = findTail(container);
-
+    window.applyHistoryGrouping = applyTo;
+    window.ungroupHistory = function (container) {
+        if (!container) return;
         container.querySelectorAll('.history-day-group').forEach(function (g) {
             var children = Array.prototype.slice.call(g.children);
+            var tail = findTail(container);
             children.forEach(function (child) {
                 if (child.classList && child.classList.contains('history-item')) {
                     if (tail && tail.parentNode === container) {
@@ -102,90 +260,10 @@
             });
             g.remove();
         });
-    }
-
-    function buildGroups(container, items) {
-        if (!items.length) return;
-
-        var groups = new Map();
-        items.forEach(function (item) {
-            var key = extractDayKey(item.getAttribute('data-added-at'));
-            if (!key) return;
-            if (!groups.has(key)) groups.set(key, []);
-            groups.get(key).push(item);
-        });
-
-        var tail = findTail(container);
-
-        if (groups.size === 0) {
-            items.forEach(function (item) {
-                if (tail && tail.parentNode === container) {
-                    container.insertBefore(item, tail);
-                } else {
-                    container.appendChild(item);
-                }
-            });
-            return;
-        }
-
-        var sort = container.getAttribute('data-cursor-sort') || 'desc';
-        var keys = Array.from(groups.keys()).sort(function (a, b) {
-            return sort === 'asc' ? a.localeCompare(b) : b.localeCompare(a);
-        });
-
-        var frag = document.createDocumentFragment();
-        keys.forEach(function (key) {
-            var date = keyToDate(key);
-            var group = document.createElement('div');
-            group.className = 'history-day-group';
-            group.setAttribute('data-date', key);
-
-            var label = document.createElement('div');
-            label.className = 'history-day-label';
-            label.innerHTML = ICON_CALENDAR + '<span class="day-label"></span>';
-            label.querySelector('.day-label').textContent = date ? humanize(date) : key;
-            group.appendChild(label);
-
-            groups.get(key).forEach(function (item) {
-                group.appendChild(item);
-            });
-            frag.appendChild(group);
-        });
-
-        if (tail && tail.parentNode === container) {
-            container.insertBefore(frag, tail);
-        } else {
-            container.appendChild(frag);
-        }
-    }
-
-    function applyTo(container) {
-        if (!container) return;
-        if (!container.classList || !container.classList.contains('history-container')) return;
-        if (applying) return;
-
-        applying = true;
-        try {
-            var tailBefore = findTail(container);
-            removeGroups(container);
-            var items = collectItems(container);
-            detachItems(items);
-            buildGroups(container, items);
-            if (tailBefore && tailBefore.parentNode !== container) {
-                container.appendChild(tailBefore);
-            }
-        } finally {
-            applying = false;
-        }
-    }
-
-    window.applyHistoryGrouping = applyTo;
-    window.ungroupHistory = function (container) {
-        removeGroups(container || document);
     };
 
     function init() {
-        document.querySelectorAll('.history-container').forEach(applyTo);
+        document.querySelectorAll('.history-container, .watched-container, [data-watched-container], [data-group-history]').forEach(applyTo);
     }
 
     if (document.readyState === 'loading') {

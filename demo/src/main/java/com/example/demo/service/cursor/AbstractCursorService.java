@@ -1,109 +1,75 @@
-// demo/src/main/java/com/example/demo/service/cursor/AbstractCursorService.java
 package com.example.demo.service.cursor;
 
+import com.example.demo.dto.cursor.Cursor;
 import com.example.demo.dto.response.CursorPageResponse;
-import com.example.demo.dto.response.UserCursorPageResponse;
-import com.example.demo.dto.user.UserSidebarViewDTO;
-import com.example.demo.mapper.entity.UserMapper;
-import com.example.demo.repository.entity.UserRepository;
+import lombok.AllArgsConstructor;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.function.Function;
 
-public abstract class AbstractCursorService<Entity, DTO> {
+@AllArgsConstructor
+public abstract class AbstractCursorService<EntityType, DataType> {
 
-    private final UserRepository userRepository;
-    private final UserMapper userMapper;
-    private final CursorContentMapper<Entity, DTO> contentMapper;
-    private final Function<Entity, Long> cursorExtractor;
+    private final CursorCodec cursorCodec;
     private final int defaultPageSize;
-
-    protected AbstractCursorService(UserRepository userRepository,
-                                    UserMapper userMapper,
-                                    CursorContentMapper<Entity, DTO> contentMapper,
-                                    Function<Entity, Long> cursorExtractor,
-                                    int defaultPageSize) {
-        this.userRepository = userRepository;
-        this.userMapper = userMapper;
-        this.contentMapper = contentMapper;
-        this.cursorExtractor = cursorExtractor;
-        this.defaultPageSize = defaultPageSize;
-    }
+    private final int maximumPageSize;
+    private final Function<EntityType, String> cursorValueExtractor;
+    private final Function<List<EntityType>, List<DataType>> contentMapper;
 
     @Transactional(readOnly = true)
-    public CursorPageResponse<DTO> getPage(Long userId,
-                                           String rawCursor,
-                                           String sortDirection,
-                                           Integer requestedPageSize) {
-        Long cursor = decodeCursor(rawCursor);
-        String normalizedSort = normalizeSortDirection(sortDirection);
-        boolean ascending = "asc".equals(normalizedSort);
+    public CursorPageResponse<DataType> page(String rawCursor,
+                                             String sortDirection,
+                                             Integer requestedPageSize,
+                                             Long... contextValues) {
+        String cursorValue = null;
+        if (rawCursor != null && !rawCursor.isBlank()) {
+            Cursor decodedCursor = cursorCodec.decode(rawCursor);
+            cursorValue = decodedCursor != null ? decodedCursor.value() : null;
+        }
 
-        int pageSize = resolvePageSize(requestedPageSize);
-        Pageable pageable = PageRequest.of(0, pageSize + 1);
+        String normalizedSortDirection = "asc".equalsIgnoreCase(sortDirection) ? "asc" : "desc";
+        int effectivePageSize = resolvePageSize(requestedPageSize);
 
-        Slice<Entity> slice = fetchSlice(userId, cursor, ascending, pageable);
+        Slice<EntityType> slice = fetchSlice(
+                cursorValue,
+                normalizedSortDirection,
+                PageRequest.of(0, effectivePageSize + 1),
+                contextValues);
 
-        List<Entity> rawContent = slice.getContent();
-        boolean hasMore = rawContent.size() > pageSize;
-        List<Entity> contentEntities = hasMore
-                ? rawContent.subList(0, pageSize)
+        List<EntityType> rawContent = slice.getContent();
+        boolean hasMore = rawContent.size() > effectivePageSize;
+        List<EntityType> pageContent = hasMore
+                ? rawContent.subList(0, effectivePageSize)
                 : rawContent;
 
-        List<DTO> content = contentMapper.map(contentEntities);
-
-        String nextCursor = hasMore && !contentEntities.isEmpty()
-                ? encodeCursor(cursorExtractor.apply(contentEntities.get(contentEntities.size() - 1)))
-                : null;
-
-        return CursorPageResponse.<DTO>builder()
-                .content(content)
-                .hasMore(hasMore)
-                .nextCursor(nextCursor)
-                .sort(normalizedSort)
-                .build();
-    }
-
-    @Transactional(readOnly = true)
-    public UserCursorPageResponse<DTO> getPageWithSidebar(Long userId,
-                                                          String rawCursor,
-                                                          String sortDirection,
-                                                          Integer requestedPageSize) {
-        CursorPageResponse<DTO> page = getPage(userId, rawCursor, sortDirection, requestedPageSize);
-        UserSidebarViewDTO sidebar = userMapper.toSidebarView(
-                userRepository.findByIdOrThrow(userId));
-        return UserCursorPageResponse.of(page, sidebar);
-    }
-
-    private Long decodeCursor(String rawCursor) {
-        if (rawCursor == null || rawCursor.isBlank()) return null;
-        try {
-            return Long.parseLong(rawCursor.trim());
-        } catch (NumberFormatException e) {
-            return null;
+        String nextCursor = null;
+        if (hasMore && !pageContent.isEmpty()) {
+            EntityType lastEntity = pageContent.get(pageContent.size() - 1);
+            String lastCursorValue = cursorValueExtractor.apply(lastEntity);
+            if (lastCursorValue != null) {
+                nextCursor = cursorCodec.encode(new Cursor(lastCursorValue));
+            }
         }
+
+        return new CursorPageResponse<>(
+                contentMapper.apply(pageContent),
+                hasMore,
+                nextCursor,
+                normalizedSortDirection);
     }
 
-    private String encodeCursor(Long cursorValue) {
-        return cursorValue != null ? String.valueOf(cursorValue) : null;
-    }
-
-    private String normalizeSortDirection(String sortDirection) {
-        if (sortDirection == null) return "desc";
-        return "asc".equalsIgnoreCase(sortDirection) ? "asc" : "desc";
-    }
+    protected abstract Slice<EntityType> fetchSlice(String cursorValue,
+                                                    String sortDirection,
+                                                    PageRequest pageRequest,
+                                                    Long... contextValues);
 
     private int resolvePageSize(Integer requestedPageSize) {
-        if (requestedPageSize == null || requestedPageSize <= 0) return defaultPageSize;
-        return Math.min(requestedPageSize, 100);
+        if (requestedPageSize == null || requestedPageSize <= 0) {
+            return defaultPageSize;
+        }
+        return Math.min(requestedPageSize, maximumPageSize);
     }
-
-    protected abstract Slice<Entity> fetchSlice(Long userId,
-                                                Long cursorValue,
-                                                boolean isAscending,
-                                                Pageable pageable);
 }

@@ -3,7 +3,7 @@
     flex-direction: column;
     gap: 0.5rem;
     width: 100%;
-    flex: 0 0 auto;
+    min-height: 0;
 }
 
 .history-day-group {

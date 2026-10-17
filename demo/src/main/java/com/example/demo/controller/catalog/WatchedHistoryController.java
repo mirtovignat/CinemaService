@@ -2,11 +2,14 @@ package com.example.demo.controller.catalog;
 
 import com.example.demo.dto.catalog.LibrarianMovieViewDTO;
 import com.example.demo.dto.response.ApiResponse;
-import com.example.demo.dto.response.UserCursorPageResponse;
+import com.example.demo.dto.response.CursorPageResponse;
 import com.example.demo.dto.user.SessionUser;
 import com.example.demo.exception.SuccessCode;
+import com.example.demo.mapper.entity.UserMapper;
 import com.example.demo.service.catalog.WatchedHistoryService;
+import com.example.demo.service.catalog.cursor.WatchedHistoryCursorService;
 import com.example.demo.service.movie.FilterMetaService;
+import com.example.demo.service.user.UserQueryService;
 import com.example.demo.util.MessageUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,8 +25,11 @@ import java.util.Map;
 public class WatchedHistoryController {
 
     private final WatchedHistoryService watchedHistoryService;
+    private final WatchedHistoryCursorService watchedHistoryCursorService;
     private final MessageUtils messageUtils;
     private final FilterMetaService filterMetaService;
+    private final UserQueryService userQueryService;
+    private final UserMapper userMapper;
 
     @GetMapping
     public String getWatched(@RequestParam(required = false) String cursor,
@@ -33,7 +39,9 @@ public class WatchedHistoryController {
                              Model model) {
         Long userId = sessionUser.id();
         model.addAttribute("response",
-                watchedHistoryService.getPageWithSidebar(userId, cursor, sort, size));
+                watchedHistoryCursorService.page(cursor, sort, size, userId));
+        model.addAttribute("userSidebar",
+                userMapper.toSidebarView(userQueryService.getUser(userId)));
         model.addAttribute("genres", filterMetaService.getAllGenres());
         model.addAttribute("saveHistory", watchedHistoryService.isHistorySaved(userId));
         return "catalog/watched";
@@ -41,39 +49,52 @@ public class WatchedHistoryController {
 
     @GetMapping("/more")
     @ResponseBody
-    public UserCursorPageResponse<LibrarianMovieViewDTO> more(@RequestParam(required = false) String cursor,
-                                                              @RequestParam(required = false) String sort,
-                                                              @RequestParam(required = false) Integer size,
-                                                              SessionUser sessionUser) {
-        return watchedHistoryService.getPageWithSidebar(sessionUser.id(), cursor, sort, size);
+    public CursorPageResponse<LibrarianMovieViewDTO> more(
+            @RequestParam(required = false) String cursor,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) Integer size,
+            SessionUser sessionUser) {
+        return watchedHistoryCursorService.page(cursor, sort, size, sessionUser.id());
     }
 
     @PostMapping("/add/{id}")
     @ResponseBody
-    public ResponseEntity<Map<String, Object>> watch(@PathVariable Long id, SessionUser sessionUser) {
+    public ResponseEntity<Map<String, Object>> watch(@PathVariable Long id,
+                                                     SessionUser sessionUser) {
         Long userId = sessionUser.id();
         boolean saveHistory = watchedHistoryService.isHistorySaved(userId);
-        if (saveHistory) watchedHistoryService.watch(id, userId);
+        if (saveHistory) {
+            watchedHistoryService.watch(id, userId);
+        }
         String message = saveHistory
                 ? messageUtils.getSuccess(SuccessCode.WATCHED)
                 : "История просмотров отключена";
-        return ResponseEntity.ok(Map.of("saved", saveHistory, "message", message, "success", true));
+        return ResponseEntity.ok(Map.of(
+                "saved", saveHistory,
+                "message", message,
+                "success", true
+        ));
     }
 
     @PostMapping("/clear")
     @ResponseBody
     public ResponseEntity<ApiResponse> clear(SessionUser sessionUser) {
         watchedHistoryService.clear(sessionUser.id());
-        return ResponseEntity.ok(ApiResponse.success(SuccessCode.CLEARED,
-                messageUtils.getSuccess(SuccessCode.CLEARED)));
+        return ResponseEntity.ok(ApiResponse.success(
+                SuccessCode.CLEARED,
+                messageUtils.getSuccess(SuccessCode.CLEARED)
+        ));
     }
 
     @PostMapping("/remove/{id}")
     @ResponseBody
-    public ResponseEntity<ApiResponse> remove(@PathVariable Long id, SessionUser sessionUser) {
+    public ResponseEntity<ApiResponse> remove(@PathVariable Long id,
+                                              SessionUser sessionUser) {
         watchedHistoryService.removeHistoryItem(sessionUser.id(), id);
-        return ResponseEntity.ok(ApiResponse.success(SuccessCode.REMOVED,
-                messageUtils.getSuccess(SuccessCode.REMOVED)));
+        return ResponseEntity.ok(ApiResponse.success(
+                SuccessCode.REMOVED,
+                messageUtils.getSuccess(SuccessCode.REMOVED)
+        ));
     }
 
     @PostMapping

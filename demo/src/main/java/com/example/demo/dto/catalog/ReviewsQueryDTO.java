@@ -5,12 +5,9 @@ import lombok.Builder;
 @Builder
 public record ReviewsQueryDTO(
         String cursor,
-        String sort
+        String sort,
+        Integer size
 ) {
-    public ReviewCursor cursorOrNull() {
-        return ReviewCursor.decode(cursor);
-    }
-
     public enum SortDirection {
         ASC,
         DESC

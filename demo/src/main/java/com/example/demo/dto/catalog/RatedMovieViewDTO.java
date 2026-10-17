@@ -4,7 +4,6 @@ import lombok.Builder;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Builder
 public record RatedMovieViewDTO(
@@ -16,6 +15,6 @@ public record RatedMovieViewDTO(
         LocalDate releaseDate,
         BigDecimal ratingValue,
         String review,
-        LocalDateTime addedAt
+        String addedAt
 ) {
 }

@@ -17,5 +17,6 @@ public enum ErrorCode {
     VALIDATION_ERROR,
     INTERNAL_ERROR,
     TOO_YOUNG,
-    PHONE_INVALID
+    PHONE_INVALID,
+    INVALID_CURSOR
 }

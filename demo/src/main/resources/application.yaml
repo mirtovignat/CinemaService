@@ -67,11 +67,13 @@ tmdb:
 
 app:
   rating:
-    top-limit: 4
+    top-limit: 3
   reviews:
     sort-cookie-max-age: 31536000
-    page-size: 5
+    page-size: 10
+    max-page-size: 50
   recommendations:
-    page-size: 8
+    page-size: 10
   catalog:
-    page-size: 5
+    page-size: 20
+    max-page-size: 100

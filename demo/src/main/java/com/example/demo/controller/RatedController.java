@@ -1,15 +1,16 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.catalog.RatedMovieFormDTO;
-import com.example.demo.dto.catalog.ReviewsPageRequest;
+import com.example.demo.dto.catalog.ReviewViewDTO;
 import com.example.demo.dto.catalog.ReviewsQueryDTO;
 import com.example.demo.dto.response.ApiResponse;
-import com.example.demo.dto.response.ReviewsSliceResponse;
+import com.example.demo.dto.response.CursorPageResponse;
 import com.example.demo.dto.user.SessionUser;
 import com.example.demo.exception.SuccessCode;
+import com.example.demo.service.catalog.cursor.ReviewCursorService;
+import com.example.demo.service.movie.MovieService;
 import com.example.demo.service.rated.RatedCommandService;
 import com.example.demo.service.rated.RatedQueryService;
-import com.example.demo.service.rated.ReviewsQueryService;
 import com.example.demo.service.user.UserQueryService;
 import com.example.demo.util.MessageUtils;
 import com.example.demo.web.resolver.ReviewSortResolver;
@@ -31,53 +32,59 @@ public class RatedController {
 
     private final RatedCommandService ratedCommandService;
     private final RatedQueryService ratedQueryService;
-    private final ReviewsQueryService reviewsQueryService;
+    private final ReviewCursorService reviewCursorService;
     private final UserQueryService userQueryService;
+    private final MovieService movieService;
     private final MessageUtils messageUtils;
     private final ReviewSortResolver reviewSortResolver;
     private final int reviewsPageSize;
 
-    public RatedController(
-            RatedCommandService ratedCommandService,
-            RatedQueryService ratedQueryService,
-            ReviewsQueryService reviewsQueryService,
-            UserQueryService userQueryService,
-            MessageUtils messageUtils,
-            ReviewSortResolver reviewSortResolver,
-            @Value("${app.reviews.page-size:10}") int reviewsPageSize
-    ) {
+    public RatedController(RatedCommandService ratedCommandService,
+                           RatedQueryService ratedQueryService,
+                           ReviewCursorService reviewCursorService,
+                           UserQueryService userQueryService,
+                           MovieService movieService,
+                           MessageUtils messageUtils,
+                           ReviewSortResolver reviewSortResolver,
+                           @Value("${app.reviews.page-size:10}") int reviewsPageSize) {
         this.ratedCommandService = ratedCommandService;
         this.ratedQueryService = ratedQueryService;
-        this.reviewsQueryService = reviewsQueryService;
+        this.reviewCursorService = reviewCursorService;
         this.userQueryService = userQueryService;
+        this.movieService = movieService;
         this.messageUtils = messageUtils;
         this.reviewSortResolver = reviewSortResolver;
         this.reviewsPageSize = reviewsPageSize;
     }
 
     @GetMapping("/{id}/reviews")
-    public String getReviews(
-            @PathVariable Long id,
-            @ModelAttribute ReviewsQueryDTO reviewsQueryDTO,
-            SessionUser sessionUser,
-            @CookieValue(value = ReviewSortResolver.SORT_COOKIE_NAME, required = false) String sortCookie,
-            HttpServletResponse httpServletResponse,
-            Model model
-    ) {
+    public String getReviews(@PathVariable Long id,
+                             @ModelAttribute ReviewsQueryDTO reviewsQueryDTO,
+                             SessionUser sessionUser,
+                             @CookieValue(value = ReviewSortResolver.SORT_COOKIE_NAME, required = false) String sortCookie,
+                             HttpServletResponse httpServletResponse,
+                             Model model) {
         Long userId = sessionUser.idOrNull();
 
         ReviewsQueryDTO.SortDirection sortDirection =
                 reviewSortResolver.resolveAndPersist(reviewsQueryDTO, sortCookie, httpServletResponse);
 
-        ReviewsPageRequest reviewsPageRequest = ReviewsPageRequest.builder()
-                .size(reviewsPageSize)
-                .sort(sortDirection)
-                .build();
+        Integer requestedPageSize = reviewsQueryDTO.size() != null
+                ? reviewsQueryDTO.size()
+                : reviewsPageSize;
 
-        ReviewsSliceResponse reviewsSliceResponse =
-                reviewsQueryService.buildReviewsPage(id, userId, reviewsPageRequest);
-        model.addAttribute("response", reviewsSliceResponse);
+        CursorPageResponse<ReviewViewDTO> page =
+                reviewCursorService.page(reviewsQueryDTO.cursor(), sortDirection.name(),
+                        requestedPageSize, id, userId);
 
+        model.addAttribute("response", page);
+        model.addAttribute("ownReview", userId != null
+                ? ratedQueryService.getRating(id, userId)
+                : null);
+        model.addAttribute("movieId", id);
+        model.addAttribute("movieTitle", movieService.getMovie(id).getTitle());
+        model.addAttribute("avgRating", ratedQueryService.getMovieRating(id));
+        model.addAttribute("totalReviews", ratedQueryService.getReviewsCountForMovie(id));
         if (userId != null) {
             model.addAttribute("currentUsername", userQueryService.getUsername(userId));
         }
@@ -86,24 +93,21 @@ public class RatedController {
 
     @GetMapping("/{id}/reviews/more")
     @ResponseBody
-    public ResponseEntity<ReviewsSliceResponse> getReviewsMore(
-            @PathVariable Long id,
-            @ModelAttribute ReviewsQueryDTO reviewsQueryDTO,
-            SessionUser sessionUser,
-            @CookieValue(value = ReviewSortResolver.SORT_COOKIE_NAME, required = false) String sortCookie
-    ) {
+    public CursorPageResponse<ReviewViewDTO> getReviewsMore(@PathVariable Long id,
+                                                            @ModelAttribute ReviewsQueryDTO reviewsQueryDTO,
+                                                            SessionUser sessionUser,
+                                                            @CookieValue(value = ReviewSortResolver.SORT_COOKIE_NAME, required = false) String sortCookie) {
         Long userId = sessionUser.idOrNull();
 
         ReviewsQueryDTO.SortDirection sortDirection =
                 reviewSortResolver.resolve(reviewsQueryDTO, sortCookie);
 
-        ReviewsPageRequest reviewsPageRequest = ReviewsPageRequest.builder()
-                .cursor(reviewsQueryDTO.cursorOrNull())
-                .size(reviewsPageSize)
-                .sort(sortDirection)
-                .build();
+        Integer requestedPageSize = reviewsQueryDTO.size() != null
+                ? reviewsQueryDTO.size()
+                : reviewsPageSize;
 
-        return ResponseEntity.ok(reviewsQueryService.buildReviewsPage(id, userId, reviewsPageRequest));
+        return reviewCursorService.page(reviewsQueryDTO.cursor(), sortDirection.name(),
+                requestedPageSize, id, userId);
     }
 
     @PostMapping("/{id}/reviews/delete")
@@ -119,19 +123,16 @@ public class RatedController {
 
     @GetMapping("/form/{movieId}")
     @ResponseBody
-    public ResponseEntity<RatedMovieFormDTO> getMyReviewForm(
-            @PathVariable Long movieId,
-            SessionUser sessionUser
-    ) {
+    public ResponseEntity<RatedMovieFormDTO> getMyReviewForm(@PathVariable Long movieId,
+                                                             SessionUser sessionUser) {
         Long userId = sessionUser.id();
         return ResponseEntity.ok(ratedQueryService.getPreFilledForm(movieId, userId));
     }
 
     @PostMapping("/add")
     @ResponseBody
-    public ResponseEntity<ApiResponse> addRating(
-            @Valid @ModelAttribute RatedMovieFormDTO ratedMovieFormDTO,
-            SessionUser sessionUser) {
+    public ResponseEntity<ApiResponse> addRating(@Valid @ModelAttribute RatedMovieFormDTO ratedMovieFormDTO,
+                                                 SessionUser sessionUser) {
         Long userId = sessionUser.id();
         ratedCommandService.addOrUpdateRating(ratedMovieFormDTO.id(), userId, ratedMovieFormDTO);
         return respond(SuccessCode.REVIEW_HAS_BEEN_SAVED);
@@ -139,9 +140,8 @@ public class RatedController {
 
     @PostMapping("/edit")
     @ResponseBody
-    public ResponseEntity<ApiResponse> editRating(
-            @Valid @ModelAttribute RatedMovieFormDTO ratedMovieFormDTO,
-            SessionUser sessionUser) {
+    public ResponseEntity<ApiResponse> editRating(@Valid @ModelAttribute RatedMovieFormDTO ratedMovieFormDTO,
+                                                  SessionUser sessionUser) {
         Long userId = sessionUser.id();
         ratedCommandService.addOrUpdateRating(ratedMovieFormDTO.id(), userId, ratedMovieFormDTO);
         return respond(SuccessCode.REVIEW_HAS_BEEN_UPDATED);
@@ -149,9 +149,8 @@ public class RatedController {
 
     @PostMapping("/remove/{id}")
     @ResponseBody
-    public ResponseEntity<ApiResponse> removeRating(
-            @PathVariable("id") Long movieId,
-            SessionUser sessionUser) {
+    public ResponseEntity<ApiResponse> removeRating(@PathVariable("id") Long movieId,
+                                                    SessionUser sessionUser) {
         Long userId = sessionUser.id();
         ratedCommandService.deleteRating(movieId, userId);
         return respond(SuccessCode.REVIEW_HAS_BEEN_DELETED);

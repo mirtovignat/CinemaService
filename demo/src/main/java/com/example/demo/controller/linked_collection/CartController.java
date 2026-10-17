@@ -5,7 +5,7 @@ import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.dto.response.CursorPageResponse;
 import com.example.demo.dto.user.SessionUser;
 import com.example.demo.exception.SuccessCode;
-import com.example.demo.service.catalog.CartCatalogService;
+import com.example.demo.service.catalog.cursor.CartCursorService;
 import com.example.demo.service.linked_collection.CartService;
 import com.example.demo.util.MessageUtils;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ import java.util.Map;
 public class CartController {
 
     private final CartService cartService;
-    private final CartCatalogService cartCatalogService;
+    private final CartCursorService cartCursorService;
     private final MessageUtils messageUtils;
 
     @GetMapping
@@ -32,7 +32,7 @@ public class CartController {
                           SessionUser sessionUser,
                           Model model) {
         Long userId = sessionUser.id();
-        model.addAttribute("response", cartCatalogService.getPage(userId, cursor, sort, size));
+        model.addAttribute("response", cartCursorService.page(cursor, sort, size, userId));
         model.addAttribute("catalogCount", cartService.getCount(userId));
         return "cart";
     }
@@ -43,7 +43,7 @@ public class CartController {
                                                     @RequestParam(required = false) String sort,
                                                     @RequestParam(required = false) Integer size,
                                                     SessionUser sessionUser) {
-        return cartCatalogService.getPage(sessionUser.id(), cursor, sort, size);
+        return cartCursorService.page(cursor, sort, size, sessionUser.id());
     }
 
     @GetMapping("/count")

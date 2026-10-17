@@ -3,13 +3,14 @@ package com.example.demo.mapper.entity;
 import com.example.demo.dto.catalog.RatedMovieFormDTO;
 import com.example.demo.dto.catalog.RatedMovieViewDTO;
 import com.example.demo.dto.catalog.ReviewViewDTO;
+import com.example.demo.mapper.util.DateTimeMapperUtil;
 import com.example.demo.mapper.util.RatingMapper;
 import com.example.demo.model.entity.RatedMovie;
 import com.example.demo.model.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = DateTimeMapperUtil.class)
 public abstract class RatedMapper {
 
     public ReviewViewDTO toReviewViewWithOwn(RatedMovie ratedMovie, Long currentUserId) {
@@ -24,7 +25,7 @@ public abstract class RatedMapper {
                 .username(reviewAuthorUsername)
                 .ratingValue(RatingMapper.normalizeRating(ratedMovie.getRatingValue()))
                 .reviewText(ratedMovie.getReview())
-                .addedAt(ratedMovie.getAddedAt())
+                .addedAt(DateTimeMapperUtil.toUtcIso(ratedMovie.getAddedAt()))
                 .own(isOwnReview)
                 .build();
     }
@@ -53,7 +54,7 @@ public abstract class RatedMapper {
                 .releaseDate(ratedMovie.getMovie().getReleaseDate())
                 .ratingValue(RatingMapper.normalizeRating(ratedMovie.getRatingValue()))
                 .review(ratedMovie.getReview())
-                .addedAt(ratedMovie.getAddedAt())
+                .addedAt(DateTimeMapperUtil.toUtcIso(ratedMovie.getAddedAt()))
                 .build();
     }
 

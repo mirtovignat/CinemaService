@@ -8,6 +8,7 @@ import com.example.demo.exception.ErrorCode;
 import com.example.demo.model.entity.User;
 import com.example.demo.repository.entity.CartItemRepository;
 import com.example.demo.repository.entity.FavouriteMovieRepository;
+import com.example.demo.repository.entity.RatedMovieRepository;
 import com.example.demo.repository.entity.UserRepository;
 import com.example.demo.util.PhoneNormalizer;
 import com.example.demo.util.UserSuffixGenerator;
@@ -27,6 +28,7 @@ public class UserCommandService {
     private final PasswordEncoder passwordEncoder;
     private final CartItemRepository cartItemRepository;
     private final FavouriteMovieRepository favouriteMovieRepository;
+    private final RatedMovieRepository ratedMovieRepository;
     private final UserSuffixGenerator userSuffixGenerator;
 
     public ProfileFieldUpdateDTO prepareAndValidateField(ProfileFieldUpdateDTO profileFieldUpdateDTO,
@@ -132,6 +134,7 @@ public class UserCommandService {
         User user = userQueryService.getUser(userId);
         favouriteMovieRepository.deleteAllByUserId(userId);
         cartItemRepository.deleteAllByUserId(userId);
+        ratedMovieRepository.softDeleteAllByUserId(userId);
         String suffix = userSuffixGenerator.generate(user);
         userRepository.softDeleteById(userId, suffix);
     }

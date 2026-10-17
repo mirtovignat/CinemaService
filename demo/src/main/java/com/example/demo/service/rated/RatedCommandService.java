@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 @AllArgsConstructor
 @Service
@@ -35,7 +36,7 @@ public class RatedCommandService {
         RatedMovie ratedMovie = findOrInit(movieId, userId, user, movie);
 
         applyForm(ratedMovie, ratedMovieFormDTO);
-        ratedMovie.setAddedAt(LocalDateTime.now());
+        ratedMovie.setAddedAt(LocalDateTime.now(ZoneOffset.UTC));
         ratedMovie.getDeletableState().setDeleted(false);
         ratedMovieRepository.saveAndFlush(ratedMovie);
 

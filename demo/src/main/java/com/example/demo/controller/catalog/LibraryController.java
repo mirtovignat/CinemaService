@@ -1,10 +1,12 @@
 package com.example.demo.controller.catalog;
 
 import com.example.demo.dto.catalog.LibrarianMovieViewDTO;
-import com.example.demo.dto.response.UserCursorPageResponse;
+import com.example.demo.dto.response.CursorPageResponse;
 import com.example.demo.dto.user.SessionUser;
-import com.example.demo.service.catalog.LibraryService;
+import com.example.demo.mapper.entity.UserMapper;
+import com.example.demo.service.catalog.cursor.LibraryCursorService;
 import com.example.demo.service.movie.FilterMetaService;
+import com.example.demo.service.user.UserQueryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,8 +20,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @RequiredArgsConstructor
 public class LibraryController {
 
-    private final LibraryService libraryService;
+    private final LibraryCursorService libraryCursorService;
     private final FilterMetaService filterMetaService;
+    private final UserQueryService userQueryService;
+    private final UserMapper userMapper;
 
     @GetMapping
     public String getLibrary(@RequestParam(required = false) String cursor,
@@ -28,17 +32,19 @@ public class LibraryController {
                              SessionUser sessionUser,
                              Model model) {
         model.addAttribute("response",
-                libraryService.getPageWithSidebar(sessionUser.id(), cursor, sort, size));
+                libraryCursorService.page(cursor, sort, size, sessionUser.id()));
+        model.addAttribute("userSidebar",
+                userMapper.toSidebarView(userQueryService.getUser(sessionUser.id())));
         model.addAttribute("genres", filterMetaService.getAllGenres());
         return "catalog/library";
     }
 
     @GetMapping("/more")
     @ResponseBody
-    public UserCursorPageResponse<LibrarianMovieViewDTO> more(@RequestParam(required = false) String cursor,
-                                                              @RequestParam(required = false) String sort,
-                                                              @RequestParam(required = false) Integer size,
-                                                              SessionUser sessionUser) {
-        return libraryService.getPageWithSidebar(sessionUser.id(), cursor, sort, size);
+    public CursorPageResponse<LibrarianMovieViewDTO> more(@RequestParam(required = false) String cursor,
+                                                          @RequestParam(required = false) String sort,
+                                                          @RequestParam(required = false) Integer size,
+                                                          SessionUser sessionUser) {
+        return libraryCursorService.page(cursor, sort, size, sessionUser.id());
     }
 }

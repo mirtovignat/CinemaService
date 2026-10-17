@@ -1,4 +1,3 @@
-// demo/src/main/java/com/example/demo/repository/entity/RatedMovieRepository.java
 package com.example.demo.repository.entity;
 
 import com.example.demo.model.entity.Movie;
@@ -19,153 +18,161 @@ import java.util.Optional;
 @Repository
 public interface RatedMovieRepository extends AbstractCatalogItemRepository<RatedMovie> {
 
+    @Query("""
+            SELECT ratedMovie
+            FROM RatedMovie ratedMovie
+            JOIN FETCH ratedMovie.movie
+            WHERE ratedMovie.id.userId = :userId
+            AND ratedMovie.deletableState.deleted = false
+            AND (
+                :hasCursor = false
+                OR ratedMovie.addedAt > :cursorAddedAt
+                OR (ratedMovie.addedAt = :cursorAddedAt AND ratedMovie.id.movieId > :cursorMovieId)
+            )
+            ORDER BY ratedMovie.addedAt ASC, ratedMovie.id.movieId ASC
+            """)
+    Slice<RatedMovie> fetchRatedAscending(@Param("userId") Long userId,
+                                          @Param("hasCursor") boolean hasCursor,
+                                          @Param("cursorAddedAt") LocalDateTime cursorAddedAt,
+                                          @Param("cursorMovieId") Long cursorMovieId,
+                                          Pageable pageable);
+
+    @Query("""
+            SELECT ratedMovie
+            FROM RatedMovie ratedMovie
+            JOIN FETCH ratedMovie.movie
+            WHERE ratedMovie.id.userId = :userId
+            AND ratedMovie.deletableState.deleted = false
+            AND (
+                :hasCursor = false
+                OR ratedMovie.addedAt < :cursorAddedAt
+                OR (ratedMovie.addedAt = :cursorAddedAt AND ratedMovie.id.movieId < :cursorMovieId)
+            )
+            ORDER BY ratedMovie.addedAt DESC, ratedMovie.id.movieId DESC
+            """)
+    Slice<RatedMovie> fetchRatedDescending(@Param("userId") Long userId,
+                                           @Param("hasCursor") boolean hasCursor,
+                                           @Param("cursorAddedAt") LocalDateTime cursorAddedAt,
+                                           @Param("cursorMovieId") Long cursorMovieId,
+                                           Pageable pageable);
+
+    @Query("""
+            SELECT ratedMovie
+            FROM RatedMovie ratedMovie
+            JOIN FETCH ratedMovie.user
+            WHERE ratedMovie.id.movieId = :movieId
+            AND ratedMovie.deletableState.deleted = false
+            AND ratedMovie.id.userId <> :viewerUserId
+            AND (
+                :hasCursor = false
+                OR ratedMovie.addedAt > :cursorAddedAt
+                OR (ratedMovie.addedAt = :cursorAddedAt AND ratedMovie.id.userId > :cursorUserId)
+            )
+            ORDER BY ratedMovie.addedAt ASC, ratedMovie.id.userId ASC
+            """)
+    Slice<RatedMovie> fetchReviewsAscending(@Param("movieId") Long movieId,
+                                            @Param("viewerUserId") Long viewerUserId,
+                                            @Param("hasCursor") boolean hasCursor,
+                                            @Param("cursorAddedAt") LocalDateTime cursorAddedAt,
+                                            @Param("cursorUserId") Long cursorUserId,
+                                            Pageable pageable);
+
+    @Query("""
+            SELECT ratedMovie
+            FROM RatedMovie ratedMovie
+            JOIN FETCH ratedMovie.user
+            WHERE ratedMovie.id.movieId = :movieId
+            AND ratedMovie.deletableState.deleted = false
+            AND ratedMovie.id.userId <> :viewerUserId
+            AND (
+                :hasCursor = false
+                OR ratedMovie.addedAt < :cursorAddedAt
+                OR (ratedMovie.addedAt = :cursorAddedAt AND ratedMovie.id.userId < :cursorUserId)
+            )
+            ORDER BY ratedMovie.addedAt DESC, ratedMovie.id.userId DESC
+            """)
+    Slice<RatedMovie> fetchReviewsDescending(@Param("movieId") Long movieId,
+                                             @Param("viewerUserId") Long viewerUserId,
+                                             @Param("hasCursor") boolean hasCursor,
+                                             @Param("cursorAddedAt") LocalDateTime cursorAddedAt,
+                                             @Param("cursorUserId") Long cursorUserId,
+                                             Pageable pageable);
+
     @Override
     @Query("""
-            SELECT DISTINCT item
-            FROM RatedMovie item
-            JOIN FETCH item.movie
-            JOIN FETCH item.user
-            WHERE item.user.id = :userId
-            AND item.deletableState.deleted = false
+            SELECT DISTINCT ratedMovie
+            FROM RatedMovie ratedMovie
+            JOIN FETCH ratedMovie.movie
+            JOIN FETCH ratedMovie.user
+            WHERE ratedMovie.id.userId = :userId
+            AND ratedMovie.deletableState.deleted = false
             """)
     List<RatedMovie> findAllByUserId(@Param("userId") Long userId);
 
     @Override
     @Query("""
-            SELECT COUNT(item) > 0
-            FROM RatedMovie item
-            WHERE item.id.movieId = :movieId
-            AND item.id.userId = :userId
-            AND item.deletableState.deleted = false
+            SELECT COUNT(ratedMovie) > 0
+            FROM RatedMovie ratedMovie
+            WHERE ratedMovie.id.movieId = :movieId
+            AND ratedMovie.id.userId = :userId
+            AND ratedMovie.deletableState.deleted = false
             """)
     boolean existsByMovieIdAndUserId(@Param("movieId") Long movieId,
                                      @Param("userId") Long userId);
 
     @Override
     @Query("""
-            SELECT COUNT(item)
-            FROM RatedMovie item
-            WHERE item.id.userId = :userId
-            AND item.deletableState.deleted = false
+            SELECT COUNT(ratedMovie)
+            FROM RatedMovie ratedMovie
+            WHERE ratedMovie.id.userId = :userId
+            AND ratedMovie.deletableState.deleted = false
             """)
     Long countByUserId(@Param("userId") Long userId);
 
     @Override
     @Query("""
-            SELECT item.id.movieId
-            FROM RatedMovie item
-            WHERE item.id.userId = :userId
-            AND item.deletableState.deleted = false
+            SELECT ratedMovie.id.movieId
+            FROM RatedMovie ratedMovie
+            WHERE ratedMovie.id.userId = :userId
+            AND ratedMovie.deletableState.deleted = false
             """)
     List<Long> findMovieIdsByUserId(@Param("userId") Long userId);
 
     @Query("""
-            SELECT item
-            FROM RatedMovie item
-            JOIN FETCH item.movie
-            JOIN FETCH item.user
-            WHERE item.id.movieId = :movieId
-            AND item.id.userId = :userId
-            AND item.deletableState.deleted = false
+            SELECT ratedMovie
+            FROM RatedMovie ratedMovie
+            JOIN FETCH ratedMovie.movie
+            JOIN FETCH ratedMovie.user
+            WHERE ratedMovie.id.movieId = :movieId
+            AND ratedMovie.id.userId = :userId
+            AND ratedMovie.deletableState.deleted = false
             """)
     Optional<RatedMovie> findByMovieIdAndUserId(@Param("movieId") Long movieId,
                                                 @Param("userId") Long userId);
 
     @Query("""
-            SELECT item
-            FROM RatedMovie item
-            JOIN FETCH item.movie
-            JOIN FETCH item.user
-            WHERE item.id.movieId = :movieId
-            AND item.id.userId = :userId
+            SELECT ratedMovie
+            FROM RatedMovie ratedMovie
+            JOIN FETCH ratedMovie.movie
+            JOIN FETCH ratedMovie.user
+            WHERE ratedMovie.id.movieId = :movieId
+            AND ratedMovie.id.userId = :userId
             """)
     Optional<RatedMovie> findByMovieIdAndUserIdIncludingDeleted(
             @Param("movieId") Long movieId,
             @Param("userId") Long userId);
 
     @Query("""
-            SELECT item
-            FROM RatedMovie item
-            JOIN FETCH item.movie
-            JOIN FETCH item.user
-            WHERE item.id.movieId = :movieId
-            AND item.id.userId = :userId
-            AND item.deletableState.deleted = false
+            SELECT ratedMovie
+            FROM RatedMovie ratedMovie
+            JOIN FETCH ratedMovie.movie
+            JOIN FETCH ratedMovie.user
+            WHERE ratedMovie.id.movieId = :movieId
+            AND ratedMovie.id.userId = :userId
+            AND ratedMovie.deletableState.deleted = false
             """)
     Optional<RatedMovie> findOwnReview(@Param("movieId") Long movieId,
                                        @Param("userId") Long userId);
-
-    @Query("""
-            SELECT item
-            FROM RatedMovie item
-            JOIN FETCH item.user
-            WHERE item.id.movieId = :movieId
-            AND item.deletableState.deleted = false
-            AND item.id.userId <> :viewerUserId
-            ORDER BY item.addedAt DESC, item.id.userId DESC
-            """)
-    Slice<RatedMovie> findReviewsDescFirst(
-            @Param("movieId") Long movieId,
-            @Param("viewerUserId") Long viewerUserId,
-            Pageable pageable
-    );
-
-    @Query("""
-            SELECT item
-            FROM RatedMovie item
-            JOIN FETCH item.user
-            WHERE item.id.movieId = :movieId
-            AND item.deletableState.deleted = false
-            AND item.id.userId <> :viewerUserId
-            AND (
-                item.addedAt < :cursorAddedAt
-                OR (item.addedAt = :cursorAddedAt AND item.id.userId < :cursorUserId)
-            )
-            ORDER BY item.addedAt DESC, item.id.userId DESC
-            """)
-    Slice<RatedMovie> findReviewsDescAfter(
-            @Param("movieId") Long movieId,
-            @Param("viewerUserId") Long viewerUserId,
-            @Param("cursorAddedAt") LocalDateTime cursorAddedAt,
-            @Param("cursorUserId") Long cursorUserId,
-            Pageable pageable
-    );
-
-    @Query("""
-            SELECT item
-            FROM RatedMovie item
-            JOIN FETCH item.user
-            WHERE item.id.movieId = :movieId
-            AND item.deletableState.deleted = false
-            AND item.id.userId <> :viewerUserId
-            ORDER BY item.addedAt ASC, item.id.userId ASC
-            """)
-    Slice<RatedMovie> findReviewsAscFirst(
-            @Param("movieId") Long movieId,
-            @Param("viewerUserId") Long viewerUserId,
-            Pageable pageable
-    );
-
-    @Query("""
-            SELECT item
-            FROM RatedMovie item
-            JOIN FETCH item.user
-            WHERE item.id.movieId = :movieId
-            AND item.deletableState.deleted = false
-            AND item.id.userId <> :viewerUserId
-            AND (
-                item.addedAt > :cursorAddedAt
-                OR (item.addedAt = :cursorAddedAt AND item.id.userId > :cursorUserId)
-            )
-            ORDER BY item.addedAt ASC, item.id.userId ASC
-            """)
-    Slice<RatedMovie> findReviewsAscAfter(
-            @Param("movieId") Long movieId,
-            @Param("viewerUserId") Long viewerUserId,
-            @Param("cursorAddedAt") LocalDateTime cursorAddedAt,
-            @Param("cursorUserId") Long cursorUserId,
-            Pageable pageable
-    );
 
     @Query("""
             SELECT COUNT(ratedMovie)
@@ -186,12 +193,21 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
     int softDeleteByMovieIdAndUserId(@Param("movieId") Long movieId,
                                      @Param("userId") Long userId);
 
+    @Modifying
     @Query("""
-            SELECT item
-            FROM RatedMovie item
-            WHERE item.id.userId = :userId
-            AND item.deletableState.deleted = false
-            ORDER BY item.ratingValue DESC
+            UPDATE RatedMovie ratedMovie
+            SET ratedMovie.deletableState.deleted = true
+            WHERE ratedMovie.id.userId = :userId
+            AND ratedMovie.deletableState.deleted = false
+            """)
+    void softDeleteAllByUserId(@Param("userId") Long userId);
+
+    @Query("""
+            SELECT ratedMovie
+            FROM RatedMovie ratedMovie
+            WHERE ratedMovie.id.userId = :userId
+            AND ratedMovie.deletableState.deleted = false
+            ORDER BY ratedMovie.ratingValue DESC
             """)
     List<RatedMovie> findTopNByUserIdOrderByRatingValueDesc(
             @Param("userId") Long userId,
@@ -206,45 +222,13 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
     BigDecimal calculateAverageRating(@Param("movie") Movie movie);
 
     @Query("""
-            SELECT item
-            FROM RatedMovie item
-            JOIN FETCH item.movie
-            JOIN FETCH item.user
-            WHERE item.id.userId = :userId
-            AND item.deletableState.deleted = false
-            ORDER BY item.addedAt DESC, item.id.userId DESC
+            SELECT ratedMovie
+            FROM RatedMovie ratedMovie
+            JOIN FETCH ratedMovie.movie
+            JOIN FETCH ratedMovie.user
+            WHERE ratedMovie.id.userId = :userId
+            AND ratedMovie.deletableState.deleted = false
+            ORDER BY ratedMovie.addedAt DESC, ratedMovie.id.userId DESC
             """)
     List<RatedMovie> findAllActiveByUserId(@Param("userId") Long userId);
-
-    @Query("""
-            SELECT item
-            FROM RatedMovie item
-            JOIN FETCH item.movie
-            JOIN FETCH item.user
-            WHERE item.id.userId = :userId
-            AND item.deletableState.deleted = false
-            AND (:cursorMovieId IS NULL OR item.id.movieId < :cursorMovieId)
-            ORDER BY item.id.movieId DESC
-            """)
-    Slice<RatedMovie> findRatedPageDesc(
-            @Param("userId") Long userId,
-            @Param("cursorMovieId") Long cursorMovieId,
-            Pageable pageable
-    );
-
-    @Query("""
-            SELECT item
-            FROM RatedMovie item
-            JOIN FETCH item.movie
-            JOIN FETCH item.user
-            WHERE item.id.userId = :userId
-            AND item.deletableState.deleted = false
-            AND (:cursorMovieId IS NULL OR item.id.movieId > :cursorMovieId)
-            ORDER BY item.id.movieId ASC
-            """)
-    Slice<RatedMovie> findRatedPageAsc(
-            @Param("userId") Long userId,
-            @Param("cursorMovieId") Long cursorMovieId,
-            Pageable pageable
-    );
 }

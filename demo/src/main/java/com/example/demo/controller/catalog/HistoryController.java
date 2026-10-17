@@ -1,10 +1,12 @@
 package com.example.demo.controller.catalog;
 
 import com.example.demo.dto.catalog.HistoricalMovieViewDTO;
-import com.example.demo.dto.response.UserCursorPageResponse;
+import com.example.demo.dto.response.CursorPageResponse;
 import com.example.demo.dto.user.SessionUser;
-import com.example.demo.service.catalog.HistoryService;
+import com.example.demo.mapper.entity.UserMapper;
+import com.example.demo.service.catalog.cursor.HistoryCursorService;
 import com.example.demo.service.movie.FilterMetaService;
+import com.example.demo.service.user.UserQueryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,8 +20,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @RequiredArgsConstructor
 public class HistoryController {
 
-    private final HistoryService historyService;
+    private final HistoryCursorService historyCursorService;
     private final FilterMetaService filterMetaService;
+    private final UserQueryService userQueryService;
+    private final UserMapper userMapper;
 
     @GetMapping
     public String getHistory(@RequestParam(required = false) String cursor,
@@ -28,18 +32,19 @@ public class HistoryController {
                              SessionUser sessionUser,
                              Model model) {
         model.addAttribute("response",
-                historyService.getPageWithSidebar(sessionUser.id(), cursor, sort, size));
+                historyCursorService.page(cursor, sort, size, sessionUser.id()));
+        model.addAttribute("userSidebar",
+                userMapper.toSidebarView(userQueryService.getUser(sessionUser.id())));
         model.addAttribute("genres", filterMetaService.getAllGenres());
         return "catalog/history";
     }
 
     @GetMapping("/more")
     @ResponseBody
-    public UserCursorPageResponse<HistoricalMovieViewDTO> more(
-            @RequestParam(required = false) String cursor,
-            @RequestParam(required = false) String sort,
-            @RequestParam(required = false) Integer size,
-            SessionUser sessionUser) {
-        return historyService.getPageWithSidebar(sessionUser.id(), cursor, sort, size);
+    public CursorPageResponse<HistoricalMovieViewDTO> more(@RequestParam(required = false) String cursor,
+                                                           @RequestParam(required = false) String sort,
+                                                           @RequestParam(required = false) Integer size,
+                                                           SessionUser sessionUser) {
+        return historyCursorService.page(cursor, sort, size, sessionUser.id());
     }
 }

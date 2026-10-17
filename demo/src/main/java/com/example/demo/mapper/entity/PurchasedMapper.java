@@ -2,12 +2,13 @@ package com.example.demo.mapper.entity;
 
 import com.example.demo.dto.catalog.HistoricalMovieViewDTO;
 import com.example.demo.dto.catalog.LibrarianMovieViewDTO;
+import com.example.demo.mapper.util.DateTimeMapperUtil;
 import com.example.demo.model.base.WatchHistoryItem;
 import com.example.demo.model.entity.PurchasedMovie;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = DateTimeMapperUtil.class)
 public interface PurchasedMapper {
 
     @Mapping(target = "id", source = "purchasedMovie.movie.id")
@@ -18,7 +19,9 @@ public interface PurchasedMapper {
     @Mapping(target = "releaseDate", source = "purchasedMovie.movie.releaseDate")
     @Mapping(target = "ageRating", source = "purchasedMovie.movie.ageRating")
     @Mapping(target = "watched", constant = "true")
-    @Mapping(target = "addedAt", source = "watchedAt")
+    @Mapping(target = "addedAt",
+            source = "watchedAt",
+            qualifiedByName = "toUtcIso")
     @Mapping(target = "historyItemId", source = "id")
     @Mapping(target = "director", source = "purchasedMovie.movie.director")
     LibrarianMovieViewDTO toLibrarianViewFromHistoryItem(WatchHistoryItem item);
@@ -26,7 +29,9 @@ public interface PurchasedMapper {
     @Mapping(target = "id", source = "movie.id")
     @Mapping(target = "title", source = "movie.title")
     @Mapping(target = "priceSnapshot", source = "priceSnapshot")
-    @Mapping(target = "addedAt", source = "addedAt")
+    @Mapping(target = "addedAt",
+            source = "addedAt",
+            qualifiedByName = "toUtcIso")
     HistoricalMovieViewDTO toOwnerViewFromHistorical(PurchasedMovie purchasedMovie);
 
     @Mapping(target = "id", source = "movie.id")
@@ -38,7 +43,9 @@ public interface PurchasedMapper {
     @Mapping(target = "ageRating", source = "movie.ageRating")
     @Mapping(target = "watched",
             expression = "java(!purchasedMovie.getWatchedHistory().isEmpty())")
-    @Mapping(target = "addedAt", source = "addedAt")
+    @Mapping(target = "addedAt",
+            source = "addedAt",
+            qualifiedByName = "toUtcIso")
     @Mapping(target = "historyItemId", ignore = true)
     @Mapping(target = "director", source = "movie.director")
     LibrarianMovieViewDTO toOwnerViewFromLibrarian(PurchasedMovie purchasedMovie);

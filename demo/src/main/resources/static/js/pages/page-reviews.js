@@ -136,14 +136,18 @@
             dateEl.style.display = dateText ? '' : 'none';
         }
 
-        const textEl = card.querySelector('.review-text');
+        const textEl = card.querySelector('.review-text, .is-muted');
         if (textEl) {
-            if (review.reviewText) {
+            if (review.reviewText && review.reviewText.trim() !== '') {
                 textEl.textContent = review.reviewText;
                 textEl.style.display = '';
+                textEl.className = 'review-text';
             } else {
-                textEl.textContent = '';
-                textEl.style.display = 'none';
+                textEl.textContent = isOwn
+                    ? '— Вы не оставили текстового отзыва —'
+                    : '— Пользователь не оставил текстового отзыва —';
+                textEl.style.display = '';
+                textEl.className = 'is-muted';
             }
         }
 
@@ -192,14 +196,16 @@
             ratingEl.textContent = formatRating(review.ratingValue);
         }
 
-        const textEl = card.querySelector('.review-text');
+        const textEl = card.querySelector('.review-text, .is-muted');
         if (textEl && review.reviewText != null) {
             if (review.reviewText === '') {
-                textEl.textContent = '';
-                textEl.style.display = 'none';
+                textEl.textContent = '— Вы не оставили текстового отзыва —';
+                textEl.style.display = '';
+                textEl.className = 'is-muted';
             } else {
                 textEl.textContent = review.reviewText;
                 textEl.style.display = '';
+                textEl.className = 'review-text';
             }
         }
 
@@ -618,9 +624,9 @@
             retryCount = 0;
             disabledUntil = 0;
 
-            if (Array.isArray(data.reviews) && data.reviews.length > 0) {
+            if (Array.isArray(data.content) && data.content.length > 0) {
                 const fragment = document.createDocumentFragment();
-                data.reviews.forEach(review => {
+                data.content.forEach(review => {
                     const el = buildCard(review, false, false);
                     if (el) fragment.appendChild(el);
                 });
@@ -664,5 +670,20 @@
             wrapper.classList.remove('is-loading');
             if (spinner) spinner.style.display = 'none';
         }
+    }
+
+    function formatReviewDates() {
+        document.querySelectorAll('.js-review-date[data-date]').forEach(function (el) {
+            var raw = el.getAttribute('data-date');
+            if (raw && window.formatDateTime) {
+                el.textContent = window.formatDateTime(raw);
+            }
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', formatReviewDates);
+    } else {
+        formatReviewDates();
     }
 })();

@@ -1,21 +1,14 @@
-// demo/src/main/java/com/example/demo/service/catalog/WatchedHistoryService.java
 package com.example.demo.service.catalog;
 
-import com.example.demo.dto.catalog.LibrarianMovieViewDTO;
 import com.example.demo.exception.BusinessException;
 import com.example.demo.exception.ErrorCode;
-import com.example.demo.mapper.entity.PurchasedMapper;
-import com.example.demo.mapper.entity.UserMapper;
 import com.example.demo.model.base.WatchHistoryItem;
 import com.example.demo.model.entity.PurchasedMovie;
 import com.example.demo.model.entity.User;
 import com.example.demo.repository.base.WatchHistoryItemRepository;
 import com.example.demo.repository.entity.PurchasedMovieRepository;
 import com.example.demo.repository.entity.UserRepository;
-import com.example.demo.service.cursor.AbstractCursorService;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,40 +16,13 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 
+@AllArgsConstructor
 @Service
-public class WatchedHistoryService extends AbstractCursorService<WatchHistoryItem, LibrarianMovieViewDTO> {
+public class WatchedHistoryService {
 
     private final PurchasedMovieRepository purchasedMovieRepository;
     private final WatchHistoryItemRepository watchHistoryItemRepository;
     private final UserRepository userRepository;
-
-    public WatchedHistoryService(PurchasedMovieRepository purchasedMovieRepository,
-                                 WatchHistoryItemRepository watchHistoryItemRepository,
-                                 UserRepository userRepository,
-                                 UserMapper userMapper,
-                                 PurchasedMapper purchasedMapper,
-                                 @Value("${app.catalog.page-size:20}") int defaultPageSize) {
-        super(userRepository,
-                userMapper,
-                entities -> entities.stream()
-                        .map(purchasedMapper::toLibrarianViewFromHistoryItem)
-                        .toList(),
-                WatchHistoryItem::getId,
-                defaultPageSize);
-        this.purchasedMovieRepository = purchasedMovieRepository;
-        this.watchHistoryItemRepository = watchHistoryItemRepository;
-        this.userRepository = userRepository;
-    }
-
-    @Override
-    protected Slice<WatchHistoryItem> fetchSlice(Long userId,
-                                                 Long cursorValue,
-                                                 boolean isAscending,
-                                                 Pageable pageable) {
-        return isAscending
-                ? watchHistoryItemRepository.findPageAsc(userId, cursorValue, pageable)
-                : watchHistoryItemRepository.findPageDesc(userId, cursorValue, pageable);
-    }
 
     @Transactional
     public void watch(Long movieId, Long userId) {

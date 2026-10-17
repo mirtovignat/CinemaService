@@ -28,6 +28,26 @@
                'T' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds());
     }
 
+    function formatTimeHHmm(value) {
+        if (value === null || value === undefined || value === '') return '';
+        var s = String(value).trim();
+        var m = s.match(/[T ](\d{2}):(\d{2})/);
+        if (m) return m[1] + ':' + m[2];
+        var d = new Date(s);
+        if (isNaN(d.getTime())) return '';
+        return pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+    }
+
+    function formatTimeHHmmss(value) {
+        if (value === null || value === undefined || value === '') return '';
+        var s = String(value).trim();
+        var m = s.match(/[T ](\d{2}):(\d{2}):(\d{2})/);
+        if (m) return m[1] + ':' + m[2] + ':' + m[3];
+        var d = new Date(s);
+        if (isNaN(d.getTime())) return '';
+        return pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds());
+    }
+
     function interpolateTemplate(tpl, item, isUrl) {
         return String(tpl).replace(/\{(\w+)\}/g, function (_, key) {
             var v = item[key];
@@ -37,8 +57,52 @@
         });
     }
 
+    function collectTargets(root, selector) {
+        var list = [];
+        if (root.matches && root.matches(selector)) list.push(root);
+        root.querySelectorAll(selector).forEach(function (el) {
+            list.push(el);
+        });
+        return list;
+    }
+
+    function extractYear(value) {
+        var s = String(value === null || value === undefined ? '' : value);
+        var m = s.match(/\d{4}/);
+        return m ? m[0] : '';
+    }
+
+    function formatRatingValue(value) {
+        if (value === null || value === undefined || value === '') return '';
+        var n = parseFloat(String(value).replace(',', '.'));
+        if (isNaN(n)) return String(value);
+        return n.toFixed(1).replace('.', ',');
+    }
+
+    function formatPriceWithCurrency(value) {
+        var n = parseFloat(String(value).replace(',', '.'));
+        if (isNaN(n)) return String(value);
+        if (window.UI && typeof window.UI.formatPrice === 'function') {
+            return window.UI.formatPrice(n) + ' ₽';
+        }
+        return n.toFixed(2).replace('.', ',') + ' ₽';
+    }
+
+    function formatPricePlain(value) {
+        var n = parseFloat(String(value).replace(',', '.'));
+        if (isNaN(n)) return String(value);
+        if (window.UI && typeof window.UI.formatPrice === 'function') {
+            return window.UI.formatPrice(n);
+        }
+        return n.toFixed(2).replace('.', ',');
+    }
+
+    function resolveAddedAt(item) {
+        return item.addedAt || item.watchedAt || item.added_at || item.watched_at || '';
+    }
+
     function applyDataAttrs(root, item) {
-        root.querySelectorAll('[data-attr]').forEach(function (el) {
+        collectTargets(root, '[data-attr]').forEach(function (el) {
             var spec = el.getAttribute('data-attr') || '';
             spec.split(';').forEach(function (pair) {
                 var idx = pair.indexOf(':');
@@ -50,6 +114,8 @@
                 var value;
                 if (key.indexOf('{') !== -1) {
                     value = interpolateTemplate(key, item, !!URL_ATTRS[attr]);
+                } else if (key === 'addedAt' || key === 'watchedAt') {
+                    value = resolveAddedAt(item);
                 } else {
                     value = item[key];
                 }
@@ -63,26 +129,50 @@
             });
         });
 
-        root.querySelectorAll('[data-field]').forEach(function (el) {
+        collectTargets(root, '[data-field]').forEach(function (el) {
             var key = el.getAttribute('data-field');
             var value = item[key];
-            if (value === undefined || value === null) return;
 
-            if (key === 'price' || key === 'priceSnapshot') {
-                var n = parseFloat(value);
-                if (!isNaN(n) && window.UI && typeof window.UI.formatPrice === 'function') {
-                    value = window.UI.formatPrice(n) + ' ₽';
-                }
+            if (key === 'releaseYear') {
+                value = extractYear(item.releaseDate || item.release_year || item.year || '');
+            }
+
+            if (key === 'addedAtTime') {
+                value = formatTimeHHmm(resolveAddedAt(item));
             }
 
             if (key === 'addedAt' || key === 'watchedAt') {
-                if (typeof window.formatDateTime === 'function') {
-                    var formatted = window.formatDateTime(value);
-                    if (formatted) value = formatted;
-                } else {
-                    value = normalizeAddedAt(value);
+                value = formatTimeHHmmss(resolveAddedAt(item));
+            }
+
+            if (key === 'price') {
+                if (value !== undefined && value !== null) {
+                    value = formatPriceWithCurrency(value);
+                }
+            } else if (key === 'priceSnapshot') {
+                if (value !== undefined && value !== null) {
+                    value = formatPricePlain(value);
                 }
             }
+
+            if (key === 'rating' || key === 'ratingValue') {
+                if (value !== undefined && value !== null) {
+                    value = formatRatingValue(value);
+                }
+            }
+
+            if (key === 'releaseDate') {
+                value = extractYear(value);
+            }
+
+            if (key === 'review') {
+                var text = (value === null || value === undefined) ? '' : String(value).trim();
+                var empty = text === '';
+                value = empty ? 'Пользователь не оставил отзыва' : text;
+                el.classList.toggle('history-item-meta-value--muted', empty);
+            }
+
+            if (value === undefined || value === null) return;
 
             if (el.tagName === 'IMG') {
                 el.setAttribute('src', String(value));
@@ -91,6 +181,16 @@
                 el.textContent = String(value);
             }
         });
+
+        var addedRaw = resolveAddedAt(item);
+        if (addedRaw && !root.getAttribute('data-added-at')) {
+            var normalized = normalizeAddedAt(addedRaw);
+            if (normalized) root.setAttribute('data-added-at', normalized);
+        }
+
+        if (item.id !== undefined && item.id !== null && !root.getAttribute('data-movie-id')) {
+            root.setAttribute('data-movie-id', String(item.id));
+        }
 
         root.querySelectorAll('img[data-poster-img]').forEach(function (img) {
             var container = img.closest(
@@ -183,12 +283,15 @@
             scrollRoot: null,
             scrollParents: [],
             pollTimer: null,
-            scrollHandler: null,
             scrollListeners: []
         };
 
-        function isHistoryContainer() {
-            return container.classList && container.classList.contains('history-container');
+        function isGroupableHistoryContainer() {
+            if (!container.classList) return false;
+            if (container.classList.contains('watched-container')) return true;
+            if (container.hasAttribute('data-watched-container')) return true;
+            if (container.classList.contains('history-container')) return true;
+            return false;
         }
 
         function ensureSentinel() {
@@ -230,12 +333,10 @@
 
         function detachScrollListeners() {
             state.scrollListeners.forEach(function (pair) {
-                var node = pair.node;
-                var handler = pair.handler;
-                if (node === window) {
-                    window.removeEventListener('scroll', handler);
+                if (pair.node === window) {
+                    window.removeEventListener('scroll', pair.handler);
                 } else {
-                    node.removeEventListener('scroll', handler);
+                    pair.node.removeEventListener('scroll', pair.handler);
                 }
             });
             state.scrollListeners = [];
@@ -302,7 +403,7 @@
 
                 ensureTail();
 
-                if (isHistoryContainer() &&
+                if (isGroupableHistoryContainer() &&
                     typeof window.applyHistoryGrouping === 'function') {
                     window.applyHistoryGrouping(container);
                     ensureTail();

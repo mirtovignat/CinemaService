@@ -10,6 +10,7 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 @Getter
 @Setter
@@ -40,7 +41,7 @@ public abstract class AbstractCatalogItem {
             User user,
             Movie movie
     ) {
-        entity.setAddedAt(LocalDateTime.now());
+        entity.setAddedAt(LocalDateTime.now(ZoneOffset.UTC));
         entity.setUser(user);
         entity.setMovie(movie);
         AbstractCatalogItemId id = AbstractCatalogItemId.from(movie, user);

@@ -14,7 +14,7 @@
     <div class="profile-grid">
         <th:block th:replace="~{fragments/sidebar :: sidebar(
             currentPage='rated',
-            userSidebar=${response.userSidebar()},
+            userSidebar=${userSidebar},
             genres=${genres}
         )}"></th:block>
 
@@ -30,20 +30,21 @@
                 <th:block th:replace="~{fragments/catalog-search :: catalogSearch}"></th:block>
             </div>
 
-            <div th:if="${response != null and response.page() != null and response.page().content() != null and !response.page().content().isEmpty()}"
+            <div th:if="${response != null and response.content() != null and !response.content().isEmpty()}"
                  class="history-container"
                  data-cursor-container
+                 data-group-history
                  data-cursor-endpoint="/rated/history/more"
                  data-cursor-template="ratedItemTemplate"
-                 th:attr="data-cursor-next=${response.page().nextCursor()},
-                          data-cursor-has-more=${response.page().hasMore()},
-                          data-cursor-sort=${response.page().sort()}">
+                 th:attr="data-cursor-next=${response.nextCursor()},
+                          data-cursor-has-more=${response.hasMore()},
+                          data-cursor-sort=${response.sort()}">
 
-                <div th:each="item : ${response.page().content()}"
+                <div th:each="item : ${response.content()}"
                      class="history-item"
                      th:data-movie-id="${item.id()}"
                      th:data-movie-title="${item.title()}"
-                     th:attr="data-added-at=${item.addedAt() != null ? #temporals.format(item.addedAt(), 'yyyy-MM-dd''T''HH:mm:ss') : ''}">
+                     th:data-added-at="${item.addedAt()}">
 
                     <div class="history-item-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -72,7 +73,7 @@
                                       th:text="${item.review()}">Отличный фильм!</span>
                                 <span class="history-item-meta-value history-item-meta-value--muted"
                                       th:if="${item.review() == null or #strings.isEmpty(item.review())}">
-                                    Пользователь не оставил отзыва
+                                    — Вы не оставили текстового отзыва —
                                 </span>
                             </div>
 
@@ -97,14 +98,14 @@
                             <circle cx="12" cy="12" r="10"/>
                             <polyline points="12 6 12 12 16 14"/>
                         </svg>
-                        <span th:text="${'Оценено: ' + #temporals.format(item.addedAt(), 'HH:mm:ss')}">Оценено: 18:30:00</span>
+                        <span>Оценено: <span class="js-local-time" th:data-utc="${item.addedAt()}"></span></span>
                     </div>
                 </div>
 
                 <div class="cursor-loader" data-cursor-loader></div>
             </div>
 
-            <div th:if="${response == null or response.page() == null or response.page().content() == null or response.page().content().isEmpty()}"
+            <div th:if="${response == null or response.content() == null or response.content().isEmpty()}"
                  class="empty-message">
                 <div class="empty-icon">
                     <th:block th:replace="~{fragments/icons :: icon-star}"></th:block>
@@ -114,7 +115,7 @@
                 <a th:href="@{/}" class="browse-movies-btn">Перейти в главное меню</a>
             </div>
 
-            <th:block th:if="${response == null or response.page() == null or response.page().content() == null or response.page().content().isEmpty()}">
+            <th:block th:if="${response == null or response.content() == null or response.content().isEmpty()}">
                 <th:block th:insert="~{fragments/recommendations :: recommendations}"></th:block>
             </th:block>
         </div>
@@ -144,6 +145,9 @@
                     <span class="history-item-meta-value history-item-meta-value--rating">
                         <span data-field="ratingValue"></span>
                         <span class="history-item-meta-value-max"> / 10</span>
+                        <span class="history-item-rating-star">
+                            <th:block th:replace="~{fragments/icons :: icon-star}"></th:block>
+                        </span>
                     </span>
                 </div>
             </div>
@@ -154,11 +158,12 @@
                 <circle cx="12" cy="12" r="10"/>
                 <polyline points="12 6 12 12 16 14"/>
             </svg>
-            <span data-field="addedAt"></span>
+            <span>Оценено: <span class="js-local-time" data-field="addedAtTime"></span></span>
         </div>
     </div>
 </template>
 
+<script th:src="@{/js/pages/watched-local-time.js}" defer></script>
 <script th:src="@{/js/modules/sort-toggle.js}" defer></script>
 <script th:src="@{/js/modules/cursor-pagination.js}" defer></script>
 <script th:src="@{/js/main.js}" defer></script>

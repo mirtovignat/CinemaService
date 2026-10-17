@@ -1,4 +1,3 @@
-// demo/src/main/java/com/example/demo/repository/entity/FavouriteMovieRepository.java
 package com.example.demo.repository.entity;
 
 import com.example.demo.model.entity.FavouriteMovie;
@@ -9,30 +8,44 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
+
 @Repository
 public interface FavouriteMovieRepository extends AbstractCatalogItemRepository<FavouriteMovie> {
 
     @Query("""
-            SELECT item
-            FROM FavouriteMovie item
-            JOIN FETCH item.movie
-            WHERE item.user.id = :userId
-            AND (:cursorMovieId IS NULL OR item.id.movieId < :cursorMovieId)
-            ORDER BY item.id.movieId DESC
+            SELECT favouriteMovie
+            FROM FavouriteMovie favouriteMovie
+            JOIN FETCH favouriteMovie.movie
+            WHERE favouriteMovie.id.userId = :userId
+            AND (
+                :hasCursor = false
+                OR favouriteMovie.addedAt > :cursorAddedAt
+                OR (favouriteMovie.addedAt = :cursorAddedAt AND favouriteMovie.id.movieId > :cursorMovieId)
+            )
+            ORDER BY favouriteMovie.addedAt ASC, favouriteMovie.id.movieId ASC
             """)
-    Slice<FavouriteMovie> findPageDesc(@Param("userId") Long userId,
-                                       @Param("cursorMovieId") Long cursorMovieId,
-                                       Pageable pageable);
+    Slice<FavouriteMovie> fetchAscending(@Param("userId") Long userId,
+                                         @Param("hasCursor") boolean hasCursor,
+                                         @Param("cursorAddedAt") LocalDateTime cursorAddedAt,
+                                         @Param("cursorMovieId") Long cursorMovieId,
+                                         Pageable pageable);
 
     @Query("""
-            SELECT item
-            FROM FavouriteMovie item
-            JOIN FETCH item.movie
-            WHERE item.user.id = :userId
-            AND (:cursorMovieId IS NULL OR item.id.movieId > :cursorMovieId)
-            ORDER BY item.id.movieId ASC
+            SELECT favouriteMovie
+            FROM FavouriteMovie favouriteMovie
+            JOIN FETCH favouriteMovie.movie
+            WHERE favouriteMovie.id.userId = :userId
+            AND (
+                :hasCursor = false
+                OR favouriteMovie.addedAt < :cursorAddedAt
+                OR (favouriteMovie.addedAt = :cursorAddedAt AND favouriteMovie.id.movieId < :cursorMovieId)
+            )
+            ORDER BY favouriteMovie.addedAt DESC, favouriteMovie.id.movieId DESC
             """)
-    Slice<FavouriteMovie> findPageAsc(@Param("userId") Long userId,
-                                      @Param("cursorMovieId") Long cursorMovieId,
-                                      Pageable pageable);
+    Slice<FavouriteMovie> fetchDescending(@Param("userId") Long userId,
+                                          @Param("hasCursor") boolean hasCursor,
+                                          @Param("cursorAddedAt") LocalDateTime cursorAddedAt,
+                                          @Param("cursorMovieId") Long cursorMovieId,
+                                          Pageable pageable);
 }

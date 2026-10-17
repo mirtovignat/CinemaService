@@ -16,7 +16,7 @@
     <div class="profile-grid">
         <th:block th:replace="~{fragments/sidebar :: sidebar(
             currentPage='library',
-            userSidebar=${response.userSidebar()},
+            userSidebar=${userSidebar},
             genres=${genres}
         )}"></th:block>
 
@@ -27,30 +27,25 @@
                         <th:block th:replace="~{fragments/icons :: icon-film}"></th:block>
                         Моя коллекция
                     </h1>
-                    <div class="greeting-sub"
-                         th:if="${response != null and response.page() != null and response.page().content() != null}">
-                        Загружено: <strong th:text="${#lists.size(response.page().content())}">0</strong>
-                    </div>
                 </div>
                 <th:block th:replace="~{fragments/sort-toggle :: sortToggle}"></th:block>
                 <th:block th:replace="~{fragments/catalog-search :: catalogSearch}"></th:block>
             </div>
 
-            <div th:if="${response != null and response.page() != null and response.page().content() != null and !response.page().content().isEmpty()}"
+            <div th:if="${response != null and response.content() != null and !response.content().isEmpty()}"
                  class="library-container"
                  data-cursor-container
                  data-cursor-endpoint="/library/more"
                  data-cursor-template="libraryCardTemplate"
-                 th:attr="data-cursor-next=${response.page().nextCursor()},
-                          data-cursor-has-more=${response.page().hasMore()},
-                          data-cursor-sort=${response.page().sort()}">
+                 th:attr="data-cursor-next=${response.nextCursor()},
+                          data-cursor-has-more=${response.hasMore()},
+                          data-cursor-sort=${response.sort()}">
 
-                <div th:each="item : ${response.page().content()}"
+                <div th:each="item : ${response.content()}"
                      class="media-card library-card"
                      th:classappend="${item.watched()} ? 'watched' : ''"
-                     th:attr="data-movie-id=${item.id()},
-                              data-added-at=${item.addedAt() != null ? #temporals.format(item.addedAt(), 'yyyy-MM-dd''T''HH:mm:ss') : ''},
-                              data-date=${item.addedAt() != null ? #temporals.format(item.addedAt(), 'yyyy-MM-dd') : ''}">
+                     th:data-movie-id="${item.id()}"
+                     th:data-added-at="${item.addedAt()}">
 
                     <div class="media-card-poster-link">
                         <a class="poster-link" href="javascript:void(0);"
@@ -79,25 +74,24 @@
                             <a th:href="@{/movies/{id}(id=${item.id()})}" th:text="${item.title()}">Название</a>
                         </h3>
                         <div class="media-card-info">
-                            <div class="library-genre-tag" th:if="${item.genre() != null and !item.genre().isEmpty()}">
-                                <span class="genre-label">
-                                    <th:block th:replace="~{fragments/icons :: icon-tag}"></th:block> Жанр:
-                                </span>
-                                <span class="genre-value" th:text="${item.genre()}">Фантастика</span>
+                            <div class="library-info-row" th:if="${item.genre() != null and !item.genre().isEmpty()}">
+                                <span class="library-info-icon"><th:block th:replace="~{fragments/icons :: icon-tag}"></th:block></span>
+                                <span class="library-info-label">Жанр:</span>
+                                <span class="library-info-value" th:text="${item.genre()}">Фантастика</span>
                             </div>
                             <div class="library-info-row" th:if="${item.director() != null and !item.director().isEmpty()}">
                                 <span class="library-info-icon"><th:block th:replace="~{fragments/icons :: icon-video}"></th:block></span>
                                 <span class="library-info-label">Режиссёр</span>
-                                <span class="library-info-value" th:text="${item.director()}" th:title="${item.director()}">Режиссёр</span>
+                                <span class="library-info-value" th:text="${item.director()}" th:title="${item.director()}">Режиссёр:</span>
                             </div>
                             <div class="library-info-row" th:if="${item.ageRating() != null}">
                                 <span class="library-info-icon"><th:block th:replace="~{fragments/icons :: icon-lock}"></th:block></span>
-                                <span class="library-info-label">Возрастной рейтинг</span>
+                                <span class="library-info-label">Возрастной рейтинг:</span>
                                 <span class="library-info-value" th:text="${item.ageRating()} + '+'">18+</span>
                             </div>
                             <div class="library-info-row" th:if="${item.releaseDate() != null}">
                                 <span class="library-info-icon"><th:block th:replace="~{fragments/icons :: icon-calendar}"></th:block></span>
-                                <span class="library-info-label">Год выпуска</span>
+                                <span class="library-info-label">Год выпуска:</span>
                                 <span class="library-info-value" th:text="${item.releaseDate().year}">2024</span>
                             </div>
                         </div>
@@ -107,7 +101,7 @@
                 <div class="cursor-loader" data-cursor-loader></div>
             </div>
 
-            <div th:if="${response == null or response.page() == null or response.page().content() == null or response.page().content().isEmpty()}"
+            <div th:if="${response == null or response.content() == null or response.content().isEmpty()}"
                  class="empty-message">
                 <div class="empty-icon"><th:block th:replace="~{fragments/icons :: icon-film}"></th:block></div>
                 <h2>Ваша коллекция пуста</h2>
@@ -115,7 +109,7 @@
                 <a th:href="@{/}" class="browse-movies-btn">Перейти в главное меню</a>
             </div>
 
-            <th:block th:if="${response == null or response.page() == null or response.page().content() == null or response.page().content().isEmpty()}">
+            <th:block th:if="${response == null or response.content() == null or response.content().isEmpty()}">
                 <th:block th:insert="~{fragments/recommendations :: recommendations}"></th:block>
             </th:block>
         </div>
@@ -124,7 +118,7 @@
 
 <template id="libraryCardTemplate">
     <div class="media-card library-card"
-         data-attr="data-movie-id:id;data-added-at:addedAt;data-date:addedAt">
+         data-attr="data-movie-id:id;data-added-at:addedAt">
         <div class="media-card-poster-link">
             <a class="poster-link" href="javascript:void(0);" data-action="watch-movie"
                data-attr="data-movie-id:id;data-movie-title:title;data-poster-url:posterUrl">
@@ -146,27 +140,32 @@
                 <a data-attr="href:/movies/{id}" data-field="title"></a>
             </h3>
             <div class="media-card-info">
-                <div class="library-genre-tag">
-                    <span class="genre-label">Жанр:</span>
-                    <span class="genre-value" data-field="genre"></span>
+                <div class="library-info-row">
+                    <span class="library-info-icon"><th:block th:replace="~{fragments/icons :: icon-tag}"></th:block></span>
+                    <span class="library-info-label">Жанр:</span>
+                    <span class="library-info-value" data-field="genre"></span>
                 </div>
                 <div class="library-info-row">
-                    <span class="library-info-label">Режиссёр</span>
+                    <span class="library-info-icon"><th:block th:replace="~{fragments/icons :: icon-video}"></th:block></span>
+                    <span class="library-info-label">Режиссёр:</span>
                     <span class="library-info-value" data-field="director"></span>
                 </div>
                 <div class="library-info-row">
-                    <span class="library-info-label">Возрастной рейтинг</span>
-                    <span class="library-info-value" data-field="ageRating"></span>
+                    <span class="library-info-icon"><th:block th:replace="~{fragments/icons :: icon-lock}"></th:block></span>
+                    <span class="library-info-label">Возрастной рейтинг:</span>
+                    <span class="library-info-value"><span data-field="ageRating"></span>+</span>
                 </div>
                 <div class="library-info-row">
-                    <span class="library-info-label">Год выпуска</span>
-                    <span class="library-info-value" data-field="releaseDate"></span>
+                    <span class="library-info-icon"><th:block th:replace="~{fragments/icons :: icon-calendar}"></th:block></span>
+                    <span class="library-info-label">Год выпуска:</span>
+                    <span class="library-info-value" data-field="releaseYear"></span>
                 </div>
             </div>
         </div>
     </div>
 </template>
 
+<script th:src="@{/js/pages/watched-local-time.js}" defer></script>
 <script th:src="@{/js/pages/highlight.js}" defer></script>
 <script th:src="@{/js/modules/cursor-pagination.js}" defer></script>
 <script th:src="@{/js/main.js}" defer></script>

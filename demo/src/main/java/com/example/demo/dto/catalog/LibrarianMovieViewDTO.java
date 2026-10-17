@@ -4,19 +4,19 @@ import lombok.Builder;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Builder
 public record LibrarianMovieViewDTO(
         Long id,
+        Long historyItemId,
         String title,
         String posterUrl,
         String genre,
+        String director,
         BigDecimal rating,
         LocalDate releaseDate,
         Integer ageRating,
-        boolean watched,
-        LocalDateTime addedAt,
-        Long historyItemId,
-        String director
-) {}
+        Boolean watched,
+        String addedAt
+) {
+}

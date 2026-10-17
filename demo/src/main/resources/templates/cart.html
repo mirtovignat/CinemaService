@@ -58,9 +58,10 @@
         <th:block th:replace="~{fragments/catalog-search :: catalogSearch}"></th:block>
     </div>
 
-    <div class="catalog-content">
+    <div class="catalog-content" style="display: flex; flex-direction: column; height: 100%;">
 
         <div class="cart-container"
+             style="margin-top: auto;"
              th:if="${response != null and response.content() != null and !response.content().isEmpty()}"
              data-cursor-container
              data-cursor-endpoint="/cart/more"
@@ -174,14 +175,17 @@
             <div class="media-card-info">
                 <div class="media-card-info-rows">
                     <div class="media-card-info-row media-card-info-row--year">
+                        <th:block th:replace="~{fragments/icons :: icon-calendar}"></th:block>
                         <span class="media-card-info-label">Год выпуска:</span>
-                        <span class="media-card-info-value" data-field="releaseDate"></span>
+                        <span class="media-card-info-value" data-field="releaseYear"></span>
                     </div>
                     <div class="media-card-info-row media-card-info-row--genre">
+                        <th:block th:replace="~{fragments/icons :: icon-tag}"></th:block>
                         <span class="media-card-info-label">Жанр:</span>
                         <span class="media-card-info-value" data-field="genre"></span>
                     </div>
                     <div class="media-card-info-row media-card-info-row--duration">
+                        <th:block th:replace="~{fragments/icons :: icon-clock}"></th:block>
                         <span class="media-card-info-label">Длительность:</span>
                         <span class="media-card-info-value" data-field="formattedDuration"></span>
                     </div>

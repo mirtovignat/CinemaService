@@ -27,26 +27,26 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    margin-bottom: 1rem;
 }
 
 .history-day-label {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: #94a3b8;
-    padding: 0 0.25rem 0.25rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #f1f5f9;
+    padding: 0.2rem 0.25rem 0.2rem 0;
+    border-bottom: none;
+    margin-bottom: 0;
 }
 
 .history-day-label svg {
-    width: 13px;
-    height: 13px;
-    stroke: #a78bfa;
-    opacity: 0.75;
+    width: 18px;
+    height: 18px;
+    stroke: #94a3b8;
+    opacity: 0.8;
     flex-shrink: 0;
 }
 
@@ -80,6 +80,8 @@
     border-radius: 9px;
     border: 1px solid rgba(255, 255, 255, 0.06);
     position: relative;
+    z-index: 1;
+    isolation: isolate;
     cursor: pointer;
     align-self: stretch;
 }
@@ -119,7 +121,7 @@
     animation: watchedBarPulse 2s ease-in-out infinite;
     box-shadow: 0 0 15px rgba(239, 68, 68, 0.45);
     pointer-events: none;
-    z-index: 5;
+    z-index: 1;
     border-radius: 0 0 9px 9px;
 }
 
@@ -249,6 +251,7 @@
     align-self: start;
     position: relative;
     width: 32px;
+    z-index: 2;
 }
 
 .history-item-actions .more-btn {

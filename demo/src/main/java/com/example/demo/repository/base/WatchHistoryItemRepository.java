@@ -1,4 +1,3 @@
-// demo/src/main/java/com/example/demo/repository/base/WatchHistoryItemRepository.java
 package com.example.demo.repository.base;
 
 import com.example.demo.model.base.WatchHistoryItem;
@@ -9,39 +8,56 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
 public interface WatchHistoryItemRepository extends JpaRepository<WatchHistoryItem, Long> {
 
     @Query("""
-            SELECT item FROM WatchHistoryItem item
-            WHERE item.id = :itemId AND item.purchasedMovie.user.id = :userId
+            SELECT watchHistoryItem
+            FROM WatchHistoryItem watchHistoryItem
+            WHERE watchHistoryItem.id = :itemId
+            AND watchHistoryItem.purchasedMovie.user.id = :userId
             """)
     Optional<WatchHistoryItem> findByIdAndUserId(@Param("itemId") Long itemId,
                                                  @Param("userId") Long userId);
 
     @Query("""
-            SELECT item FROM WatchHistoryItem item
-            JOIN FETCH item.purchasedMovie pm
-            JOIN FETCH pm.movie
-            WHERE pm.user.id = :userId
-            AND (:cursorId IS NULL OR item.id < :cursorId)
-            ORDER BY item.id DESC
+            SELECT watchHistoryItem
+            FROM WatchHistoryItem watchHistoryItem
+            JOIN FETCH watchHistoryItem.purchasedMovie purchasedMovie
+            JOIN FETCH purchasedMovie.movie
+            WHERE purchasedMovie.user.id = :userId
+            AND (
+                :hasCursor = false
+                OR watchHistoryItem.watchedAt > :cursorWatchedAt
+                OR (watchHistoryItem.watchedAt = :cursorWatchedAt AND watchHistoryItem.id > :cursorId)
+            )
+            ORDER BY watchHistoryItem.watchedAt ASC, watchHistoryItem.id ASC
             """)
-    Slice<WatchHistoryItem> findPageDesc(@Param("userId") Long userId,
-                                         @Param("cursorId") Long cursorId,
-                                         Pageable pageable);
+    Slice<WatchHistoryItem> fetchAscending(@Param("userId") Long userId,
+                                           @Param("hasCursor") boolean hasCursor,
+                                           @Param("cursorWatchedAt") LocalDateTime cursorWatchedAt,
+                                           @Param("cursorId") Long cursorId,
+                                           Pageable pageable);
 
     @Query("""
-            SELECT item FROM WatchHistoryItem item
-            JOIN FETCH item.purchasedMovie pm
-            JOIN FETCH pm.movie
-            WHERE pm.user.id = :userId
-            AND (:cursorId IS NULL OR item.id > :cursorId)
-            ORDER BY item.id ASC
+            SELECT watchHistoryItem
+            FROM WatchHistoryItem watchHistoryItem
+            JOIN FETCH watchHistoryItem.purchasedMovie purchasedMovie
+            JOIN FETCH purchasedMovie.movie
+            WHERE purchasedMovie.user.id = :userId
+            AND (
+                :hasCursor = false
+                OR watchHistoryItem.watchedAt < :cursorWatchedAt
+                OR (watchHistoryItem.watchedAt = :cursorWatchedAt AND watchHistoryItem.id < :cursorId)
+            )
+            ORDER BY watchHistoryItem.watchedAt DESC, watchHistoryItem.id DESC
             """)
-    Slice<WatchHistoryItem> findPageAsc(@Param("userId") Long userId,
-                                        @Param("cursorId") Long cursorId,
-                                        Pageable pageable);
+    Slice<WatchHistoryItem> fetchDescending(@Param("userId") Long userId,
+                                            @Param("hasCursor") boolean hasCursor,
+                                            @Param("cursorWatchedAt") LocalDateTime cursorWatchedAt,
+                                            @Param("cursorId") Long cursorId,
+                                            Pageable pageable);
 }
