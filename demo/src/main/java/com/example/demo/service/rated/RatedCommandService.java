@@ -33,10 +33,20 @@ public class RatedCommandService {
         Movie movie = movieService.getMovie(movieId);
         User user = userQueryService.getUser(userId);
 
-        RatedMovie ratedMovie = findOrInit(movieId, userId, user, movie);
+        RatedMovie ratedMovie = ratedMovieRepository
+                .findByMovieIdAndUserIdIncludingDeleted(movieId, userId)
+                .orElse(null);
 
-        applyForm(ratedMovie, ratedMovieFormDTO);
-        ratedMovie.setAddedAt(LocalDateTime.now(ZoneOffset.UTC));
+        boolean isNew = ratedMovie == null;
+        if (isNew) {
+            ratedMovie = AbstractCatalogItem.init(RatedMovie.builder().build(), user, movie);
+        }
+
+        ratedMovie.setRatingValue(ratedMovieFormDTO.rating());
+        ratedMovie.setReview(ratedMovieFormDTO.review());
+        if (isNew) {
+            ratedMovie.setAddedAt(LocalDateTime.now(ZoneOffset.UTC));
+        }
         ratedMovie.getDeletableState().setDeleted(false);
         ratedMovieRepository.saveAndFlush(ratedMovie);
 
@@ -53,17 +63,6 @@ public class RatedCommandService {
         }
 
         synchronizeMovieRating(movie, movieId);
-    }
-
-    private RatedMovie findOrInit(Long movieId, Long userId, User user, Movie movie) {
-        return ratedMovieRepository
-                .findByMovieIdAndUserIdIncludingDeleted(movieId, userId)
-                .orElseGet(() -> AbstractCatalogItem.init(RatedMovie.builder().build(), user, movie));
-    }
-
-    private void applyForm(RatedMovie ratedMovie, RatedMovieFormDTO form) {
-        ratedMovie.setRatingValue(form.rating());
-        ratedMovie.setReview(form.review());
     }
 
     private void synchronizeMovieRating(Movie movie, Long movieId) {

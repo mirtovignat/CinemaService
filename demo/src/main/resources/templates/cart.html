@@ -114,7 +114,10 @@
                             </div>
                         </div>
                         <div class="media-card-price-and-actions">
-                            <span class="media-card-price" th:text="${cartMovie.price()} + ' ₽'">600 ₽</span>
+                            <span class="media-card-price">
+                                <th:block th:replace="~{fragments/icons :: icon-money}"></th:block>
+                                Цена: <span th:text="${cartMovie.price()} + ' ₽'">600 ₽</span>
+                            </span>
                             <div class="media-card-actions">
                                 <button type="button" class="icon-btn rating-btn" data-action="show-rating"
                                         th:data-movie-id="${cartMovie.id()}" th:data-movie-title="${cartMovie.title()}"
@@ -191,7 +194,10 @@
                     </div>
                 </div>
                 <div class="media-card-price-and-actions">
-                    <span class="media-card-price" data-field="price"></span>
+                    <span class="media-card-price">
+                        <th:block th:replace="~{fragments/icons :: icon-money}"></th:block>
+                        Цена: <span data-field="price"></span>
+                    </span>
                     <div class="media-card-actions">
                         <button type="button" class="icon-btn rating-btn" data-action="show-rating"
                                 data-attr="data-movie-id:id;data-movie-title:title" title="Оценить фильм">

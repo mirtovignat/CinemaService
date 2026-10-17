@@ -296,21 +296,10 @@
     fill: none;
 }
 
-.media-card-info-row--year svg {
-    stroke: #34d399;
-}
-
-.media-card-info-row--genre svg {
-    stroke: #60a5fa;
-}
-
-.media-card-info-row--duration svg {
-    stroke: #fbbf24;
-}
-
-.media-card-info-row--age svg {
-    stroke: #f472b6;
-}
+.media-card-info-row--year svg { stroke: #34d399; }
+.media-card-info-row--genre svg { stroke: #60a5fa; }
+.media-card-info-row--duration svg { stroke: #fbbf24; }
+.media-card-info-row--age svg { stroke: #f472b6; }
 
 .media-card-info-label {
     color: #94a3b8;

@@ -2,15 +2,12 @@ package com.example.demo.repository.base;
 
 import com.example.demo.model.base.AbstractCatalogItem;
 import com.example.demo.model.base.AbstractCatalogItemId;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.query.Param;
 
-import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -57,46 +54,4 @@ public interface AbstractCatalogItemRepository<Entity extends AbstractCatalogIte
             """)
     List<Long> findMovieIdsByUserIdAndMovieIdIn(@Param("userId") Long userId,
                                                 @Param("movieIds") Collection<Long> movieIds);
-
-    @Query("""
-            SELECT item FROM #{#entityName} item
-            JOIN FETCH item.movie
-            WHERE item.id.userId = :userId
-            ORDER BY item.addedAt ASC, item.id.movieId ASC
-            """)
-    Slice<Entity> findPageAscFirst(@Param("userId") Long userId, Pageable pageable);
-
-    @Query("""
-            SELECT item FROM #{#entityName} item
-            JOIN FETCH item.movie
-            WHERE item.id.userId = :userId
-            ORDER BY item.addedAt DESC, item.id.movieId DESC
-            """)
-    Slice<Entity> findPageDescFirst(@Param("userId") Long userId, Pageable pageable);
-
-    @Query("""
-            SELECT item FROM #{#entityName} item
-            JOIN FETCH item.movie
-            WHERE item.id.userId = :userId
-            AND (item.addedAt > :cursorAddedAt
-                 OR (item.addedAt = :cursorAddedAt AND item.id.movieId > :cursorEntityId))
-            ORDER BY item.addedAt ASC, item.id.movieId ASC
-            """)
-    Slice<Entity> findPageAscAfter(@Param("userId") Long userId,
-                                   @Param("cursorAddedAt") LocalDateTime cursorAddedAt,
-                                   @Param("cursorEntityId") Long cursorEntityId,
-                                   Pageable pageable);
-
-    @Query("""
-            SELECT item FROM #{#entityName} item
-            JOIN FETCH item.movie
-            WHERE item.id.userId = :userId
-            AND (item.addedAt < :cursorAddedAt
-                 OR (item.addedAt = :cursorAddedAt AND item.id.movieId < :cursorEntityId))
-            ORDER BY item.addedAt DESC, item.id.movieId DESC
-            """)
-    Slice<Entity> findPageDescAfter(@Param("userId") Long userId,
-                                    @Param("cursorAddedAt") LocalDateTime cursorAddedAt,
-                                    @Param("cursorEntityId") Long cursorEntityId,
-                                    Pageable pageable);
 }

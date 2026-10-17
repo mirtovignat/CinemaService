@@ -18,11 +18,11 @@ public interface CartItemMapper {
     @Mapping(target = "rating", source = "cartItem.movie.rating")
     @Mapping(target = "releaseDate", source = "cartItem.movie.releaseDate")
     @Mapping(target = "currencyCode", ignore = true)
-    @Mapping(target = "inFavourites", source = "status.inFavourites")
-    @Mapping(target = "bought", source = "status.bought")
+    @Mapping(target = "inFavourites", source = "userStatus.inFavourites")
+    @Mapping(target = "bought", source = "userStatus.bought")
     @Mapping(target = "quantity", source = "cartItem.quantity")
     @Mapping(target = "formattedDuration",
             source = "cartItem.movie.duration",
             qualifiedByName = "durationToString")
-    CartItemViewDTO toOwnerView(CartItem cartItem, UserStatus status);
+    CartItemViewDTO toOwnerView(CartItem cartItem, UserStatus userStatus);
 }

@@ -4,16 +4,16 @@ import lombok.Getter;
 
 @Getter
 public class BusinessException extends RuntimeException {
-    private final ErrorCode code;
+    private final ErrorCode errorCode;
     private final Object[] args;
 
-    private BusinessException(ErrorCode code, Object... args) {
-        super(code.name());
-        this.code = code;
+    private BusinessException(ErrorCode errorCode, Object... args) {
+        super(errorCode.name());
+        this.errorCode = errorCode;
         this.args = args;
     }
 
-    public static BusinessException of(ErrorCode code, Object... args) {
-        return new BusinessException(code, args);
+    public static BusinessException of(ErrorCode errorCode, Object... args) {
+        return new BusinessException(errorCode, args);
     }
 }

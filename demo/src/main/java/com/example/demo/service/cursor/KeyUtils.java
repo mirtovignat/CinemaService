@@ -6,12 +6,15 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class KeyUtils {
 
     public static String encodeTimestampAndIdentifier(LocalDateTime timestamp,
                                                       Long identifier) {
+        Objects.requireNonNull(timestamp, "timestamp не должен быть null");
+        Objects.requireNonNull(identifier, "identifier не должен быть null");
         return timestamp.toString() + "_" + identifier;
     }
 

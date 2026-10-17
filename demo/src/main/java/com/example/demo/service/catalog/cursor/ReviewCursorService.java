@@ -7,6 +7,7 @@ import com.example.demo.repository.entity.RatedMovieRepository;
 import com.example.demo.service.cursor.AbstractCursorService;
 import com.example.demo.service.cursor.CursorCodec;
 import com.example.demo.service.cursor.KeyUtils;
+import com.example.demo.service.cursor.context.ReviewCursorContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
@@ -16,20 +17,18 @@ import java.time.LocalDateTime;
 
 @Service
 public class ReviewCursorService
-        extends AbstractCursorService<RatedMovie, ReviewViewDTO> {
+        extends AbstractCursorService<RatedMovie, ReviewViewDTO, ReviewCursorContext> {
 
     private final RatedMovieRepository ratedMovieRepository;
 
     public ReviewCursorService(CursorCodec cursorCodec,
                                RatedMovieRepository ratedMovieRepository,
                                RatedMapper ratedMapper,
-                               @Value("${app.reviews.page-size:10}") int defaultPageSize,
-                               @Value("${app.reviews.max-page-size:50}") int maximumPageSize) {
+                               @Value("${app.reviews.page-size:10}") int defaultPageSize) {
         super(cursorCodec,
                 defaultPageSize,
-                maximumPageSize,
                 ratedMovie -> KeyUtils.encodeTimestampAndIdentifier(
-                        ratedMovie.getAddedAt(), ratedMovie.getId().getUserId()),
+                        ratedMovie.getAddedAt(), ratedMovie.getAbstractCatalogItemId().getUserId()),
                 ratedMovies -> ratedMovies.stream()
                         .map(ratedMovie -> ratedMapper.toReviewViewWithOwn(ratedMovie, null))
                         .toList());
@@ -40,11 +39,9 @@ public class ReviewCursorService
     protected Slice<RatedMovie> fetchSlice(String cursorValue,
                                            String sortDirection,
                                            PageRequest pageRequest,
-                                           Long... contextValues) {
-        Long movieId = contextValues[0];
-        Long viewerId = contextValues.length > 1 && contextValues[1] != null
-                ? contextValues[1]
-                : -1L;
+                                           ReviewCursorContext context) {
+        Long movieId = context.movieId();
+        Long viewerId = context.viewerId();
         boolean hasCursor = cursorValue != null;
         LocalDateTime cursorAddedAt = hasCursor ? KeyUtils.decodeTimestamp(cursorValue) : null;
         Long cursorUserId = hasCursor ? KeyUtils.decodeIdentifier(cursorValue) : null;

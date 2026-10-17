@@ -47,7 +47,7 @@ public class GlobalExceptionHandler {
                                           HttpServletRequest httpServletRequest,
                                           Model model,
                                           RedirectAttributes redirectAttributes) {
-        ErrorCode errorCode = businessException.getCode();
+        ErrorCode errorCode = businessException.getErrorCode();
         String errorMessage = messageUtils.getError(errorCode, businessException.getArgs());
         HttpStatus httpStatus = mapErrorCodeToHttpStatus(errorCode);
         return buildErrorResponse(httpServletRequest, model, redirectAttributes,

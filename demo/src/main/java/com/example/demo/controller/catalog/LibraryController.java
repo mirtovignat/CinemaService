@@ -5,6 +5,7 @@ import com.example.demo.dto.response.CursorPageResponse;
 import com.example.demo.dto.user.SessionUser;
 import com.example.demo.mapper.entity.UserMapper;
 import com.example.demo.service.catalog.cursor.LibraryCursorService;
+import com.example.demo.service.cursor.context.UserCursorContext;
 import com.example.demo.service.movie.FilterMetaService;
 import com.example.demo.service.user.UserQueryService;
 import lombok.RequiredArgsConstructor;
@@ -28,11 +29,10 @@ public class LibraryController {
     @GetMapping
     public String getLibrary(@RequestParam(required = false) String cursor,
                              @RequestParam(required = false) String sort,
-                             @RequestParam(required = false) Integer size,
                              SessionUser sessionUser,
                              Model model) {
         model.addAttribute("response",
-                libraryCursorService.page(cursor, sort, size, sessionUser.id()));
+                libraryCursorService.page(cursor, sort, new UserCursorContext(sessionUser.id())));
         model.addAttribute("userSidebar",
                 userMapper.toSidebarView(userQueryService.getUser(sessionUser.id())));
         model.addAttribute("genres", filterMetaService.getAllGenres());
@@ -43,8 +43,7 @@ public class LibraryController {
     @ResponseBody
     public CursorPageResponse<LibrarianMovieViewDTO> more(@RequestParam(required = false) String cursor,
                                                           @RequestParam(required = false) String sort,
-                                                          @RequestParam(required = false) Integer size,
                                                           SessionUser sessionUser) {
-        return libraryCursorService.page(cursor, sort, size, sessionUser.id());
+        return libraryCursorService.page(cursor, sort, new UserCursorContext(sessionUser.id()));
     }
 }

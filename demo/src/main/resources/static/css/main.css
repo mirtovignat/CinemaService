@@ -2,7 +2,6 @@
 @import url('base/_base.css');
 @import url('base/_reset.css');
 @import url('base/_typography.css');
-@import url('layout/_grid.css');
 @import url('components/_flash-messages.css');
 @import url('components/_modals.css');
 @import url('components/_buttons.css');

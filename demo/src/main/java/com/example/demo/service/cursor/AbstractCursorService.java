@@ -11,19 +11,17 @@ import java.util.List;
 import java.util.function.Function;
 
 @AllArgsConstructor
-public abstract class AbstractCursorService<EntityType, DataType> {
+public abstract class AbstractCursorService<EntityType, DataType, ContextType> {
 
     private final CursorCodec cursorCodec;
     private final int defaultPageSize;
-    private final int maximumPageSize;
     private final Function<EntityType, String> cursorValueExtractor;
     private final Function<List<EntityType>, List<DataType>> contentMapper;
 
     @Transactional(readOnly = true)
     public CursorPageResponse<DataType> page(String rawCursor,
                                              String sortDirection,
-                                             Integer requestedPageSize,
-                                             Long... contextValues) {
+                                             ContextType context) {
         String cursorValue = null;
         if (rawCursor != null && !rawCursor.isBlank()) {
             Cursor decodedCursor = cursorCodec.decode(rawCursor);
@@ -31,18 +29,17 @@ public abstract class AbstractCursorService<EntityType, DataType> {
         }
 
         String normalizedSortDirection = "asc".equalsIgnoreCase(sortDirection) ? "asc" : "desc";
-        int effectivePageSize = resolvePageSize(requestedPageSize);
 
         Slice<EntityType> slice = fetchSlice(
                 cursorValue,
                 normalizedSortDirection,
-                PageRequest.of(0, effectivePageSize + 1),
-                contextValues);
+                PageRequest.of(0, defaultPageSize + 1),
+                context);
 
         List<EntityType> rawContent = slice.getContent();
-        boolean hasMore = rawContent.size() > effectivePageSize;
+        boolean hasMore = rawContent.size() > defaultPageSize;
         List<EntityType> pageContent = hasMore
-                ? rawContent.subList(0, effectivePageSize)
+                ? rawContent.subList(0, defaultPageSize)
                 : rawContent;
 
         String nextCursor = null;
@@ -64,12 +61,5 @@ public abstract class AbstractCursorService<EntityType, DataType> {
     protected abstract Slice<EntityType> fetchSlice(String cursorValue,
                                                     String sortDirection,
                                                     PageRequest pageRequest,
-                                                    Long... contextValues);
-
-    private int resolvePageSize(Integer requestedPageSize) {
-        if (requestedPageSize == null || requestedPageSize <= 0) {
-            return defaultPageSize;
-        }
-        return Math.min(requestedPageSize, maximumPageSize);
-    }
+                                                    ContextType context);
 }

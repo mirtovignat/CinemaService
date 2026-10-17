@@ -8,6 +8,7 @@ import com.example.demo.repository.entity.CartItemRepository;
 import com.example.demo.service.cursor.AbstractCursorService;
 import com.example.demo.service.cursor.CursorCodec;
 import com.example.demo.service.cursor.KeyUtils;
+import com.example.demo.service.cursor.context.UserCursorContext;
 import com.example.demo.service.linked_collection.UserStatusResolver;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
@@ -19,7 +20,8 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-public class CartCursorService extends AbstractCursorService<CartItem, CartItemViewDTO> {
+public class CartCursorService
+        extends AbstractCursorService<CartItem, CartItemViewDTO, UserCursorContext> {
 
     private final CartItemRepository cartItemRepository;
 
@@ -27,13 +29,11 @@ public class CartCursorService extends AbstractCursorService<CartItem, CartItemV
                              CartItemRepository cartItemRepository,
                              UserStatusResolver userStatusResolver,
                              CartItemMapper cartItemMapper,
-                             @Value("${app.catalog.page-size:20}") int defaultPageSize,
-                             @Value("${app.catalog.max-page-size:100}") int maximumPageSize) {
+                             @Value("${app.catalog.page-size:20}") int defaultPageSize) {
         super(cursorCodec,
                 defaultPageSize,
-                maximumPageSize,
                 cartItem -> KeyUtils.encodeTimestampAndIdentifier(
-                        cartItem.getAddedAt(), cartItem.getId().getMovieId()),
+                        cartItem.getAddedAt(), cartItem.getAbstractCatalogItemId().getMovieId()),
                 cartItems -> mapWithStatuses(cartItems, userStatusResolver, cartItemMapper));
         this.cartItemRepository = cartItemRepository;
     }
@@ -42,8 +42,8 @@ public class CartCursorService extends AbstractCursorService<CartItem, CartItemV
     protected Slice<CartItem> fetchSlice(String cursorValue,
                                          String sortDirection,
                                          PageRequest pageRequest,
-                                         Long... contextValues) {
-        Long userId = contextValues[0];
+                                         UserCursorContext context) {
+        Long userId = context.userId();
         boolean hasCursor = cursorValue != null;
         LocalDateTime cursorAddedAt = hasCursor ? KeyUtils.decodeTimestamp(cursorValue) : null;
         Long cursorMovieId = hasCursor ? KeyUtils.decodeIdentifier(cursorValue) : null;
@@ -58,15 +58,15 @@ public class CartCursorService extends AbstractCursorService<CartItem, CartItemV
         if (cartItems.isEmpty()) {
             return List.of();
         }
-        Long userId = cartItems.get(0).getId().getUserId();
+        Long userId = cartItems.get(0).getAbstractCatalogItemId().getUserId();
         List<Long> movieIds = cartItems.stream()
-                .map(cartItem -> cartItem.getId().getMovieId())
+                .map(cartItem -> cartItem.getAbstractCatalogItemId().getMovieId())
                 .toList();
         Map<Long, UserStatus> userStatuses = userStatusResolver.resolveAll(userId, movieIds);
         return cartItems.stream()
                 .map(cartItem -> cartItemMapper.toOwnerView(
                         cartItem,
-                        userStatuses.getOrDefault(cartItem.getId().getMovieId(),
+                        userStatuses.getOrDefault(cartItem.getAbstractCatalogItemId().getMovieId(),
                                 UserStatus.builder().build())))
                 .toList();
     }

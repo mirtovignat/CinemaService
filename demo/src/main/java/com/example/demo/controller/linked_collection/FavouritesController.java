@@ -6,6 +6,7 @@ import com.example.demo.dto.response.CursorPageResponse;
 import com.example.demo.dto.user.SessionUser;
 import com.example.demo.exception.SuccessCode;
 import com.example.demo.service.catalog.cursor.FavouritesCursorService;
+import com.example.demo.service.cursor.context.UserCursorContext;
 import com.example.demo.service.linked_collection.FavouritesService;
 import com.example.demo.util.MessageUtils;
 import lombok.RequiredArgsConstructor;
@@ -28,11 +29,10 @@ public class FavouritesController {
     @GetMapping
     public String getFavourites(@RequestParam(required = false) String cursor,
                                 @RequestParam(required = false) String sort,
-                                @RequestParam(required = false) Integer size,
                                 SessionUser sessionUser,
                                 Model model) {
         Long userId = sessionUser.id();
-        model.addAttribute("response", favouritesCursorService.page(cursor, sort, size, userId));
+        model.addAttribute("response", favouritesCursorService.page(cursor, sort, new UserCursorContext(userId)));
         model.addAttribute("catalogCount", favouritesService.getCount(userId));
         return "favourites";
     }
@@ -41,9 +41,8 @@ public class FavouritesController {
     @ResponseBody
     public CursorPageResponse<FavouriteMovieViewDTO> more(@RequestParam(required = false) String cursor,
                                                           @RequestParam(required = false) String sort,
-                                                          @RequestParam(required = false) Integer size,
                                                           SessionUser sessionUser) {
-        return favouritesCursorService.page(cursor, sort, size, sessionUser.id());
+        return favouritesCursorService.page(cursor, sort, new UserCursorContext(sessionUser.id()));
     }
 
     @GetMapping("/count")

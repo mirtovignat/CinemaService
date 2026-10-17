@@ -7,6 +7,7 @@ import com.example.demo.repository.entity.PurchasedMovieRepository;
 import com.example.demo.service.cursor.AbstractCursorService;
 import com.example.demo.service.cursor.CursorCodec;
 import com.example.demo.service.cursor.KeyUtils;
+import com.example.demo.service.cursor.context.UserCursorContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
@@ -16,20 +17,18 @@ import java.time.LocalDateTime;
 
 @Service
 public class HistoryCursorService
-        extends AbstractCursorService<PurchasedMovie, HistoricalMovieViewDTO> {
+        extends AbstractCursorService<PurchasedMovie, HistoricalMovieViewDTO, UserCursorContext> {
 
     private final PurchasedMovieRepository purchasedMovieRepository;
 
     public HistoryCursorService(CursorCodec cursorCodec,
                                 PurchasedMovieRepository purchasedMovieRepository,
                                 PurchasedMapper purchasedMapper,
-                                @Value("${app.catalog.page-size:20}") int defaultPageSize,
-                                @Value("${app.catalog.max-page-size:100}") int maximumPageSize) {
+                                @Value("${app.catalog.page-size:20}") int defaultPageSize) {
         super(cursorCodec,
                 defaultPageSize,
-                maximumPageSize,
                 purchasedMovie -> KeyUtils.encodeTimestampAndIdentifier(
-                        purchasedMovie.getAddedAt(), purchasedMovie.getId().getMovieId()),
+                        purchasedMovie.getAddedAt(), purchasedMovie.getAbstractCatalogItemId().getMovieId()),
                 purchasedMovies -> purchasedMovies.stream()
                         .map(purchasedMapper::toOwnerViewFromHistorical)
                         .toList());
@@ -40,8 +39,8 @@ public class HistoryCursorService
     protected Slice<PurchasedMovie> fetchSlice(String cursorValue,
                                                String sortDirection,
                                                PageRequest pageRequest,
-                                               Long... contextValues) {
-        Long userId = contextValues[0];
+                                               UserCursorContext context) {
+        Long userId = context.userId();
         boolean hasCursor = cursorValue != null;
         LocalDateTime cursorAddedAt = hasCursor ? KeyUtils.decodeTimestamp(cursorValue) : null;
         Long cursorMovieId = hasCursor ? KeyUtils.decodeIdentifier(cursorValue) : null;

@@ -47,12 +47,12 @@ public class NavigationHistoryInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        String referer = httpServletRequest.getHeader("Referer");
-        if (referer == null || referer.isBlank()) {
+        String refererHeader = httpServletRequest.getHeader("Referer");
+        if (refererHeader == null || refererHeader.isBlank()) {
             return true;
         }
 
-        String refererPath = extractInternalPath(referer, httpServletRequest);
+        String refererPath = extractInternalPath(refererHeader, httpServletRequest);
         if (refererPath == null) {
             return true;
         }
@@ -86,20 +86,20 @@ public class NavigationHistoryInterceptor implements HandlerInterceptor {
 
     private String extractInternalPath(String referer, HttpServletRequest httpServletRequest) {
         try {
-            URI uri = URI.create(referer);
-            String host = uri.getHost();
-            if (host == null) return null;
+            URI refererUri = URI.create(referer);
+            String refererHost = refererUri.getHost();
+            if (refererHost == null) return null;
 
-            if (!host.equalsIgnoreCase(httpServletRequest.getServerName())) return null;
+            if (!refererHost.equalsIgnoreCase(httpServletRequest.getServerName())) return null;
 
-            int refererPort = uri.getPort();
+            int refererPort = refererUri.getPort();
             int serverPort = httpServletRequest.getServerPort();
             if (refererPort != -1 && refererPort != serverPort) return null;
 
-            String path = uri.getRawPath();
-            if (path == null || path.isBlank()) return null;
+            String refererPath = refererUri.getRawPath();
+            if (refererPath == null || refererPath.isBlank()) return null;
 
-            return buildPathWithQuery(path, uri.getRawQuery());
+            return buildPathWithQuery(refererPath, refererUri.getRawQuery());
         } catch (IllegalArgumentException illegalArgumentException) {
             return null;
         }

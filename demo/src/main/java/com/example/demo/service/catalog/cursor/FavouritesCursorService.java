@@ -8,6 +8,7 @@ import com.example.demo.repository.entity.FavouriteMovieRepository;
 import com.example.demo.service.cursor.AbstractCursorService;
 import com.example.demo.service.cursor.CursorCodec;
 import com.example.demo.service.cursor.KeyUtils;
+import com.example.demo.service.cursor.context.UserCursorContext;
 import com.example.demo.service.linked_collection.UserStatusResolver;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
@@ -20,7 +21,7 @@ import java.util.Map;
 
 @Service
 public class FavouritesCursorService
-        extends AbstractCursorService<FavouriteMovie, FavouriteMovieViewDTO> {
+        extends AbstractCursorService<FavouriteMovie, FavouriteMovieViewDTO, UserCursorContext> {
 
     private final FavouriteMovieRepository favouriteMovieRepository;
 
@@ -28,13 +29,11 @@ public class FavouritesCursorService
                                    FavouriteMovieRepository favouriteMovieRepository,
                                    UserStatusResolver userStatusResolver,
                                    FavouritesMapper favouritesMapper,
-                                   @Value("${app.catalog.page-size:20}") int defaultPageSize,
-                                   @Value("${app.catalog.max-page-size:100}") int maximumPageSize) {
+                                   @Value("${app.catalog.page-size:20}") int defaultPageSize) {
         super(cursorCodec,
                 defaultPageSize,
-                maximumPageSize,
                 favouriteMovie -> KeyUtils.encodeTimestampAndIdentifier(
-                        favouriteMovie.getAddedAt(), favouriteMovie.getId().getMovieId()),
+                        favouriteMovie.getAddedAt(), favouriteMovie.getAbstractCatalogItemId().getMovieId()),
                 favouriteMovies -> mapWithStatuses(favouriteMovies, userStatusResolver, favouritesMapper));
         this.favouriteMovieRepository = favouriteMovieRepository;
     }
@@ -43,8 +42,8 @@ public class FavouritesCursorService
     protected Slice<FavouriteMovie> fetchSlice(String cursorValue,
                                                String sortDirection,
                                                PageRequest pageRequest,
-                                               Long... contextValues) {
-        Long userId = contextValues[0];
+                                               UserCursorContext context) {
+        Long userId = context.userId();
         boolean hasCursor = cursorValue != null;
         LocalDateTime cursorAddedAt = hasCursor ? KeyUtils.decodeTimestamp(cursorValue) : null;
         Long cursorMovieId = hasCursor ? KeyUtils.decodeIdentifier(cursorValue) : null;
@@ -59,15 +58,15 @@ public class FavouritesCursorService
         if (favouriteMovies.isEmpty()) {
             return List.of();
         }
-        Long userId = favouriteMovies.get(0).getId().getUserId();
+        Long userId = favouriteMovies.get(0).getAbstractCatalogItemId().getUserId();
         List<Long> movieIds = favouriteMovies.stream()
-                .map(favouriteMovie -> favouriteMovie.getId().getMovieId())
+                .map(favouriteMovie -> favouriteMovie.getAbstractCatalogItemId().getMovieId())
                 .toList();
         Map<Long, UserStatus> userStatuses = userStatusResolver.resolveAll(userId, movieIds);
         return favouriteMovies.stream()
                 .map(favouriteMovie -> favouritesMapper.toOwnerView(
                         favouriteMovie,
-                        userStatuses.getOrDefault(favouriteMovie.getId().getMovieId(),
+                        userStatuses.getOrDefault(favouriteMovie.getAbstractCatalogItemId().getMovieId(),
                                 UserStatus.builder().build())))
                 .toList();
     }

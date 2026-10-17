@@ -1,4 +1,9 @@
 package com.example.demo.dto.cursor;
 
-public record Cursor(String value) {
+import lombok.Builder;
+
+@Builder
+public record Cursor(
+        String value
+) {
 }

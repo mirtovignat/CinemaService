@@ -8,6 +8,7 @@ import com.example.demo.exception.SuccessCode;
 import com.example.demo.mapper.entity.UserMapper;
 import com.example.demo.service.catalog.WatchedHistoryService;
 import com.example.demo.service.catalog.cursor.WatchedHistoryCursorService;
+import com.example.demo.service.cursor.context.UserCursorContext;
 import com.example.demo.service.movie.FilterMetaService;
 import com.example.demo.service.user.UserQueryService;
 import com.example.demo.util.MessageUtils;
@@ -34,12 +35,11 @@ public class WatchedHistoryController {
     @GetMapping
     public String getWatched(@RequestParam(required = false) String cursor,
                              @RequestParam(required = false) String sort,
-                             @RequestParam(required = false) Integer size,
                              SessionUser sessionUser,
                              Model model) {
         Long userId = sessionUser.id();
         model.addAttribute("response",
-                watchedHistoryCursorService.page(cursor, sort, size, userId));
+                watchedHistoryCursorService.page(cursor, sort, new UserCursorContext(userId)));
         model.addAttribute("userSidebar",
                 userMapper.toSidebarView(userQueryService.getUser(userId)));
         model.addAttribute("genres", filterMetaService.getAllGenres());
@@ -52,9 +52,8 @@ public class WatchedHistoryController {
     public CursorPageResponse<LibrarianMovieViewDTO> more(
             @RequestParam(required = false) String cursor,
             @RequestParam(required = false) String sort,
-            @RequestParam(required = false) Integer size,
             SessionUser sessionUser) {
-        return watchedHistoryCursorService.page(cursor, sort, size, sessionUser.id());
+        return watchedHistoryCursorService.page(cursor, sort, new UserCursorContext(sessionUser.id()));
     }
 
     @PostMapping("/add/{id}")

@@ -707,8 +707,6 @@ input[type="date"]:focus {
     display: none !important;
 }
 
-/* ===== Сортировка (сжатый блок) ===== */
-
 .sort-filter-group {
     display: flex;
     flex-direction: column;

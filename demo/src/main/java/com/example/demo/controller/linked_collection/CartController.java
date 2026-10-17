@@ -6,6 +6,7 @@ import com.example.demo.dto.response.CursorPageResponse;
 import com.example.demo.dto.user.SessionUser;
 import com.example.demo.exception.SuccessCode;
 import com.example.demo.service.catalog.cursor.CartCursorService;
+import com.example.demo.service.cursor.context.UserCursorContext;
 import com.example.demo.service.linked_collection.CartService;
 import com.example.demo.util.MessageUtils;
 import lombok.RequiredArgsConstructor;
@@ -28,11 +29,10 @@ public class CartController {
     @GetMapping
     public String getCart(@RequestParam(required = false) String cursor,
                           @RequestParam(required = false) String sort,
-                          @RequestParam(required = false) Integer size,
                           SessionUser sessionUser,
                           Model model) {
         Long userId = sessionUser.id();
-        model.addAttribute("response", cartCursorService.page(cursor, sort, size, userId));
+        model.addAttribute("response", cartCursorService.page(cursor, sort, new UserCursorContext(userId)));
         model.addAttribute("catalogCount", cartService.getCount(userId));
         return "cart";
     }
@@ -41,9 +41,8 @@ public class CartController {
     @ResponseBody
     public CursorPageResponse<CartItemViewDTO> more(@RequestParam(required = false) String cursor,
                                                     @RequestParam(required = false) String sort,
-                                                    @RequestParam(required = false) Integer size,
                                                     SessionUser sessionUser) {
-        return cartCursorService.page(cursor, sort, size, sessionUser.id());
+        return cartCursorService.page(cursor, sort, new UserCursorContext(sessionUser.id()));
     }
 
     @GetMapping("/count")

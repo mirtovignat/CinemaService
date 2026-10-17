@@ -8,6 +8,7 @@ import com.example.demo.dto.response.CursorPageResponse;
 import com.example.demo.dto.user.SessionUser;
 import com.example.demo.exception.SuccessCode;
 import com.example.demo.service.catalog.cursor.ReviewCursorService;
+import com.example.demo.service.cursor.context.ReviewCursorContext;
 import com.example.demo.service.movie.MovieService;
 import com.example.demo.service.rated.RatedCommandService;
 import com.example.demo.service.rated.RatedQueryService;
@@ -16,7 +17,6 @@ import com.example.demo.util.MessageUtils;
 import com.example.demo.web.resolver.ReviewSortResolver;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -37,7 +37,6 @@ public class RatedController {
     private final MovieService movieService;
     private final MessageUtils messageUtils;
     private final ReviewSortResolver reviewSortResolver;
-    private final int reviewsPageSize;
 
     public RatedController(RatedCommandService ratedCommandService,
                            RatedQueryService ratedQueryService,
@@ -45,8 +44,7 @@ public class RatedController {
                            UserQueryService userQueryService,
                            MovieService movieService,
                            MessageUtils messageUtils,
-                           ReviewSortResolver reviewSortResolver,
-                           @Value("${app.reviews.page-size:10}") int reviewsPageSize) {
+                           ReviewSortResolver reviewSortResolver) {
         this.ratedCommandService = ratedCommandService;
         this.ratedQueryService = ratedQueryService;
         this.reviewCursorService = reviewCursorService;
@@ -54,7 +52,6 @@ public class RatedController {
         this.movieService = movieService;
         this.messageUtils = messageUtils;
         this.reviewSortResolver = reviewSortResolver;
-        this.reviewsPageSize = reviewsPageSize;
     }
 
     @GetMapping("/{id}/reviews")
@@ -69,13 +66,9 @@ public class RatedController {
         ReviewsQueryDTO.SortDirection sortDirection =
                 reviewSortResolver.resolveAndPersist(reviewsQueryDTO, sortCookie, httpServletResponse);
 
-        Integer requestedPageSize = reviewsQueryDTO.size() != null
-                ? reviewsQueryDTO.size()
-                : reviewsPageSize;
-
         CursorPageResponse<ReviewViewDTO> page =
                 reviewCursorService.page(reviewsQueryDTO.cursor(), sortDirection.name(),
-                        requestedPageSize, id, userId);
+                        new ReviewCursorContext(id, userId));
 
         model.addAttribute("response", page);
         model.addAttribute("ownReview", userId != null
@@ -102,12 +95,8 @@ public class RatedController {
         ReviewsQueryDTO.SortDirection sortDirection =
                 reviewSortResolver.resolve(reviewsQueryDTO, sortCookie);
 
-        Integer requestedPageSize = reviewsQueryDTO.size() != null
-                ? reviewsQueryDTO.size()
-                : reviewsPageSize;
-
         return reviewCursorService.page(reviewsQueryDTO.cursor(), sortDirection.name(),
-                requestedPageSize, id, userId);
+                new ReviewCursorContext(id, userId));
     }
 
     @PostMapping("/{id}/reviews/delete")

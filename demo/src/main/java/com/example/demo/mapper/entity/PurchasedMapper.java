@@ -24,7 +24,7 @@ public interface PurchasedMapper {
             qualifiedByName = "toUtcIso")
     @Mapping(target = "historyItemId", source = "id")
     @Mapping(target = "director", source = "purchasedMovie.movie.director")
-    LibrarianMovieViewDTO toLibrarianViewFromHistoryItem(WatchHistoryItem item);
+    LibrarianMovieViewDTO toLibrarianViewFromHistoryItem(WatchHistoryItem watchHistoryItem);
 
     @Mapping(target = "id", source = "movie.id")
     @Mapping(target = "title", source = "movie.title")

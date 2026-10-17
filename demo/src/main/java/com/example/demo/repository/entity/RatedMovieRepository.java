@@ -62,7 +62,7 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
             JOIN FETCH ratedMovie.user
             WHERE ratedMovie.id.movieId = :movieId
             AND ratedMovie.deletableState.deleted = false
-            AND ratedMovie.id.userId <> :viewerUserId
+            AND (:viewerUserId IS NULL OR ratedMovie.id.userId <> :viewerUserId)
             AND (
                 :hasCursor = false
                 OR ratedMovie.addedAt > :cursorAddedAt
@@ -83,7 +83,7 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
             JOIN FETCH ratedMovie.user
             WHERE ratedMovie.id.movieId = :movieId
             AND ratedMovie.deletableState.deleted = false
-            AND ratedMovie.id.userId <> :viewerUserId
+            AND (:viewerUserId IS NULL OR ratedMovie.id.userId <> :viewerUserId)
             AND (
                 :hasCursor = false
                 OR ratedMovie.addedAt < :cursorAddedAt
