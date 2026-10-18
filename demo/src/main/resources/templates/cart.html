@@ -58,10 +58,9 @@
         <th:block th:replace="~{fragments/catalog-search :: catalogSearch}"></th:block>
     </div>
 
-    <div class="catalog-content" style="display: flex; flex-direction: column; height: 100%;">
+    <div class="catalog-content">
 
         <div class="cart-container"
-             style="margin-top: auto;"
              th:if="${response != null and response.content() != null and !response.content().isEmpty()}"
              data-cursor-container
              data-cursor-endpoint="/cart/more"
@@ -74,7 +73,8 @@
                  th:each="cartMovie : ${response.content()}"
                  th:data-movie-id="${cartMovie.id()}"
                  th:data-movie-price="${cartMovie.price()}"
-                 th:data-movie-title="${cartMovie.title()}">
+                 th:data-movie-title="${cartMovie.title()}"
+                 th:data-poster-url="${cartMovie.posterUrl()}">
                 <div class="media-card-poster-link">
                     <a th:href="@{/movies/{id}(id=${cartMovie.id()})}">
                         <img th:if="${cartMovie.posterUrl() != null and !cartMovie.posterUrl().isEmpty()}"
@@ -131,7 +131,9 @@
                                 </button>
                                 <button type="button" class="buy-now-btn" data-action="single-buy"
                                         th:data-movie-id="${cartMovie.id()}" th:data-movie-title="${cartMovie.title()}"
-                                        th:data-movie-price="${cartMovie.price()}" title="Купить сейчас">
+                                        th:data-movie-price="${cartMovie.price()}"
+                                        th:data-poster-url="${cartMovie.posterUrl()}"
+                                        title="Купить сейчас">
                                     Купить сейчас
                                 </button>
                             </div>
@@ -162,7 +164,7 @@
 
 <template id="cartCardTemplate">
     <div class="media-card cart-card"
-         data-attr="data-movie-id:id;data-movie-price:price;data-movie-title:title">
+         data-attr="data-movie-id:id;data-movie-price:price;data-movie-title:title;data-poster-url:posterUrl">
         <div class="media-card-poster-link">
             <a data-attr="href:/movies/{id}">
                 <img class="media-card-poster-img" data-poster-img data-field="posterUrl" src="" alt="Постер"/>
@@ -208,7 +210,7 @@
                             <th:block th:replace="~{fragments/icons :: icon-trash}"></th:block>
                         </button>
                         <button type="button" class="buy-now-btn" data-action="single-buy"
-                                data-attr="data-movie-id:id;data-movie-title:title;data-movie-price:price"
+                                data-attr="data-movie-id:id;data-movie-title:title;data-movie-price:price;data-poster-url:posterUrl"
                                 title="Купить сейчас">Купить сейчас</button>
                     </div>
                 </div>
@@ -220,6 +222,7 @@
 <th:block th:replace="~{fragments/modals/cart-modals :: cartModals}"></th:block>
 <th:block th:replace="~{fragments/modals/ratings-modals :: ratingsModals}"></th:block>
 
+<script th:src="@{/js/modules/sort-toggle.js}" defer></script>
 <script th:src="@{/js/pages/highlight.js}" defer></script>
 <script th:src="@{/js/modules/cursor-pagination.js}" defer></script>
 <script th:src="@{/js/main.js}" defer></script>

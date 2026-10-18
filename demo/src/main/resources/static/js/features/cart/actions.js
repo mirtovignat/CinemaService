@@ -69,6 +69,22 @@
         if (el) el.textContent = price ? UI.formatPrice(price) + ' ₽' : '';
     }
 
+    function setModalPoster(modal, url) {
+        if (!modal) return;
+        var img = modal.querySelector('[data-modal-poster]');
+        if (!img) return;
+        if (url && url !== 'null' && url !== 'undefined' && url.trim() !== '') {
+            img.src = url;
+            img.style.display = 'block';
+            img.onerror = function() {
+                img.style.display = 'none';
+            };
+        } else {
+            img.removeAttribute('src');
+            img.style.display = 'none';
+        }
+    }
+
     function setModalSummary(modal, html) {
         if (!modal) return;
         var el = modal.querySelector('[data-modal-summary]');
@@ -196,19 +212,10 @@
 
         setModalTitle(modal, getMovieTitle(el));
         setModalPrice(modal, getMoviePrice(el));
+        setModalPoster(modal, el.getAttribute('data-poster-url') || '');
 
         bindOneTimeConfirm(modal, function () {
             closeModal('cartBuyOneModal');
-
-            var movieTitle = getMovieTitle(el);
-            var cartCard = document.querySelector(
-                '.cart-card[data-movie-id="' + CSS.escape(movieId) + '"]'
-            );
-            var posterUrl = '';
-            if (cartCard) {
-                var posterImg = cartCard.querySelector('.media-card-poster-img');
-                if (posterImg) posterUrl = posterImg.getAttribute('src') || '';
-            }
 
             CartFeature.buyOne(movieId)
                 .then(function (data) {

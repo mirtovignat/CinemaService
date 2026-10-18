@@ -274,6 +274,8 @@
         clearLastSearch();
     })();
 
+    var catalogSearchInputRef = null;
+
     function initCatalogSearch() {
         var input = document.querySelector('[data-catalog-search-input]');
         var clearBtn = document.querySelector('[data-catalog-search-clear]');
@@ -283,9 +285,12 @@
         var hintEl = document.querySelector('[data-catalog-search-hint]');
         if (!input || !wrapper) return;
 
+        catalogSearchInputRef = input;
+
         var ELLIPSIS = '…';
         var currentTopMatch = null;
         var lockedUniqueKey = null;
+        var pointerDownInsideBox = false;
 
         function isTruncated(value) {
             return typeof value === 'string'
@@ -528,11 +533,9 @@
                 hideAllItems();
             }
 
-            if (matches.length > 0) {
+            if (matches.length === 1) {
                 currentTopMatch = matches[0].title;
-                if (matches.length === 1) {
-                    renderAutocomplete(value, [matches[0].title]);
-                }
+                renderAutocomplete(value, [matches[0].title]);
             }
 
             if (box) {
@@ -560,6 +563,7 @@
 
                         el.addEventListener('pointerdown', function (e) {
                             e.preventDefault();
+                            pointerDownInsideBox = true;
                             applySuggestion(entry);
                             input.blur();
                         });
@@ -663,7 +667,11 @@
 
         input.addEventListener('blur', function () {
             setTimeout(function () {
-                if (!input.value) { hideSuggestions(); return; }
+                if (pointerDownInsideBox) {
+                    pointerDownInsideBox = false;
+                    return;
+                }
+                if (!input.value) { hideSuggestions(); hideAutocomplete(); return; }
                 if (!hasMeaningfulChars(input.value)) {
                     hideSuggestions();
                     hideAutocomplete();
@@ -673,6 +681,7 @@
                 updateClearVisibility();
                 hideSuggestions();
                 hideAutocomplete();
+                resetActiveSuggestion();
             }, 150);
         });
 
@@ -689,6 +698,24 @@
         }
 
         updateClearVisibility();
+
+        window.reapplyCatalogSearchFilter = function () {
+            if (!catalogSearchInputRef) return;
+            if (lockedUniqueKey) {
+                applyFilterByUniqueKey(lockedUniqueKey);
+                return;
+            }
+            var value = String(catalogSearchInputRef.value || '').trim();
+            if (!value) {
+                showAllItems();
+                return;
+            }
+            if (!hasMeaningfulChars(value)) {
+                hideAllItems();
+                return;
+            }
+            applyFilterByText(stripEllipsis(value));
+        };
     }
 
     function initHeaderSearch() {
@@ -728,20 +755,6 @@
                     return t ? t.textContent.trim() : '';
                 })
                 .filter(function (t) { return t.length > 0; });
-        }
-
-        function findSingleCardMatch(query) {
-            var cards = getCardTitles();
-            if (cards.length === 0) return null;
-            var q = normalize(query);
-            if (!q) return null;
-
-            var matches = cards.filter(function (t) {
-                return normalize(t).indexOf(q) === 0;
-            });
-
-            if (matches.length === 1) return matches[0];
-            return null;
         }
 
         function updateClearVisibility() {
@@ -956,12 +969,7 @@
                     clean = currentTopMatch;
                 }
             } else {
-                var cardMatch = findSingleCardMatch(clean);
-                if (cardMatch) {
-                    clean = cardMatch;
-                } else {
-                    clean = capitalizeFirst(clean);
-                }
+                clean = capitalizeFirst(clean);
             }
 
             input.value = clean;

@@ -42,7 +42,7 @@
                           data-cursor-sort=${response.sort()}">
 
                 <div th:each="item : ${response.content()}"
-                     class="media-card library-card"
+                     class="library-card"
                      th:classappend="${item.watched()} ? 'watched' : ''"
                      th:data-movie-id="${item.id()}"
                      th:data-added-at="${item.addedAt()}">
@@ -81,7 +81,7 @@
                             </div>
                             <div class="library-info-row" th:if="${item.director() != null and !item.director().isEmpty()}">
                                 <span class="library-info-icon"><th:block th:replace="~{fragments/icons :: icon-video}"></th:block></span>
-                                <span class="library-info-label">Режиссёр</span>
+                                <span class="library-info-label">Режиссёр:</span>
                                 <span class="library-info-value" th:text="${item.director()}" th:title="${item.director()}">Режиссёр:</span>
                             </div>
                             <div class="library-info-row" th:if="${item.ageRating() != null}">
@@ -117,7 +117,7 @@
 </main>
 
 <template id="libraryCardTemplate">
-    <div class="media-card library-card"
+    <div class="library-card"
          data-attr="data-movie-id:id;data-added-at:addedAt">
         <div class="media-card-poster-link">
             <a class="poster-link" href="javascript:void(0);" data-action="watch-movie"
@@ -166,6 +166,7 @@
 </template>
 
 <script th:src="@{/js/pages/watched-local-time.js}" defer></script>
+<script th:src="@{/js/modules/sort-toggle.js}" defer></script>
 <script th:src="@{/js/pages/highlight.js}" defer></script>
 <script th:src="@{/js/modules/cursor-pagination.js}" defer></script>
 <script th:src="@{/js/main.js}" defer></script>

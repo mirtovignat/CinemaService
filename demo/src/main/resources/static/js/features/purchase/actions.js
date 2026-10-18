@@ -100,6 +100,19 @@
         var priceEl = modal.querySelector('[data-modal-price]');
         if (priceEl) priceEl.textContent = UI.formatPrice(getMoviePrice(el)) + ' ₽';
 
+        var img = modal.querySelector('[data-modal-poster]');
+        var posterUrl = el.getAttribute('data-poster-url') || '';
+        if (img) {
+            if (posterUrl && posterUrl !== 'null' && posterUrl !== 'undefined' && posterUrl.trim() !== '') {
+                img.src = posterUrl;
+                img.style.display = 'block';
+                img.onerror = function() { img.style.display = 'none'; };
+            } else {
+                img.removeAttribute('src');
+                img.style.display = 'none';
+            }
+        }
+
         bindOneTimeConfirm(modal, function () {
             closeModal('cartBuyOneModal');
             PurchaseFeature.buyOne(movieId)

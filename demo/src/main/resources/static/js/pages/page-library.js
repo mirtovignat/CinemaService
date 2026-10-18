@@ -36,7 +36,7 @@
         function doScroll() {
             var scroller = card.closest('.profile-right');
             if (!scroller) {
-                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                card.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 return;
             }
 
@@ -46,13 +46,9 @@
             var headerEl = scroller.querySelector('.page-header-row');
             var headerHeight = headerEl ? headerEl.offsetHeight : 0;
 
-            var visibleHeight = scroller.clientHeight - headerHeight;
-            var visibleCenter = headerHeight + (visibleHeight / 2);
+            var cardTopInScroller = cardRect.top - scrollerRect.top;
 
-            var cardCenterInScroller =
-                (cardRect.top - scrollerRect.top) + (cardRect.height / 2);
-
-            var targetScroll = scroller.scrollTop + cardCenterInScroller - visibleCenter;
+            var targetScroll = scroller.scrollTop + cardTopInScroller - headerHeight - 20;
 
             var maxScroll = scroller.scrollHeight - scroller.clientHeight;
             targetScroll = Math.max(0, Math.min(targetScroll, maxScroll));

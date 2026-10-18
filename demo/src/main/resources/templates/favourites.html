@@ -32,6 +32,8 @@
         </div>
 
         <div class="page-header-actions">
+            <th:block th:replace="~{fragments/sort-toggle :: sortToggle}"></th:block>
+
             <button type="button"
                     class="clear-favourites-btn"
                     data-action="clear-favourites"
@@ -44,9 +46,8 @@
         <th:block th:replace="~{fragments/catalog-search :: catalogSearch}"></th:block>
     </div>
 
-    <div class="catalog-content" style="display: flex; flex-direction: column; height: 100%;">
+    <div class="catalog-content">
         <div class="favourites-container"
-             style="margin-top: auto;"
              th:if="${response != null and response.content() != null and !response.content().isEmpty()}"
              data-cursor-container
              data-cursor-endpoint="/favourites/more"
@@ -241,6 +242,7 @@
 <th:block th:replace="~{fragments/modals/favourites-modals :: favouritesModals}"></th:block>
 <th:block th:replace="~{fragments/modals/ratings-modals :: ratingsModals}"></th:block>
 
+<script th:src="@{/js/modules/sort-toggle.js}" defer></script>
 <script th:src="@{/js/modules/cursor-pagination.js}" defer></script>
 <script th:src="@{/js/main.js}" defer></script>
 

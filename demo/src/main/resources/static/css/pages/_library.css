@@ -1,27 +1,62 @@
 .header-wrapper { flex-shrink: 0; z-index: 50; }
 
+.profile-wrapper .profile-right {
+    display: flex;
+    flex-direction: column;
+    padding: 0 2.5rem 1.5rem 2.5rem;
+    height: 100%;
+    min-height: 0;
+}
+
 .library-container {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 2rem 1.5rem;
     width: 100%;
     margin: 0 auto;
-    align-items: stretch;
-    padding: 1px 1px 4px 1px;
     box-sizing: border-box;
-    overflow: visible;
+
+    /* Сетка забирает всё свободное место до футера */
+    flex: 1 1 auto;
+
+    /* Равномерно распределяет пустоту между рядами */
+    align-content: space-between;
 }
 
 .empty-message {
     margin-top: 1.5rem;
 }
 
-.profile-wrapper .profile-right {
-    padding-bottom: 2rem;
+.library-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 18px;
+    border: 1px solid rgba(72, 187, 255, 0.2);
+    overflow: hidden;
 }
 
 .library-card .media-card-poster-link {
     position: relative;
+    flex-shrink: 0;
+    aspect-ratio: 2 / 3;
+}
+
+.library-card .media-card-content {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 147px;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    padding: 0.5rem 0.7rem 0.9rem;
+}
+
+.library-card .media-card-info {
+    justify-content: flex-start;
+    gap: 0.2rem;
+    flex: 1 1 auto;
 }
 
 .library-card .poster-overlay {
@@ -52,34 +87,6 @@
 @keyframes watchedBarPulse {
     0%, 100% { background-position: 0% 0%; }
     50% { background-position: 100% 0%; }
-}
-
-.library-genre-tag {
-    background: rgba(96, 165, 250, 0.12);
-    padding: 0.15rem 0.7rem;
-    border-radius: 14px;
-    font-size: 0.75rem;
-    color: #94a3b8;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    white-space: nowrap;
-    max-width: 80%;
-    border: 1px solid rgba(96, 165, 250, 0.08);
-    align-self: flex-start;
-}
-
-.library-genre-tag .genre-label {
-    color: #64748b;
-    font-weight: 500;
-    font-size: 0.65rem;
-}
-
-.library-genre-tag .genre-value {
-    color: #e2e8f0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 .library-info-row {

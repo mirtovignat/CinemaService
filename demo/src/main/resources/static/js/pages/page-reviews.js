@@ -13,8 +13,6 @@
         ? wrapper.dataset.movieId
         : body.dataset.movieId;
 
-    const SORT_STORAGE_KEY = 'cinemaReviewsSortOrder';
-
     function normalizeRating(value) {
         if (value == null) return null;
         var num = parseFloat(String(value).replace(',', '.'));
@@ -30,25 +28,6 @@
         if (num == null) return '—';
         return num.toFixed(1);
     }
-
-    (function ensureSortFromStorage() {
-        var params = new URLSearchParams(window.location.search);
-        if (params.has('sort')) {
-            var current = params.get('sort');
-            if (current === 'ASC' || current === 'DESC') {
-                try { localStorage.setItem(SORT_STORAGE_KEY, current); } catch (e) {}
-            }
-            return;
-        }
-        var saved = null;
-        try { saved = localStorage.getItem(SORT_STORAGE_KEY); } catch (e) {}
-        if (saved === 'ASC' || saved === 'DESC') {
-            var url = new URL(window.location.href);
-            url.searchParams.set('sort', saved);
-            url.searchParams.delete('cursor');
-            window.location.replace(url.toString());
-        }
-    })();
 
     function getCount() {
         if (!countEl) return null;

@@ -69,12 +69,23 @@
                     </svg>
                 </button>
             </div>
-            <p>Вы покупаете фильм:</p>
-            <p style="font-weight:600; color:#e2e8f0; margin-bottom:12px;" data-modal-movie-title></p>
-            <div class="modal-price" data-modal-price></div>
+
+            <div class="buy-one-intro">Вы собираетесь приобрести фильм:</div>
+
+            <div class="buy-one-movie-card">
+                <img data-modal-poster src="" alt="Постер" class="buy-one-poster">
+                <div class="buy-one-info">
+                    <div class="buy-one-title" data-modal-movie-title></div>
+                    <div class="buy-one-price-row">
+                        <span class="buy-one-price-label">К оплате:</span>
+                        <span class="buy-one-price" data-modal-price></span>
+                    </div>
+                </div>
+            </div>
+
             <div class="modal-buttons">
                 <button type="button" class="modal-confirm-btn" data-modal-confirm>
-                    Купить
+                    Оплатить
                 </button>
             </div>
         </div>

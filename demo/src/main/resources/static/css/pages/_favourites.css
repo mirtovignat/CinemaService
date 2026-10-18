@@ -46,9 +46,10 @@ main.catalog-wrapper::-webkit-scrollbar-thumb:hover {
     width: 100%;
     max-width: 1400px;
     margin: 0 auto;
-    padding: 0.75rem 0 0;
+    padding: 0.75rem 0 1.5rem;
     box-sizing: border-box;
-    flex: 0 1 auto;
+    flex: 1 1 auto;
+    min-height: 0;
 }
 
 .favourites-container {
@@ -58,8 +59,10 @@ main.catalog-wrapper::-webkit-scrollbar-thumb:hover {
     width: 100%;
     margin: 0 auto;
     align-items: stretch;
+    align-content: start;
     padding-bottom: 0;
     overflow: visible;
+    flex: 1 1 auto;
 }
 
 .favourites-card .media-card-poster-link {
@@ -130,7 +133,7 @@ main.catalog-wrapper::-webkit-scrollbar-thumb:hover {
 
 @media (max-width: 480px) {
     .catalog-content {
-        padding: 0.5rem 0 0;
+        padding: 0.5rem 0 1rem;
     }
 
     main.catalog-wrapper {

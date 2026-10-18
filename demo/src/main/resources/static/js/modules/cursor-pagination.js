@@ -417,6 +417,10 @@
                     window.applyStatusesFromSession();
                 }
 
+                if (typeof window.reapplyCatalogSearchFilter === 'function') {
+                    window.reapplyCatalogSearchFilter();
+                }
+
                 ensureTail();
                 rebindScrollParents();
 
@@ -457,6 +461,7 @@
         };
 
         instances.push(state);
+        window.__cursorStates = instances;
 
         requestAnimationFrame(function () {
             requestAnimationFrame(function () {
@@ -479,6 +484,7 @@
         destroyAll: function () {
             instances.forEach(function (s) { if (s.destroy) s.destroy(); });
             instances = [];
+            window.__cursorStates = instances;
         }
     };
 
