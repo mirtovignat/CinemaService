@@ -69,9 +69,7 @@
                     <div class="input-wrap" th:classappend="${#fields.hasErrors('amount')} ? 'has-error' : ''">
                         <span class="currency-static">₽</span>
                         <div class="amount-input-with-stepper">
-                            <label for="amount"
-                                   style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Сумма
-                                пополнения</label>
+                            <label for="amount" class="visually-hidden">Сумма пополнения</label>
                             <input type="text" inputmode="decimal" id="amount" name="amount"
                                    placeholder="0,00" autocomplete="off"
                                    th:field="*{amount}"

@@ -18,12 +18,16 @@ main.catalog-wrapper.no-scroll {
     margin-bottom: 0;
 }
 
-main.catalog-wrapper::-webkit-scrollbar { width: 8px; }
+main.catalog-wrapper::-webkit-scrollbar {
+    width: 8px;
+}
+
 main.catalog-wrapper::-webkit-scrollbar-track {
     background: rgba(255, 255, 255, 0.06);
     border-radius: 6px;
     margin: 2px 0;
 }
+
 main.catalog-wrapper::-webkit-scrollbar-thumb {
     background: #6b7280;
     border-radius: 6px;
@@ -31,6 +35,7 @@ main.catalog-wrapper::-webkit-scrollbar-thumb {
     background-clip: padding-box;
     min-height: 30px;
 }
+
 main.catalog-wrapper::-webkit-scrollbar-thumb:hover {
     background: #9ca3af;
 }
@@ -78,8 +83,8 @@ main.catalog-wrapper::-webkit-scrollbar-thumb:hover {
 
 .cart-card .media-card-content {
     box-sizing: border-box;
-    min-height: 155px;
-    height: auto;
+    min-height: 147px;
+    height: 147px;
     overflow: hidden;
 }
 
@@ -160,26 +165,44 @@ main.catalog-wrapper::-webkit-scrollbar-thumb:hover {
 }
 
 @media (max-width: 1100px) {
-    .cart-container { grid-template-columns: repeat(3, 1fr); }
+    .cart-container {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }
+
 @media (max-width: 1024px) {
-    main.catalog-wrapper { padding: 0 1rem 0 1rem; }
+    main.catalog-wrapper {
+        padding: 0 1rem 0 1rem;
+    }
 }
+
 @media (max-width: 780px) {
-    .cart-container { grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+    .cart-container {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
 }
+
 @media (max-width: 480px) {
-    .catalog-content { padding: 0.5rem 0 1rem; }
-    main.catalog-wrapper { padding: 0 0.75rem 0 0.75rem; }
+    .catalog-content {
+        padding: 0.5rem 0 1rem;
+    }
+
+    main.catalog-wrapper {
+        padding: 0 0.75rem 0 0.75rem;
+    }
+
     .cart-container {
         grid-template-columns: 1fr;
         max-width: 320px;
         margin: 0 auto;
     }
+
     .page-header-row .page-header-actions {
         width: 100%;
         flex-wrap: wrap;
     }
+
     .clear-cart-btn,
     .checkout-btn {
         width: 100%;

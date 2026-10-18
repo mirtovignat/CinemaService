@@ -58,7 +58,13 @@
                                  class="media-card-poster-img" data-poster-img src=""/>
                             <div class="movie-poster-placeholder"
                                  th:classappend="${item.posterUrl() != null and !item.posterUrl().isEmpty()} ? 'hidden' : ''"
-                                 data-poster-placeholder><span>Постер</span></div>
+                                 data-poster-placeholder>
+                                <div class="poster-placeholder-icon">
+                                    <th:block th:replace="~{fragments/icons :: icon-image}"></th:block>
+                                </div>
+                                <div class="poster-placeholder-text">Нет постера</div>
+                                <div class="poster-placeholder-sub">Изображение недоступно</div>
+                            </div>
                             <th:block th:replace="~{fragments/rating-badge :: ratingBadge(
                                 movieId=${item.id()}, rating=${item.rating()})}"></th:block>
                         </a>
@@ -123,14 +129,18 @@
             <a class="poster-link" href="javascript:void(0);" data-action="watch-movie"
                data-attr="data-movie-id:id;data-movie-title:title;data-poster-url:posterUrl">
                 <img class="media-card-poster-img" data-poster-img data-field="posterUrl" src="" alt="Постер"/>
-                <div class="movie-poster-placeholder hidden" data-poster-placeholder><span>Постер</span></div>
+                <div class="movie-poster-placeholder hidden" data-poster-placeholder>
+                    <div class="poster-placeholder-icon">
+                        <th:block th:replace="~{fragments/icons :: icon-image}"></th:block>
+                    </div>
+                    <div class="poster-placeholder-text">Нет постера</div>
+                    <div class="poster-placeholder-sub">Изображение недоступно</div>
+                </div>
             </a>
             <div class="poster-overlay">
                 <button class="watch-btn-neon watch-btn-neon--md" type="button" data-action="watch-movie"
                         data-attr="data-movie-id:id;data-movie-title:title;data-poster-url:posterUrl">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                        <polygon points="5 3 19 12 5 21 5 3"/>
-                    </svg>
+                    <th:block th:replace="~{fragments/icons :: icon-play}"></th:block>
                     Смотреть
                 </button>
             </div>
@@ -165,9 +175,9 @@
     </div>
 </template>
 
-<script th:src="@{/js/pages/watched-local-time.js}" defer></script>
+<script th:src="@{/js/modules/watched-local-time.js}" defer></script>
 <script th:src="@{/js/modules/sort-toggle.js}" defer></script>
-<script th:src="@{/js/pages/highlight.js}" defer></script>
+<script th:src="@{/js/modules/highlight.js}" defer></script>
 <script th:src="@{/js/modules/cursor-pagination.js}" defer></script>
 <script th:src="@{/js/main.js}" defer></script>
 

@@ -21,10 +21,10 @@
     var _pendingHistoryId = null;
     var _watchInFlight = 0;
 
-    var ICON_CALENDAR = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
-    var ICON_TAG = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6Z"/></svg>';
-    var ICON_VIDEO = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>';
-    var ICON_STAR = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z"/></svg>';
+    function getIcon(name) {
+        var tpl = document.getElementById('js-icon-' + name);
+        return tpl ? tpl.innerHTML : '';
+    }
 
     function pad2(n) { return String(n).padStart(2, '0'); }
     function toIso(date) { return date.toISOString(); }
@@ -34,6 +34,18 @@
         var n = parseFloat(String(value).replace(',', '.'));
         if (isNaN(n)) return String(value);
         return n.toFixed(1).replace('.', ',');
+    }
+
+    function isHistoryEnabled() {
+        if (typeof window.saveHistoryEnabled === 'boolean') {
+            return window.saveHistoryEnabled;
+        }
+        var toggle = document.getElementById('saveHistoryToggle');
+        if (toggle) {
+            window.saveHistoryEnabled = !!toggle.checked;
+            return window.saveHistoryEnabled;
+        }
+        return true;
     }
 
     function findWatchedContainer() {
@@ -118,12 +130,12 @@
         return '';
     }
 
-    function buildMetaRow(cls, iconSvg, labelText, valueText) {
+    function buildMetaRow(cls, iconName, labelText, valueText) {
         var row = document.createElement('div');
         row.className = 'history-item-meta-row ' + cls;
         var icon = document.createElement('span');
         icon.className = 'history-item-meta-icon';
-        icon.innerHTML = iconSvg;
+        icon.innerHTML = getIcon(iconName);
         row.appendChild(icon);
         var label = document.createElement('span');
         label.className = 'history-item-meta-label';
@@ -163,7 +175,6 @@
             if (posterImg) {
                 posterImg.setAttribute('data-poster-img', '');
                 posterImg.src = posterUrl;
-                posterImg.onclick = function () { window.location.href = '/movies/' + movieId; };
                 posterImg.addEventListener('error', function () {
                     posterImg.style.display = 'none';
                     if (noPoster) noPoster.style.display = 'flex';
@@ -176,7 +187,6 @@
             if (posterImg) posterImg.style.display = 'none';
             if (noPoster) {
                 noPoster.style.display = 'flex';
-                noPoster.onclick = function () { window.location.href = '/movies/' + movieId; };
             }
         }
 
@@ -191,9 +201,6 @@
             watchBtn.setAttribute('data-watched', 'true');
         }
 
-        var infoBlock = item.querySelector('.history-item-info');
-        if (infoBlock) infoBlock.onclick = function () { window.location.href = '/movies/' + movieId; };
-
         var titleLink = item.querySelector('.history-item-title');
         if (titleLink) {
             titleLink.href = '/movies/' + movieId;
@@ -203,11 +210,11 @@
         var metaBlock = item.querySelector('.history-item-meta');
         if (metaBlock) {
             metaBlock.innerHTML = '';
-            if (director) metaBlock.appendChild(buildMetaRow('history-item-meta-row--director', ICON_VIDEO, 'Режиссёр:', director));
-            if (year) metaBlock.appendChild(buildMetaRow('history-item-meta-row--year', ICON_CALENDAR, 'Год создания:', String(year)));
-            if (genre) metaBlock.appendChild(buildMetaRow('history-item-meta-row--genre', ICON_TAG, 'Жанр:', genre));
-            if (ageRating) metaBlock.appendChild(buildMetaRow('history-item-meta-row--age', ICON_CALENDAR, 'Возрастной рейтинг:', String(ageRating) + '+'));
-            if (rating) metaBlock.appendChild(buildMetaRow('history-item-meta-row--rating', ICON_STAR, 'Рейтинг:', formatRatingText(rating) + ' / 10'));
+            if (director) metaBlock.appendChild(buildMetaRow('history-item-meta-row--director', 'video', 'Режиссёр:', director));
+            if (year) metaBlock.appendChild(buildMetaRow('history-item-meta-row--year', 'calendar', 'Год создания:', String(year)));
+            if (genre) metaBlock.appendChild(buildMetaRow('history-item-meta-row--genre', 'tag', 'Жанр:', genre));
+            if (ageRating) metaBlock.appendChild(buildMetaRow('history-item-meta-row--age', 'calendar', 'Возрастной рейтинг:', String(ageRating) + '+'));
+            if (rating) metaBlock.appendChild(buildMetaRow('history-item-meta-row--rating', 'star', 'Рейтинг:', formatRatingText(rating) + ' / 10'));
         }
 
         var timeSpan = item.querySelector('.history-item-time span');
@@ -270,7 +277,7 @@
 
             var groupLabel = document.createElement('div');
             groupLabel.className = 'history-day-label';
-            groupLabel.innerHTML = ICON_CALENDAR + '<span class="day-label">Сегодня</span>';
+            groupLabel.innerHTML = getIcon('calendar') + '<span class="day-label">Сегодня</span>';
             newGroup.appendChild(groupLabel);
             newGroup.appendChild(node);
 
@@ -317,32 +324,36 @@
         var movieTitle = button.getAttribute('data-movie-title') || '';
         if (!movieId) return Promise.resolve();
 
+        var historyEnabled = isHistoryEnabled();
         var libraryCard = button.closest('.library-card');
         var rollbackLibrary = null;
         var newItem = null;
         var container = null;
 
-        if (libraryCard) {
+        if (libraryCard && historyEnabled) {
             rollbackLibrary = applyOptimisticInLibrary(libraryCard);
-        } else {
-            var context = collectMovieContext(button);
-            container = findWatchedContainer() || ensureWatchedContainer();
-            var now = new Date();
+        } else if (historyEnabled) {
+            var existingContainer = findWatchedContainer();
+            if (existingContainer) {
+                var context = collectMovieContext(button);
+                container = existingContainer;
+                var now = new Date();
 
-            newItem = buildHistoryItem(
-                String(movieId),
-                movieTitle,
-                posterUrl,
-                context.genre,
-                context.year,
-                context.director,
-                context.ageRating,
-                context.rating,
-                now
-            );
+                newItem = buildHistoryItem(
+                    String(movieId),
+                    movieTitle,
+                    posterUrl,
+                    context.genre,
+                    context.year,
+                    context.director,
+                    context.ageRating,
+                    context.rating,
+                    now
+                );
 
-            insertIntoTodayGroup(container, newItem);
-            hideWatchedEmptyState();
+                insertIntoTodayGroup(container, newItem);
+                hideWatchedEmptyState();
+            }
         }
 
         button.disabled = true;

@@ -26,9 +26,7 @@
                         title="Фильтры">
                     <th:block th:replace="~{fragments/icons :: icon-filter}"></th:block>
                 </button>
-                <label for="headerSearchInput"
-                       style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Поиск
-                    фильмов</label>
+                <label for="headerSearchInput" class="visually-hidden">Поиск фильмов</label>
                 <input type="text" id="headerSearchInput" name="title" autocomplete="off"
                        placeholder="Поиск фильмов..." maxlength="100"
                        th:value="${param.title != null and !#strings.isEmpty(param.title[0])
@@ -441,9 +439,7 @@
                             <span class="range-prefix">Длительность (От)</span>
                             <div class="duration-picker">
                                 <div class="duration-field">
-                                    <label for="durationFromHours"
-                                           style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Часы
-                                        от</label>
+                                    <label for="durationFromHours" class="visually-hidden">Часы от</label>
                                     <div class="duration-input-wrapper">
                                         <input type="text" id="durationFromHours" class="filter-input positive-int"
                                                placeholder="0" data-max="16" maxlength="2" inputmode="numeric"
@@ -452,9 +448,7 @@
                                     </div>
                                 </div>
                                 <div class="duration-field">
-                                    <label for="durationFromMinutes"
-                                           style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Минуты
-                                        от</label>
+                                    <label for="durationFromMinutes" class="visually-hidden">Минуты от</label>
                                     <div class="duration-input-wrapper">
                                         <input type="text" id="durationFromMinutes" class="filter-input positive-int"
                                                placeholder="0" data-max="59" maxlength="2" inputmode="numeric"
@@ -463,9 +457,7 @@
                                     </div>
                                 </div>
                                 <div class="duration-field">
-                                    <label for="durationFromSeconds"
-                                           style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Секунды
-                                        от</label>
+                                    <label for="durationFromSeconds" class="visually-hidden">Секунды от</label>
                                     <div class="duration-input-wrapper">
                                         <input type="text" id="durationFromSeconds" class="filter-input positive-int"
                                                placeholder="0" data-max="59" maxlength="2" inputmode="numeric"
@@ -480,9 +472,7 @@
                             <span class="range-prefix">Длительность (До)</span>
                             <div class="duration-picker">
                                 <div class="duration-field">
-                                    <label for="durationToHours"
-                                           style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Часы
-                                        до</label>
+                                    <label for="durationToHours" class="visually-hidden">Часы до</label>
                                     <div class="duration-input-wrapper">
                                         <input type="text" id="durationToHours" class="filter-input positive-int"
                                                placeholder="0" data-max="16" maxlength="2" inputmode="numeric"
@@ -491,9 +481,7 @@
                                     </div>
                                 </div>
                                 <div class="duration-field">
-                                    <label for="durationToMinutes"
-                                           style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Минуты
-                                        до</label>
+                                    <label for="durationToMinutes" class="visually-hidden">Минуты до</label>
                                     <div class="duration-input-wrapper">
                                         <input type="text" id="durationToMinutes" class="filter-input positive-int"
                                                placeholder="0" data-max="59" maxlength="2" inputmode="numeric"
@@ -502,9 +490,7 @@
                                     </div>
                                 </div>
                                 <div class="duration-field">
-                                    <label for="durationToSeconds"
-                                           style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Секунды
-                                        до</label>
+                                    <label for="durationToSeconds" class="visually-hidden">Секунды до</label>
                                     <div class="duration-input-wrapper">
                                         <input type="text" id="durationToSeconds" class="filter-input positive-int"
                                                placeholder="0" data-max="59" maxlength="2" inputmode="numeric"

@@ -37,7 +37,9 @@ public class WebConfig implements WebMvcConfigurer {
                         "/cart/count", "/favourites/count",
                         "/rated/count/**", "/rated/rating/**",
                         "/rated/*/reviews/more",
-                        "/movies/*/rating"
+                        "/movies/*/rating",
+                        "/recommendations",
+                        "/watched/more"
                 );
 
         interceptorRegistry.addInterceptor(navigationHistoryInterceptor)

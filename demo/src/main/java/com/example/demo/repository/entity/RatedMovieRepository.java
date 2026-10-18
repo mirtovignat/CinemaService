@@ -18,9 +18,9 @@ import java.util.Optional;
 @Repository
 public interface RatedMovieRepository extends AbstractCatalogItemRepository<RatedMovie> {
 
+    @Override
     @Query("""
-            SELECT ratedMovie
-            FROM RatedMovie ratedMovie
+            SELECT ratedMovie FROM RatedMovie ratedMovie
             JOIN FETCH ratedMovie.movie
             WHERE ratedMovie.id.userId = :userId
             AND ratedMovie.deletableState.deleted = false
@@ -31,15 +31,15 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
             )
             ORDER BY ratedMovie.addedAt ASC, ratedMovie.id.movieId ASC
             """)
-    Slice<RatedMovie> fetchRatedAscending(@Param("userId") Long userId,
-                                          @Param("hasCursor") boolean hasCursor,
-                                          @Param("cursorAddedAt") LocalDateTime cursorAddedAt,
-                                          @Param("cursorMovieId") Long cursorMovieId,
-                                          Pageable pageable);
+    Slice<RatedMovie> fetchAscending(@Param("userId") Long userId,
+                                     @Param("hasCursor") boolean hasCursor,
+                                     @Param("cursorAddedAt") LocalDateTime cursorAddedAt,
+                                     @Param("cursorMovieId") Long cursorMovieId,
+                                     Pageable pageable);
 
+    @Override
     @Query("""
-            SELECT ratedMovie
-            FROM RatedMovie ratedMovie
+            SELECT ratedMovie FROM RatedMovie ratedMovie
             JOIN FETCH ratedMovie.movie
             WHERE ratedMovie.id.userId = :userId
             AND ratedMovie.deletableState.deleted = false
@@ -50,15 +50,14 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
             )
             ORDER BY ratedMovie.addedAt DESC, ratedMovie.id.movieId DESC
             """)
-    Slice<RatedMovie> fetchRatedDescending(@Param("userId") Long userId,
-                                           @Param("hasCursor") boolean hasCursor,
-                                           @Param("cursorAddedAt") LocalDateTime cursorAddedAt,
-                                           @Param("cursorMovieId") Long cursorMovieId,
-                                           Pageable pageable);
+    Slice<RatedMovie> fetchDescending(@Param("userId") Long userId,
+                                      @Param("hasCursor") boolean hasCursor,
+                                      @Param("cursorAddedAt") LocalDateTime cursorAddedAt,
+                                      @Param("cursorMovieId") Long cursorMovieId,
+                                      Pageable pageable);
 
     @Query("""
-            SELECT ratedMovie
-            FROM RatedMovie ratedMovie
+            SELECT ratedMovie FROM RatedMovie ratedMovie
             JOIN FETCH ratedMovie.user
             WHERE ratedMovie.id.movieId = :movieId
             AND ratedMovie.deletableState.deleted = false
@@ -78,8 +77,7 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
                                             Pageable pageable);
 
     @Query("""
-            SELECT ratedMovie
-            FROM RatedMovie ratedMovie
+            SELECT ratedMovie FROM RatedMovie ratedMovie
             JOIN FETCH ratedMovie.user
             WHERE ratedMovie.id.movieId = :movieId
             AND ratedMovie.deletableState.deleted = false
@@ -100,8 +98,7 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
 
     @Override
     @Query("""
-            SELECT DISTINCT ratedMovie
-            FROM RatedMovie ratedMovie
+            SELECT DISTINCT ratedMovie FROM RatedMovie ratedMovie
             JOIN FETCH ratedMovie.movie
             JOIN FETCH ratedMovie.user
             WHERE ratedMovie.id.userId = :userId
@@ -111,8 +108,7 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
 
     @Override
     @Query("""
-            SELECT COUNT(ratedMovie) > 0
-            FROM RatedMovie ratedMovie
+            SELECT COUNT(ratedMovie) > 0 FROM RatedMovie ratedMovie
             WHERE ratedMovie.id.movieId = :movieId
             AND ratedMovie.id.userId = :userId
             AND ratedMovie.deletableState.deleted = false
@@ -122,8 +118,7 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
 
     @Override
     @Query("""
-            SELECT COUNT(ratedMovie)
-            FROM RatedMovie ratedMovie
+            SELECT COUNT(ratedMovie) FROM RatedMovie ratedMovie
             WHERE ratedMovie.id.userId = :userId
             AND ratedMovie.deletableState.deleted = false
             """)
@@ -131,16 +126,15 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
 
     @Override
     @Query("""
-            SELECT ratedMovie.id.movieId
-            FROM RatedMovie ratedMovie
+            SELECT ratedMovie.id.movieId FROM RatedMovie ratedMovie
             WHERE ratedMovie.id.userId = :userId
             AND ratedMovie.deletableState.deleted = false
             """)
     List<Long> findMovieIdsByUserId(@Param("userId") Long userId);
 
+    @Override
     @Query("""
-            SELECT ratedMovie
-            FROM RatedMovie ratedMovie
+            SELECT ratedMovie FROM RatedMovie ratedMovie
             JOIN FETCH ratedMovie.movie
             JOIN FETCH ratedMovie.user
             WHERE ratedMovie.id.movieId = :movieId
@@ -151,8 +145,7 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
                                                 @Param("userId") Long userId);
 
     @Query("""
-            SELECT ratedMovie
-            FROM RatedMovie ratedMovie
+            SELECT ratedMovie FROM RatedMovie ratedMovie
             JOIN FETCH ratedMovie.movie
             JOIN FETCH ratedMovie.user
             WHERE ratedMovie.id.movieId = :movieId
@@ -163,8 +156,7 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
             @Param("userId") Long userId);
 
     @Query("""
-            SELECT ratedMovie
-            FROM RatedMovie ratedMovie
+            SELECT ratedMovie FROM RatedMovie ratedMovie
             JOIN FETCH ratedMovie.movie
             JOIN FETCH ratedMovie.user
             WHERE ratedMovie.id.movieId = :movieId
@@ -175,8 +167,7 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
                                        @Param("userId") Long userId);
 
     @Query("""
-            SELECT COUNT(ratedMovie)
-            FROM RatedMovie ratedMovie
+            SELECT COUNT(ratedMovie) FROM RatedMovie ratedMovie
             WHERE ratedMovie.id.movieId = :movieId
             AND ratedMovie.deletableState.deleted = false
             """)
@@ -203,8 +194,7 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
     void softDeleteAllByUserId(@Param("userId") Long userId);
 
     @Query("""
-            SELECT ratedMovie
-            FROM RatedMovie ratedMovie
+            SELECT ratedMovie FROM RatedMovie ratedMovie
             WHERE ratedMovie.id.userId = :userId
             AND ratedMovie.deletableState.deleted = false
             ORDER BY ratedMovie.ratingValue DESC
@@ -214,16 +204,14 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
             Pageable pageable);
 
     @Query("""
-            SELECT AVG(ratedMovie.ratingValue)
-            FROM RatedMovie ratedMovie
+            SELECT AVG(ratedMovie.ratingValue) FROM RatedMovie ratedMovie
             WHERE ratedMovie.movie = :movie
             AND ratedMovie.deletableState.deleted = false
             """)
     BigDecimal calculateAverageRating(@Param("movie") Movie movie);
 
     @Query("""
-            SELECT ratedMovie
-            FROM RatedMovie ratedMovie
+            SELECT ratedMovie FROM RatedMovie ratedMovie
             JOIN FETCH ratedMovie.movie
             JOIN FETCH ratedMovie.user
             WHERE ratedMovie.id.userId = :userId

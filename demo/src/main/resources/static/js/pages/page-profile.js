@@ -1,17 +1,10 @@
 (function () {
     'use strict';
 
-    var ICON_CHECK =
-        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" ' +
-        'fill="none" stroke="currentColor" stroke-width="2.2" ' +
-        'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-        '<path d="M4.5 12.75l6 6 9-13.5"/></svg>';
-
-    var ICON_X =
-        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" ' +
-        'fill="none" stroke="currentColor" stroke-width="2.2" ' +
-        'stroke-linecap="round" aria-hidden="true">' +
-        '<path d="M7 7l10 10M17 7L7 17"/></svg>';
+    function getIcon(name) {
+        var tpl = document.getElementById('js-icon-' + name);
+        return tpl ? tpl.innerHTML : '';
+    }
 
     function pushUserInfo(user) {
         if (typeof window.updateSidebarAndHeader === 'function') {
@@ -114,7 +107,7 @@
         clearButton.type = 'button';
         clearButton.className = 'inline-edit-clear';
         clearButton.setAttribute('aria-label', 'Очистить');
-        clearButton.innerHTML = ICON_X;
+        clearButton.innerHTML = getIcon('x');
         clearButton.onclick = function () { input.value = ''; input.focus(); };
 
         inputWrap.appendChild(input);
@@ -127,13 +120,13 @@
         doneButton.type = 'button';
         doneButton.className = 'inline-edit-done-btn';
         doneButton.setAttribute('aria-label', 'Сохранить');
-        doneButton.innerHTML = ICON_CHECK;
+        doneButton.innerHTML = getIcon('check');
 
         var cancelButton = document.createElement('button');
         cancelButton.type = 'button';
         cancelButton.className = 'inline-edit-cancel-btn';
         cancelButton.setAttribute('aria-label', 'Отмена');
-        cancelButton.innerHTML = ICON_X;
+        cancelButton.innerHTML = getIcon('x');
 
         var errorElement = document.createElement('div');
         errorElement.className = 'inline-edit-error';

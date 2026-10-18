@@ -1,4 +1,4 @@
-package com.example.demo.service.cursor.context;
+package com.example.demo.service.cursor.util;
 
 import org.jetbrains.annotations.NotNull;
 

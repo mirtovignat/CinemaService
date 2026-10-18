@@ -2,6 +2,7 @@ package com.example.demo.service.cursor;
 
 import com.example.demo.dto.cursor.Cursor;
 import com.example.demo.dto.response.CursorPageResponse;
+import com.example.demo.service.cursor.util.CursorCodec;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;

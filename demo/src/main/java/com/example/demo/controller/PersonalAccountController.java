@@ -9,13 +9,13 @@ import com.example.demo.dto.user.SessionUser;
 import com.example.demo.dto.user.UserForOwnerViewDTO;
 import com.example.demo.exception.SuccessCode;
 import com.example.demo.model.entity.User;
-import com.example.demo.service.catalog.WatchedHistoryService;
 import com.example.demo.service.movie.FilterMetaService;
 import com.example.demo.service.user.UserCommandService;
 import com.example.demo.service.user.UserQueryService;
 import com.example.demo.util.MessageUtils;
 import com.example.demo.web.interceptor.NavigationHistoryInterceptor;
 import com.example.demo.web.security.SessionAuthenticator;
+import com.example.demo.web.util.ApiResponseFactory;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -34,14 +34,12 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PersonalAccountController {
 
-    private static final String DEFAULT_RETURN_PATH = "/personal-account";
-
     private final UserCommandService userCommandService;
     private final UserQueryService userQueryService;
     private final MessageUtils messageUtils;
-    private final WatchedHistoryService watchHistoryService;
     private final FilterMetaService filterMetaService;
     private final SessionAuthenticator sessionAuthenticator;
+    private final ApiResponseFactory apiResponseFactory;
 
     @GetMapping("/personal-account")
     public String getPersonalAccount(SessionUser sessionUser, Model model) {
@@ -50,7 +48,7 @@ public class PersonalAccountController {
         PersonalAccountResponse response = userQueryService.buildUserPage(user);
         model.addAttribute("response", response);
         model.addAttribute("genres", filterMetaService.getAllGenres());
-        return "personal-account";
+        return "account/personal-account";
     }
 
     @GetMapping("/profile/edit")
@@ -60,7 +58,7 @@ public class PersonalAccountController {
         PersonalAccountResponse response = userQueryService.buildUserPage(user);
         model.addAttribute("response", response);
         model.addAttribute("genres", filterMetaService.getAllGenres());
-        return "profile";
+        return "account/profile";
     }
 
     @GetMapping("/settings")
@@ -86,7 +84,7 @@ public class PersonalAccountController {
             sessionAuthenticator.updateSessionUser(updatedSessionUser, httpServletRequest, httpServletResponse);
         }
         UserForOwnerViewDTO updatedUser = userQueryService.getUserForOwner(userId);
-        return respond(SuccessCode.UPDATED, Map.of(
+        return apiResponseFactory.ok(SuccessCode.UPDATED, Map.of(
                 "user", updatedUser,
                 "sessionUser", updatedSessionUser
         ));
@@ -96,7 +94,7 @@ public class PersonalAccountController {
     @ResponseBody
     public ResponseEntity<ApiResponse> deletePhone(SessionUser sessionUser) {
         userCommandService.deletePhone(sessionUser.id());
-        return respond(SuccessCode.PHONE_HAS_BEEN_REMOVED, Map.of());
+        return apiResponseFactory.ok(SuccessCode.PHONE_HAS_BEEN_REMOVED, Map.of());
     }
 
     @GetMapping("/settings/change/pwd")
@@ -104,7 +102,7 @@ public class PersonalAccountController {
         if (!model.containsAttribute("passwordChangingDTO")) {
             model.addAttribute("passwordChangingDTO", PasswordChangingDTO.builder().build());
         }
-        return "change-password";
+        return "account/change-password";
     }
 
     @PostMapping("/settings/change/pwd")
@@ -116,7 +114,7 @@ public class PersonalAccountController {
             RedirectAttributes redirectAttributes
     ) {
         if (bindingResult.hasErrors()) {
-            return "change-password";
+            return "account/change-password";
         }
         Long userId = sessionUser.id();
         String newPasswordHash = userCommandService.prepareAndValidatePassword(passwordChangingDTO, userId);
@@ -142,7 +140,7 @@ public class PersonalAccountController {
     }
 
     private String resolveReturnPath(HttpSession httpSession) {
-        if (httpSession == null) return DEFAULT_RETURN_PATH;
+        if (httpSession == null) return "/personal-account";
 
         Object stored = httpSession.getAttribute(NavigationHistoryInterceptor.PREVIOUS_PAGE_ATTR);
         httpSession.removeAttribute(NavigationHistoryInterceptor.PREVIOUS_PAGE_ATTR);
@@ -150,7 +148,7 @@ public class PersonalAccountController {
         if (stored instanceof String storedPath && isSafeLocalPath(storedPath)) {
             return storedPath;
         }
-        return DEFAULT_RETURN_PATH;
+        return "/personal-account";
     }
 
     private boolean isSafeLocalPath(String path) {
@@ -164,14 +162,5 @@ public class PersonalAccountController {
             return false;
         }
         return !path.startsWith("/\\");
-    }
-
-    private ResponseEntity<ApiResponse> respond(SuccessCode successCode, Map<String, Object> data) {
-        String message = messageUtils.getSuccess(successCode);
-        return ResponseEntity.ok(ApiResponse.builder()
-                .code(successCode.name())
-                .message(message)
-                .data(data)
-                .build());
     }
 }

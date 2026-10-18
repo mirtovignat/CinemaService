@@ -7,16 +7,18 @@ import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.dto.response.CursorPageResponse;
 import com.example.demo.dto.user.SessionUser;
 import com.example.demo.exception.SuccessCode;
-import com.example.demo.service.catalog.cursor.ReviewCursorService;
-import com.example.demo.service.cursor.context.ReviewCursorContext;
+import com.example.demo.service.cursor.ReviewCursorService;
+import com.example.demo.service.cursor.util.ReviewCursorContext;
 import com.example.demo.service.movie.MovieService;
 import com.example.demo.service.rated.RatedCommandService;
 import com.example.demo.service.rated.RatedQueryService;
 import com.example.demo.service.user.UserQueryService;
 import com.example.demo.util.MessageUtils;
 import com.example.demo.web.resolver.ReviewSortResolver;
+import com.example.demo.web.util.ApiResponseFactory;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -26,6 +28,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.math.BigDecimal;
 import java.util.Map;
 
+@AllArgsConstructor
 @Controller
 @RequestMapping("/rated")
 public class RatedController {
@@ -37,22 +40,7 @@ public class RatedController {
     private final MovieService movieService;
     private final MessageUtils messageUtils;
     private final ReviewSortResolver reviewSortResolver;
-
-    public RatedController(RatedCommandService ratedCommandService,
-                           RatedQueryService ratedQueryService,
-                           ReviewCursorService reviewCursorService,
-                           UserQueryService userQueryService,
-                           MovieService movieService,
-                           MessageUtils messageUtils,
-                           ReviewSortResolver reviewSortResolver) {
-        this.ratedCommandService = ratedCommandService;
-        this.ratedQueryService = ratedQueryService;
-        this.reviewCursorService = reviewCursorService;
-        this.userQueryService = userQueryService;
-        this.movieService = movieService;
-        this.messageUtils = messageUtils;
-        this.reviewSortResolver = reviewSortResolver;
-    }
+    private final ApiResponseFactory apiResponseFactory;
 
     @GetMapping("/{id}/reviews")
     public String getReviews(@PathVariable Long id,
@@ -81,7 +69,7 @@ public class RatedController {
         if (userId != null) {
             model.addAttribute("currentUsername", userQueryService.getUsername(userId));
         }
-        return "reviews";
+        return "catalog/reviews";
     }
 
     @GetMapping("/{id}/reviews/more")
@@ -124,7 +112,7 @@ public class RatedController {
                                                  SessionUser sessionUser) {
         Long userId = sessionUser.id();
         ratedCommandService.addOrUpdateRating(ratedMovieFormDTO.id(), userId, ratedMovieFormDTO);
-        return respond(SuccessCode.REVIEW_HAS_BEEN_SAVED);
+        return apiResponseFactory.ok(SuccessCode.REVIEW_HAS_BEEN_SAVED);
     }
 
     @PostMapping("/edit")
@@ -133,7 +121,7 @@ public class RatedController {
                                                   SessionUser sessionUser) {
         Long userId = sessionUser.id();
         ratedCommandService.addOrUpdateRating(ratedMovieFormDTO.id(), userId, ratedMovieFormDTO);
-        return respond(SuccessCode.REVIEW_HAS_BEEN_UPDATED);
+        return apiResponseFactory.ok(SuccessCode.REVIEW_HAS_BEEN_UPDATED);
     }
 
     @PostMapping("/remove/{id}")
@@ -142,7 +130,7 @@ public class RatedController {
                                                     SessionUser sessionUser) {
         Long userId = sessionUser.id();
         ratedCommandService.deleteRating(movieId, userId);
-        return respond(SuccessCode.REVIEW_HAS_BEEN_DELETED);
+        return apiResponseFactory.ok(SuccessCode.REVIEW_HAS_BEEN_DELETED);
     }
 
     @GetMapping("/rating/{id}")
@@ -156,14 +144,5 @@ public class RatedController {
     @ResponseBody
     public ResponseEntity<Long> getReviewsCount(@PathVariable Long movieId) {
         return ResponseEntity.ok(ratedQueryService.getReviewsCountForMovie(movieId));
-    }
-
-    private ResponseEntity<ApiResponse> respond(SuccessCode successCode) {
-        String message = messageUtils.getSuccess(successCode);
-        return ResponseEntity.ok(ApiResponse.builder()
-                .code(successCode.name())
-                .message(message)
-                .data(Map.of())
-                .build());
     }
 }

@@ -1,4 +1,4 @@
-package com.example.demo.service.cursor;
+package com.example.demo.service.cursor.util;
 
 import com.example.demo.exception.BusinessException;
 import com.example.demo.exception.ErrorCode;
@@ -15,7 +15,7 @@ public final class KeyUtils {
                                                       Long identifier) {
         Objects.requireNonNull(timestamp, "timestamp не должен быть null");
         Objects.requireNonNull(identifier, "identifier не должен быть null");
-        return timestamp.toString() + "_" + identifier;
+        return timestamp + "_" + identifier;
     }
 
     public static LocalDateTime decodeTimestamp(String cursorValue) {

@@ -33,7 +33,13 @@
         </h1>
 
         <div class="poster-sidebar">
-            <div class="poster-wrapper">
+
+            <div th:if="${sessionUser.authenticated and card.status.bought}"
+                 class="poster-wrapper"
+                 data-action="watch-movie"
+                 th:data-movie-id="${card.movie.id}"
+                 th:data-movie-title="${card.movie.title}"
+                 th:data-poster-url="${card.movie.posterUrl}">
 
                 <img th:if="${card.movie.posterUrl != null and !card.movie.posterUrl.isEmpty()}"
                      th:src="${card.movie.posterUrl}"
@@ -52,11 +58,7 @@
                     <div class="poster-placeholder-sub">Изображение недоступно</div>
                 </div>
 
-                <div class="poster-overlay"
-                     th:if="${sessionUser.authenticated
-                              and card.status.bought
-                              and card.movie.posterUrl != null
-                              and !card.movie.posterUrl.isEmpty()}">
+                <div class="poster-overlay">
                     <button class="watch-btn-neon"
                             type="button"
                             data-action="watch-movie"
@@ -68,6 +70,27 @@
                         </svg>
                         Смотреть
                     </button>
+                </div>
+            </div>
+
+            <div th:unless="${sessionUser.authenticated and card.status.bought}"
+                 class="poster-wrapper">
+
+                <img th:if="${card.movie.posterUrl != null and !card.movie.posterUrl.isEmpty()}"
+                     th:src="${card.movie.posterUrl}"
+                     class="movie-poster-img"
+                     alt="Постер"
+                     data-poster-img
+                     src=""/>
+
+                <div class="movie-poster-placeholder"
+                     data-poster-placeholder
+                     th:classappend="${card.movie.posterUrl != null and !card.movie.posterUrl.isEmpty()} ? 'hidden' : ''">
+                    <div class="poster-placeholder-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4.35-4.35a1.5 1.5 0 0 0-2.12 0L7 18"/></svg>
+                    </div>
+                    <div class="poster-placeholder-text">Нет постера</div>
+                    <div class="poster-placeholder-sub">Изображение недоступно</div>
                 </div>
             </div>
         </div>

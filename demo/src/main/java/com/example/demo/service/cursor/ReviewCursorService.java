@@ -1,13 +1,12 @@
-package com.example.demo.service.catalog.cursor;
+package com.example.demo.service.cursor;
 
 import com.example.demo.dto.catalog.ReviewViewDTO;
 import com.example.demo.mapper.entity.RatedMapper;
 import com.example.demo.model.entity.RatedMovie;
 import com.example.demo.repository.entity.RatedMovieRepository;
-import com.example.demo.service.cursor.AbstractCursorService;
-import com.example.demo.service.cursor.CursorCodec;
-import com.example.demo.service.cursor.KeyUtils;
-import com.example.demo.service.cursor.context.ReviewCursorContext;
+import com.example.demo.service.cursor.util.CursorCodec;
+import com.example.demo.service.cursor.util.KeyUtils;
+import com.example.demo.service.cursor.util.ReviewCursorContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;

@@ -4,6 +4,7 @@
     <title>История покупок — CinemaService</title>
     <th:block th:replace="~{fragments/head :: head}"></th:block>
     <link rel="stylesheet" th:href="@{/css/pages/_purchase-history.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/_history.css}">
 </head>
 <body class="layout-fixed">
 <th:block th:replace="~{fragments/header :: header}"></th:block>
@@ -47,19 +48,14 @@
                      data-action="navigate"
                      th:data-href="@{/movies/{id}(id=${item.id()})}">
                     <div class="history-item-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                             stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
-                             stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.75l6 6 9-13.5"/></svg>
+                        <th:block th:replace="~{fragments/icons :: icon-check}"></th:block>
                     </div>
                     <div class="history-item-info">
                         <a th:href="@{/movies/{id}(id=${item.id()})}" class="history-item-title"
                            th:text="${item.title()}">Название</a>
                         <div class="history-item-meta">
                             <span class="history-item-time" th:if="${item.addedAt() != null}">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                     stroke-width="1.5" stroke="currentColor">
-                                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-                                </svg>
+                                <th:block th:replace="~{fragments/icons :: icon-time}"></th:block>
                                 Куплено: <span class="js-local-time" th:data-utc="${item.addedAt()}"></span>
                             </span>
                         </div>
@@ -93,18 +89,13 @@
          data-action="navigate"
          data-attr="data-movie-id:id;data-added-at:addedAt;data-href:/movies/{id}">
         <div class="history-item-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
-                 stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.75l6 6 9-13.5"/></svg>
+            <th:block th:replace="~{fragments/icons :: icon-check}"></th:block>
         </div>
         <div class="history-item-info">
             <a class="history-item-title" data-attr="href:/movies/{id}" data-field="title"></a>
             <div class="history-item-meta">
                 <span class="history-item-time">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                         stroke-width="1.5" stroke="currentColor">
-                        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-                    </svg>
+                    <th:block th:replace="~{fragments/icons :: icon-time}"></th:block>
                     Куплено: <span class="js-local-time" data-field="addedAtTime"></span>
                 </span>
             </div>
@@ -115,7 +106,7 @@
     </div>
 </template>
 
-<script th:src="@{/js/pages/watched-local-time.js}" defer></script>
+<script th:src="@{/js/modules/watched-local-time.js}" defer></script>
 <script th:src="@{/js/modules/sort-toggle.js}" defer></script>
 <script th:src="@{/js/modules/cursor-pagination.js}" defer></script>
 <script th:src="@{/js/main.js}" defer></script>

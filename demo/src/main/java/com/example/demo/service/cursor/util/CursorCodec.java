@@ -1,4 +1,4 @@
-package com.example.demo.service.cursor;
+package com.example.demo.service.cursor.util;
 
 import com.example.demo.dto.cursor.Cursor;
 import com.example.demo.exception.BusinessException;

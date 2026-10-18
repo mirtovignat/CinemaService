@@ -1,4 +1,4 @@
-package com.example.demo.service.catalog;
+package com.example.demo.service;
 
 import com.example.demo.exception.BusinessException;
 import com.example.demo.exception.ErrorCode;

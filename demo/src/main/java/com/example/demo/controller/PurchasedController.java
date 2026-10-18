@@ -4,8 +4,8 @@ import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.dto.user.SessionUser;
 import com.example.demo.exception.SuccessCode;
 import com.example.demo.service.purchased.PurchasedCommandService;
-import com.example.demo.util.MessageUtils;
 import com.example.demo.web.security.SessionAuthenticator;
+import com.example.demo.web.util.ApiResponseFactory;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.math.BigDecimal;
-import java.util.Map;
 
 @Controller
 @RequestMapping("/orders")
@@ -25,8 +24,8 @@ import java.util.Map;
 public class PurchasedController {
 
     private final PurchasedCommandService purchasedCommandService;
-    private final MessageUtils messageUtils;
     private final SessionAuthenticator sessionAuthenticator;
+    private final ApiResponseFactory apiResponseFactory;
 
     @PostMapping("/add/bulk")
     @ResponseBody
@@ -58,11 +57,6 @@ public class PurchasedController {
                 httpServletRequest,
                 httpServletResponse
         );
-        String message = messageUtils.getSuccess(SuccessCode.PURCHASED);
-        return ResponseEntity.ok(ApiResponse.builder()
-                .code(SuccessCode.PURCHASED.name())
-                .message(message)
-                .data(Map.of())
-                .build());
+        return apiResponseFactory.ok(SuccessCode.PURCHASED);
     }
 }

@@ -63,7 +63,7 @@ public class MovieController {
 
         model.addAttribute("response", response);
         model.addAttribute("filterQuery", result.filterQuery());
-        return "index";
+        return "catalog/index";
     }
 
     @GetMapping(value = "/movies", params = "genre")
@@ -94,7 +94,7 @@ public class MovieController {
 
                     model.addAttribute("response", response);
                     model.addAttribute("filterQuery", result.filterQuery());
-                    return "index";
+                    return "catalog/index";
                 })
                 .orElseGet(() -> {
                     redirectAttributes.addFlashAttribute("error",
@@ -121,7 +121,7 @@ public class MovieController {
         MovieForUser<MovieDetailsViewDTO> card =
                 movieService.getCard(id, sessionUser.idOrNull());
         model.addAttribute("card", card);
-        return "show";
+        return "catalog/show";
     }
 
     @GetMapping("/movies/{id}/rating")

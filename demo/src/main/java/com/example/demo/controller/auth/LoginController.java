@@ -17,7 +17,7 @@ public class LoginController {
         if (!model.containsAttribute("loginForm")) {
             model.addAttribute("loginForm", buildLoginForm(switchUsername));
         }
-        return "login";
+        return "auth/login";
     }
 
     private LoginFormDTO buildLoginForm(String switchUsername) {

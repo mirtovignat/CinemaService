@@ -1,49 +1,21 @@
 package com.example.demo.controller.catalog;
 
 import com.example.demo.dto.catalog.HistoricalMovieViewDTO;
-import com.example.demo.dto.response.CursorPageResponse;
-import com.example.demo.dto.user.SessionUser;
 import com.example.demo.mapper.entity.UserMapper;
-import com.example.demo.service.catalog.cursor.HistoryCursorService;
-import com.example.demo.service.cursor.context.UserCursorContext;
+import com.example.demo.service.cursor.HistoryCursorService;
 import com.example.demo.service.movie.FilterMetaService;
 import com.example.demo.service.user.UserQueryService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 @RequestMapping("/history")
-@RequiredArgsConstructor
-public class HistoryController {
+public class HistoryController extends AbstractCatalogPageController<HistoricalMovieViewDTO> {
 
-    private final HistoryCursorService historyCursorService;
-    private final FilterMetaService filterMetaService;
-    private final UserQueryService userQueryService;
-    private final UserMapper userMapper;
-
-    @GetMapping
-    public String getHistory(@RequestParam(required = false) String cursor,
-                             @RequestParam(required = false) String sort,
-                             SessionUser sessionUser,
-                             Model model) {
-        model.addAttribute("response",
-                historyCursorService.page(cursor, sort, new UserCursorContext(sessionUser.id())));
-        model.addAttribute("userSidebar",
-                userMapper.toSidebarView(userQueryService.getUser(sessionUser.id())));
-        model.addAttribute("genres", filterMetaService.getAllGenres());
-        return "catalog/history";
-    }
-
-    @GetMapping("/more")
-    @ResponseBody
-    public CursorPageResponse<HistoricalMovieViewDTO> more(@RequestParam(required = false) String cursor,
-                                                           @RequestParam(required = false) String sort,
-                                                           SessionUser sessionUser) {
-        return historyCursorService.page(cursor, sort, new UserCursorContext(sessionUser.id()));
+    public HistoryController(HistoryCursorService historyCursorService,
+                             FilterMetaService filterMetaService,
+                             UserQueryService userQueryService,
+                             UserMapper userMapper) {
+        super(historyCursorService, filterMetaService, userQueryService, userMapper, "account/history");
     }
 }

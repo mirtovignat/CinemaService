@@ -4,6 +4,7 @@
     <title>История оценок — CinemaService</title>
     <th:block th:replace="~{fragments/head :: head}"></th:block>
     <link rel="stylesheet" th:href="@{/css/pages/_rated-history.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/_history.css}">
 </head>
 <body class="layout-fixed">
 <th:block th:replace="~{fragments/header :: header}"></th:block>
@@ -47,9 +48,7 @@
                      th:data-added-at="${item.addedAt()}">
 
                     <div class="history-item-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                            <path d="M12 2l2.9 6.9 7.1.6-5.4 4.7 1.6 7-6.2-3.7-6.2 3.7 1.6-7L2 9.5l7.1-.6L12 2z"/>
-                        </svg>
+                        <th:block th:replace="~{fragments/icons :: icon-star-filled}"></th:block>
                     </div>
 
                     <div class="history-item-info"
@@ -93,11 +92,7 @@
                     </div>
 
                     <div class="history-item-time" th:if="${item.addedAt() != null}">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                             stroke-width="1.5" stroke="currentColor">
-                            <circle cx="12" cy="12" r="10"/>
-                            <polyline points="12 6 12 12 16 14"/>
-                        </svg>
+                        <th:block th:replace="~{fragments/icons :: icon-time}"></th:block>
                         <span>Оценено: <span class="js-local-time" th:data-utc="${item.addedAt()}"></span></span>
                     </div>
                 </div>
@@ -125,9 +120,7 @@
 <template id="ratedItemTemplate">
     <div class="history-item" data-attr="data-movie-id:id;data-movie-title:title;data-added-at:addedAt">
         <div class="history-item-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M12 2l2.9 6.9 7.1.6-5.4 4.7 1.6 7-6.2-3.7-6.2 3.7 1.6-7L2 9.5l7.1-.6L12 2z"/>
-            </svg>
+            <th:block th:replace="~{fragments/icons :: icon-star-filled}"></th:block>
         </div>
         <div class="history-item-info" data-action="navigate" data-attr="data-href:/movies/{id}">
             <a class="history-item-title" data-attr="href:/movies/{id}" data-field="title"></a>
@@ -153,17 +146,13 @@
             </div>
         </div>
         <div class="history-item-time">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                 stroke-width="1.5" stroke="currentColor">
-                <circle cx="12" cy="12" r="10"/>
-                <polyline points="12 6 12 12 16 14"/>
-            </svg>
+            <th:block th:replace="~{fragments/icons :: icon-time}"></th:block>
             <span>Оценено: <span class="js-local-time" data-field="addedAtTime"></span></span>
         </div>
     </div>
 </template>
 
-<script th:src="@{/js/pages/watched-local-time.js}" defer></script>
+<script th:src="@{/js/modules/watched-local-time.js}" defer></script>
 <script th:src="@{/js/modules/sort-toggle.js}" defer></script>
 <script th:src="@{/js/modules/cursor-pagination.js}" defer></script>
 <script th:src="@{/js/main.js}" defer></script>

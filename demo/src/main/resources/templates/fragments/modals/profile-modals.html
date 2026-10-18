@@ -11,20 +11,13 @@
                     <th:block th:replace="~{fragments/icons :: icon-trash}"></th:block>
                     Удаление номера телефона
                 </h3>
-                <button type="button" class="modal-x"
-                        data-close-delete-phone-modal aria-label="Закрыть">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                         fill="none" stroke="currentColor" stroke-width="1.8"
-                         stroke-linecap="round" aria-hidden="true">
-                        <path d="M7 7l10 10M17 7L7 17"/>
-                    </svg>
+                <button type="button" class="modal-x" data-close-delete-phone-modal aria-label="Закрыть">
+                    <th:block th:replace="~{fragments/icons :: icon-x}"></th:block>
                 </button>
             </div>
             <p>Вы уверены, что хотите удалить номер телефона?</p>
             <div class="modal-buttons">
-                <button id="confirmDeletePhoneBtn"
-                        class="modal-confirm-btn danger"
-                        type="button">
+                <button id="confirmDeletePhoneBtn" class="modal-confirm-btn danger" type="button">
                     <th:block th:replace="~{fragments/icons :: icon-trash}"></th:block>
                     Удалить
                 </button>
@@ -39,26 +32,16 @@
                     <th:block th:replace="~{fragments/icons :: icon-user-delete}"></th:block>
                     Удаление аккаунта
                 </h3>
-                <button class="modal-x"
-                        type="button"
-                        data-action="close-delete-account-modal"
-                        aria-label="Закрыть">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                         fill="none" stroke="currentColor" stroke-width="1.8"
-                         stroke-linecap="round" aria-hidden="true">
-                        <path d="M7 7l10 10M17 7L7 17"/>
-                    </svg>
+                <button class="modal-x" type="button" data-action="close-delete-account-modal" aria-label="Закрыть">
+                    <th:block th:replace="~{fragments/icons :: icon-x}"></th:block>
                 </button>
             </div>
             <p>Вы уверены, что хотите удалить аккаунт?</p>
             <p style="color:#fda4af; font-weight:600;">Это действие необратимо.</p>
-            <p style="color:#94a3b8; font-size:0.85rem;">
-                Все покупки, оценки, избранное и история просмотров будут утеряны.
-            </p>
+            <p style="color:#94a3b8; font-size:0.85rem;">Все покупки, оценки, избранное и история просмотров будут утеряны.</p>
             <div class="modal-buttons">
-                <button class="modal-confirm-btn danger"
-                        type="button"
-                        data-action="confirm-delete-account">Удалить аккаунт
+                <button class="modal-confirm-btn danger" type="button" data-action="confirm-delete-account">
+                    Удалить аккаунт
                 </button>
             </div>
             <form th:action="@{/profile/delete}" method="post" id="deleteAccountForm" style="display:none;"></form>

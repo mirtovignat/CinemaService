@@ -34,7 +34,7 @@ public class RegistrationController {
         if (!model.containsAttribute("registerForm")) {
             model.addAttribute("registerForm", RegisterFormDTO.getForm());
         }
-        return "register";
+        return "auth/register";
     }
 
     @PostMapping

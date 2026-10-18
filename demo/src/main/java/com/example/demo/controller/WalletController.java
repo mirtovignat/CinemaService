@@ -39,7 +39,7 @@ public class WalletController {
             model.addAttribute("topUpFormDTO", TopUpFormDTO.builder().build());
         }
         model.addAttribute("wallet", userQueryService.getWalletForOwner(userId));
-        return "top-up";
+        return "account/top-up";
     }
 
     @GetMapping("/balance")
@@ -59,7 +59,7 @@ public class WalletController {
                         Model model) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("wallet", userQueryService.getWalletForOwner(sessionUser.id()));
-            return "top-up";
+            return "account/top-up";
         }
         User user = userQueryService.getUser(sessionUser.id());
         userCommandService.saveTopUp(topUpFormDTO.amount(), user);
