@@ -15,48 +15,44 @@
             </a>
         </th:block>
 
-        <a th:href="@{${url} + '?page=0' + ${filterQuery}}"
-           class="page-nav"
-           th:classappend="${current == 0} ? 'active' : ''"
-           data-page="0">1</a>
-
-        <a th:if="${total > 1}"
-           th:href="@{${url} + '?page=1' + ${filterQuery}}"
-           class="page-nav"
-           th:classappend="${current == 1} ? 'active' : ''"
-           data-page="1">2</a>
-
-        <span th:if="${total > 5 and current > 3}" class="page-dots">…</span>
-
-        <th:block th:with="from=${(current - 1 > 2) ? current - 1 : 2},
-                           to=${(current + 1 < total - 2) ? current + 1 : total - 3}">
-            <th:block th:each="p : ${#numbers.sequence(from, to)}">
-                <a th:if="${p >= 2 and p <= total - 2}"
-                   th:href="@{${url} + '?page=' + ${p} + ${filterQuery}}"
+        <th:block th:if="${total <= 7}">
+            <th:block th:each="i : ${#numbers.sequence(0, total - 1)}">
+                <a th:href="@{${url} + '?page=' + ${i} + ${filterQuery}}"
                    class="page-nav"
-                   th:classappend="${p == current} ? 'active' : ''"
-                   th:text="${p + 1}"
-                   th:attr="data-page=${p}"></a>
+                   th:classappend="${i == current} ? 'active' : ''"
+                   th:text="${i + 1}"
+                   th:attr="data-page=${i}"></a>
             </th:block>
         </th:block>
+        <th:block th:unless="${total <= 7}">
 
-        <span th:if="${total > 5 and current < total - 3}" class="page-dots">…</span>
+            <a th:href="@{${url} + '?page=0' + ${filterQuery}}"
+               class="page-nav"
+               th:classappend="${current == 0} ? 'active' : ''"
+               data-page="0">1</a>
 
-        <a th:if="${total > 3}"
-           th:with="penultimate=${total - 2}"
-           th:href="@{${url} + '?page=' + ${penultimate} + ${filterQuery}}"
-           class="page-nav"
-           th:classappend="${current == penultimate} ? 'active' : ''"
-           th:text="${total - 1}"
-           th:attr="data-page=${penultimate}"></a>
+            <span th:if="${current > 3}" class="page-dots">…</span>
 
-        <a th:if="${total > 2}"
-           th:with="last=${total - 1}"
-           th:href="@{${url} + '?page=' + ${last} + ${filterQuery}}"
-           class="page-nav"
-           th:classappend="${current == last} ? 'active' : ''"
-           th:text="${total}"
-           th:attr="data-page=${last}"></a>
+            <th:block th:with="from=${current - 1 > 2 ? current - 1 : 2},
+                               to=${current + 1 < total - 2 ? current + 1 : total - 3}">
+                <th:block th:each="p : ${#numbers.sequence(from, to)}">
+                    <a th:href="@{${url} + '?page=' + ${p} + ${filterQuery}}"
+                       class="page-nav"
+                       th:classappend="${p == current} ? 'active' : ''"
+                       th:text="${p + 1}"
+                       th:attr="data-page=${p}"></a>
+                </th:block>
+            </th:block>
+
+            <span th:if="${current < total - 4}" class="page-dots">…</span>
+
+            <a th:href="@{${url} + '?page=' + ${total - 1} + ${filterQuery}}"
+               class="page-nav"
+               th:classappend="${current == total - 1} ? 'active' : ''"
+               th:text="${total}"
+               th:attr="data-page=${total - 1}"></a>
+
+        </th:block>
 
         <th:block th:if="${current < total - 1}">
             <a th:with="nextPage=${current + 1}"

@@ -97,7 +97,7 @@
             wrapper: wrapper,
             grid: grid,
             currentUri: currentUri,
-            page: 0,
+            nextCursor: null,
             hasMore: true,
             loading: false,
             loaded: new Set(),
@@ -123,16 +123,21 @@
         state.fetchPage = function () {
             if (state.loading || !state.hasMore) return Promise.resolve(false);
             state.loading = true;
-            var currentPage = state.page;
-            return fetch(ENDPOINT + '?page=' + currentPage, {
+
+            var url = ENDPOINT;
+            if (state.nextCursor) {
+                url += '?cursor=' + encodeURIComponent(state.nextCursor);
+            }
+
+            return fetch(url, {
                 headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                 cache: 'no-store'
             })
-            .then(function (r) { return r.ok ? r.json() : Promise.reject(r); })
-            .then(function (slice) {
-                var movies = Array.isArray(slice && slice.content) ? slice.content : [];
-                state.page = currentPage + 1;
-                state.hasMore = slice && (slice.hasNext === true || (slice.hasNext === undefined && slice.last === false));
+            .then(function (response) { return response.ok ? response.json() : Promise.reject(response); })
+            .then(function (page) {
+                var movies = Array.isArray(page && page.items) ? page.items : [];
+                state.nextCursor = page && page.nextCursor ? page.nextCursor : null;
+                state.hasMore = page && page.hasMore === true;
                 state.appendMovies(movies);
                 if (movies.length === 0 && grid.children.length === 0) {
                     state.hasMore = false;
@@ -140,8 +145,8 @@
                 }
                 return movies.length > 0;
             })
-            .catch(function (e) {
-                console.warn('[RecommendationsCarousel]', e);
+            .catch(function (error) {
+                console.warn('[RecommendationsCarousel]', error);
                 state.hasMore = false;
                 return false;
             })
@@ -178,7 +183,7 @@
         };
 
         state.reload = function () {
-            state.page = 0;
+            state.nextCursor = null;
             state.hasMore = true;
             state.loading = false;
             state.loaded.clear();
@@ -210,13 +215,16 @@
                 rolled = true;
                 state.excluded.delete(id);
                 state.loaded.delete(id);
-                snapshots.forEach(function (s) {
+                snapshots.forEach(function (snapshot) {
                     var parser = document.createElement('div');
-                    parser.innerHTML = s.html;
+                    parser.innerHTML = snapshot.html;
                     var node = parser.firstElementChild;
-                    if (!node || !s.parent) return;
-                    if (s.next && s.next.parentNode === s.parent) s.parent.insertBefore(node, s.next);
-                    else s.parent.appendChild(node);
+                    if (!node || !snapshot.parent) return;
+                    if (snapshot.next && snapshot.next.parentNode === snapshot.parent) {
+                        snapshot.parent.insertBefore(node, snapshot.next);
+                    } else {
+                        snapshot.parent.appendChild(node);
+                    }
                 });
             };
         };
@@ -224,12 +232,12 @@
         wrapper.addEventListener('scroll', state.checkEdge, { passive: true });
 
         if (window.ResizeObserver) {
-            var ro = new ResizeObserver(function () {
+            var resizeObserver = new ResizeObserver(function () {
                 state.fillUntilOverflow().then(function () {
                     state.checkEdge();
                 });
             });
-            ro.observe(wrapper);
+            resizeObserver.observe(wrapper);
         }
 
         state.fillUntilOverflow().then(function () {
@@ -247,16 +255,20 @@
     window.RecommendationsCarousel = { mount: mount, mountAll: mountAll };
 
     window.removeRecommendationOptimistic = function (movieId) {
-        var rollbacks = instances.map(function (s) { return s.removeOptimistic(movieId); });
-        return function () { rollbacks.forEach(function (r) { r(); }); };
+        var rollbacks = instances.map(function (state) {
+            return state.removeOptimistic(movieId);
+        });
+        return function () {
+            rollbacks.forEach(function (rollback) { rollback(); });
+        };
     };
 
     window.reloadRecommendations = function () {
-        instances.forEach(function (s) { s.reload(); });
+        instances.forEach(function (state) { state.reload(); });
     };
 
     window.refreshRecommendationsAfterMutation = function () {
-        instances.forEach(function (s) { s.checkEdge(); });
+        instances.forEach(function (state) { state.checkEdge(); });
     };
 
     if (document.readyState === 'loading') {

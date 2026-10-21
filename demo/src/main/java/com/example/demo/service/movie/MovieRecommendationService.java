@@ -34,7 +34,7 @@ public class MovieRecommendationService {
             FavouriteMovieRepository favouriteMovieRepository,
             PurchasedMovieRepository purchasedMovieRepository,
             RatedMovieRepository ratedMovieRepository,
-            @Value("${app.recommendations.page-size:8}") int pageSize
+            @Value("${app.recommendations.cursorPageResponse-size:8}") int pageSize
     ) {
         this.movieRepository = movieRepository;
         this.movieMapper = movieMapper;
@@ -57,7 +57,7 @@ public class MovieRecommendationService {
         return getRecommendedMoviesSlice(userId, 0);
     }
 
-    private Set<Long> collectExcludedMovieIds(Long userId) {
+    public Set<Long> collectExcludedMovieIds(Long userId) {
         Set<Long> excludedIds = new LinkedHashSet<>();
         excludedIds.addAll(cartItemRepository.findMovieIdsByUserId(userId));
         excludedIds.addAll(favouriteMovieRepository.findMovieIdsByUserId(userId));

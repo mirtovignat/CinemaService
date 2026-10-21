@@ -130,7 +130,7 @@
                     </div>
                 </div>
 
-                <div th:each="review : ${response.content()}"
+                <div th:each="review : ${cursorPageResponse.items()}"
                      class="review-card"
                      th:data-movie-id="${movieId}"
                      th:attr="data-date=${review.addedAt}">
@@ -183,11 +183,11 @@
 
             <div id="loadMoreWrapper"
                  class="reviews-load-more"
-                 th:if="${response.hasMore()}"
+                 th:if="${cursorPageResponse.hasMore()}"
                  th:attr="data-movie-id=${movieId},
-                          data-sort=${response.sort()},
-                          data-cursor=${response.nextCursor()},
-                          data-has-more=${response.hasMore()}">
+                          data-sort=${cursorPageResponse.sort()},
+                          data-cursor=${cursorPageResponse.nextCursor()},
+                          data-has-more=${cursorPageResponse.hasMore()}">
                 <div class="reviews-spinner-wrapper"
                      id="reviewsSpinnerWrapper"
                      style="display:none;">

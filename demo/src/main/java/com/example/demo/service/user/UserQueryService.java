@@ -10,9 +10,9 @@ import com.example.demo.repository.entity.CartItemRepository;
 import com.example.demo.repository.entity.FavouriteMovieRepository;
 import com.example.demo.repository.entity.PurchasedMovieRepository;
 import com.example.demo.repository.entity.UserRepository;
+import com.example.demo.service.catalog.RatedQueryService;
 import com.example.demo.service.movie.FilterMetaService;
 import com.example.demo.service.movie.MovieRecommendationService;
-import com.example.demo.service.rated.RatedQueryService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -41,8 +41,8 @@ public class UserQueryService {
                 movieRecommendationService.getFirstRecommendationsPage(userId);
 
         return PersonalAccountResponse.builder()
-                .userForOwner(userMapper.toOwnerView(user))
-                .userSidebar(userMapper.toSidebarView(user))
+                .userForOwnerViewDTO(userMapper.toOwnerView(user))
+                .userSidebarViewDTO(userMapper.toSidebarView(user))
                 .purchasesCount(purchasedMovieRepository.countByUserId(userId))
                 .ratingsCount(ratedQueryService.countByUserId(userId))
                 .favouritesCount(favouriteMovieRepository.countByUserId(userId))

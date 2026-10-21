@@ -1,9 +1,12 @@
 package com.example.demo.dto.response;
 
+import lombok.Builder;
+
 import java.util.List;
 
-public record CursorPageResponse<DataType>(
-        List<DataType> content,
+@Builder
+public record CursorPageResponse<Item>(
+        List<Item> items,
         boolean hasMore,
         String nextCursor,
         String sort

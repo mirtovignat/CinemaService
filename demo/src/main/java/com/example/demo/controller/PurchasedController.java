@@ -3,7 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.dto.user.SessionUser;
 import com.example.demo.exception.SuccessCode;
-import com.example.demo.service.purchased.PurchasedCommandService;
+import com.example.demo.service.catalog.PurchasedCommandService;
 import com.example.demo.web.security.SessionAuthenticator;
 import com.example.demo.web.util.ApiResponseFactory;
 import jakarta.servlet.http.HttpServletRequest;
@@ -44,7 +44,10 @@ public class PurchasedController {
             SessionUser sessionUser,
             HttpServletRequest httpServletRequest,
             HttpServletResponse httpServletResponse) {
-        BigDecimal newBalance = purchasedCommandService.purchase(id, sessionUser.id());
+        BigDecimal newBalance = purchasedCommandService.purchase(
+                id,
+                sessionUser.id()
+        );
         return respond(sessionUser, newBalance, httpServletRequest, httpServletResponse);
     }
 

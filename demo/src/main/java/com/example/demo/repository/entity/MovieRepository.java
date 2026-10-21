@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,6 +22,31 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
         return findById(id)
                 .orElseThrow(() -> BusinessException.of(ErrorCode.ENTITY_NOT_FOUND));
     }
+
+    @Query("""
+            SELECT movie
+            FROM Movie movie
+            WHERE (:excludedIds IS NULL OR movie.id NOT IN :excludedIds)
+            AND movie.title IS NOT NULL
+            AND movie.title <> ''
+            AND movie.posterUrl IS NOT NULL
+            AND movie.posterUrl <> ''
+            AND (
+                :hasCursor = false
+                OR movie.rating < :cursorRating
+                OR (movie.rating = :cursorRating AND movie.id > :cursorId)
+                OR (movie.rating IS NULL AND :cursorRating IS NOT NULL)
+                OR (movie.rating IS NULL AND :cursorRating IS NULL AND movie.id > :cursorId)
+            )
+            ORDER BY movie.rating DESC NULLS LAST, movie.id ASC
+            """)
+    Slice<Movie> findRecommendedMoviesSliceKeyset(
+            @Param("excludedIds") List<Long> excludedIds,
+            @Param("hasCursor") boolean hasCursor,
+            @Param("cursorRating") BigDecimal cursorRating,
+            @Param("cursorId") Long cursorId,
+            Pageable pageable
+    );
 
     @Query("""
             SELECT movie.rating

@@ -1,16 +1,22 @@
 package com.example.demo.controller.catalog;
 
+import com.example.demo.cursor.CursorPageRequest;
+import com.example.demo.cursor.context.UserCursorContext;
 import com.example.demo.dto.catalog.LibrarianMovieViewDTO;
 import com.example.demo.dto.response.ApiResponse;
+import com.example.demo.dto.response.CursorPageResponse;
+import com.example.demo.dto.response.UserCursorPageResponse;
 import com.example.demo.dto.user.SessionUser;
+import com.example.demo.dto.user.UserSidebarViewDTO;
 import com.example.demo.exception.SuccessCode;
 import com.example.demo.mapper.entity.UserMapper;
-import com.example.demo.service.WatchedHistoryService;
+import com.example.demo.service.catalog.WatchedHistoryService;
 import com.example.demo.service.cursor.WatchedHistoryCursorService;
 import com.example.demo.service.movie.FilterMetaService;
 import com.example.demo.service.user.UserQueryService;
 import com.example.demo.util.MessageUtils;
 import com.example.demo.web.util.ApiResponseFactory;
+import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,30 +24,53 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+@AllArgsConstructor
 @Controller
 @RequestMapping("/watched")
-public class WatchedHistoryController extends AbstractCatalogPageController<LibrarianMovieViewDTO> {
+public class WatchedHistoryController {
 
+    private final WatchedHistoryCursorService watchedHistoryCursorService;
     private final WatchedHistoryService watchedHistoryService;
+    private final UserQueryService userQueryService;
+    private final UserMapper userMapper;
+    private final FilterMetaService filterMetaService;
     private final MessageUtils messageUtils;
     private final ApiResponseFactory apiResponseFactory;
 
-    public WatchedHistoryController(WatchedHistoryCursorService watchedHistoryCursorService,
-                                    FilterMetaService filterMetaService,
-                                    UserQueryService userQueryService,
-                                    UserMapper userMapper,
-                                    WatchedHistoryService watchedHistoryService,
-                                    MessageUtils messageUtils,
-                                    ApiResponseFactory apiResponseFactory) {
-        super(watchedHistoryCursorService, filterMetaService, userQueryService, userMapper, "account/watched");
-        this.watchedHistoryService = watchedHistoryService;
-        this.messageUtils = messageUtils;
-        this.apiResponseFactory = apiResponseFactory;
+    @GetMapping
+    public String getPage(@ModelAttribute CursorPageRequest cursorPageRequest,
+                          SessionUser sessionUser,
+                          Model model) {
+        Long userId = sessionUser.id();
+        model.addAttribute("response",
+                watchedHistoryCursorService.page(
+                        cursorPageRequest.cursor(),
+                        cursorPageRequest.direction(),
+                        UserCursorContext.builder()
+                                .userId(userId)
+                                .build()));
+        model.addAttribute("userSidebarViewDTO", userMapper.toSidebarView(userQueryService.getUser(userId)));
+        model.addAttribute("genres", filterMetaService.getAllGenres());
+        model.addAttribute("saveHistory", watchedHistoryService.isHistorySaved(userId));
+        return "account/watched";
     }
 
-    @Override
-    protected void applyAdditionalAttributes(Long userId, Model model) {
-        model.addAttribute("saveHistory", watchedHistoryService.isHistorySaved(userId));
+    @GetMapping("/more")
+    @ResponseBody
+    public UserCursorPageResponse<LibrarianMovieViewDTO> more(@ModelAttribute CursorPageRequest cursorPageRequest,
+                                                              SessionUser sessionUser) {
+        Long userId = sessionUser.id();
+        CursorPageResponse<LibrarianMovieViewDTO> page = watchedHistoryCursorService.page(
+                cursorPageRequest.cursor(),
+                cursorPageRequest.direction(),
+                UserCursorContext.builder()
+                        .userId(userId)
+                        .build());
+        UserSidebarViewDTO sidebar = userMapper.toSidebarView(userQueryService.getUser(userId));
+        return UserCursorPageResponse.<LibrarianMovieViewDTO>builder()
+                .cursorPageResponse(page)
+                .userSidebarViewDTO(sidebar)
+                .build();
     }
 
     @PostMapping("/add/{id}")

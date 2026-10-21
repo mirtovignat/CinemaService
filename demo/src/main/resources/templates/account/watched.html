@@ -18,7 +18,7 @@
     <div class="profile-grid">
 
         <th:block
-                th:replace="~{fragments/sidebar :: sidebar(currentPage='watched', genres=${genres}, userSidebar=${userSidebar})}">
+                th:replace="~{fragments/sidebar :: sidebar(currentPage='watched', genres=${genres}, userSidebar=${userSidebarViewDTO})}">
         </th:block>
 
         <div class="profile-right">
@@ -44,8 +44,8 @@
                           data-cursor-has-more=${response != null ? response.hasMore() : false},
                           data-cursor-sort=${response != null ? response.sort() : 'desc'}">
 
-                <th:block th:if="${response != null and response.content() != null}">
-                    <div th:each="item : ${response.content()}"
+                <th:block th:if="${response != null and response.items() != null}">
+                    <div th:each="item : ${response.items()}"
                          class="history-item watched"
                          th:data-history-id="${item.historyItemId()}"
                          th:data-movie-id="${item.id()}"
@@ -187,7 +187,7 @@
 
             <div class="empty-message"
                  data-watched-empty
-                 th:style="${response != null and response.content() != null and !response.content().isEmpty()} ? 'display:none;' : ''">
+                 th:style="${response != null and response.items() != null and !response.items().isEmpty()} ? 'display:none;' : ''">
                 <div class="empty-icon">
                     <th:block th:replace="~{fragments/icons :: icon-watch-history}"></th:block>
                 </div>
@@ -197,7 +197,7 @@
             </div>
 
             <th:block
-                    th:if="${response == null or response.content() == null or response.content().isEmpty()}">
+                    th:if="${response == null or response.items() == null or response.items().isEmpty()}">
                 <th:block th:insert="~{fragments/recommendations :: recommendations}"></th:block>
             </th:block>
 
@@ -226,7 +226,7 @@
                 <button class="setting-action danger"
                         type="button"
                         data-action="open-clear-history-modal"
-                        th:attr="data-has-history=${response != null and response.content() != null and !response.content().isEmpty()}">
+                        th:attr="data-has-history=${response != null and response.items() != null and !response.items().isEmpty()}">
                     <th:block th:replace="~{fragments/icons :: icon-trash}"></th:block>
                     Удалить всю историю
                 </button>

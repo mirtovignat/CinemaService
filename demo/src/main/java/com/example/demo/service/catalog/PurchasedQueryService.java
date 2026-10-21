@@ -1,4 +1,4 @@
-package com.example.demo.service.purchased;
+package com.example.demo.service.catalog;
 
 import com.example.demo.repository.entity.PurchasedMovieRepository;
 import lombok.AllArgsConstructor;

@@ -24,6 +24,7 @@ public class LoginController {
         if (switchUsername != null && !switchUsername.isBlank()) {
             return LoginFormDTO.forSwitch(switchUsername);
         }
-        return LoginFormDTO.builder().build();
+        return LoginFormDTO.builder()
+                .build();
     }
 }

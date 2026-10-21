@@ -1,5 +1,7 @@
 package com.example.demo.controller;
 
+import com.example.demo.cursor.SortDirection;
+import com.example.demo.cursor.context.ReviewCursorContext;
 import com.example.demo.dto.catalog.RatedMovieFormDTO;
 import com.example.demo.dto.catalog.ReviewViewDTO;
 import com.example.demo.dto.catalog.ReviewsQueryDTO;
@@ -7,11 +9,10 @@ import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.dto.response.CursorPageResponse;
 import com.example.demo.dto.user.SessionUser;
 import com.example.demo.exception.SuccessCode;
-import com.example.demo.service.cursor.ReviewCursorService;
-import com.example.demo.service.cursor.util.ReviewCursorContext;
+import com.example.demo.service.catalog.RatedCommandService;
+import com.example.demo.service.catalog.RatedQueryService;
+import com.example.demo.service.cursor.CursorPageService;
 import com.example.demo.service.movie.MovieService;
-import com.example.demo.service.rated.RatedCommandService;
-import com.example.demo.service.rated.RatedQueryService;
 import com.example.demo.service.user.UserQueryService;
 import com.example.demo.util.MessageUtils;
 import com.example.demo.web.resolver.ReviewSortResolver;
@@ -35,7 +36,7 @@ public class RatedController {
 
     private final RatedCommandService ratedCommandService;
     private final RatedQueryService ratedQueryService;
-    private final ReviewCursorService reviewCursorService;
+    private final CursorPageService<ReviewCursorContext, ReviewViewDTO> reviewCursorService;
     private final UserQueryService userQueryService;
     private final MovieService movieService;
     private final MessageUtils messageUtils;
@@ -51,21 +52,27 @@ public class RatedController {
                              Model model) {
         Long userId = sessionUser.idOrNull();
 
-        ReviewsQueryDTO.SortDirection sortDirection =
+        SortDirection sortDirection =
                 reviewSortResolver.resolveAndPersist(reviewsQueryDTO, sortCookie, httpServletResponse);
 
-        CursorPageResponse<ReviewViewDTO> page =
-                reviewCursorService.page(reviewsQueryDTO.cursor(), sortDirection.name(),
-                        new ReviewCursorContext(id, userId));
+        CursorPageResponse<ReviewViewDTO> cursorPageResponse =
+                reviewCursorService.page(
+                        reviewsQueryDTO.cursor(),
+                        sortDirection,
+                        ReviewCursorContext.builder()
+                                .movieId(id)
+                                .viewerId(userId)
+                                .build());
 
-        model.addAttribute("response", page);
-        model.addAttribute("ownReview", userId != null
-                ? ratedQueryService.getRating(id, userId)
-                : null);
-        model.addAttribute("movieId", id);
-        model.addAttribute("movieTitle", movieService.getMovie(id).getTitle());
-        model.addAttribute("avgRating", ratedQueryService.getMovieRating(id));
-        model.addAttribute("totalReviews", ratedQueryService.getReviewsCountForMovie(id));
+        model.addAttribute("cursorPageResponse", cursorPageResponse)
+                .addAttribute("ownReview", userId != null
+                        ? ratedQueryService.getRating(id, userId)
+                        : null)
+                .addAttribute("movieId", id)
+                .addAttribute("movieTitle", movieService.getMovie(id).getTitle())
+                .addAttribute("avgRating", ratedQueryService.getMovieRating(id))
+                .addAttribute("totalReviews", ratedQueryService.getReviewsCountForMovie(id));
+
         if (userId != null) {
             model.addAttribute("currentUsername", userQueryService.getUsername(userId));
         }
@@ -80,11 +87,16 @@ public class RatedController {
                                                             @CookieValue(value = ReviewSortResolver.SORT_COOKIE_NAME, required = false) String sortCookie) {
         Long userId = sessionUser.idOrNull();
 
-        ReviewsQueryDTO.SortDirection sortDirection =
+        SortDirection sortDirection =
                 reviewSortResolver.resolve(reviewsQueryDTO, sortCookie);
 
-        return reviewCursorService.page(reviewsQueryDTO.cursor(), sortDirection.name(),
-                new ReviewCursorContext(id, userId));
+        return reviewCursorService.page(
+                reviewsQueryDTO.cursor(),
+                sortDirection,
+                ReviewCursorContext.builder()
+                        .movieId(id)
+                        .viewerId(userId)
+                        .build());
     }
 
     @PostMapping("/{id}/reviews/delete")

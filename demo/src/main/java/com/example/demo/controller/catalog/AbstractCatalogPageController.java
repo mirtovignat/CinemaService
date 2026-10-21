@@ -1,62 +1,69 @@
 package com.example.demo.controller.catalog;
 
+import com.example.demo.cursor.CursorPageRequest;
+import com.example.demo.cursor.context.UserCursorContext;
 import com.example.demo.dto.response.CursorPageResponse;
+import com.example.demo.dto.response.UserCursorPageResponse;
 import com.example.demo.dto.user.SessionUser;
+import com.example.demo.dto.user.UserSidebarViewDTO;
 import com.example.demo.mapper.entity.UserMapper;
-import com.example.demo.service.cursor.AbstractUserCursorService;
-import com.example.demo.service.cursor.util.UserCursorContext;
+import com.example.demo.service.cursor.CursorPageService;
 import com.example.demo.service.movie.FilterMetaService;
 import com.example.demo.service.user.UserQueryService;
+import lombok.AllArgsConstructor;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-public abstract class AbstractCatalogPageController<D> {
+@AllArgsConstructor
+public abstract class AbstractCatalogPageController<DTO> {
 
-    protected final AbstractUserCursorService<?, D> cursorService;
+    protected final CursorPageService<UserCursorContext, DTO> cursorService;
     protected final FilterMetaService filterMetaService;
     protected final UserQueryService userQueryService;
     protected final UserMapper userMapper;
     protected final String viewName;
 
-    protected AbstractCatalogPageController(AbstractUserCursorService<?, D> cursorService,
-                                            FilterMetaService filterMetaService,
-                                            UserQueryService userQueryService,
-                                            UserMapper userMapper,
-                                            String viewName) {
-        this.cursorService = cursorService;
-        this.filterMetaService = filterMetaService;
-        this.userQueryService = userQueryService;
-        this.userMapper = userMapper;
-        this.viewName = viewName;
-    }
-
     @GetMapping
-    public String getPage(@RequestParam(required = false) String cursor,
-                          @RequestParam(required = false) String sort,
+    public String getPage(@ModelAttribute CursorPageRequest cursorPageRequest,
                           SessionUser sessionUser,
                           Model model) {
         Long userId = sessionUser.id();
-        
-        model.addAttribute("response", cursorService.page(cursor, sort, new UserCursorContext(userId)));
-        model.addAttribute("userSidebar", userMapper.toSidebarView(userQueryService.getUser(userId)));
-        model.addAttribute("genres", filterMetaService.getAllGenres());
-        
-        applyAdditionalAttributes(userId, model);
-        
+        model.addAttribute("response",
+                cursorService.page(
+                        cursorPageRequest.cursor(),
+                        cursorPageRequest.direction(),
+                        UserCursorContext.builder()
+                                .userId(userId)
+                                .build()));
+        model.addAttribute("userSidebarViewDTO",
+                userMapper.toSidebarView(
+                        userQueryService.getUser(userId)
+                )
+        );
+        model.addAttribute("genres",
+                filterMetaService.getAllGenres()
+        );
         return viewName;
     }
 
     @GetMapping("/more")
     @ResponseBody
-    public CursorPageResponse<D> more(@RequestParam(required = false) String cursor,
-                                      @RequestParam(required = false) String sort,
-                                      SessionUser sessionUser) {
-        return cursorService.page(cursor, sort, new UserCursorContext(sessionUser.id()));
-    }
-
-    protected void applyAdditionalAttributes(Long userId, Model model) {
-        // По умолчанию ничего не делаем. Watched переопределит это.
+    public UserCursorPageResponse<DTO> more(@ModelAttribute
+                                            CursorPageRequest cursorPageRequest,
+                                            SessionUser sessionUser) {
+        Long userId = sessionUser.id();
+        CursorPageResponse<DTO> cursorPageResponse = cursorService.page(
+                cursorPageRequest.cursor(),
+                cursorPageRequest.direction(),
+                UserCursorContext.builder()
+                        .userId(userId)
+                        .build());
+        UserSidebarViewDTO userSidebarViewDTO = userMapper.toSidebarView(userQueryService.getUser(userId));
+        return UserCursorPageResponse.<DTO>builder()
+                .cursorPageResponse(cursorPageResponse)
+                .userSidebarViewDTO(userSidebarViewDTO)
+                .build();
     }
 }

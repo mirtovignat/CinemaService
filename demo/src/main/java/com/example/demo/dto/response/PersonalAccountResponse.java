@@ -10,8 +10,8 @@ import java.util.List;
 
 @Builder
 public record PersonalAccountResponse(
-        UserForOwnerViewDTO userForOwner,
-        UserSidebarViewDTO userSidebar,
+        UserForOwnerViewDTO userForOwnerViewDTO,
+        UserSidebarViewDTO userSidebarViewDTO,
         long purchasesCount,
         long ratingsCount,
         long favouritesCount,

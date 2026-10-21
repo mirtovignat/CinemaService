@@ -9,7 +9,7 @@ import org.springframework.data.domain.Page;
 @Builder
 public record MoviesPageResponse(
         Page<MovieForUser<MovieCardViewDTO>> cardsPage,
-        MovieFilter filter,
+        MovieFilter movieFilter,
         boolean isSearch
 ) {
 }

@@ -15,7 +15,7 @@
     <div class="profile-grid">
         <th:block th:replace="~{fragments/sidebar :: sidebar(
             currentPage='rated',
-            userSidebar=${userSidebar},
+            userSidebar=${userSidebarViewDTO},
             genres=${genres}
         )}"></th:block>
 
@@ -31,7 +31,7 @@
                 <th:block th:replace="~{fragments/catalog-search :: catalogSearch}"></th:block>
             </div>
 
-            <div th:if="${response != null and response.content() != null and !response.content().isEmpty()}"
+            <div th:if="${response != null and response.items() != null and !response.items().isEmpty()}"
                  class="history-container"
                  data-cursor-container
                  data-group-history
@@ -41,7 +41,7 @@
                           data-cursor-has-more=${response.hasMore()},
                           data-cursor-sort=${response.sort()}">
 
-                <div th:each="item : ${response.content()}"
+                <div th:each="item : ${response.items()}"
                      class="history-item"
                      th:data-movie-id="${item.id()}"
                      th:data-movie-title="${item.title()}"
@@ -100,7 +100,7 @@
                 <div class="cursor-loader" data-cursor-loader></div>
             </div>
 
-            <div th:if="${response == null or response.content() == null or response.content().isEmpty()}"
+            <div th:if="${response == null or response.items() == null or response.items().isEmpty()}"
                  class="empty-message">
                 <div class="empty-icon">
                     <th:block th:replace="~{fragments/icons :: icon-star}"></th:block>
@@ -110,7 +110,7 @@
                 <a th:href="@{/}" class="browse-movies-btn">Перейти в главное меню</a>
             </div>
 
-            <th:block th:if="${response == null or response.content() == null or response.content().isEmpty()}">
+            <th:block th:if="${response == null or response.items() == null or response.items().isEmpty()}">
                 <th:block th:insert="~{fragments/recommendations :: recommendations}"></th:block>
             </th:block>
         </div>

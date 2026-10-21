@@ -5,7 +5,7 @@ import com.example.demo.dto.base.UserStatuses;
 import com.example.demo.repository.entity.CartItemRepository;
 import com.example.demo.repository.entity.FavouriteMovieRepository;
 import com.example.demo.repository.entity.PurchasedMovieRepository;
-import com.example.demo.service.rated.RatedQueryService;
+import com.example.demo.service.catalog.RatedQueryService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 

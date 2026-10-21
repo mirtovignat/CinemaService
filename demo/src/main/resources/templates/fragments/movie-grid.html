@@ -2,13 +2,14 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="">
 <body>
 
-<div th:fragment="grid(response)">
+<div th:fragment="grid(moviesPageResponse, genreMoviesPageResponse)"
+     th:with="pageResponse=${moviesPageResponse != null ? moviesPageResponse : genreMoviesPageResponse}">
 
     <div class="movies-grid"
-         th:if="${response.cardsPage() != null and !response.cardsPage().empty}">
+         th:if="${pageResponse != null and pageResponse.cardsPage() != null and !pageResponse.cardsPage().empty}">
 
         <div class="movie-card"
-             th:each="movie : ${response.cardsPage().content}"
+             th:each="movie : ${pageResponse.cardsPage().content}"
              th:data-movie-id="${movie.movie.id}"
              th:data-movie-title="${movie.movie.title}"
              th:data-movie-price="${movie.movie.price}">
@@ -278,8 +279,8 @@
     </div>
 
     <div class="empty-message"
-         th:classappend="${response.isSearch()} ? 'empty-message--search' : ''"
-         th:unless="${response.cardsPage() != null and !response.cardsPage().empty}">
+         th:classappend="${pageResponse != null and pageResponse.isSearch()} ? 'empty-message--search' : ''"
+         th:unless="${pageResponse != null and pageResponse.cardsPage() != null and !pageResponse.cardsPage().empty}">
         <div class="empty-icon">
             <svg xmlns="http://www.w3.org/2000/svg"
                  viewBox="0 0 24 24"

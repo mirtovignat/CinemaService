@@ -11,7 +11,7 @@
 <div id="authStatus" th:data-authenticated="${sessionUser.authenticated}" style="display:none;"></div>
 
 <main class="catalog-wrapper"
-      th:classappend="${response == null or response.content() == null or #lists.size(response.content()) <= 4} ? 'no-scroll' : ''">
+      th:classappend="${response == null or response.items() == null or #lists.size(response.items()) <= 4} ? 'no-scroll' : ''">
 
     <div class="page-header-row">
 
@@ -37,7 +37,7 @@
             <button type="button"
                     class="clear-favourites-btn"
                     data-action="clear-favourites"
-                    th:if="${response != null and response.content() != null and !response.content().isEmpty()}">
+                    th:if="${response != null and response.items() != null and !response.items().isEmpty()}">
                 <th:block th:replace="~{fragments/icons :: icon-trash}"></th:block>
                 Очистить избранное
             </button>
@@ -48,7 +48,7 @@
 
     <div class="catalog-content">
         <div class="favourites-container"
-             th:if="${response != null and response.content() != null and !response.content().isEmpty()}"
+             th:if="${response != null and response.items() != null and !response.items().isEmpty()}"
              data-cursor-container
              data-cursor-endpoint="/favourites/more"
              data-cursor-template="favouriteCardTemplate"
@@ -56,7 +56,7 @@
                       data-cursor-has-more=${response.hasMore()},
                       data-cursor-sort=${response.sort()}">
 
-            <div th:each="movie : ${response.content()}"
+            <div th:each="movie : ${response.items()}"
                  class="media-card favourites-card"
                  th:data-movie-id="${movie.id()}"
                  th:data-movie-price="${movie.price()}"
@@ -150,7 +150,7 @@
             <div class="cursor-loader" data-cursor-loader></div>
         </div>
 
-        <div th:if="${response == null or response.content() == null or response.content().isEmpty()}"
+        <div th:if="${response == null or response.items() == null or response.items().isEmpty()}"
              class="empty-message empty-message--danger">
             <div class="empty-icon">
                 <th:block th:replace="~{fragments/icons :: icon-heart}"></th:block>
@@ -160,7 +160,7 @@
             <a th:href="@{/}" class="browse-movies-btn">Перейти в главное меню</a>
         </div>
 
-        <th:block th:if="${response == null or response.content() == null or response.content().isEmpty()}">
+        <th:block th:if="${response == null or response.items() == null or response.items().isEmpty()}">
             <th:block th:with="visible=9">
                 <th:block th:insert="~{fragments/recommendations :: recommendations}"></th:block>
             </th:block>

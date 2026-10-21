@@ -1,18 +1,21 @@
 package com.example.demo.service.cursor;
 
-import com.example.demo.dto.cursor.Cursor;
+import com.example.demo.cursor.Cursor;
+import com.example.demo.cursor.SortDirection;
+import com.example.demo.cursor.codec.CursorCodec;
 import com.example.demo.dto.response.CursorPageResponse;
-import com.example.demo.service.cursor.util.CursorCodec;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.function.Function;
 
 @AllArgsConstructor
-public abstract class AbstractCursorService<EntityType, DataType, ContextType> {
+public abstract class AbstractCursorService<EntityType, DataType, ContextType>
+        implements CursorPageService<ContextType, DataType> {
 
     private final CursorCodec cursorCodec;
     private final int defaultPageSize;
@@ -21,24 +24,24 @@ public abstract class AbstractCursorService<EntityType, DataType, ContextType> {
 
     @Transactional(readOnly = true)
     public CursorPageResponse<DataType> page(String rawCursor,
-                                             String sortDirection,
-                                             ContextType context) {
-        String cursorValue = null;
-        if (rawCursor != null && !rawCursor.isBlank()) {
-            Cursor decodedCursor = cursorCodec.decode(rawCursor);
-            cursorValue = decodedCursor != null ? decodedCursor.value() : null;
-        }
+                                             SortDirection sortDirection,
+                                             ContextType contextType) {
 
-        String normalizedSortDirection = "asc".equalsIgnoreCase(sortDirection) ? "asc" : "desc";
+        String cursorValue = null;
+        if (StringUtils.hasText(rawCursor)) {
+            cursorValue = cursorCodec.decode(rawCursor).value();
+        }
 
         Slice<EntityType> slice = fetchSlice(
                 cursorValue,
-                normalizedSortDirection,
+                sortDirection,
                 PageRequest.of(0, defaultPageSize + 1),
-                context);
+                contextType
+        );
 
         List<EntityType> rawContent = slice.getContent();
         boolean hasMore = rawContent.size() > defaultPageSize;
+
         List<EntityType> pageContent = hasMore
                 ? rawContent.subList(0, defaultPageSize)
                 : rawContent;
@@ -47,20 +50,19 @@ public abstract class AbstractCursorService<EntityType, DataType, ContextType> {
         if (hasMore && !pageContent.isEmpty()) {
             EntityType lastEntity = pageContent.get(pageContent.size() - 1);
             String lastCursorValue = cursorValueExtractor.apply(lastEntity);
-            if (lastCursorValue != null) {
-                nextCursor = cursorCodec.encode(new Cursor(lastCursorValue));
-            }
+            nextCursor = cursorCodec.encode(Cursor.builder().value(lastCursorValue).build());
         }
 
-        return new CursorPageResponse<>(
-                contentMapper.apply(pageContent),
-                hasMore,
-                nextCursor,
-                normalizedSortDirection);
+        return CursorPageResponse.<DataType>builder()
+                .items(contentMapper.apply(pageContent))
+                .hasMore(hasMore)
+                .nextCursor(nextCursor)
+                .sort(sortDirection.lowercase())
+                .build();
     }
 
     protected abstract Slice<EntityType> fetchSlice(String cursorValue,
-                                                    String sortDirection,
+                                                    SortDirection sortDirection,
                                                     PageRequest pageRequest,
-                                                    ContextType context);
+                                                    ContextType contextType);
 }

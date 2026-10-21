@@ -8,6 +8,7 @@ import com.example.demo.repository.entity.FavouriteMovieRepository;
 import com.example.demo.repository.entity.MovieRepository;
 import com.example.demo.repository.entity.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class FavouritesService
@@ -18,9 +19,21 @@ public class FavouritesService
                              MovieRepository movieRepository,
                              UserStatusResolver userStatusResolver,
                              FavouritesMapper favouritesMapper) {
-        super(favouriteMovieRepository, userRepository, movieRepository, userStatusResolver,
+        super(favouriteMovieRepository,
+                userRepository,
+                movieRepository,
+                userStatusResolver,
                 () -> FavouriteMovie.builder().build(),
                 favouritesMapper::toOwnerView,
                 ErrorCode.EMPTY_FAVOURITES);
+    }
+
+    @Override
+    @Transactional
+    public void add(Long movieId, Long userId) {
+        if (existsInCollection(movieId, userId)) {
+            return;
+        }
+        save(movieId, userId);
     }
 }

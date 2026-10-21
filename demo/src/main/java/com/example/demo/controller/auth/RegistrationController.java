@@ -38,7 +38,8 @@ public class RegistrationController {
     }
 
     @PostMapping
-    public String register(@Valid @ModelAttribute("registerForm") RegisterFormDTO registerFormDTO,
+    public String register(@Valid @ModelAttribute("registerForm")
+                           RegisterFormDTO registerFormDTO,
                            HttpServletRequest httpServletRequest,
                            HttpServletResponse httpServletResponse) {
         authorizeService.validateRegister(registerFormDTO);

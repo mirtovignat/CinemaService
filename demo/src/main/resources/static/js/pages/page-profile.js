@@ -1,368 +1,134 @@
 (function () {
     'use strict';
 
-    function getIcon(name) {
-        var tpl = document.getElementById('js-icon-' + name);
-        return tpl ? tpl.innerHTML : '';
-    }
+    const ICON_CHECK = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>`;
+    const ICON_CROSS = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>`;
 
-    function pushUserInfo(user) {
-        if (typeof window.updateSidebarAndHeader === 'function') {
-            window.updateSidebarAndHeader(user);
-        }
-    }
+    const ICON_CLEAR = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
 
-    function closeDeletePhoneModal() {
-        var e = document.getElementById('deletePhoneModal');
-        if (e) e.classList.remove('show');
-    }
-
-    function normalizeForCompare(fieldType, value) {
-        if (value == null) return '';
-        var raw = String(value).trim();
-        if (fieldType === 'PHONE') {
-            if (raw === '') return '';
-            if (typeof window.PhoneMask !== 'undefined' && typeof window.PhoneMask.parse === 'function') {
-                var parsed = window.PhoneMask.parse(raw);
-                if (parsed && parsed.digits) return parsed.digits;
-            }
-            return raw.replace(/\D/g, '');
-        }
-        if (fieldType === 'EMAIL') {
-            return raw.toLowerCase();
-        }
-        return raw;
-    }
-
-    function getEditableValue(textElement, fieldType) {
-        if (fieldType === 'PHONE') {
-            var rawAttr = textElement.getAttribute('data-raw-phone');
-            if (rawAttr && rawAttr.trim() !== '') {
-                return rawAttr.trim();
-            }
-        }
-        return textElement.textContent.trim();
-    }
-
-    function setEditableValue(textElement, fieldType, value) {
-        var raw = value || '';
-        if (fieldType === 'PHONE') {
-            textElement.setAttribute('data-raw-phone', raw);
-            if (raw === '') {
-                textElement.textContent = '';
-                return;
-            }
-            var display = raw;
-            if (typeof window.maskPhone === 'function') {
-                display = window.maskPhone(raw);
-            }
-            textElement.textContent = display;
-            return;
-        }
-        textElement.textContent = raw;
-    }
-
-    function startInlineEdit(groupId, fieldType) {
-        var group = document.getElementById(groupId);
+    function setupProfileFieldEdit(groupId, fieldName) {
+        const group = document.getElementById(groupId);
         if (!group) return;
-        var textElement = group.querySelector('.editable-text');
-        if (!textElement) return;
-        if (group.querySelector('.inline-edit-wrapper')) return;
+        const editBtn = group.querySelector('.edit-trigger');
+        if (!editBtn) return;
 
-        var oldValueRaw = getEditableValue(textElement, fieldType);
-        var oldValueNormalized = normalizeForCompare(fieldType, oldValueRaw);
-        var editTrigger = group.querySelector('.edit-trigger');
-        var emptyElement = group.querySelector('.detail-value-empty');
+        const valueContainer = group.querySelector('.contact-value');
+        const textSpan = group.querySelector('.editable-text');
+        const emptySpan = group.querySelector('.detail-value-empty');
+        const errorSpan = group.querySelector('.field-error');
+        const oldHtml = valueContainer.innerHTML;
 
-        var wrapper = document.createElement('div');
-        wrapper.className = 'inline-edit-wrapper';
-        var controls = document.createElement('div');
-        controls.className = 'inline-edit-controls';
-        var inputWrap = document.createElement('div');
-        inputWrap.className = 'inline-edit-input-wrap';
+        editBtn.addEventListener('click', () => {
+            if (group.querySelector('.inline-edit-wrapper')) return;
 
-        var input = document.createElement('input');
-        input.type = 'text';
-        input.className = 'inline-edit-input';
-        input.dataset.fieldType = fieldType;
+            let currentText = '';
+            if (textSpan) currentText = textSpan.textContent.trim();
+            if (currentText === 'Телефон не указан') currentText = '';
 
-        if (fieldType === 'PHONE') {
-            input.type = 'tel';
-            var formatted = oldValueRaw;
-            if (formatted !== '' && typeof window.formatPhoneRaw === 'function') {
-                formatted = window.formatPhoneRaw(formatted);
-            }
-            input.value = formatted;
-            if (typeof window.initPhoneField === 'function') {
-                window.initPhoneField(input);
-            }
-        } else if (fieldType === 'EMAIL') {
-            input.type = 'email';
-            input.value = oldValueRaw;
-        } else {
-            input.value = oldValueRaw;
-        }
+            valueContainer.innerHTML = `
+                <div class="inline-edit-wrapper">
+                    <div class="inline-edit-controls">
+                        <div class="inline-edit-input-wrap">
+                            <input type="text" class="inline-edit-input" value="${currentText}">
+                            <button type="button" class="inline-edit-clear">${ICON_CLEAR}</button>
+                        </div>
+                        <div class="inline-edit-actions">
+                            <button type="button" class="inline-edit-done-btn">${ICON_CHECK}</button>
+                            <button type="button" class="inline-edit-cancel-btn">${ICON_CROSS}</button>
+                        </div>
+                    </div>
+                    <div class="inline-edit-error"></div>
+                </div>
+            `;
 
-        var clearButton = document.createElement('button');
-        clearButton.type = 'button';
-        clearButton.className = 'inline-edit-clear';
-        clearButton.setAttribute('aria-label', 'Очистить');
-        clearButton.innerHTML = getIcon('x');
-        clearButton.onclick = function () { input.value = ''; input.focus(); };
+            const input = valueContainer.querySelector('.inline-edit-input');
+            const btnDone = valueContainer.querySelector('.inline-edit-done-btn');
+            const btnCancel = valueContainer.querySelector('.inline-edit-cancel-btn');
+            const btnClear = valueContainer.querySelector('.inline-edit-clear');
+            const errDiv = valueContainer.querySelector('.inline-edit-error');
 
-        inputWrap.appendChild(input);
-        inputWrap.appendChild(clearButton);
+            input.focus();
+            input.setSelectionRange(input.value.length, input.value.length);
 
-        var actions = document.createElement('div');
-        actions.className = 'inline-edit-actions';
+            btnClear.addEventListener('click', () => {
+                input.value = '';
+                input.focus();
+            });
 
-        var doneButton = document.createElement('button');
-        doneButton.type = 'button';
-        doneButton.className = 'inline-edit-done-btn';
-        doneButton.setAttribute('aria-label', 'Сохранить');
-        doneButton.innerHTML = getIcon('check');
+            const cancelEdit = () => {
+                valueContainer.innerHTML = oldHtml;
+                if (errorSpan) errorSpan.textContent = '';
+                setupProfileFieldEdit(groupId, fieldName);
+            };
 
-        var cancelButton = document.createElement('button');
-        cancelButton.type = 'button';
-        cancelButton.className = 'inline-edit-cancel-btn';
-        cancelButton.setAttribute('aria-label', 'Отмена');
-        cancelButton.innerHTML = getIcon('x');
+            btnCancel.addEventListener('click', cancelEdit);
 
-        var errorElement = document.createElement('div');
-        errorElement.className = 'inline-edit-error';
+            const saveEdit = () => {
+                const val = input.value.trim();
 
-        function closeWithoutChange() {
-            wrapper.replaceWith(textElement);
-            var isEmpty = oldValueRaw === '';
-            if (editTrigger) editTrigger.style.display = isEmpty ? 'none' : 'inline-flex';
-            if (emptyElement) emptyElement.style.display = isEmpty ? 'inline-flex' : 'none';
-        }
-
-        function validateAndSave() {
-            var value = input.value.trim();
-            errorElement.classList.remove('show');
-            input.classList.remove('has-error');
-
-            var result;
-            if (fieldType === 'PHONE') {
-                result = Validators.phone(value);
-            } else if (fieldType === 'EMAIL') {
-                result = Validators.email(value);
-            } else {
-                result = Validators.username(value);
-            }
-
-            if (!result.ok) {
-                errorElement.textContent = result.error;
-                errorElement.classList.add('show');
-                input.classList.add('has-error');
-                return;
-            }
-
-            var newValueNormalized = normalizeForCompare(fieldType, value);
-
-            if (newValueNormalized === oldValueNormalized) {
-                closeWithoutChange();
-                return;
-            }
-
-            var isUsernameChange =
-                fieldType === 'USERNAME'
-                && typeof window.AccountSwitcher !== 'undefined'
-                && typeof window.AccountSwitcher.rename === 'function';
-
-            if (isUsernameChange) {
-                window.AccountSwitcher.rename(oldValueRaw, value);
-            }
-
-            API.request('/settings/change/field', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ identifier: fieldType, field: value })
-            })
-            .then(function (data) {
-                var maybeUser = (data && data.data && data.data.user) || (data && data.user) || null;
-
-                var storedValue = value;
-                if (fieldType === 'PHONE' && maybeUser && maybeUser.phone != null) {
-                    storedValue = maybeUser.phone;
+                if (!val && fieldName !== 'PHONE') {
+                    errDiv.textContent = 'Поле не может быть пустым';
+                    errDiv.classList.add('show');
+                    input.classList.add('has-error');
+                    return;
                 }
 
-                setEditableValue(textElement, fieldType, storedValue);
-                wrapper.replaceWith(textElement);
+                errDiv.classList.remove('show');
+                input.classList.remove('has-error');
+                btnDone.disabled = true;
 
-                var isEmpty = !storedValue;
-                if (editTrigger) editTrigger.style.display = isEmpty ? 'none' : 'inline-flex';
-                if (emptyElement) emptyElement.style.display = isEmpty ? 'inline-flex' : 'none';
-
-                if (isUsernameChange
-                    && maybeUser
-                    && maybeUser.username
-                    && maybeUser.username !== value) {
-                    window.AccountSwitcher.rename(value, maybeUser.username);
-                }
-
-                var patchedUser = {};
-                if (fieldType === 'USERNAME') patchedUser.username = value;
-                if (fieldType === 'EMAIL') patchedUser.email = value;
-                if (fieldType === 'PHONE') patchedUser.phone = storedValue;
-
-                if (maybeUser) {
-                    for (var k in maybeUser) {
-                        if (Object.prototype.hasOwnProperty.call(maybeUser, k)) {
-                            patchedUser[k] = maybeUser[k];
+                fetch('/settings/change/field', {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        [document.querySelector('meta[name="_csrf_header"]').content]: document.querySelector('meta[name="_csrf"]').content
+                    },
+                    body: JSON.stringify({ identifier: fieldName, field: val })
+                })
+                .then(async (r) => {
+                    const data = await r.json();
+                    if (!r.ok) throw new Error(data.message || 'Ошибка сохранения');
+                    return data;
+                })
+                .then((data) => {
+                    if (fieldName === 'USERNAME' && data.data.sessionUser) {
+                        if (window.updateSidebarAndHeader) {
+                            window.updateSidebarAndHeader({ username: data.data.sessionUser.username });
                         }
                     }
+                    window.location.reload();
+                })
+                .catch((err) => {
+                    errDiv.textContent = err.message;
+                    errDiv.classList.add('show');
+                    input.classList.add('has-error');
+                    btnDone.disabled = false;
+                });
+            };
+
+            btnDone.addEventListener('click', saveEdit);
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    saveEdit();
                 }
-
-                pushUserInfo(patchedUser);
-
-                if (typeof showFlashMessage === 'function') {
-                    showFlashMessage('Данные изменены', 'success');
-                }
-            })
-            .catch(function (error) {
-                if (isUsernameChange) {
-                    window.AccountSwitcher.rename(value, oldValueRaw);
-                }
-                errorElement.textContent = (error && error.message) || 'Ошибка обновления';
-                errorElement.classList.add('show');
-                input.classList.add('has-error');
-            });
-        }
-
-        function cancelEdit() {
-            closeWithoutChange();
-        }
-
-        doneButton.onclick = validateAndSave;
-        cancelButton.onclick = cancelEdit;
-
-        input.addEventListener('keydown', function (event) {
-            if (event.key === 'Enter') { event.preventDefault(); validateAndSave(); }
-            if (event.key === 'Escape') { event.preventDefault(); cancelEdit(); }
-        });
-
-        if (editTrigger) editTrigger.style.display = 'none';
-        if (emptyElement) emptyElement.style.display = 'none';
-
-        actions.appendChild(doneButton);
-        actions.appendChild(cancelButton);
-        controls.appendChild(inputWrap);
-        controls.appendChild(actions);
-        controls.appendChild(errorElement);
-        wrapper.appendChild(controls);
-        textElement.replaceWith(wrapper);
-
-        input.focus();
-        input.select();
-
-        var fieldError = group.querySelector('.field-error');
-        if (fieldError) fieldError.classList.remove('show');
-    }
-
-    function bindInlineEditTriggers() {
-        document.querySelectorAll('[data-edit-group][data-edit-field]').forEach(function (btn) {
-            if (btn.dataset.inlineEditBound === '1') return;
-            btn.dataset.inlineEditBound = '1';
-            btn.addEventListener('click', function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                var groupId = btn.getAttribute('data-edit-group');
-                var fieldType = btn.getAttribute('data-edit-field');
-                if (groupId && fieldType) startInlineEdit(groupId, fieldType);
-            });
-        });
-    }
-
-    function bindCloseDeletePhoneModal() {
-        document.querySelectorAll('[data-close-delete-phone-modal]').forEach(function (btn) {
-            if (btn.dataset.closePhoneBound === '1') return;
-            btn.dataset.closePhoneBound = '1';
-            btn.addEventListener('click', function (e) {
-                e.preventDefault();
-                closeDeletePhoneModal();
-            });
-        });
-    }
-
-    function bindConfirmDeletePhone() {
-        var btn = document.getElementById('confirmDeletePhoneBtn');
-        if (!btn) return;
-        if (btn.dataset.confirmPhoneBound === '1') return;
-        btn.dataset.confirmPhoneBound = '1';
-
-        btn.addEventListener('click', function () {
-            API.del('/settings/delete/phone')
-            .then(function (data) {
-                closeDeletePhoneModal();
-
-                var phone = document.getElementById('panelPhone');
-                var empty = document.getElementById('panelPhoneEmpty');
-                var edit = document.getElementById('phoneEditBtn');
-
-                if (phone) {
-                    phone.textContent = '';
-                    phone.setAttribute('data-raw-phone', '');
-                }
-                if (empty) empty.style.display = 'inline-flex';
-                if (edit) edit.style.display = 'none';
-
-                var patchedUser = { phone: '' };
-                var maybeUser = (data && data.data && data.data.user) || (data && data.user) || null;
-                if (maybeUser) {
-                    for (var k in maybeUser) {
-                        if (Object.prototype.hasOwnProperty.call(maybeUser, k)) {
-                            patchedUser[k] = maybeUser[k];
-                        }
-                    }
-                }
-                pushUserInfo(patchedUser);
-
-                if (typeof showFlashMessage === 'function') {
-                    showFlashMessage('Номер телефона удален', 'success');
-                }
-            })
-            .catch(function () {
-                if (typeof showFlashMessage === 'function') {
-                    showFlashMessage('Ошибка удаления', 'error');
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    cancelEdit();
                 }
             });
         });
-    }
-
-    function maskInitialPhones() {
-        var phone = document.getElementById('panelPhone');
-        if (!phone) return;
-        var raw = phone.getAttribute('data-raw-phone') || phone.textContent.trim();
-        if (!raw) return;
-        if (raw.indexOf('***') !== -1) return;
-        phone.setAttribute('data-raw-phone', raw);
-        if (typeof window.maskPhone === 'function') {
-            phone.textContent = window.maskPhone(raw);
-        }
     }
 
     function init() {
-        maskInitialPhones();
-        bindInlineEditTriggers();
-        bindCloseDeletePhoneModal();
-        bindConfirmDeletePhone();
-
-        document.addEventListener('keydown', function (event) {
-            if (event.key !== 'Escape') return;
-            if (typeof window.closeDeleteAccountModal === 'function') {
-                window.closeDeleteAccountModal();
-            }
-            closeDeletePhoneModal();
-        });
+        setupProfileFieldEdit('usernameGroup', 'USERNAME');
+        setupProfileFieldEdit('emailGroup', 'EMAIL');
+        setupProfileFieldEdit('phoneGroup', 'PHONE');
     }
 
-    window.startInlineEdit = startInlineEdit;
-    window.closeDeletePhoneModal = closeDeletePhoneModal;
-
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init, { once: true });
+        document.addEventListener('DOMContentLoaded', init);
     } else {
         init();
     }

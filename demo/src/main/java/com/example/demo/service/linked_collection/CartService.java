@@ -22,7 +22,10 @@ public class CartService extends AbstractLinkedCollectionService<CartItem, CartI
                        UserStatusResolver userStatusResolver,
                        PurchasedMovieRepository purchasedMovieRepository,
                        CartItemMapper cartItemMapper) {
-        super(cartItemRepository, userRepository, movieRepository, userStatusResolver,
+        super(cartItemRepository,
+                userRepository,
+                movieRepository,
+                userStatusResolver,
                 () -> CartItem.builder().quantity((short) 1).build(),
                 cartItemMapper::toOwnerView,
                 ErrorCode.EMPTY_CART);
@@ -35,6 +38,9 @@ public class CartService extends AbstractLinkedCollectionService<CartItem, CartI
         if (purchasedMovieRepository.existsByMovieIdAndUserId(movieId, userId)) {
             return;
         }
-        super.add(movieId, userId);
+        if (existsInCollection(movieId, userId)) {
+            return;
+        }
+        save(movieId, userId);
     }
 }

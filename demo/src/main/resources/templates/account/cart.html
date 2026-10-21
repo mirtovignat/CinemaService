@@ -11,7 +11,7 @@
 <div id="authStatus" th:data-authenticated="${sessionUser.authenticated}" style="display:none;"></div>
 
 <main class="catalog-wrapper"
-      th:classappend="${response == null or response.content() == null or #lists.size(response.content()) <= 4} ? 'no-scroll' : ''">
+      th:classappend="${response == null or response.items() == null or #lists.size(response.items()) <= 4} ? 'no-scroll' : ''">
 
     <div class="page-header-row">
 
@@ -35,10 +35,10 @@
 
             <button type="button"
                     class="checkout-btn"
-                    th:with="totalPrice=${response != null and response.content() != null
-                                         ? #aggregates.sum(response.content().![price()]) : 0}"
+                    th:with="totalPrice=${response != null and response.items() != null
+                                         ? #aggregates.sum(response.items().![price()]) : 0}"
                     data-action="bulk-buy"
-                    th:if="${response != null and response.content() != null and !response.content().isEmpty()}">
+                    th:if="${response != null and response.items() != null and !response.items().isEmpty()}">
                 <span class="btn-text">
                     <th:block th:replace="~{fragments/icons :: icon-cart}"></th:block>
                     Купить всё
@@ -49,7 +49,7 @@
             <button type="button"
                     class="clear-cart-btn"
                     data-action="clear-cart"
-                    th:if="${response != null and response.content() != null and !response.content().isEmpty()}">
+                    th:if="${response != null and response.items() != null and !response.items().isEmpty()}">
                 <th:block th:replace="~{fragments/icons :: icon-trash}"></th:block>
                 Очистить всю корзину
             </button>
@@ -61,7 +61,7 @@
     <div class="catalog-content">
 
         <div class="cart-container"
-             th:if="${response != null and response.content() != null and !response.content().isEmpty()}"
+             th:if="${response != null and response.items() != null and !response.items().isEmpty()}"
              data-cursor-container
              data-cursor-endpoint="/cart/more"
              data-cursor-template="cartCardTemplate"
@@ -70,7 +70,7 @@
                       data-cursor-sort=${response.sort()}">
 
             <div class="media-card cart-card"
-                 th:each="cartMovie : ${response.content()}"
+                 th:each="cartMovie : ${response.items()}"
                  th:data-movie-id="${cartMovie.id()}"
                  th:data-movie-price="${cartMovie.price()}"
                  th:data-movie-title="${cartMovie.title()}"
@@ -145,7 +145,7 @@
             <div class="cursor-loader" data-cursor-loader></div>
         </div>
 
-        <div th:if="${response == null or response.content() == null or response.content().isEmpty()}"
+        <div th:if="${response == null or response.items() == null or response.items().isEmpty()}"
              class="empty-message">
             <div class="empty-icon"><th:block th:replace="~{fragments/icons :: icon-cart}"></th:block></div>
             <h2>Корзина пока пуста</h2>
@@ -153,7 +153,7 @@
             <a th:href="@{/}" class="browse-movies-btn">Перейти в главное меню</a>
         </div>
 
-        <th:block th:if="${response == null or response.content() == null or response.content().isEmpty()}">
+        <th:block th:if="${response == null or response.items() == null or response.items().isEmpty()}">
             <th:block th:with="visible=9">
                 <th:block th:insert="~{fragments/recommendations :: recommendations}"></th:block>
             </th:block>

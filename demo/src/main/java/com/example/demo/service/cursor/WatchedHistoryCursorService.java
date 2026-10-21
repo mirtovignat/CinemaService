@@ -1,11 +1,11 @@
 package com.example.demo.service.cursor;
 
+import com.example.demo.cursor.codec.CursorCodec;
+import com.example.demo.cursor.codec.KeyCodec;
 import com.example.demo.dto.catalog.LibrarianMovieViewDTO;
 import com.example.demo.mapper.entity.PurchasedMapper;
 import com.example.demo.model.base.WatchHistoryItem;
 import com.example.demo.repository.base.WatchHistoryItemRepository;
-import com.example.demo.service.cursor.util.CursorCodec;
-import com.example.demo.service.cursor.util.KeyUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -13,13 +13,16 @@ import org.springframework.stereotype.Service;
 public class WatchedHistoryCursorService extends AbstractUserCursorService<WatchHistoryItem, LibrarianMovieViewDTO> {
 
     public WatchedHistoryCursorService(CursorCodec cursorCodec,
+                                       KeyCodec keyCodec,
                                        WatchHistoryItemRepository watchHistoryItemRepository,
                                        PurchasedMapper purchasedMapper,
-                                       @Value("${app.catalog.page-size:20}") int defaultPageSize) {
+                                       @Value("${app.catalog.cursorPageResponse-size:20}") int defaultPageSize) {
         super(cursorCodec,
+                keyCodec,
                 defaultPageSize,
-                watchHistoryItem -> KeyUtils.encodeTimestampAndIdentifier(
-                        watchHistoryItem.getWatchedAt(), watchHistoryItem.getId()),
+                watchHistoryItem -> keyCodec.encode(
+                        watchHistoryItem.getWatchedAt(),
+                        watchHistoryItem.getId()),
                 watchHistoryItems -> watchHistoryItems.stream()
                         .map(purchasedMapper::toLibrarianViewFromHistoryItem)
                         .toList(),

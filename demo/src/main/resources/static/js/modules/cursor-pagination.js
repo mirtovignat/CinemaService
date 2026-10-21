@@ -264,7 +264,8 @@
 
         var endpoint   = container.getAttribute('data-cursor-endpoint');
         var templateId = container.getAttribute('data-cursor-template');
-        var sort       = container.getAttribute('data-cursor-sort') || 'desc';
+        var sortAttr   = container.getAttribute('data-cursor-sort') || 'DESC';
+        var sort       = sortAttr.toUpperCase() === 'ASC' ? 'ASC' : 'DESC'; // Приводим к капсу
         var nextCursor = container.getAttribute('data-cursor-next') || null;
         var hasMore    = container.getAttribute('data-cursor-has-more') === 'true';
 
@@ -380,25 +381,31 @@
                 return r.json();
             })
             .then(function (response) {
-                var page = (response && response.page) ? response.page : response;
-                var content = Array.isArray(page && page.content) ? page.content : [];
+                var cursorPageResponse = (response && response.cursorPageResponse)
+                    ? response.cursorPageResponse
+                    : response;
+                var items = Array.isArray(cursorPageResponse && cursorPageResponse.items)
+                    ? cursorPageResponse.items
+                    : [];
 
                 var sentinel = ensureSentinel();
                 var frag = document.createDocumentFragment();
-                content.forEach(function (item) {
+                items.forEach(function (item) {
                     var card = createCardFromTemplate(state.templateId, item);
                     if (card) frag.appendChild(card);
                 });
                 container.insertBefore(frag, sentinel);
 
-                state.nextCursor = page.nextCursor || null;
-                state.hasMore = !!page.hasMore;
+                state.nextCursor = cursorPageResponse.nextCursor || null;
+                state.hasMore = !!cursorPageResponse.hasMore;
                 container.setAttribute('data-cursor-next', state.nextCursor || '');
                 container.setAttribute('data-cursor-has-more', state.hasMore ? 'true' : 'false');
 
-                if (response && response.userSidebar &&
-                    typeof window.updateSidebarAndHeader === 'function') {
-                    window.updateSidebarAndHeader(response.userSidebar);
+                var sidebar = (response && response.userSidebarViewDTO)
+                    ? response.userSidebarViewDTO
+                    : null;
+                if (sidebar && typeof window.updateSidebarAndHeader === 'function') {
+                    window.updateSidebarAndHeader(sidebar);
                 }
 
                 ensureTail();
@@ -424,7 +431,7 @@
                 ensureTail();
                 rebindScrollParents();
 
-                return content.length > 0;
+                return items.length > 0;
             })
             .catch(function (e) {
                 console.warn('[cursor-pagination] error', e);

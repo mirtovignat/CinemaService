@@ -1,29 +1,35 @@
 package com.example.demo.controller;
 
+import com.example.demo.cursor.CursorPageRequest;
+import com.example.demo.cursor.SortDirection;
+import com.example.demo.cursor.context.RecommendationCursorContext;
 import com.example.demo.dto.movie.MovieCardViewDTO;
 import com.example.demo.dto.movie.MovieDetailsViewDTO;
 import com.example.demo.dto.movie.MovieForUser;
 import com.example.demo.dto.movie.MovieSearchDTO;
+import com.example.demo.dto.response.CursorPageResponse;
 import com.example.demo.dto.response.GenreMoviesPageResponse;
 import com.example.demo.dto.response.MoviesPageResponse;
 import com.example.demo.dto.user.SessionUser;
 import com.example.demo.filter.MovieFilter;
 import com.example.demo.filter.MovieFilterFacade;
 import com.example.demo.filter.MovieSearchContext;
+import com.example.demo.service.cursor.RecommendationCursorService;
 import com.example.demo.service.movie.MovieRecommendationService;
 import com.example.demo.service.movie.MovieService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Slice;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Controller
 @RequiredArgsConstructor
@@ -32,12 +38,13 @@ public class MovieController {
     private final MovieService movieService;
     private final MovieRecommendationService movieRecommendationService;
     private final MovieFilterFacade movieFilterFacade;
+    private final RecommendationCursorService recommendationCursorService;
 
     @GetMapping({"/", "/movies"})
     public String showMovies(
             @RequestParam(value = "title", required = false) String title,
             @RequestParam(value = "sortBy", required = false) String sortBy,
-            @RequestParam(value = "sortDir", required = false) String sortDir,
+            @RequestParam(value = "sortDirection", required = false) String sortDirection,
             @Valid @ModelAttribute MovieFilter movieFilter,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "35") int size,
@@ -45,7 +52,7 @@ public class MovieController {
             Model model
     ) {
         Long userId = sessionUser.idOrNull();
-        MovieSearchContext movieSearchContext = MovieSearchContext.of(title, sortBy, sortDir);
+        MovieSearchContext movieSearchContext = MovieSearchContext.of(title, sortBy, sortDirection);
 
         MovieFilterFacade.Result result =
                 movieFilterFacade.filter(movieFilter, movieSearchContext, page, size, userId);
@@ -55,13 +62,13 @@ public class MovieController {
             return redirect;
         }
 
-        MoviesPageResponse response = MoviesPageResponse.builder()
+        MoviesPageResponse moviesPageResponse = MoviesPageResponse.builder()
                 .cardsPage(result.page())
-                .filter(movieFilter)
+                .movieFilter(movieFilter)
                 .isSearch(isSearch(title, movieFilter))
                 .build();
 
-        model.addAttribute("response", response);
+        model.addAttribute("moviesPageResponse", moviesPageResponse);
         model.addAttribute("filterQuery", result.filterQuery());
         return "catalog/index";
     }
@@ -70,7 +77,7 @@ public class MovieController {
     public String showMoviesByGenre(
             @RequestParam String genre,
             @RequestParam(value = "sortBy", required = false) String sortBy,
-            @RequestParam(value = "sortDir", required = false) String sortDir,
+            @RequestParam(value = "sortDirection", required = false) String sortDir,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "15") int size,
             SessionUser sessionUser,
@@ -86,13 +93,13 @@ public class MovieController {
                         return redirect;
                     }
 
-                    GenreMoviesPageResponse response = GenreMoviesPageResponse.builder()
+                    GenreMoviesPageResponse genreMoviesPageResponse = GenreMoviesPageResponse.builder()
                             .cardsPage(result.page())
                             .genre(genre)
                             .isSearch(true)
                             .build();
 
-                    model.addAttribute("response", response);
+                    model.addAttribute("genreMoviesPageResponse", genreMoviesPageResponse);
                     model.addAttribute("filterQuery", result.filterQuery());
                     return "catalog/index";
                 })
@@ -105,11 +112,22 @@ public class MovieController {
 
     @GetMapping("/recommendations")
     @ResponseBody
-    public Slice<MovieCardViewDTO> getRecommendationsAjax(
-            @RequestParam(defaultValue = "0") int page,
+    public CursorPageResponse<MovieCardViewDTO> getRecommendationsAjax(
+            @ModelAttribute CursorPageRequest cursorPageRequest,
             SessionUser sessionUser
     ) {
-        return movieRecommendationService.getRecommendedMoviesSlice(sessionUser.idOrNull(), page);
+        Long userId = sessionUser.idOrNull();
+
+        Set<Long> excludedMovieIds = movieRecommendationService.collectExcludedMovieIds(userId);
+
+        return recommendationCursorService.page(
+                cursorPageRequest.cursor(),
+                SortDirection.DESC,
+                RecommendationCursorContext.builder()
+                        .userId(userId)
+                        .excludedMovieIds(excludedMovieIds.isEmpty() ? null : new ArrayList<>(excludedMovieIds))
+                        .build()
+        );
     }
 
     @GetMapping("/movies/{id}")

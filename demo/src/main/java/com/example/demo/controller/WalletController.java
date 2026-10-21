@@ -36,7 +36,9 @@ public class WalletController {
     public String getTopUpForm(SessionUser sessionUser, Model model) {
         Long userId = sessionUser.id();
         if (!model.containsAttribute("topUpFormDTO")) {
-            model.addAttribute("topUpFormDTO", TopUpFormDTO.builder().build());
+            model.addAttribute("topUpFormDTO",
+                    TopUpFormDTO.builder()
+                            .build());
         }
         model.addAttribute("wallet", userQueryService.getWalletForOwner(userId));
         return "account/top-up";

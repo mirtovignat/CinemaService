@@ -19,26 +19,26 @@
      style="display:none;"></div>
 
 <div id="userIdHolder"
-     th:data-user-id="${response.userForOwner.id}"
+     th:data-user-id="${personalAccountResponse.userForOwnerViewDTO.id}"
      style="display:none;"></div>
 
 <main class="profile-wrapper">
-    <div th:if="${response}"
+    <div th:if="${personalAccountResponse}"
          class="profile-grid"
          id="profileGrid">
 
         <th:block
-                th:replace="~{fragments/sidebar :: sidebar(currentPage='personal-account', genres=${response.genres}, userSidebar=${response.userSidebar()})}">
+                th:replace="~{fragments/sidebar :: sidebar(currentPage='personal-account', genres=${personalAccountResponse.genres}, userSidebar=${personalAccountResponse.userSidebarViewDTO()})}">
         </th:block>
 
         <div class="profile-right"
-             th:classappend="${#lists.isEmpty(response.topThreeRatedMovies)} ? 'no-scroll' : ''">
+             th:classappend="${#lists.isEmpty(personalAccountResponse.topThreeRatedMovies)} ? 'no-scroll' : ''">
 
             <div class="profile-right-header">
                 <div>
                     <h1 id="mainTitle"
                         class="greeting"
-                        th:with="u=${response.userForOwner},
+                        th:with="u=${personalAccountResponse.userForOwnerViewDTO},
                                  fullName=${u.name != null and !#strings.isEmpty(u.name)
                                              ? (u.patronymic != null and !#strings.isEmpty(u.patronymic)
                                                  ? u.name + ' ' + u.patronymic
@@ -59,13 +59,13 @@
                             <th:block th:replace="~{fragments/icons :: icon-heart}"></th:block>
                             <span style="font-weight:600;">Мои любимые фильмы:</span>
                             <span style="font-weight:400;color:#64748b;"
-                                  th:utext="'ТОП-' + ${#lists.size(response.topThreeRatedMovies)}">
+                                  th:utext="'ТОП-' + ${#lists.size(personalAccountResponse.topThreeRatedMovies)}">
                             </span>
                         </span>
                     </div>
 
                     <div class="favorites-grid"
-                         th:if="${#lists.isEmpty(response.topThreeRatedMovies)}">
+                         th:if="${#lists.isEmpty(personalAccountResponse.topThreeRatedMovies)}">
                         <div class="favorites-empty-card">
                             <th:block th:replace="~{fragments/icons :: icon-film}"></th:block>
                             <div class="empty-title">
@@ -80,9 +80,9 @@
                     </div>
 
                     <div class="favorites-grid"
-                         th:unless="${#lists.isEmpty(response.topThreeRatedMovies)}">
+                         th:unless="${#lists.isEmpty(personalAccountResponse.topThreeRatedMovies)}">
                         <div class="fav-card"
-                             th:each="ratedMovie, iterStat : ${response.topThreeRatedMovies}">
+                             th:each="ratedMovie, iterStat : ${personalAccountResponse.topThreeRatedMovies}">
                             <div class="fav-poster">
                                 <a th:href="@{/movies/{id}(id=${ratedMovie.id}, from=${currentUri})}">
 
@@ -144,7 +144,7 @@
                     </div>
                 </section>
 
-                <th:block th:if="${!response.recommendedMovies.isEmpty()}"
+                <th:block th:if="${!personalAccountResponse.recommendedMovies.isEmpty()}"
                           th:replace="~{fragments/recommendations :: recommendations}"></th:block>
             </div>
         </div>

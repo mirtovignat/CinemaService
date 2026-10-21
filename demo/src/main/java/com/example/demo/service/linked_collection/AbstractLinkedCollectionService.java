@@ -25,10 +25,12 @@ public abstract class AbstractLinkedCollectionService<Entity extends AbstractCat
     protected final UserRepository userRepository;
     protected final MovieRepository movieRepository;
     protected final UserStatusResolver userStatusResolver;
-
     private final Supplier<Entity> entitySupplier;
     private final BiFunction<Entity, UserStatus, DTO> dtoMapper;
     private final ErrorCode emptyCollectionErrorCode;
+
+    @Transactional
+    public abstract void add(Long movieId, Long userId);
 
     @Transactional(readOnly = true)
     public Long getCount(Long userId) {
@@ -64,21 +66,6 @@ public abstract class AbstractLinkedCollectionService<Entity extends AbstractCat
     }
 
     @Transactional
-    public void add(Long movieId, Long userId) {
-        if (existsInCollection(movieId, userId)) {
-            return;
-        }
-        User user = userRepository.findByIdOrThrow(userId);
-        Movie movie = movieRepository.findByIdOrThrow(movieId);
-        try {
-            abstractCatalogItemRepository.save(
-                    AbstractCatalogItem.init(entitySupplier.get(), user, movie)
-            );
-        } catch (DataIntegrityViolationException ignored) {
-        }
-    }
-
-    @Transactional
     public void remove(Long movieId, Long userId) {
         abstractCatalogItemRepository.deleteByMovieIdAndUserId(movieId, userId);
     }
@@ -94,5 +81,17 @@ public abstract class AbstractLinkedCollectionService<Entity extends AbstractCat
             throw BusinessException.of(emptyCollectionErrorCode);
         }
         abstractCatalogItemRepository.deleteAllByUserId(userId);
+    }
+
+    @Transactional
+    protected void save(Long movieId, Long userId) {
+        User user = userRepository.findByIdOrThrow(userId);
+        Movie movie = movieRepository.findByIdOrThrow(movieId);
+        try {
+            abstractCatalogItemRepository.save(
+                    AbstractCatalogItem.init(entitySupplier.get(), user, movie)
+            );
+        } catch (DataIntegrityViolationException ignored) {
+        }
     }
 }

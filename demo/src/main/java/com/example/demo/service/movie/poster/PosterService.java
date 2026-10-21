@@ -19,7 +19,8 @@ public class PosterService {
 
     public PosterService(MinioClient minioClient,
                          MinIOConfig minIOConfig,
-                         @Qualifier("fileRestClient") RestClient restClient) {
+                         @Qualifier("fileRestClient")
+                         RestClient restClient) {
         this.minioClient = minioClient;
         this.minIOConfig = minIOConfig;
         this.restClient = restClient;

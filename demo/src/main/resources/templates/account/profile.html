@@ -13,13 +13,13 @@
 <th:block th:replace="~{fragments/flash-messages :: flashMessages}"></th:block>
 
 <div id="authStatus" th:data-authenticated="${sessionUser.authenticated}" style="display:none;"></div>
-<div id="userIdHolder" th:data-user-id="${response.userForOwner.id}" style="display:none;"></div>
+<div id="userIdHolder" th:data-user-id="${personalAccountResponse.userForOwnerViewDTO.id}" style="display:none;"></div>
 
 <main class="profile-wrapper">
     <div class="profile-grid" id="profileGrid">
 
         <th:block
-                th:replace="~{fragments/sidebar :: sidebar(currentPage='profile', genres=${response.genres}, userSidebar=${response.userSidebar()})}">
+                th:replace="~{fragments/sidebar :: sidebar(currentPage='profile', genres=${personalAccountResponse.genres}, userSidebar=${personalAccountResponse.userSidebarViewDTO()})}">
         </th:block>
 
         <div class="profile-right">
@@ -47,42 +47,42 @@
                             <div class="detail-group fio-readonly">
                                 <span class="detail-label">Фамилия</span>
                                 <div class="detail-value">
-                                    <span th:text="${response.userForOwner.surname}"></span>
+                                    <span th:text="${personalAccountResponse.userForOwnerViewDTO.surname}"></span>
                                 </div>
                             </div>
 
                             <div class="detail-group fio-readonly">
                                 <span class="detail-label">Имя</span>
                                 <div class="detail-value">
-                                    <span th:text="${response.userForOwner.name}"></span>
+                                    <span th:text="${personalAccountResponse.userForOwnerViewDTO.name}"></span>
                                 </div>
                             </div>
 
                             <div class="detail-group fio-readonly">
                                 <span class="detail-label">Отчество</span>
                                 <div class="detail-value">
-                                    <span th:text="${response.userForOwner.patronymic}"></span>
+                                    <span th:text="${personalAccountResponse.userForOwnerViewDTO.patronymic}"></span>
                                 </div>
                             </div>
 
                             <div class="detail-group fio-readonly">
                                 <span class="detail-label">Дата рождения</span>
                                 <div class="detail-value">
-                                    <span th:text="${#temporals.format(response.userForOwner.birthDate, 'dd MMMM yyyy')}"></span>
+                                    <span th:text="${#temporals.format(personalAccountResponse.userForOwnerViewDTO.birthDate, 'dd MMMM yyyy')}"></span>
                                 </div>
                             </div>
 
                             <div class="detail-group fio-readonly">
                                 <span class="detail-label">Возрастной рейтинг</span>
                                 <div class="detail-value">
-                                    <span th:text="${response.userForOwner.age} + ' лет'"></span>
+                                    <span th:text="${personalAccountResponse.userForOwnerViewDTO.age} + ' лет'"></span>
                                 </div>
                             </div>
 
                             <div class="detail-group fio-readonly">
                                 <span class="detail-label">Пол</span>
                                 <div class="detail-value">
-                                    <span th:text="${response.userForOwner.sex ? 'Мужской' : 'Женский'}"></span>
+                                    <span th:text="${personalAccountResponse.userForOwnerViewDTO.sex ? 'Мужской' : 'Женский'}"></span>
                                 </div>
                             </div>
 
@@ -104,7 +104,7 @@
                                 <div class="contact-value">
                                     <span id="panelUsername"
                                           class="editable-text"
-                                          th:text="${response.userForOwner.username}"></span>
+                                          th:text="${personalAccountResponse.userForOwnerViewDTO.username}"></span>
                                     <span class="field-error" id="usernameError"></span>
                                 </div>
                                 <button class="edit-trigger"
@@ -122,7 +122,7 @@
                                 <div class="contact-value">
                                     <span id="panelEmail"
                                           class="editable-text"
-                                          th:text="${response.userForOwner.email}"></span>
+                                          th:text="${personalAccountResponse.userForOwnerViewDTO.email}"></span>
                                     <span class="field-error" id="emailError"></span>
                                 </div>
                                 <button class="edit-trigger"
@@ -140,11 +140,11 @@
                                 <div class="contact-value">
                                 <span id="panelPhone"
                                       class="editable-text"
-                                      th:text="${response.userForOwner.phone} ?: ''"
-                                      th:attr="data-raw-phone=${response.userForOwner.phone} ?: ''"></span>
+                                      th:text="${personalAccountResponse.userForOwnerViewDTO.phone} ?: ''"
+                                      th:attr="data-raw-phone=${personalAccountResponse.userForOwnerViewDTO.phone} ?: ''"></span>
                                     <span class="detail-value-empty"
                                           id="panelPhoneEmpty"
-                                          th:style="${#strings.isEmpty(response.userForOwner.phone)} ? 'display:inline-flex' : 'display:none'"
+                                          th:style="${#strings.isEmpty(personalAccountResponse.userForOwnerViewDTO.phone)} ? 'display:inline-flex' : 'display:none'"
                                           data-edit-group="phoneGroup"
                                           data-edit-field="PHONE">
                                     <th:block th:replace="~{fragments/icons :: icon-edit}"></th:block>
@@ -156,7 +156,7 @@
                                         id="phoneEditBtn"
                                         type="button"
                                         aria-label="Редактировать телефон"
-                                        th:style="${!#strings.isEmpty(response.userForOwner.phone)} ? 'display:inline-flex' : 'display:none'"
+                                        th:style="${!#strings.isEmpty(personalAccountResponse.userForOwnerViewDTO.phone)} ? 'display:inline-flex' : 'display:none'"
                                         data-edit-group="phoneGroup"
                                         data-edit-field="PHONE">
                                     <th:block th:replace="~{fragments/icons :: icon-edit}"></th:block>

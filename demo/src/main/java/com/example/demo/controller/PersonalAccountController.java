@@ -45,8 +45,8 @@ public class PersonalAccountController {
     public String getPersonalAccount(SessionUser sessionUser, Model model) {
         Long userId = sessionUser.id();
         User user = userQueryService.getUser(userId);
-        PersonalAccountResponse response = userQueryService.buildUserPage(user);
-        model.addAttribute("response", response);
+        PersonalAccountResponse personalAccountResponse = userQueryService.buildUserPage(user);
+        model.addAttribute("personalAccountResponse", personalAccountResponse);
         model.addAttribute("genres", filterMetaService.getAllGenres());
         return "account/personal-account";
     }
@@ -55,8 +55,8 @@ public class PersonalAccountController {
     public String editProfile(SessionUser sessionUser, Model model) {
         Long userId = sessionUser.id();
         User user = userQueryService.getUser(userId);
-        PersonalAccountResponse response = userQueryService.buildUserPage(user);
-        model.addAttribute("response", response);
+        PersonalAccountResponse personalAccountResponse = userQueryService.buildUserPage(user);
+        model.addAttribute("personalAccountResponse", personalAccountResponse);
         model.addAttribute("genres", filterMetaService.getAllGenres());
         return "account/profile";
     }
@@ -75,12 +75,12 @@ public class PersonalAccountController {
             HttpServletResponse httpServletResponse
     ) {
         Long userId = sessionUser.id();
-        ProfileFieldUpdateDTO validatedDto = userCommandService.prepareAndValidateField(profileFieldUpdateDTO, userId);
-        userCommandService.updateField(userId, validatedDto);
+        ProfileFieldUpdateDTO validatedProfileFieldUpdateDTO = userCommandService.prepareAndValidateField(profileFieldUpdateDTO, userId);
+        userCommandService.updateField(userId, validatedProfileFieldUpdateDTO);
 
         SessionUser updatedSessionUser = sessionUser;
-        if (validatedDto.identifier() == Identifier.USERNAME) {
-            updatedSessionUser = sessionUser.withUsername(validatedDto.field());
+        if (validatedProfileFieldUpdateDTO.identifier() == Identifier.USERNAME) {
+            updatedSessionUser = sessionUser.withUsername(validatedProfileFieldUpdateDTO.field());
             sessionAuthenticator.updateSessionUser(updatedSessionUser, httpServletRequest, httpServletResponse);
         }
         UserForOwnerViewDTO updatedUser = userQueryService.getUserForOwner(userId);
@@ -100,7 +100,9 @@ public class PersonalAccountController {
     @GetMapping("/settings/change/pwd")
     public String getChangePasswordForm(Model model) {
         if (!model.containsAttribute("passwordChangingDTO")) {
-            model.addAttribute("passwordChangingDTO", PasswordChangingDTO.builder().build());
+            model.addAttribute("passwordChangingDTO",
+                    PasswordChangingDTO.builder()
+                            .build());
         }
         return "account/change-password";
     }

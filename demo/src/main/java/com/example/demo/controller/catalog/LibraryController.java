@@ -16,6 +16,11 @@ public class LibraryController extends AbstractCatalogPageController<LibrarianMo
                              FilterMetaService filterMetaService,
                              UserQueryService userQueryService,
                              UserMapper userMapper) {
-        super(libraryCursorService, filterMetaService, userQueryService, userMapper, "account/library");
+        super(libraryCursorService,
+                filterMetaService,
+                userQueryService,
+                userMapper,
+                "account/library"
+        );
     }
 }

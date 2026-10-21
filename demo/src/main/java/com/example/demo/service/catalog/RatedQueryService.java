@@ -1,4 +1,4 @@
-package com.example.demo.service.rated;
+package com.example.demo.service.catalog;
 
 import com.example.demo.dto.catalog.RatedMovieFormDTO;
 import com.example.demo.dto.catalog.RatedMovieViewDTO;

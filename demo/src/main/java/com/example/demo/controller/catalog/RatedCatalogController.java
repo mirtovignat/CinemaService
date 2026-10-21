@@ -16,6 +16,11 @@ public class RatedCatalogController extends AbstractCatalogPageController<RatedM
                                   FilterMetaService filterMetaService,
                                   UserQueryService userQueryService,
                                   UserMapper userMapper) {
-        super(ratedCursorService, filterMetaService, userQueryService, userMapper, "account/rated");
+        super(ratedCursorService,
+                filterMetaService,
+                userQueryService,
+                userMapper,
+                "account/rated"
+        );
     }
 }

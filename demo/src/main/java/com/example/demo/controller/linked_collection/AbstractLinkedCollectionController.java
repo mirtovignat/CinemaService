@@ -1,53 +1,58 @@
 package com.example.demo.controller.linked_collection;
 
+import com.example.demo.cursor.CursorPageRequest;
+import com.example.demo.cursor.context.UserCursorContext;
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.dto.response.CursorPageResponse;
 import com.example.demo.dto.user.SessionUser;
 import com.example.demo.exception.SuccessCode;
-import com.example.demo.service.cursor.AbstractUserCursorService;
-import com.example.demo.service.cursor.util.UserCursorContext;
+import com.example.demo.service.cursor.CursorPageService;
 import com.example.demo.service.linked_collection.AbstractLinkedCollectionService;
 import com.example.demo.web.util.ApiResponseFactory;
+import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
-public abstract class AbstractLinkedCollectionController<D> {
+@AllArgsConstructor
+public abstract class AbstractLinkedCollectionController<DTO> {
 
-    protected final AbstractLinkedCollectionService<?, D> collectionService;
-    protected final AbstractUserCursorService<?, D> cursorService;
+    protected final AbstractLinkedCollectionService<?, DTO> collectionService;
+    protected final CursorPageService<UserCursorContext, DTO> cursorService;
     protected final ApiResponseFactory apiResponseFactory;
     protected final String viewName;
 
-    protected AbstractLinkedCollectionController(AbstractLinkedCollectionService<?, D> collectionService,
-                                                 AbstractUserCursorService<?, D> cursorService,
-                                                 ApiResponseFactory apiResponseFactory,
-                                                 String viewName) {
-        this.collectionService = collectionService;
-        this.cursorService = cursorService;
-        this.apiResponseFactory = apiResponseFactory;
-        this.viewName = viewName;
-    }
-
     @GetMapping
-    public String getCollection(@RequestParam(required = false) String cursor,
-                                @RequestParam(required = false) String sort,
+    public String getCollection(@ModelAttribute CursorPageRequest cursorPageRequest,
                                 SessionUser sessionUser,
                                 Model model) {
         Long userId = sessionUser.id();
-        model.addAttribute("response", cursorService.page(cursor, sort, new UserCursorContext(userId)));
+        model.addAttribute("response",
+                cursorService.page(
+                        cursorPageRequest.cursor(),
+                        cursorPageRequest.direction(),
+                        UserCursorContext.builder()
+                                .userId(userId)
+                                .build()
+                )
+        );
         model.addAttribute("catalogCount", collectionService.getCount(userId));
         return viewName;
     }
 
     @GetMapping("/more")
     @ResponseBody
-    public CursorPageResponse<D> more(@RequestParam(required = false) String cursor,
-                                      @RequestParam(required = false) String sort,
-                                      SessionUser sessionUser) {
-        return cursorService.page(cursor, sort, new UserCursorContext(sessionUser.id()));
+    public CursorPageResponse<DTO> more(@ModelAttribute CursorPageRequest cursorPageRequest,
+                                        SessionUser sessionUser) {
+        return cursorService.page(
+                cursorPageRequest.cursor(),
+                cursorPageRequest.direction(),
+                UserCursorContext.builder()
+                        .userId(sessionUser.id())
+                        .build()
+        );
     }
 
     @GetMapping("/count")

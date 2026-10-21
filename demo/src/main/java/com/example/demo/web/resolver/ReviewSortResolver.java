@@ -1,5 +1,6 @@
 package com.example.demo.web.resolver;
 
+import com.example.demo.cursor.SortDirection;
 import com.example.demo.dto.catalog.ReviewsQueryDTO;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -17,10 +18,10 @@ public class ReviewSortResolver {
         this.sortCookieMaxAge = sortCookieMaxAge;
     }
 
-    public ReviewsQueryDTO.SortDirection resolveAndPersist(ReviewsQueryDTO reviewsQueryDTO,
-                                                           String cookieValue,
-                                                           HttpServletResponse httpServletResponse) {
-        ReviewsQueryDTO.SortDirection sortDirection = resolve(reviewsQueryDTO.sort(), cookieValue);
+    public SortDirection resolveAndPersist(ReviewsQueryDTO reviewsQueryDTO,
+                                           String cookieValue,
+                                           HttpServletResponse httpServletResponse) {
+        SortDirection sortDirection = resolve(reviewsQueryDTO, cookieValue);
 
         if (isExplicit(reviewsQueryDTO.sort())) {
             writeCookie(httpServletResponse, sortDirection);
@@ -28,29 +29,35 @@ public class ReviewSortResolver {
         return sortDirection;
     }
 
-    public ReviewsQueryDTO.SortDirection resolve(ReviewsQueryDTO reviewsQueryDTO, String cookieValue) {
-        return resolve(reviewsQueryDTO.sort(), cookieValue);
+    public SortDirection resolve(ReviewsQueryDTO reviewsQueryDTO, String cookieValue) {
+        if (reviewsQueryDTO.sort() != null) {
+            return reviewsQueryDTO.sort();
+        }
+        SortDirection fromCookie = parseCookie(cookieValue);
+        if (fromCookie != null) {
+            return fromCookie;
+        }
+        return SortDirection.DESC;
     }
 
-    private ReviewsQueryDTO.SortDirection resolve(String rawSort, String cookieValue) {
-        if (isExplicit(rawSort)) {
-            return "ASC".equalsIgnoreCase(rawSort)
-                    ? ReviewsQueryDTO.SortDirection.ASC
-                    : ReviewsQueryDTO.SortDirection.DESC;
-        }
-        if ("ASC".equalsIgnoreCase(cookieValue)) {
-            return ReviewsQueryDTO.SortDirection.ASC;
-        }
-        return ReviewsQueryDTO.SortDirection.DESC;
+    private boolean isExplicit(SortDirection sort) {
+        return sort != null;
     }
 
-    private boolean isExplicit(String rawSort) {
-        return rawSort != null && !rawSort.isBlank();
+    private SortDirection parseCookie(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        try {
+            return SortDirection.valueOf(raw.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     private void writeCookie(HttpServletResponse httpServletResponse,
-                             ReviewsQueryDTO.SortDirection sortDirection) {
-        Cookie cookie = new Cookie(SORT_COOKIE_NAME, sortDirection.name());
+                             SortDirection sortDirection) {
+        Cookie cookie = new Cookie(SORT_COOKIE_NAME, sortDirection.lowercase());
         cookie.setPath("/rated");
         cookie.setMaxAge(sortCookieMaxAge);
         httpServletResponse.addCookie(cookie);

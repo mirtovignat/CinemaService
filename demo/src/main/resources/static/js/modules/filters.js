@@ -882,11 +882,11 @@
             var name = decodeURIComponent(kv[0] || '');
             var value = decodeURIComponent(kv[1] || '');
             if (name === 'sortBy') key = value;
-            if (name === 'sortDir') dir = value;
+            if (name === 'sortDirection') dir = value.toUpperCase(); // Изменили sortDir на sortDirection
         }
 
         if (!key || !dir) return null;
-        if (dir !== 'asc' && dir !== 'desc') return null;
+        if (dir !== 'ASC' && dir !== 'DESC') return null;
         return { key: key, dir: dir };
     }
 
@@ -900,8 +900,8 @@
         for (var i = 0; i < btns.length; i++) {
             var btn = btns[i];
             var key = btn.getAttribute('data-sort-key');
-            var dir = btn.getAttribute('data-sort-dir');
-            if (state && state.key === key && state.dir === dir) {
+            var dir = btn.getAttribute('data-sort-dir').toUpperCase();
+            if (state && state.key === key && state.dir.toUpperCase() === dir) {
                 btn.classList.add('active');
             } else {
                 btn.classList.remove('active');
@@ -911,19 +911,19 @@
 
     function syncHiddenSortFields(state) {
         var byEl = getHiddenSortField('sortBy');
-        var dirEl = getHiddenSortField('sortDir');
+        var dirEl = getHiddenSortField('sortDirection'); // Изменили на sortDirection
         if (byEl) byEl.value = state ? state.key : '';
-        if (dirEl) dirEl.value = state ? state.dir : '';
+        if (dirEl) dirEl.value = state ? state.dir.toUpperCase() : '';
     }
 
     function getCurrentSortSelection() {
         var byEl = getHiddenSortField('sortBy');
-        var dirEl = getHiddenSortField('sortDir');
+        var dirEl = getHiddenSortField('sortDirection'); // Изменили на sortDirection
         if (!byEl || !dirEl) return null;
         var key = (byEl.value || '').trim();
-        var dir = (dirEl.value || '').trim();
+        var dir = (dirEl.value || '').trim().toUpperCase();
         if (!key || !dir) return null;
-        if (dir !== 'asc' && dir !== 'desc') return null;
+        if (dir !== 'ASC' && dir !== 'DESC') return null;
         return { key: key, dir: dir };
     }
 
@@ -946,7 +946,7 @@
             e.preventDefault();
 
             var key = target.getAttribute('data-sort-key');
-            var dir = target.getAttribute('data-sort-dir');
+            var dir = target.getAttribute('data-sort-dir').toUpperCase();
             if (!key || !dir) return;
 
             var current = getCurrentSortSelection();

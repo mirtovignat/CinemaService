@@ -1,4 +1,4 @@
-package com.example.demo.service.cursor.util;
+package com.example.demo.cursor;
 
 import com.example.demo.dto.base.UserStatus;
 import com.example.demo.model.base.AbstractCatalogItem;
@@ -26,7 +26,8 @@ public class UserStatusMapperHelper {
         Long userId = firstItem.getAbstractCatalogItemId().getUserId();
 
         List<Long> movieIds = items.stream()
-                .map(item -> ((AbstractCatalogItem) item).getAbstractCatalogItemId().getMovieId())
+                .map(item -> ((AbstractCatalogItem) item).getAbstractCatalogItemId()
+                        .getMovieId())
                 .toList();
 
         Map<Long, UserStatus> userStatuses = userStatusResolver.resolveAll(userId, movieIds);
@@ -34,8 +35,12 @@ public class UserStatusMapperHelper {
         return items.stream()
                 .map(item -> {
                     Long movieId = ((AbstractCatalogItem) item).getAbstractCatalogItemId().getMovieId();
-                    UserStatus status = userStatuses.getOrDefault(movieId, UserStatus.builder().build());
-                    return mapper.apply(item, status);
+                    UserStatus userStatus = userStatuses.getOrDefault(
+                            movieId,
+                            UserStatus.builder()
+                                    .build()
+                    );
+                    return mapper.apply(item, userStatus);
                 })
                 .toList();
     }

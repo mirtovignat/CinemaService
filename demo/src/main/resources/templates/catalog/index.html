@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ru">
 <head>
-    <title th:text="${response.isSearch()} ? 'Результаты поиска — CinemaService' : 'Каталог — CinemaService'">
+    <title th:text="${moviesPageResponse != null and moviesPageResponse.isSearch()} ? 'Результаты поиска — CinemaService' : 'Каталог — CinemaService'">
         Каталог</title>
     <th:block th:replace="~{fragments/head :: head}"></th:block>
     <link rel="stylesheet" th:href="@{/css/pages/_catalog.css}">
@@ -19,27 +19,26 @@
 
 <main class="catalog-wrapper" id="catalogMain">
     <div class="catalog-header">
-        <h1 th:if="${response.isSearch()}" class="catalog-header-title catalog-header-title--search">
+        <h1 th:if="${moviesPageResponse != null and moviesPageResponse.isSearch()}" class="catalog-header-title catalog-header-title--search">
             <span>Результаты поиска</span>
             <span class="catalog-header-icon">
                 <th:block th:replace="~{fragments/icons :: icon-search}"></th:block>
             </span>
         </h1>
-        <h1 th:unless="${response.isSearch()}" style="text-align:center;">Лучшие фильмы и сериалы СПЕЦИАЛЬНО ДЛЯ
+        <h1 th:unless="${moviesPageResponse != null and moviesPageResponse.isSearch()}" style="text-align:center;">Лучшие фильмы и сериалы СПЕЦИАЛЬНО ДЛЯ
             ВАС!</h1>
     </div>
 
     <div class="catalog-content">
         <div id="catalogContent">
-            <th:block th:replace="~{fragments/movie-grid :: grid(response=${response})}"></th:block>
+            <th:block th:replace="~{fragments/movie-grid :: grid(moviesPageResponse=${moviesPageResponse}, genreMoviesPageResponse=${genreMoviesPageResponse})}"></th:block>
         </div>
 
         <div class="pagination-wrapper" id="paginationWrapper">
-            <th:block
-                    th:replace="~{fragments/pagination :: pager(page=${response.cardsPage()}, url='/movies')}"></th:block>
+            <th:block th:replace="~{fragments/pagination :: pager(page=${moviesPageResponse != null ? moviesPageResponse.cardsPage() : genreMoviesPageResponse.cardsPage()}, url='/movies')}"></th:block>
         </div>
 
-        <th:block th:if="${response.isSearch() and (response.cardsPage() == null or response.cardsPage().empty)}">
+        <th:block th:if="${moviesPageResponse != null and moviesPageResponse.isSearch() and (moviesPageResponse.cardsPage() == null or moviesPageResponse.cardsPage().empty)}">
             <th:block th:with="visible=9">
                 <th:block th:insert="~{fragments/recommendations :: recommendations}"></th:block>
             </th:block>

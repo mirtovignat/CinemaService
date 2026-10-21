@@ -16,6 +16,11 @@ public class HistoryController extends AbstractCatalogPageController<HistoricalM
                              FilterMetaService filterMetaService,
                              UserQueryService userQueryService,
                              UserMapper userMapper) {
-        super(historyCursorService, filterMetaService, userQueryService, userMapper, "account/history");
+        super(historyCursorService,
+                filterMetaService,
+                userQueryService,
+                userMapper,
+                "account/history"
+        );
     }
 }

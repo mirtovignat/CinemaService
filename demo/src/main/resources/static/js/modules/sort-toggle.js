@@ -2,7 +2,6 @@
     'use strict';
 
     var STORAGE_PREFIX = 'cinemaSortOrder';
-    var REVIEWS_STORAGE_PREFIX = 'cinemaReviewsSortOrder';
 
     function getPageKey() {
         var path = window.location.pathname.replace(/\/$/, '');
@@ -16,64 +15,47 @@
         return STORAGE_PREFIX + ':' + getPageKey();
     }
 
-    function getReviewsStorageKey() {
-        return REVIEWS_STORAGE_PREFIX + ':' + getPageKey();
-    }
-
     function getUrlSort() {
         var params = new URLSearchParams(window.location.search);
-        var s = (params.get('sort') || '').toLowerCase();
-        return (s === 'asc' || s === 'desc') ? s : null;
+        var s = (params.get('sort') || '').toUpperCase();
+        return (s === 'ASC' || s === 'DESC') ? s : null;
     }
 
     function getStoredSort() {
         try {
             var saved = localStorage.getItem(getStorageKey());
-            if (saved === 'asc' || saved === 'desc') return saved;
-        } catch (e) {}
-        try {
-            var saved2 = localStorage.getItem(getReviewsStorageKey());
-            if (saved2 === 'ASC') return 'asc';
-            if (saved2 === 'DESC') return 'desc';
+            if (saved) {
+                var s = saved.toUpperCase();
+                if (s === 'ASC' || s === 'DESC') return s;
+            }
         } catch (e) {}
         return null;
     }
 
     function setStoredSort(value) {
-        try { localStorage.setItem(getStorageKey(), value); } catch (e) {}
-        try {
-            localStorage.setItem(getReviewsStorageKey(), value === 'asc' ? 'ASC' : 'DESC');
-        } catch (e) {}
+        try { localStorage.setItem(getStorageKey(), value.toUpperCase()); } catch (e) {}
     }
 
     function isCursorPage() {
         return !!document.querySelector('[data-cursor-container]');
     }
 
-    function isReviewsPage() {
-        return !!document.getElementById('reviewsBody');
-    }
-
     function applyActive(sort) {
         document.querySelectorAll('#sortToggleGroup .sort-option').forEach(function (btn) {
-            btn.classList.toggle('active', btn.getAttribute('data-order') === sort);
+            btn.classList.toggle('active', btn.getAttribute('data-order').toUpperCase() === sort.toUpperCase());
         });
     }
 
     function getCurrentContainerSort() {
         var container = document.querySelector('[data-cursor-container]');
         if (!container) return null;
-        var s = (container.getAttribute('data-cursor-sort') || '').toLowerCase();
-        return (s === 'asc' || s === 'desc') ? s : null;
+        var s = (container.getAttribute('data-cursor-sort') || '').toUpperCase();
+        return (s === 'ASC' || s === 'DESC') ? s : null;
     }
 
     function buildUrl(order) {
         var url = new URL(window.location.href);
-        if (isReviewsPage()) {
-            url.searchParams.set('sort', order === 'asc' ? 'ASC' : 'DESC');
-        } else {
-            url.searchParams.set('sort', order);
-        }
+        url.searchParams.set('sort', order.toUpperCase()); // <--- Тут именно sort, так как бэкенд ждет sort
         url.searchParams.delete('cursor');
         return url.toString();
     }
@@ -86,9 +68,11 @@
     }
 
     function setSort(order) {
-        if (order !== 'asc' && order !== 'desc') return;
-        setStoredSort(order);
-        navigateToOrder(order);
+        if (!order) return;
+        var upperOrder = order.toUpperCase();
+        if (upperOrder !== 'ASC' && upperOrder !== 'DESC') return;
+        setStoredSort(upperOrder);
+        navigateToOrder(upperOrder);
     }
 
     function init() {
@@ -106,7 +90,7 @@
 
         if (isCursorPage()) {
             var containerSort = getCurrentContainerSort();
-            effective = containerSort || urlSort || storedSort || 'desc';
+            effective = containerSort || urlSort || storedSort || 'DESC';
             setStoredSort(effective);
 
             if (!urlSort && storedSort && containerSort && storedSort !== containerSort) {
@@ -119,7 +103,7 @@
 
             applyActive(effective);
         } else {
-            effective = urlSort || storedSort || 'desc';
+            effective = urlSort || storedSort || 'DESC';
             setStoredSort(effective);
 
             if (!urlSort && storedSort) {

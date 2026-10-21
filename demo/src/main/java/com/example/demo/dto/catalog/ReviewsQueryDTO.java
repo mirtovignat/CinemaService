@@ -1,15 +1,15 @@
 package com.example.demo.dto.catalog;
 
+import com.example.demo.cursor.SortDirection;
 import lombok.Builder;
 
 @Builder
 public record ReviewsQueryDTO(
         String cursor,
-        String sort,
+        SortDirection sort,
         Integer size
 ) {
-    public enum SortDirection {
-        ASC,
-        DESC
+    public SortDirection direction() {
+        return sort != null ? sort : SortDirection.DESC;
     }
 }
