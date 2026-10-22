@@ -47,8 +47,12 @@
         if (typeof isAuthenticated === 'function' && !isAuthenticated()) return;
         var badge = document.getElementById(badgeId);
         if (!badge) return;
-        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        fetch(url, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+            redirect: 'manual'
+        })
             .then(function (r) {
+                if (r.type === 'opaqueredirect' || r.status === 0) throw new Error('unauth');
                 var ct = r.headers.get('content-type') || '';
                 if (!r.ok || ct.indexOf('text/html') !== -1) throw new Error('unauth');
                 return r.text();

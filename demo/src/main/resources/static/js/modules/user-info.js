@@ -85,8 +85,22 @@
         phoneEl.classList.remove('phone-empty');
     }
 
+    function maskProfilePhoneOnLoad() {
+        var phoneEl = document.getElementById('panelPhone');
+        if (!phoneEl) return;
+        var raw = (phoneEl.dataset.rawPhone || phoneEl.textContent || '').trim();
+        if (!raw) return;
+        if (raw.indexOf('***') !== -1) return;
+        var digits = raw.replace(/\D/g, '');
+        if (digits.length < 5) return;
+        phoneEl.textContent = typeof window.maskPhone === 'function'
+            ? window.maskPhone(raw)
+            : raw;
+    }
+
     function init() {
         maskSidebarPhoneOnLoad();
+        maskProfilePhoneOnLoad();
     }
 
     window.updateSidebarAndHeader = updateAll;

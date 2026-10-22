@@ -37,6 +37,9 @@
             var link = e.target.closest('.page-nav');
             if (!link) return;
 
+            if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+            if (e.button !== 0) return;
+
             if (link.classList.contains('active')) {
                 e.preventDefault();
                 return;
@@ -51,13 +54,28 @@
             if (pagination) pagination.classList.add('pagination-loading');
 
             fetch(href, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'text/html'
+                },
+                redirect: 'manual',
+                credentials: 'same-origin'
             })
             .then(function (response) {
+                if (response.type === 'opaqueredirect' || response.status === 0) {
+                    window.location.href = '/login';
+                    return null;
+                }
+                if (response.redirected) {
+                    window.location.href = response.url;
+                    return null;
+                }
                 if (!response.ok) throw new Error('Network response was not ok');
                 return response.text();
             })
             .then(function (html) {
+                if (html == null) return;
+
                 var parser = new DOMParser();
                 var doc = parser.parseFromString(html, 'text/html');
                 var newContent = doc.querySelector('#catalogContent');

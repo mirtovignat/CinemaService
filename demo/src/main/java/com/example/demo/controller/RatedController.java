@@ -15,6 +15,7 @@ import com.example.demo.service.cursor.CursorPageService;
 import com.example.demo.service.movie.MovieService;
 import com.example.demo.service.user.UserQueryService;
 import com.example.demo.util.MessageUtils;
+import com.example.demo.web.resolver.CurrentUserId;
 import com.example.demo.web.resolver.ReviewSortResolver;
 import com.example.demo.web.util.ApiResponseFactory;
 import jakarta.servlet.http.HttpServletResponse;
@@ -101,9 +102,8 @@ public class RatedController {
 
     @PostMapping("/{id}/reviews/delete")
     public String deleteReview(@PathVariable("id") Long movieId,
-                               SessionUser sessionUser,
+                               @CurrentUserId Long userId,
                                RedirectAttributes redirectAttributes) {
-        Long userId = sessionUser.id();
         ratedCommandService.deleteRating(movieId, userId);
         String message = messageUtils.getSuccess(SuccessCode.REVIEW_HAS_BEEN_DELETED);
         redirectAttributes.addFlashAttribute("successMessage", message);
@@ -113,16 +113,14 @@ public class RatedController {
     @GetMapping("/form/{movieId}")
     @ResponseBody
     public ResponseEntity<RatedMovieFormDTO> getMyReviewForm(@PathVariable Long movieId,
-                                                             SessionUser sessionUser) {
-        Long userId = sessionUser.id();
+                                                             @CurrentUserId Long userId) {
         return ResponseEntity.ok(ratedQueryService.getPreFilledForm(movieId, userId));
     }
 
     @PostMapping("/add")
     @ResponseBody
     public ResponseEntity<ApiResponse> addRating(@Valid @ModelAttribute RatedMovieFormDTO ratedMovieFormDTO,
-                                                 SessionUser sessionUser) {
-        Long userId = sessionUser.id();
+                                                 @CurrentUserId Long userId) {
         ratedCommandService.addOrUpdateRating(ratedMovieFormDTO.id(), userId, ratedMovieFormDTO);
         return apiResponseFactory.ok(SuccessCode.REVIEW_HAS_BEEN_SAVED);
     }
@@ -130,8 +128,7 @@ public class RatedController {
     @PostMapping("/edit")
     @ResponseBody
     public ResponseEntity<ApiResponse> editRating(@Valid @ModelAttribute RatedMovieFormDTO ratedMovieFormDTO,
-                                                  SessionUser sessionUser) {
-        Long userId = sessionUser.id();
+                                                  @CurrentUserId Long userId) {
         ratedCommandService.addOrUpdateRating(ratedMovieFormDTO.id(), userId, ratedMovieFormDTO);
         return apiResponseFactory.ok(SuccessCode.REVIEW_HAS_BEEN_UPDATED);
     }
@@ -139,8 +136,7 @@ public class RatedController {
     @PostMapping("/remove/{id}")
     @ResponseBody
     public ResponseEntity<ApiResponse> removeRating(@PathVariable("id") Long movieId,
-                                                    SessionUser sessionUser) {
-        Long userId = sessionUser.id();
+                                                    @CurrentUserId Long userId) {
         ratedCommandService.deleteRating(movieId, userId);
         return apiResponseFactory.ok(SuccessCode.REVIEW_HAS_BEEN_DELETED);
     }

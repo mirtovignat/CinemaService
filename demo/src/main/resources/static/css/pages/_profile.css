@@ -222,7 +222,7 @@
 
 .inline-edit-wrapper {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     width: 100%;
     min-width: 0;
 }
@@ -252,6 +252,7 @@
     padding: 0 2rem 0 0.7rem;
     font-size: 0.85rem;
     outline: none;
+    transition: border-color 0.2s ease;
 }
 
 .inline-edit-input:focus {
@@ -259,8 +260,23 @@
 }
 
 .inline-edit-input.has-error {
-    border-color: #f43f5e;
-    box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.12);
+    border-color: #b91c1c;
+    box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.15);
+}
+
+.inline-error-text {
+    color: #b91c1c;
+    font-size: 0.7rem;
+    margin-top: 0.3rem;
+    margin-left: 0.2rem;
+    display: none;
+    animation: inlineFadeIn 0.2s ease;
+    line-height: 1.2;
+}
+
+@keyframes inlineFadeIn {
+    from { opacity: 0; transform: translateY(-3px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .inline-edit-clear {
@@ -281,6 +297,7 @@
     padding: 0;
     line-height: 1;
     font-family: inherit;
+    z-index: 3;
 }
 
 .inline-edit-clear svg {
@@ -348,14 +365,8 @@
 }
 
 .inline-edit-error {
-    width: 100%;
-    color: #f43f5e;
-    font-size: 0.65rem;
-    margin-top: 0.3rem;
     display: none;
 }
-
-.inline-edit-error.show { display: block; }
 
 @media (max-width: 1024px) {
     .personal-grid { grid-template-columns: 1fr; }

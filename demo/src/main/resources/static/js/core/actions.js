@@ -32,7 +32,70 @@
         }
     }
 
+    function getPosterUrl(el) {
+        if (!el) return '';
+        var url = el.getAttribute('data-poster-url') || '';
+        if (url === 'null' || url === 'undefined') return '';
+        return url.trim();
+    }
+
+    function redirectToMovie(movieId) {
+        if (!movieId) return;
+        window.location.href = '/movies/' + encodeURIComponent(movieId);
+    }
+
+    var ACTION_BUTTONS_SELECTOR = [
+        'button[data-action="add-to-cart"]',
+        'button[data-action="buy-now"]',
+        'button[data-action="toggle-favourite"]',
+        'button[data-action="show-rating"]',
+        'button[data-action="confirm-remove-from-cart"]',
+        'button[data-action="remove-from-favourites"]',
+        'button[data-action="bulk-buy"]',
+        'button[data-action="clear-cart"]',
+        'button[data-action="single-buy"]',
+        'button[data-action="clear-favourites"]',
+        'button[data-action="toggle-history-dropdown"]',
+        'button[data-action="delete-history-item"]',
+        'button[data-action="open-clear-history-modal"]'
+    ].join(', ');
+
+    function findWatchTarget(e) {
+        return e.target.closest(
+            '.watch-btn-neon, ' +
+            '[data-action="watch-movie"], ' +
+            '.poster-link[data-action="watch-movie"], ' +
+            '.history-item-poster[data-action="watch-movie"]'
+        );
+    }
+
     function handleClick(e) {
+        var watchEl = findWatchTarget(e);
+        if (watchEl) {
+            e.preventDefault();
+            e.stopPropagation();
+            run('watch-movie', watchEl, e);
+            return;
+        }
+
+        var card = e.target.closest('.movie-card, .library-card, .history-item, .cart-card, .favourites-card');
+        if (card) {
+            var movieId = card.getAttribute('data-movie-id');
+            var posterUrl = getPosterUrl(card);
+            if (movieId && !posterUrl) {
+                if (e.target.closest(ACTION_BUTTONS_SELECTOR)) {
+                    return;
+                }
+                if (e.target.closest('a[href]')) {
+                    return;
+                }
+                e.preventDefault();
+                e.stopPropagation();
+                redirectToMovie(movieId);
+                return;
+            }
+        }
+
         var el = e.target.closest && e.target.closest('[data-action]');
         if (!el) return;
         var action = el.getAttribute('data-action');
@@ -63,6 +126,19 @@
         return true;
     }
 
+    function initCardClickHandler() {
+        document.addEventListener('click', function (e) {
+            if (e.target.closest('button, a, input, textarea, select, [data-action]')) {
+                return;
+            }
+            var card = e.target.closest('.movie-card, .library-card, .favourites-card, .cart-card, .history-item');
+            if (!card) return;
+            var movieId = card.getAttribute('data-movie-id');
+            if (!movieId) return;
+            redirectToMovie(movieId);
+        });
+    }
+
     function init() {
         if (initialized) return;
         initialized = true;
@@ -71,6 +147,8 @@
         document.addEventListener('keydown', handleKeydown);
 
         register('navigate', handleNavigate);
+
+        initCardClickHandler();
 
         while (queue.length) {
             var task = queue.shift();

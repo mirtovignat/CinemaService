@@ -14,6 +14,7 @@ import com.example.demo.service.user.UserCommandService;
 import com.example.demo.service.user.UserQueryService;
 import com.example.demo.util.MessageUtils;
 import com.example.demo.web.interceptor.NavigationHistoryInterceptor;
+import com.example.demo.web.resolver.CurrentUserId;
 import com.example.demo.web.security.SessionAuthenticator;
 import com.example.demo.web.util.ApiResponseFactory;
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,8 +43,7 @@ public class PersonalAccountController {
     private final ApiResponseFactory apiResponseFactory;
 
     @GetMapping("/personal-account")
-    public String getPersonalAccount(SessionUser sessionUser, Model model) {
-        Long userId = sessionUser.id();
+    public String getPersonalAccount(@CurrentUserId Long userId, Model model) {
         User user = userQueryService.getUser(userId);
         PersonalAccountResponse personalAccountResponse = userQueryService.buildUserPage(user);
         model.addAttribute("personalAccountResponse", personalAccountResponse);
@@ -52,8 +52,7 @@ public class PersonalAccountController {
     }
 
     @GetMapping("/profile/edit")
-    public String editProfile(SessionUser sessionUser, Model model) {
-        Long userId = sessionUser.id();
+    public String editProfile(@CurrentUserId Long userId, Model model) {
         User user = userQueryService.getUser(userId);
         PersonalAccountResponse personalAccountResponse = userQueryService.buildUserPage(user);
         model.addAttribute("personalAccountResponse", personalAccountResponse);
@@ -92,8 +91,8 @@ public class PersonalAccountController {
 
     @DeleteMapping("/settings/delete/phone")
     @ResponseBody
-    public ResponseEntity<ApiResponse> deletePhone(SessionUser sessionUser) {
-        userCommandService.deletePhone(sessionUser.id());
+    public ResponseEntity<ApiResponse> deletePhone(@CurrentUserId Long userId) {
+        userCommandService.deletePhone(userId);
         return apiResponseFactory.ok(SuccessCode.PHONE_HAS_BEEN_REMOVED, Map.of());
     }
 
@@ -111,14 +110,13 @@ public class PersonalAccountController {
     public String changePassword(
             @Valid @ModelAttribute("passwordChangingDTO") PasswordChangingDTO passwordChangingDTO,
             BindingResult bindingResult,
-            SessionUser sessionUser,
+            @CurrentUserId Long userId,
             HttpSession httpSession,
             RedirectAttributes redirectAttributes
     ) {
         if (bindingResult.hasErrors()) {
             return "account/change-password";
         }
-        Long userId = sessionUser.id();
         String newPasswordHash = userCommandService.prepareAndValidatePassword(passwordChangingDTO, userId);
         userCommandService.updatePassword(newPasswordHash, userId);
         String message = messageUtils.getSuccess(SuccessCode.PASSWORD_HAS_BEEN_CHANGED);
@@ -130,11 +128,11 @@ public class PersonalAccountController {
 
     @PostMapping("/profile/delete")
     public String deleteAccount(
-            SessionUser sessionUser,
+            @CurrentUserId Long userId,
             HttpSession httpSession,
             RedirectAttributes redirectAttributes
     ) {
-        userCommandService.deleteAccount(sessionUser.id());
+        userCommandService.deleteAccount(userId);
         httpSession.invalidate();
         String message = messageUtils.getSuccess(SuccessCode.ACCOUNT_HAS_BEEN_REMOVED);
         redirectAttributes.addFlashAttribute("successMessage", message);
@@ -142,7 +140,9 @@ public class PersonalAccountController {
     }
 
     private String resolveReturnPath(HttpSession httpSession) {
-        if (httpSession == null) return "/personal-account";
+        if (httpSession == null) {
+            return "/personal-account";
+        }
 
         Object stored = httpSession.getAttribute(NavigationHistoryInterceptor.PREVIOUS_PAGE_ATTR);
         httpSession.removeAttribute(NavigationHistoryInterceptor.PREVIOUS_PAGE_ATTR);

@@ -48,15 +48,11 @@
             return data;
         },
 
-        async buyBulk(movieIds) {
+        async buyBulk() {
             if (!window.requireAuth()) {
                 throw { status: 401, code: 'NOT_AUTHORIZED', message: 'Авторизуйтесь!' };
             }
-            if (!movieIds || !movieIds.length) {
-                throw { status: 400, message: 'Корзина пуста' };
-            }
-            var data = await API.orders.addBulk(movieIds);
-            movieIds.forEach(function (id) { Store.cart.set(id, false); });
+            var data = await API.orders.addBulk();
             UI.updateCartBadge();
             return data;
         }

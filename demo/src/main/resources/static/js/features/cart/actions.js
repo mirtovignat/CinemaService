@@ -114,6 +114,52 @@
         Modal.closeById(id);
     }
 
+    function findBulkBuyButton() {
+        return document.querySelector('[data-action="bulk-buy"]');
+    }
+
+    function findClearCartButton() {
+        return document.querySelector('[data-action="clear-cart"]');
+    }
+
+    function findBulkPriceLabel() {
+        return document.getElementById('bulkTotalPrice');
+    }
+
+    function renderBulkSummary(summary) {
+        var bulkBtn = findBulkBuyButton();
+        var clearBtn = findClearCartButton();
+        var priceEl = findBulkPriceLabel();
+
+        if (!summary || !summary.count) {
+            if (bulkBtn) bulkBtn.style.display = 'none';
+            if (clearBtn) clearBtn.style.display = 'none';
+            if (priceEl) priceEl.textContent = '0 ₽';
+            return;
+        }
+
+        if (bulkBtn) bulkBtn.style.display = '';
+        if (clearBtn) clearBtn.style.display = '';
+
+        if (priceEl) {
+            priceEl.textContent = summary.count + ' шт. · ' + UI.formatPrice(summary.total) + ' ₽';
+        }
+    }
+
+    function refreshBulkSummary() {
+        if (!window.API || !API.cart || typeof API.cart.summary !== 'function') {
+            return Promise.resolve();
+        }
+        return API.cart.summary()
+            .then(function (summary) {
+                renderBulkSummary(summary);
+                return summary;
+            })
+            .catch(function () {
+                return null;
+            });
+    }
+
     async function onAdd(el) {
         var movieId = getMovieId(el);
         if (!movieId) return;
@@ -127,6 +173,7 @@
             el.onclick = function () {
                 window.location.href = '/cart?highlight=' + encodeURIComponent(movieId);
             };
+            refreshBulkSummary();
         } catch (err) {
             handleError(err);
         } finally {
@@ -144,12 +191,14 @@
             var card = cardFrom(el);
             if (card && window.location.pathname.indexOf('/cart') === 0) {
                 UI.animateRemoveCard(card, function () {
+                    refreshBulkSummary();
                     if (document.querySelectorAll('.cart-card').length === 0) {
                         window.location.reload();
                     }
                 });
             } else {
                 replaceWithAddButton(el, movieId);
+                refreshBulkSummary();
             }
         } catch (err) {
             handleError(err);
@@ -176,6 +225,7 @@
                         '.cart-card[data-movie-id="' + CSS.escape(movieId) + '"]'
                     );
                     UI.animateRemoveCard(card, function () {
+                        refreshBulkSummary();
                         if (document.querySelectorAll('.cart-card').length === 0) {
                             window.location.reload();
                         }
@@ -224,6 +274,7 @@
                         '.cart-card[data-movie-id="' + CSS.escape(movieId) + '"]'
                     );
                     UI.animateRemoveCard(card, function () {
+                        refreshBulkSummary();
                         if (document.querySelectorAll('.cart-card').length === 0) {
                             window.location.reload();
                         }
@@ -233,30 +284,33 @@
         });
     }
 
-    function onBulkBuy() {
-        var cards = document.querySelectorAll('.cart-card');
-        if (!cards.length) {
-            showFlashMessage('Корзина пуста', 'error');
+    async function onBulkBuy() {
+        if (!window.requireAuth()) {
+            showFlashMessage('Авторизуйтесь!', 'error', undefined, {
+                text: 'Перейти к авторизации',
+                url: '/login'
+            });
             return;
         }
 
-        var html = '';
-        var total = 0;
-        var movieIds = [];
-        cards.forEach(function (card) {
-            var id = card.getAttribute('data-movie-id');
-            if (id) movieIds.push(id);
-            var titleEl = card.querySelector('.media-card-title a');
-            var title = titleEl ? titleEl.textContent : 'Фильм';
-            var price = UI.getCardPrice(card);
-            total += price;
-            html +=
-                '<div class="item"><span>' + escapeHtml(title) +
-                '</span><span>' + UI.formatPrice(price) + ' ₽</span></div>';
-        });
-        html +=
+        var summary;
+        try {
+            summary = await API.cart.summary();
+        } catch (err) {
+            handleError(err);
+            return;
+        }
+
+        if (!summary || !summary.count) {
+            showFlashMessage('Корзина пуста', 'warning');
+            return;
+        }
+
+        var html =
+            '<div class="item"><span>Фильмов к покупке:</span><span>' +
+                summary.count + ' шт.</span></div>' +
             '<div class="item total"><span>Итого:</span><span>' +
-            UI.formatPrice(total) + ' ₽</span></div>';
+                UI.formatPrice(summary.total) + ' ₽</span></div>';
 
         var modal = openModal('cartBuyBulkModal');
         if (!modal) return;
@@ -265,7 +319,7 @@
 
         bindOneTimeConfirm(modal, function () {
             closeModal('cartBuyBulkModal');
-            CartFeature.buyBulk(movieIds)
+            CartFeature.buyBulk()
                 .then(function (data) {
                     saveFlashAndRedirect(
                         (data && data.message) || 'Покупка прошла успешно',

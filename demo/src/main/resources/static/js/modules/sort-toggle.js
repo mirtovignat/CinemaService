@@ -55,7 +55,7 @@
 
     function buildUrl(order) {
         var url = new URL(window.location.href);
-        url.searchParams.set('sort', order.toUpperCase()); // <--- Тут именно sort, так как бэкенд ждет sort
+        url.searchParams.set('sort', order.toUpperCase());
         url.searchParams.delete('cursor');
         return url.toString();
     }

@@ -2,6 +2,7 @@ package com.example.demo.config;
 
 import com.example.demo.web.interceptor.CacheControlInterceptor;
 import com.example.demo.web.interceptor.NavigationHistoryInterceptor;
+import com.example.demo.web.resolver.CurrentUserIdArgumentResolver;
 import com.example.demo.web.resolver.SessionUserArgumentResolver;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Configuration;
@@ -18,6 +19,7 @@ public class WebConfig implements WebMvcConfigurer {
     private final CacheControlInterceptor cacheControlInterceptor;
     private final NavigationHistoryInterceptor navigationHistoryInterceptor;
     private final SessionUserArgumentResolver sessionUserArgumentResolver;
+    private final CurrentUserIdArgumentResolver currentUserIdArgumentResolver;
 
     @Override
     public void addInterceptors(InterceptorRegistry interceptorRegistry) {
@@ -53,5 +55,6 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> handlerMethodArgumentResolvers) {
         handlerMethodArgumentResolvers.add(sessionUserArgumentResolver);
+        handlerMethodArgumentResolvers.add(currentUserIdArgumentResolver);
     }
 }

@@ -14,12 +14,10 @@
       th:classappend="${response == null or response.items() == null or #lists.size(response.items()) <= 4} ? 'no-scroll' : ''">
 
     <div class="page-header-row">
-
         <a th:href="@{/back(fallback='/')}" class="back-btn-header">
             <th:block th:replace="~{fragments/icons :: icon-arrow-left}"></th:block>
             <span>Назад</span>
         </a>
-
         <div class="profile-right-header">
             <h1>
                 <th:block th:replace="~{fragments/icons :: icon-cart}"></th:block>
@@ -29,37 +27,31 @@
                 Количество фильмов: <strong th:text="${catalogCount}">0</strong>
             </div>
         </div>
-
         <div class="page-header-actions">
             <th:block th:replace="~{fragments/sort-toggle :: sortToggle}"></th:block>
-
             <button type="button"
                     class="checkout-btn"
-                    th:with="totalPrice=${response != null and response.items() != null
-                                         ? #aggregates.sum(response.items().![price()]) : 0}"
                     data-action="bulk-buy"
-                    th:if="${response != null and response.items() != null and !response.items().isEmpty()}">
+                    th:if="${summary != null and summary.count() > 0}">
                 <span class="btn-text">
                     <th:block th:replace="~{fragments/icons :: icon-cart}"></th:block>
                     Купить всё
                 </span>
-                <span class="btn-price" id="bulkTotalPrice" th:text="${totalPrice} + ' ₽'">0 ₽</span>
+                <span class="btn-price" id="bulkTotalPrice"
+                      th:text="${summary.count() + ' шт. · ' + summary.total() + ' ₽'}">0 ₽</span>
             </button>
-
             <button type="button"
                     class="clear-cart-btn"
                     data-action="clear-cart"
-                    th:if="${response != null and response.items() != null and !response.items().isEmpty()}">
+                    th:if="${summary != null and summary.count() > 0}">
                 <th:block th:replace="~{fragments/icons :: icon-trash}"></th:block>
                 Очистить всю корзину
             </button>
         </div>
-
         <th:block th:replace="~{fragments/catalog-search :: catalogSearch}"></th:block>
     </div>
 
     <div class="catalog-content">
-
         <div class="cart-container"
              th:if="${response != null and response.items() != null and !response.items().isEmpty()}"
              data-cursor-container
@@ -76,20 +68,37 @@
                  th:data-movie-title="${cartMovie.title()}"
                  th:data-poster-url="${cartMovie.posterUrl()}">
                 <div class="media-card-poster-link">
-                    <a th:href="@{/movies/{id}(id=${cartMovie.id()})}">
-                        <img th:if="${cartMovie.posterUrl() != null and !cartMovie.posterUrl().isEmpty()}"
-                             th:src="${cartMovie.posterUrl()}"
-                             alt="Постер" class="media-card-poster-img" data-poster-img src=""/>
-                        <div class="movie-poster-placeholder"
-                             th:classappend="${cartMovie.posterUrl() != null and !cartMovie.posterUrl().isEmpty()} ? 'hidden' : ''"
-                             data-poster-placeholder>
-                            <span>Постер</span>
+                    <th:block th:if="${cartMovie.posterUrl() != null and !cartMovie.posterUrl().isEmpty() and cartMovie.posterUrl() != 'null'}">
+                        <a th:href="@{/movies/{id}(id=${cartMovie.id()})}">
+                            <img th:src="${cartMovie.posterUrl()}"
+                                 alt="Постер" class="media-card-poster-img" data-poster-img src=""/>
+                            <th:block th:replace="~{fragments/rating-badge :: ratingBadge(
+                                movieId=${cartMovie.id()},
+                                rating=${cartMovie.rating()}
+                            )}"></th:block>
+                        </a>
+                    </th:block>
+                    <th:block th:if="${cartMovie.posterUrl() == null or cartMovie.posterUrl().isEmpty() or cartMovie.posterUrl() == 'null'}">
+                        <div data-poster-placeholder-wrapper>
+                            <div class="movie-poster-placeholder" data-poster-placeholder>
+                                <div class="poster-placeholder-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" stroke-width="1.6"
+                                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <rect x="3" y="3" width="18" height="18" rx="3"/>
+                                        <circle cx="9" cy="9" r="2"/>
+                                        <path d="m21 15-4.35-4.35a1.5 1.5 0 0 0-2.12 0L7 18"/>
+                                    </svg>
+                                </div>
+                                <div class="poster-placeholder-text">Нет постера</div>
+                                <div class="poster-placeholder-sub">Изображение недоступно</div>
+                            </div>
+                            <th:block th:replace="~{fragments/rating-badge :: ratingBadge(
+                                movieId=${cartMovie.id()},
+                                rating=${cartMovie.rating()}
+                            )}"></th:block>
                         </div>
-                        <th:block th:replace="~{fragments/rating-badge :: ratingBadge(
-                            movieId=${cartMovie.id()},
-                            rating=${cartMovie.rating()}
-                        )}"></th:block>
-                    </a>
+                    </th:block>
                 </div>
                 <div class="media-card-content">
                     <h3 class="media-card-title">
@@ -97,20 +106,25 @@
                     </h3>
                     <div class="media-card-info">
                         <div class="media-card-info-rows">
-                            <div class="media-card-info-row media-card-info-row--year" th:if="${cartMovie.releaseDate() != null}">
+                            <div class="media-card-info-row media-card-info-row--year"
+                                 th:if="${cartMovie.releaseDate() != null}">
                                 <th:block th:replace="~{fragments/icons :: icon-calendar}"></th:block>
                                 <span class="media-card-info-label">Год выпуска:</span>
-                                <span class="media-card-info-value" th:text="${cartMovie.releaseDate().year}">2018</span>
+                                <span class="media-card-info-value"
+                                      th:text="${cartMovie.releaseDate().year}">2018</span>
                             </div>
-                            <div class="media-card-info-row media-card-info-row--genre" th:if="${cartMovie.genre() != null and !cartMovie.genre().isEmpty()}">
+                            <div class="media-card-info-row media-card-info-row--genre"
+                                 th:if="${cartMovie.genre() != null and !cartMovie.genre().isEmpty()}">
                                 <th:block th:replace="~{fragments/icons :: icon-tag}"></th:block>
                                 <span class="media-card-info-label">Жанр:</span>
                                 <span class="media-card-info-value" th:text="${cartMovie.genre()}">Фантастика</span>
                             </div>
-                            <div class="media-card-info-row media-card-info-row--duration" th:if="${cartMovie.formattedDuration() != null}">
+                            <div class="media-card-info-row media-card-info-row--duration"
+                                 th:if="${cartMovie.formattedDuration() != null}">
                                 <th:block th:replace="~{fragments/icons :: icon-clock}"></th:block>
                                 <span class="media-card-info-label">Длительность:</span>
-                                <span class="media-card-info-value" th:text="${cartMovie.formattedDuration()}">1:40:00</span>
+                                <span class="media-card-info-value"
+                                      th:text="${cartMovie.formattedDuration()}">1:40:00</span>
                             </div>
                         </div>
                         <div class="media-card-price-and-actions">
@@ -147,7 +161,9 @@
 
         <div th:if="${response == null or response.items() == null or response.items().isEmpty()}"
              class="empty-message">
-            <div class="empty-icon"><th:block th:replace="~{fragments/icons :: icon-cart}"></th:block></div>
+            <div class="empty-icon">
+                <th:block th:replace="~{fragments/icons :: icon-cart}"></th:block>
+            </div>
             <h2>Корзина пока пуста</h2>
             <p>Добавляйте фильмы, которые хотите приобрести, а здесь они будут аккуратно собраны в одном месте.</p>
             <a th:href="@{/}" class="browse-movies-btn">Перейти в главное меню</a>
@@ -158,7 +174,6 @@
                 <th:block th:insert="~{fragments/recommendations :: recommendations}"></th:block>
             </th:block>
         </th:block>
-
     </div>
 </main>
 
@@ -166,12 +181,24 @@
     <div class="media-card cart-card"
          data-attr="data-movie-id:id;data-movie-price:price;data-movie-title:title;data-poster-url:posterUrl">
         <div class="media-card-poster-link">
-            <a data-attr="href:/movies/{id}">
-                <img class="media-card-poster-img" data-poster-img data-field="posterUrl" src="" alt="Постер"/>
-                <div class="movie-poster-placeholder hidden" data-poster-placeholder>
-                    <span>Постер</span>
+            <div data-poster-wrapper style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column;">
+                <a data-attr="href:/movies/{id}" style="display: block; width: 100%; height: 100%;">
+                    <img class="media-card-poster-img" data-poster-img data-field="posterUrl" src="" alt="Постер" style="width: 100%; height: 100%; object-fit: cover; display: block;"/>
+                </a>
+                <div class="movie-poster-placeholder hidden" data-poster-placeholder style="position: absolute; inset: 0; z-index: 2;">
+                    <div class="poster-placeholder-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="1.6"
+                             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="3" y="3" width="18" height="18" rx="3"/>
+                            <circle cx="9" cy="9" r="2"/>
+                            <path d="m21 15-4.35-4.35a1.5 1.5 0 0 0-2.12 0L7 18"/>
+                        </svg>
+                    </div>
+                    <div class="poster-placeholder-text">Нет постера</div>
+                    <div class="poster-placeholder-sub">Изображение недоступно</div>
                 </div>
-            </a>
+            </div>
         </div>
         <div class="media-card-content">
             <h3 class="media-card-title">
@@ -211,7 +238,8 @@
                         </button>
                         <button type="button" class="buy-now-btn" data-action="single-buy"
                                 data-attr="data-movie-id:id;data-movie-title:title;data-movie-price:price;data-poster-url:posterUrl"
-                                title="Купить сейчас">Купить сейчас</button>
+                                title="Купить сейчас">Купить сейчас
+                        </button>
                     </div>
                 </div>
             </div>

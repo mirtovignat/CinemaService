@@ -38,7 +38,8 @@
 
         var fetchOptions = {
             method: method,
-            headers: headers
+            headers: headers,
+            redirect: 'manual'
         };
 
         if (options.body !== undefined && options.body !== null) {
@@ -68,7 +69,8 @@
         add: function (movieId) { return post('/cart/add/' + encode(movieId)); },
         remove: function (movieId) { return post('/cart/remove/' + encode(movieId)); },
         clear: function () { return post('/cart/clear'); },
-        count: function () { return get('/cart/count'); }
+        count: function () { return get('/cart/count'); },
+        summary: function () { return get('/cart/summary'); }
     };
 
     var Favourites = {
@@ -80,11 +82,7 @@
 
     var Orders = {
         add: function (movieId) { return post('/orders/add/' + encode(movieId)); },
-        addBulk: function (movieIds) {
-            var params = new URLSearchParams();
-            movieIds.forEach(function (id) { params.append('movieIds', id); });
-            return post('/orders/add/bulk', params);
-        }
+        addBulk: function () { return post('/orders/add/bulk'); }
     };
 
     var Rated = {

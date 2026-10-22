@@ -354,15 +354,27 @@
 
             return Promise.all([
                 fetch('/rated/rating/' + encodeURIComponent(targetMovieId) + '?_=' + Date.now(), {
-                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                    redirect: 'manual',
+                    credentials: 'same-origin'
                 })
-                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (r) {
+                    if (r.type === 'opaqueredirect' || r.status === 0) return null;
+                    if (r.redirected) return null;
+                    return r.ok ? r.json() : null;
+                })
                 .catch(function () { return null; }),
 
                 fetch('/rated/count/' + encodeURIComponent(targetMovieId), {
-                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                    redirect: 'manual',
+                    credentials: 'same-origin'
                 })
-                .then(function (r) { return r.ok ? r.text() : null; })
+                .then(function (r) {
+                    if (r.type === 'opaqueredirect' || r.status === 0) return null;
+                    if (r.redirected) return null;
+                    return r.ok ? r.text() : null;
+                })
                 .catch(function () { return null; })
             ]).then(function (res) {
                 var avgDto = res[0];
@@ -590,12 +602,26 @@
         try {
             const params = new URLSearchParams();
             if (cursor) params.set('cursor', cursor);
-            params.set('sort', sort);
+            params.set('sortDirection', sort);
 
             const resp = await fetch(`/rated/${movieId}/reviews/more?${params}`, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                redirect: 'manual',
+                credentials: 'same-origin',
                 signal: controller.signal
             });
+
+            if (resp.type === 'opaqueredirect' || resp.status === 0) {
+                window.location.href = '/login';
+                return;
+            }
+            if (resp.redirected) {
+                window.location.href = resp.url;
+                return;
+            }
             if (!resp.ok) throw new Error('HTTP ' + resp.status);
 
             const data = await resp.json();
@@ -603,9 +629,11 @@
             retryCount = 0;
             disabledUntil = 0;
 
-            if (Array.isArray(data.content) && data.content.length > 0) {
+            const items = Array.isArray(data.items) ? data.items : [];
+
+            if (items.length > 0) {
                 const fragment = document.createDocumentFragment();
-                data.content.forEach(review => {
+                items.forEach(review => {
                     const el = buildCard(review, false, false);
                     if (el) fragment.appendChild(el);
                 });
@@ -616,10 +644,6 @@
 
             cursor = data.nextCursor || null;
             if (data.hasMore === false) hasMore = false;
-
-            if (countEl && data.totalReviews != null) {
-                setCountText(data.totalReviews);
-            }
 
             if (!hasMore) {
                 disconnectObserver();

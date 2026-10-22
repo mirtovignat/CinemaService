@@ -98,7 +98,7 @@
         if (!img) return null;
         return img.closest(
             '.media-card-poster-link, .movie-poster-link, .poster-wrapper, ' +
-            '.history-item-poster, .fav-poster, .rec-poster'
+            '.history-item-poster, .fav-poster'
         ) || img.parentNode;
     }
 
@@ -112,6 +112,10 @@
 
     function showPlaceholderFor(img) {
         if (!img || !img.parentNode) return;
+
+        // Не вмешиваемся в работу рекомендаций, у них свой обработчик
+        if (img.closest('.rec-card') || img.closest('.rec-poster')) return;
+
         var container = getPosterContainer(img);
         if (!container) return;
 
@@ -123,15 +127,28 @@
         if (placeholder) {
             placeholder.classList.remove('hidden');
             placeholder.removeAttribute('style');
-        } else if (
-            container.classList.contains('rec-poster') ||
-            container.classList.contains('history-item-poster') ||
-            container.classList.contains('fav-poster') ||
-            container.classList.contains('poster-wrapper') ||
-            container.classList.contains('media-card-poster-link') ||
-            container.classList.contains('movie-poster-link')
-        ) {
-            container.appendChild(buildPosterPlaceholder());
+        } else {
+            var linkEl = container.tagName === 'A'
+                ? container
+                : (container.closest && container.closest('a')) || container.querySelector('a');
+
+            if (linkEl) {
+                linkEl.removeAttribute('href');
+                linkEl.removeAttribute('data-action');
+                linkEl.removeAttribute('data-poster-url');
+                linkEl.removeAttribute('title');
+                linkEl.style.cursor = 'default';
+                linkEl.style.pointerEvents = 'none';
+                linkEl.appendChild(buildPosterPlaceholder());
+            } else if (
+                container.classList.contains('history-item-poster') ||
+                container.classList.contains('fav-poster') ||
+                container.classList.contains('poster-wrapper') ||
+                container.classList.contains('media-card-poster-link') ||
+                container.classList.contains('movie-poster-link')
+            ) {
+                container.appendChild(buildPosterPlaceholder());
+            }
         }
 
         hideOverlay(container);

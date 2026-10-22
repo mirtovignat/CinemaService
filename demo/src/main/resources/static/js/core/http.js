@@ -13,6 +13,13 @@
     }
 
     function handleResponse(response) {
+        if (response.type === 'opaqueredirect' || response.status === 0) {
+            return Promise.reject({
+                status: 401,
+                code: 'NOT_AUTHORIZED',
+                message: 'Авторизуйтесь!'
+            });
+        }
         if (response.redirected && isLoginUrl(response.url)) {
             return Promise.reject({
                 status: 401,

@@ -178,8 +178,6 @@
                 posterImg.addEventListener('error', function () {
                     posterImg.style.display = 'none';
                     if (noPoster) noPoster.style.display = 'flex';
-                    var overlayEl = item.querySelector('.poster-overlay');
-                    if (overlayEl) overlayEl.style.display = 'none';
                 }, { once: true });
             }
             if (noPoster) noPoster.style.display = 'none';
@@ -189,9 +187,6 @@
                 noPoster.style.display = 'flex';
             }
         }
-
-        var overlay = item.querySelector('.poster-overlay');
-        if (overlay) overlay.style.display = hasPoster ? '' : 'none';
 
         var watchBtn = item.querySelector('.watch-btn-neon');
         if (watchBtn) {
@@ -313,19 +308,67 @@
         };
     }
 
+    function isPosterImageBroken(container) {
+        if (!container) return false;
+        var img = container.querySelector('img[data-poster-img]');
+        if (!img) return false;
+        if (!img.getAttribute('src')) return false;
+        if (!img.complete) return false;
+        return img.naturalWidth === 0;
+    }
+
+    function resolveWatchContext(button) {
+        var card = button.closest('.movie-card, .library-card, .history-item, .cart-card, .favourites-card');
+        var movieId = (card && card.getAttribute('data-movie-id')) ||
+                      button.getAttribute('data-movie-id') ||
+                      '';
+        var movieTitle = (card && card.getAttribute('data-movie-title')) ||
+                         button.getAttribute('data-movie-title') ||
+                         '';
+        var posterUrl = button.getAttribute('data-poster-url') ||
+                        (card && card.getAttribute('data-poster-url')) ||
+                        '';
+        if (posterUrl === 'null' || posterUrl === 'undefined') posterUrl = '';
+        posterUrl = String(posterUrl).trim();
+
+        var posterContainer = button.closest('.history-item-poster, .poster-wrapper, .media-card-poster-link, .movie-poster-link') ||
+                              (card && card.querySelector('.history-item-poster, .poster-wrapper, .media-card-poster-link, .movie-poster-link')) ||
+                              card;
+
+        return {
+            card: card,
+            movieId: movieId,
+            movieTitle: movieTitle,
+            posterUrl: posterUrl,
+            posterContainer: posterContainer
+        };
+    }
+
+    function redirectToDetails(movieId) {
+        window.location.href = '/movies/' + encodeURIComponent(movieId);
+    }
+
     function watchMovie(button) {
         if (!isAuthenticated()) {
             showFlashMessage('Авторизуйтесь!', 'error');
             return Promise.resolve();
         }
 
-        var movieId = button.getAttribute('data-movie-id');
-        var posterUrl = button.getAttribute('data-poster-url') || '';
-        var movieTitle = button.getAttribute('data-movie-title') || '';
-        if (!movieId) return Promise.resolve();
+        var ctx = resolveWatchContext(button);
+        if (!ctx.movieId) return Promise.resolve();
+
+        var hasPosterAttr = !!ctx.posterUrl;
+        var broken = isPosterImageBroken(ctx.posterContainer);
+
+        if (!hasPosterAttr || broken) {
+            redirectToDetails(ctx.movieId);
+            return Promise.resolve();
+        }
 
         var historyEnabled = isHistoryEnabled();
-        var libraryCard = button.closest('.library-card');
+        var libraryCard = ctx.card && ctx.card.classList && ctx.card.classList.contains('library-card')
+            ? ctx.card
+            : null;
         var rollbackLibrary = null;
         var newItem = null;
         var container = null;
@@ -340,9 +383,9 @@
                 var now = new Date();
 
                 newItem = buildHistoryItem(
-                    String(movieId),
-                    movieTitle,
-                    posterUrl,
+                    String(ctx.movieId),
+                    ctx.movieTitle,
+                    ctx.posterUrl,
                     context.genre,
                     context.year,
                     context.director,
@@ -359,7 +402,7 @@
         button.disabled = true;
         _watchInFlight++;
 
-        return fetch('/watched/add/' + encodeURIComponent(movieId), {
+        return fetch('/watched/add/' + encodeURIComponent(ctx.movieId), {
             method: 'POST',
             headers: csrfHeaders(),
             keepalive: true
@@ -368,15 +411,11 @@
         .then(function (data) {
             button.disabled = false;
 
-            if (posterUrl && posterUrl.trim() !== '') {
-                window.open(posterUrl, '_blank');
-            } else {
-                window.open('/movies/' + movieId, '_blank');
-            }
-
             if (newItem && data && data.historyItemId) {
                 newItem.setAttribute('data-history-id', String(data.historyItemId));
             }
+
+            window.location.href = ctx.posterUrl;
 
             return data;
         })
@@ -407,7 +446,11 @@
         var container = el.closest('.library-card') || el.closest('.history-item');
         if (!container) return;
         var watchBtn = container.querySelector('.watch-btn-neon');
-        if (!watchBtn) return;
+        if (!watchBtn) {
+            var movieId = container.getAttribute('data-movie-id');
+            if (movieId) redirectToDetails(movieId);
+            return;
+        }
         watchMovie(watchBtn);
     }
 

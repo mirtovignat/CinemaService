@@ -252,7 +252,7 @@
         return rest + ' ' + first;
     }
 
-    function sortDirectorsBySurname(list) {
+    function sortDirectionectorsBySurname(list) {
         return list.slice().sort(function (a, b) {
             var sa = normalizeForSort(getSurname(a));
             var sb = normalizeForSort(getSurname(b));
@@ -323,7 +323,7 @@
                         fillAccordionList(
                             directorsDropdown,
                             'directors',
-                            sortDirectorsBySurname(list || []),
+                            sortDirectionectorsBySurname(list || []),
                             displayDirector
                         );
                     })
@@ -882,7 +882,7 @@
             var name = decodeURIComponent(kv[0] || '');
             var value = decodeURIComponent(kv[1] || '');
             if (name === 'sortBy') key = value;
-            if (name === 'sortDirection') dir = value.toUpperCase(); // Изменили sortDir на sortDirection
+            if (name === 'sortDirection') dir = value.toUpperCase(); // Изменили sortDirection на sortDirection
         }
 
         if (!key || !dir) return null;

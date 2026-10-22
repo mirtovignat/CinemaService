@@ -19,7 +19,7 @@ public class MovieFilterQueryBuilder {
 
         addIfPresent(params, "title", movieSearchContext.title());
         addIfPresent(params, "sortBy", movieSearchContext.sortBy());
-        addIfPresent(params, "sortDir", movieSearchContext.sortDir());
+        addIfPresent(params, "sortDirection", movieSearchContext.sortDirection());
         addIfPresent(params, "genre", movieSearchContext.genre());
 
         if (movieFilter != null) {

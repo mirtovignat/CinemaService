@@ -1,6 +1,5 @@
 package com.example.demo.service.linked_collection;
 
-import com.example.demo.dto.base.UserStatus;
 import com.example.demo.exception.BusinessException;
 import com.example.demo.exception.ErrorCode;
 import com.example.demo.model.base.AbstractCatalogItem;
@@ -14,8 +13,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
-import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 @AllArgsConstructor
@@ -24,9 +21,7 @@ public abstract class AbstractLinkedCollectionService<Entity extends AbstractCat
     protected final AbstractCatalogItemRepository<Entity> abstractCatalogItemRepository;
     protected final UserRepository userRepository;
     protected final MovieRepository movieRepository;
-    protected final UserStatusResolver userStatusResolver;
     private final Supplier<Entity> entitySupplier;
-    private final BiFunction<Entity, UserStatus, DTO> dtoMapper;
     private final ErrorCode emptyCollectionErrorCode;
 
     @Transactional
@@ -49,20 +44,6 @@ public abstract class AbstractLinkedCollectionService<Entity extends AbstractCat
     @Transactional(readOnly = true)
     public List<Entity> findAll(Long userId) {
         return abstractCatalogItemRepository.findAllByUserId(userId);
-    }
-
-    @Transactional(readOnly = true)
-    public List<DTO> getAllOfUser(Long userId) {
-        List<Entity> catalogItems = abstractCatalogItemRepository.findAllByUserId(userId);
-        List<Long> movieIds = catalogItems.stream()
-                .map(catalogItem -> catalogItem.getMovie().getId())
-                .toList();
-        Map<Long, UserStatus> userStatusByMovieId = userStatusResolver.resolveAll(userId, movieIds);
-        return catalogItems.stream()
-                .map(catalogItem -> dtoMapper.apply(
-                        catalogItem,
-                        userStatusByMovieId.get(catalogItem.getMovie().getId())))
-                .toList();
     }
 
     @Transactional

@@ -1,10 +1,7 @@
 (function () {
     'use strict';
 
-    var MIN_DIGITS = 11;
     var MAX_DIGITS = 13;
-    var MIN_COUNTRY = 1;
-    var MAX_COUNTRY = 3;
 
     function digitsOnly(value) {
         return String(value == null ? '' : value).replace(/\D/g, '');
@@ -14,8 +11,8 @@
         var len = digits.length;
         if (len === 0) return { country: '', rest: '' };
         var countryLen = len - 10;
-        if (countryLen < MIN_COUNTRY) countryLen = MIN_COUNTRY;
-        if (countryLen > MAX_COUNTRY) countryLen = MAX_COUNTRY;
+        if (countryLen < 1) countryLen = 1;
+        if (countryLen > 3) countryLen = 3;
         return {
             country: digits.substring(0, countryLen),
             rest: digits.substring(countryLen)
@@ -41,41 +38,6 @@
         return formatted;
     }
 
-    function parsePhone(value) {
-        var digits = digitsOnly(value);
-        if (digits.length < MIN_DIGITS || digits.length > MAX_DIGITS) return null;
-
-        var parts = splitCountry(digits);
-        if (parts.rest.length !== 10) return null;
-
-        return {
-            country: parts.country,
-            area: parts.rest.substring(0, 3),
-            part1: parts.rest.substring(3, 6),
-            part2: parts.rest.substring(6, 8),
-            part3: parts.rest.substring(8, 10),
-            digits: digits,
-            formatted: formatPhoneRaw(digits)
-        };
-    }
-
-    function isValidPhone(value) {
-        if (!value) return true;
-        return parsePhone(value) != null;
-    }
-
-    function maskPhone(value) {
-        if (!value) return '';
-        var raw = String(value).trim();
-        if (raw.indexOf('***') !== -1) return raw;
-
-        var parsed = parsePhone(raw);
-        if (!parsed) return raw;
-
-        return '+' + parsed.country +
-            ' (' + parsed.area + ') ***-**-' + parsed.part3;
-    }
-
     function countDigitsBefore(text, pos) {
         var count = 0;
         for (var i = 0; i < pos && i < text.length; i++) {
@@ -85,9 +47,7 @@
     }
 
     function positionFromDigitCount(text, digitCount) {
-        if (digitCount <= 0) {
-            return text.charAt(0) === '+' ? Math.min(1, text.length) : 0;
-        }
+        if (digitCount <= 0) return text.charAt(0) === '+' ? 1 : 0;
         var seen = 0;
         for (var i = 0; i < text.length; i++) {
             var code = text.charCodeAt(i);
@@ -99,88 +59,96 @@
         return text.length;
     }
 
-    function placeCursorByDigits(input, digitsBeforeCursor) {
-        var value = input.value;
-        var pos = positionFromDigitCount(value, digitsBeforeCursor);
-        try { input.setSelectionRange(pos, pos); } catch (e) {}
-    }
-
     function initPhoneField(input) {
         if (!input) return;
         if (input.dataset.phoneMaskInited === '1') return;
         input.dataset.phoneMaskInited = '1';
 
+        var skipFormat = false;
+
         input.addEventListener('beforeinput', function (e) {
             if (!e.inputType) return;
-            if (e.inputType.indexOf('delete') !== 0) return;
-            this.dataset.digitsBeforeDelete = String(
-                countDigitsBefore(this.value, this.selectionStart)
-            );
-            this.dataset.digitsAfterDelete = String(
-                countDigitsBefore(this.value, this.selectionEnd)
-            );
-        });
+            if (e.inputType === 'deleteContentBackward' ||
+                e.inputType === 'deleteContentForward' ||
+                e.inputType === 'deleteByCut') {
+                e.preventDefault();
 
-        input.addEventListener('input', function () {
-            var isDelete = this.dataset.digitsBeforeDelete !== undefined;
-            var beforeDigits = isDelete ? parseInt(this.dataset.digitsBeforeDelete, 10) || 0 : null;
-            var afterDigits = isDelete ? parseInt(this.dataset.digitsAfterDelete, 10) || 0 : null;
+                var start = this.selectionStart;
+                var end = this.selectionEnd;
+                var val = this.value;
+                var newPos = start;
 
-            if (!isDelete) {
-                var cursorBefore = this.selectionStart;
-                beforeDigits = countDigitsBefore(this.value, cursorBefore);
-            }
-
-            var formatted = formatPhoneRaw(this.value);
-            if (this.value !== formatted) this.value = formatted;
-
-            if (isDelete) {
-                var targetDigits = Math.max(0, beforeDigits - 1);
-                if (this.selectionStart === this.selectionEnd) {
-                    placeCursorByDigits(this, targetDigits);
+                if (start === end) {
+                    if (e.inputType === 'deleteContentBackward') {
+                        if (start === 0) return;
+                        val = val.slice(0, start - 1) + val.slice(start);
+                        newPos = start - 1;
+                    } else {
+                        if (start >= val.length) return;
+                        val = val.slice(0, start) + val.slice(start + 1);
+                    }
                 } else {
-                    placeCursorByDigits(this, afterDigits);
+                    val = val.slice(0, start) + val.slice(end);
                 }
-            } else {
-                placeCursorByDigits(this, beforeDigits);
-            }
 
-            delete this.dataset.digitsBeforeDelete;
-            delete this.dataset.digitsAfterDelete;
+                this.value = val;
+                this.setSelectionRange(newPos, newPos);
+
+                skipFormat = true;
+                this.dispatchEvent(new Event('input', { bubbles: true }));
+                skipFormat = false;
+            }
         });
 
-        input.addEventListener('keydown', function (event) {
-            var allowedKeys = [
-                'Backspace', 'Tab', 'ArrowLeft', 'ArrowRight',
-                'Delete', 'Enter', 'Escape', 'Home', 'End'
-            ];
-            if (allowedKeys.indexOf(event.key) !== -1) return;
-            if (event.ctrlKey || event.metaKey) return;
-            if (event.key >= '0' && event.key <= '9') return;
-            if (event.key === '+' || event.key === '(' || event.key === ')' ||
-                event.key === '-' || event.key === ' ') return;
-            event.preventDefault();
+        input.addEventListener('keydown', function (e) {
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
+            if (e.key.length === 1 && !/[0-9]/.test(e.key)) {
+                e.preventDefault();
+            }
+        });
+
+        input.addEventListener('input', function (e) {
+            if (skipFormat) return;
+            if (e.inputType && e.inputType.indexOf('delete') === 0) {
+                return;
+            }
+
+            var cursorPos = this.selectionStart;
+            var digitsBefore = countDigitsBefore(this.value, cursorPos);
+            var formatted = formatPhoneRaw(this.value);
+
+            if (this.value !== formatted) {
+                this.value = formatted;
+            }
+
+            var newPos = positionFromDigitCount(this.value, digitsBefore);
+            this.setSelectionRange(newPos, newPos);
         });
 
         input.addEventListener('paste', function (event) {
             event.preventDefault();
             var pasted = (event.clipboardData || window.clipboardData).getData('text');
             if (!pasted) return;
+
             var digits = digitsOnly(pasted);
             if (!digits) return;
-            var merged = digitsOnly(this.value) + digits;
-            this.value = formatPhoneRaw(merged);
-            placeCursorByDigits(this, digitsOnly(this.value).length);
-            this.dispatchEvent(new Event('input', { bubbles: true }));
+
+            var currentVal = this.value;
+            var start = this.selectionStart;
+            var end = this.selectionEnd;
+            var newVal = currentVal.slice(0, start) + digits + currentVal.slice(end);
+
+            var digitsBefore = countDigitsBefore(newVal, start + digits.length);
+
+            this.value = formatPhoneRaw(newVal);
+
+            var newPos = positionFromDigitCount(this.value, digitsBefore);
+            this.setSelectionRange(newPos, newPos);
         });
 
-        input.addEventListener('blur', function () {
-            var digits = digitsOnly(this.value);
-            if (digits.length === 0) { this.value = ''; return; }
-            this.value = formatPhoneRaw(this.value);
-        });
-
-        if (input.value) input.value = formatPhoneRaw(input.value);
+        if (input.value) {
+            input.value = formatPhoneRaw(input.value);
+        }
     }
 
     function autoInitPhoneMasks(root) {
@@ -191,18 +159,11 @@
 
     window.PhoneMask = {
         format: formatPhoneRaw,
-        parse: parsePhone,
-        isValid: isValidPhone,
-        mask: maskPhone,
         init: initPhoneField,
-        autoInit: autoInitPhoneMasks,
-        MAX_DIGITS: MAX_DIGITS,
-        MIN_DIGITS: MIN_DIGITS
+        autoInit: autoInitPhoneMasks
     };
 
     window.formatPhoneRaw = formatPhoneRaw;
-    window.maskPhone = maskPhone;
-    window.isValidPhone = isValidPhone;
     window.initPhoneField = initPhoneField;
     window.autoInitPhoneMasks = autoInitPhoneMasks;
 

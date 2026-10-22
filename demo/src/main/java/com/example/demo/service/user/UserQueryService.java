@@ -6,9 +6,6 @@ import com.example.demo.dto.user.UserForOwnerViewDTO;
 import com.example.demo.dto.wallet.WalletForOwnerViewDTO;
 import com.example.demo.mapper.entity.UserMapper;
 import com.example.demo.model.entity.User;
-import com.example.demo.repository.entity.CartItemRepository;
-import com.example.demo.repository.entity.FavouriteMovieRepository;
-import com.example.demo.repository.entity.PurchasedMovieRepository;
 import com.example.demo.repository.entity.UserRepository;
 import com.example.demo.service.catalog.RatedQueryService;
 import com.example.demo.service.movie.FilterMetaService;
@@ -27,10 +24,7 @@ public class UserQueryService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
-    private final PurchasedMovieRepository purchasedMovieRepository;
     private final RatedQueryService ratedQueryService;
-    private final FavouriteMovieRepository favouriteMovieRepository;
-    private final CartItemRepository cartItemRepository;
     private final MovieRecommendationService movieRecommendationService;
     private final FilterMetaService filterMetaService;
 
@@ -43,10 +37,6 @@ public class UserQueryService {
         return PersonalAccountResponse.builder()
                 .userForOwnerViewDTO(userMapper.toOwnerView(user))
                 .userSidebarViewDTO(userMapper.toSidebarView(user))
-                .purchasesCount(purchasedMovieRepository.countByUserId(userId))
-                .ratingsCount(ratedQueryService.countByUserId(userId))
-                .favouritesCount(favouriteMovieRepository.countByUserId(userId))
-                .cartCount(cartItemRepository.countByUserId(userId))
                 .topThreeRatedMovies(ratedQueryService.getTopNRatedMovies(userId))
                 .recommendedMovies(firstPage.getContent())
                 .genres(filterMetaService.getAllGenres())

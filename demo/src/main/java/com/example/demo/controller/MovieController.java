@@ -77,7 +77,7 @@ public class MovieController {
     public String showMoviesByGenre(
             @RequestParam String genre,
             @RequestParam(value = "sortBy", required = false) String sortBy,
-            @RequestParam(value = "sortDirection", required = false) String sortDir,
+            @RequestParam(value = "sortDirection", required = false) String sortDirection,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "15") int size,
             SessionUser sessionUser,
@@ -86,7 +86,7 @@ public class MovieController {
     ) {
         Long userId = sessionUser.idOrNull();
 
-        return movieFilterFacade.filterByGenre(genre, sortBy, sortDir, page, size, userId)
+        return movieFilterFacade.filterByGenre(genre, sortBy, sortDirection, page, size, userId)
                 .map(result -> {
                     String redirect = redirectIfSingle(result.page());
                     if (redirect != null) {

@@ -3,6 +3,7 @@ package com.example.demo.filter;
 import com.example.demo.dto.movie.MovieCardViewDTO;
 import com.example.demo.dto.movie.MovieForUser;
 import com.example.demo.service.movie.MovieService;
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +20,7 @@ public class MovieFilterFacade {
     private final MovieFilterQueryBuilder queryBuilder;
     private final GenreValidator genreValidator;
 
+    @Builder
     public record Result(
             Page<MovieForUser<MovieCardViewDTO>> page,
             String filterQuery
@@ -34,7 +36,7 @@ public class MovieFilterFacade {
         int safePage = Math.max(page, 0);
         int safeSize = size > 0 ? size : 35;
 
-        Pageable pageable = sortResolver.resolve(safePage, safeSize, context.sortBy(), context.sortDir());
+        Pageable pageable = sortResolver.resolve(safePage, safeSize, context.sortBy(), context.sortDirection());
 
         Page<MovieForUser<MovieCardViewDTO>> result =
                 movieService.getMovies(filter, context.title(), pageable, userId);
@@ -44,7 +46,7 @@ public class MovieFilterFacade {
                 safePage,
                 lastPage -> {
                     Pageable lastPageable = sortResolver.resolve(
-                            lastPage, safeSize, context.sortBy(), context.sortDir());
+                            lastPage, safeSize, context.sortBy(), context.sortDirection());
                     return movieService.getMovies(filter, context.title(), lastPageable, userId);
                 }
         );
@@ -56,7 +58,7 @@ public class MovieFilterFacade {
 
     public Optional<Result> filterByGenre(String genre,
                                           String sortBy,
-                                          String sortDir,
+                                          String sortDirection,
                                           int page,
                                           int size,
                                           Long userId) {
@@ -68,7 +70,7 @@ public class MovieFilterFacade {
         int safePage = Math.max(page, 0);
         int safeSize = size > 0 ? size : 15;
 
-        Pageable pageable = sortResolver.resolve(safePage, safeSize, sortBy, sortDir);
+        Pageable pageable = sortResolver.resolve(safePage, safeSize, sortBy, sortDirection);
 
         Page<MovieForUser<MovieCardViewDTO>> result =
                 movieService.getMoviesByGenre(genre, pageable, userId);
@@ -77,15 +79,18 @@ public class MovieFilterFacade {
                 result,
                 safePage,
                 lastPage -> {
-                    Pageable lastPageable = sortResolver.resolve(lastPage, safeSize, sortBy, sortDir);
+                    Pageable lastPageable = sortResolver.resolve(lastPage, safeSize, sortBy, sortDirection);
                     return movieService.getMoviesByGenre(genre, lastPageable, userId);
                 }
         );
 
-        MovieSearchContext context = MovieSearchContext.ofGenre(genre, sortBy, sortDir);
-        String filterQuery = queryBuilder.build(null, context);
+        MovieSearchContext movieSearchContext = MovieSearchContext.ofGenre(genre, sortBy, sortDirection);
+        String filterQuery = queryBuilder.build(null, movieSearchContext);
 
-        return Optional.of(new Result(result, filterQuery));
+        return Optional.of(Result.builder()
+                .page(result)
+                .filterQuery(filterQuery)
+                .build());
     }
 
     private Page<MovieForUser<MovieCardViewDTO>> clampToLastExistingPage(

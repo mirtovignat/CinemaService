@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
@@ -40,6 +41,18 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ClientAbortException.class)
     public void handleClientAbortException(ClientAbortException clientAbortException) {
+    }
+
+    @ExceptionHandler(InsufficientAuthenticationException.class)
+    public Object handleInsufficientAuthenticationException(
+            InsufficientAuthenticationException insufficientAuthenticationException,
+            HttpServletRequest httpServletRequest) {
+        if (RequestUtils.isAjaxRequest(httpServletRequest)) {
+            String errorMessage = messageUtils.getError(ErrorCode.NOT_AUTHORIZED);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error(ErrorCode.NOT_AUTHORIZED, errorMessage));
+        }
+        return "redirect:/login";
     }
 
     @ExceptionHandler(BusinessException.class)

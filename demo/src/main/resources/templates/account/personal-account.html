@@ -5,9 +5,7 @@
     <th:block th:replace="~{fragments/head :: head}"></th:block>
     <link rel="stylesheet" th:href="@{/css/pages/_personal-account.css}">
 </head>
-
 <body class="layout-fixed">
-
 <div class="header-wrapper">
     <th:block th:replace="~{fragments/header :: header}"></th:block>
 </div>
@@ -51,9 +49,7 @@
             </div>
 
             <div id="mainContent">
-
                 <section class="favorites-section">
-
                     <div class="section-label" style="justify-content: flex-start;">
                         <span style="font-size:1.1rem;color:#f1f5f9;display:inline-flex;align-items:baseline;gap:0.35rem;">
                             <th:block th:replace="~{fragments/icons :: icon-heart}"></th:block>
@@ -84,41 +80,46 @@
                         <div class="fav-card"
                              th:each="ratedMovie, iterStat : ${personalAccountResponse.topThreeRatedMovies}">
                             <div class="fav-poster">
-                                <a th:href="@{/movies/{id}(id=${ratedMovie.id}, from=${currentUri})}">
-
-                                    <img th:if="${ratedMovie.posterUrl != null and !ratedMovie.posterUrl.isEmpty()}"
-                                         th:src="${ratedMovie.posterUrl}"
-                                         th:alt="${ratedMovie.title}"
-                                         class="fav-poster-img"
-                                         data-poster-img
-                                         src=""
-                                         alt=""/>
-
-                                    <div class="movie-poster-placeholder"
-                                         data-poster-placeholder
-                                         th:classappend="${ratedMovie.posterUrl != null and !ratedMovie.posterUrl.isEmpty()} ? 'hidden' : ''">
-                                        <div class="poster-placeholder-icon">
-                                            <svg xmlns="http://www.w3.org/2000/svg"
-                                                 viewBox="0 0 24 24"
-                                                 fill="none"
-                                                 stroke="currentColor"
-                                                 stroke-width="1.6"
-                                                 stroke-linecap="round"
-                                                 stroke-linejoin="round"
-                                                 aria-hidden="true">
-                                                <rect x="3" y="3" width="18" height="18" rx="3"/>
-                                                <circle cx="9" cy="9" r="2"/>
-                                                <path d="m21 15-4.35-4.35a1.5 1.5 0 0 0-2.12 0L7 18"/>
-                                            </svg>
+                                <th:block
+                                        th:if="${ratedMovie.posterUrl != null and !ratedMovie.posterUrl.isEmpty() and ratedMovie.posterUrl != 'null'}">
+                                    <a th:href="@{/movies/{id}(id=${ratedMovie.id}, from=${currentUri})}">
+                                        <img th:src="${ratedMovie.posterUrl}"
+                                             th:alt="${ratedMovie.title}"
+                                             class="fav-poster-img"
+                                             data-poster-img
+                                             src=""
+                                             alt=""/>
+                                        <span class="fav-rank">
+                                            #<span th:text="${iterStat.index + 1}">1</span>
+                                        </span>
+                                    </a>
+                                </th:block>
+                                <th:block
+                                        th:if="${ratedMovie.posterUrl == null or ratedMovie.posterUrl.isEmpty() or ratedMovie.posterUrl == 'null'}">
+                                    <div data-poster-placeholder-wrapper>
+                                        <div class="movie-poster-placeholder" data-poster-placeholder>
+                                            <div class="poster-placeholder-icon">
+                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                     viewBox="0 0 24 24"
+                                                     fill="none"
+                                                     stroke="currentColor"
+                                                     stroke-width="1.6"
+                                                     stroke-linecap="round"
+                                                     stroke-linejoin="round"
+                                                     aria-hidden="true">
+                                                    <rect x="3" y="3" width="18" height="18" rx="3"/>
+                                                    <circle cx="9" cy="9" r="2"/>
+                                                    <path d="m21 15-4.35-4.35a1.5 1.5 0 0 0-2.12 0L7 18"/>
+                                                </svg>
+                                            </div>
+                                            <div class="poster-placeholder-text">Нет постера</div>
+                                            <div class="poster-placeholder-sub">Изображение недоступно</div>
                                         </div>
-                                        <div class="poster-placeholder-text">Нет постера</div>
-                                        <div class="poster-placeholder-sub">Изображение недоступно</div>
+                                        <span class="fav-rank">
+                                            #<span th:text="${iterStat.index + 1}">1</span>
+                                        </span>
                                     </div>
-
-                                    <span class="fav-rank">
-                                        #<span th:text="${iterStat.index + 1}">1</span>
-                                    </span>
-                                </a>
+                                </th:block>
                             </div>
                             <div class="fav-info">
                                 <div class="fav-title"

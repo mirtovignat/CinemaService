@@ -2,7 +2,6 @@ package com.example.demo.service.linked_collection;
 
 import com.example.demo.dto.catalog.FavouriteMovieViewDTO;
 import com.example.demo.exception.ErrorCode;
-import com.example.demo.mapper.entity.FavouritesMapper;
 import com.example.demo.model.entity.FavouriteMovie;
 import com.example.demo.repository.entity.FavouriteMovieRepository;
 import com.example.demo.repository.entity.MovieRepository;
@@ -16,15 +15,11 @@ public class FavouritesService
 
     public FavouritesService(FavouriteMovieRepository favouriteMovieRepository,
                              UserRepository userRepository,
-                             MovieRepository movieRepository,
-                             UserStatusResolver userStatusResolver,
-                             FavouritesMapper favouritesMapper) {
+                             MovieRepository movieRepository) {
         super(favouriteMovieRepository,
                 userRepository,
                 movieRepository,
-                userStatusResolver,
                 () -> FavouriteMovie.builder().build(),
-                favouritesMapper::toOwnerView,
                 ErrorCode.EMPTY_FAVOURITES);
     }
 

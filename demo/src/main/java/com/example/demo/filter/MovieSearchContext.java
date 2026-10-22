@@ -6,23 +6,23 @@ import lombok.Builder;
 public record MovieSearchContext(
         String title,
         String sortBy,
-        String sortDir,
+        String sortDirection,
         String genre
 ) {
 
-    public static MovieSearchContext of(String title, String sortBy, String sortDir) {
+    public static MovieSearchContext of(String title, String sortBy, String sortDirection) {
         return MovieSearchContext.builder()
                 .title(title)
                 .sortBy(sortBy)
-                .sortDir(sortDir)
+                .sortDirection(sortDirection)
                 .build();
     }
 
-    public static MovieSearchContext ofGenre(String genre, String sortBy, String sortDir) {
+    public static MovieSearchContext ofGenre(String genre, String sortBy, String sortDirection) {
         return MovieSearchContext.builder()
                 .genre(genre)
                 .sortBy(sortBy)
-                .sortDir(sortDir)
+                .sortDirection(sortDirection)
                 .build();
     }
 }

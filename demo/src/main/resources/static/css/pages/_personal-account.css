@@ -123,13 +123,76 @@
     object-fit: cover;
 }
 
+.fav-card .fav-poster > div[data-poster-placeholder-wrapper] {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    position: relative;
+}
+
 .fav-card .fav-poster .movie-poster-placeholder {
     width: 100%;
     height: 100%;
+    min-height: 100%;
+    aspect-ratio: 2 / 3;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 0.6rem;
+    text-align: center;
+    padding: 1rem;
+    box-sizing: border-box;
+    color: #94a3b8;
+    background:
+        radial-gradient(circle at 30% 20%, rgba(99, 102, 241, 0.18), transparent 55%),
+        radial-gradient(circle at 70% 80%, rgba(168, 85, 247, 0.16), transparent 55%),
+        linear-gradient(145deg, #1a2036 0%, #0d1322 100%);
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+    border-radius: 18px 18px 0 0;
+}
+
+.fav-card .fav-poster .movie-poster-placeholder .poster-placeholder-icon {
+    position: relative;
+    z-index: 1;
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    background: linear-gradient(145deg, rgba(99, 102, 241, 0.28), rgba(59, 130, 246, 0.1));
+    border: 1px solid rgba(129, 140, 248, 0.28);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 10px 24px rgba(0, 0, 0, 0.3);
+}
+
+.fav-card .fav-poster .movie-poster-placeholder .poster-placeholder-icon svg {
+    width: 28px;
+    height: 28px;
+    stroke: #a78bfa;
+    fill: none;
+}
+
+.fav-card .fav-poster .movie-poster-placeholder .poster-placeholder-text {
+    position: relative;
+    z-index: 1;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #c4b5fd;
+    opacity: 0.85;
+}
+
+.fav-card .fav-poster .movie-poster-placeholder .poster-placeholder-sub {
+    position: relative;
+    z-index: 1;
+    font-size: 0.7rem;
+    color: #64748b;
+    font-weight: 400;
 }
 
 .fav-card .fav-poster .fav-rank {

@@ -28,21 +28,14 @@ public class RatedQueryService {
     private final MovieService movieService;
     private final int ratingsToLimit;
 
-    public RatedQueryService(
-            RatedMovieRepository ratedRepository,
-            RatedMapper ratedMapper,
-            @Lazy MovieService movieService,
-            @Value("${app.rating.top-limit:4}") int ratingsToLimit
-    ) {
+    public RatedQueryService(RatedMovieRepository ratedRepository,
+                             RatedMapper ratedMapper,
+                             @Lazy MovieService movieService,
+                             @Value("${app.rating.top-limit:4}") int ratingsToLimit) {
         this.ratedRepository = ratedRepository;
         this.ratedMapper = ratedMapper;
         this.movieService = movieService;
         this.ratingsToLimit = ratingsToLimit;
-    }
-
-    public long countByUserId(Long userId) {
-        Long count = ratedRepository.countByUserId(userId);
-        return count == null ? 0L : count;
     }
 
     public RatedMovieFormDTO getPreFilledForm(Long movieId, Long userId) {

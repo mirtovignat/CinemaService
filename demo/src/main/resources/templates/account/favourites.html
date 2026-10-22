@@ -3,7 +3,7 @@
 <head>
     <title>Избранное — CinemaService</title>
     <th:block th:replace="~{fragments/head :: head}"></th:block>
-    <link rel="stylesheet" th:href="@{/css/pages/_favourites.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/_cart.css}">
 </head>
 <body class="layout-fixed">
 <th:block th:replace="~{fragments/header :: header}"></th:block>
@@ -14,12 +14,10 @@
       th:classappend="${response == null or response.items() == null or #lists.size(response.items()) <= 4} ? 'no-scroll' : ''">
 
     <div class="page-header-row">
-
         <a th:href="@{/back(fallback='/')}" class="back-btn-header">
             <th:block th:replace="~{fragments/icons :: icon-arrow-left}"></th:block>
             <span>Назад</span>
         </a>
-
         <div class="profile-right-header">
             <h1>
                 <th:block th:replace="~{fragments/icons :: icon-heart}"></th:block>
@@ -30,10 +28,8 @@
                 <strong th:text="${catalogCount}">0</strong>
             </div>
         </div>
-
         <div class="page-header-actions">
             <th:block th:replace="~{fragments/sort-toggle :: sortToggle}"></th:block>
-
             <button type="button"
                     class="clear-favourites-btn"
                     data-action="clear-favourites"
@@ -42,7 +38,6 @@
                 Очистить избранное
             </button>
         </div>
-
         <th:block th:replace="~{fragments/catalog-search :: catalogSearch}"></th:block>
     </div>
 
@@ -62,33 +57,42 @@
                  th:data-movie-price="${movie.price()}"
                  th:data-movie-title="${movie.title()}">
                 <div class="media-card-poster-link">
-                    <a th:href="@{/movies/{id}(id=${movie.id()})}">
-                        <img th:if="${movie.posterUrl() != null and !movie.posterUrl().isEmpty()}"
-                             th:src="${movie.posterUrl()}"
-                             alt="Постер"
-                             class="media-card-poster-img"
-                             data-poster-img
-                             src=""/>
-                        <div class="movie-poster-placeholder"
-                             data-poster-placeholder
-                             th:classappend="${movie.posterUrl() != null and !movie.posterUrl().isEmpty()} ? 'hidden' : ''">
-                            <div class="poster-placeholder-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                     fill="none" stroke="currentColor" stroke-width="1.6"
-                                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <rect x="3" y="3" width="18" height="18" rx="3"/>
-                                    <circle cx="9" cy="9" r="2"/>
-                                    <path d="m21 15-4.35-4.35a1.5 1.5 0 0 0-2.12 0L7 18"/>
-                                </svg>
+                    <th:block
+                            th:if="${movie.posterUrl() != null and !movie.posterUrl().isEmpty() and movie.posterUrl() != 'null'}">
+                        <a th:href="@{/movies/{id}(id=${movie.id()})}">
+                            <img th:src="${movie.posterUrl()}"
+                                 alt="Постер"
+                                 class="media-card-poster-img"
+                                 data-poster-img
+                                 src=""/>
+                            <th:block th:replace="~{fragments/rating-badge :: ratingBadge(
+                                movieId=${movie.id()},
+                                rating=${movie.rating()}
+                            )}"></th:block>
+                        </a>
+                    </th:block>
+                    <th:block
+                            th:if="${movie.posterUrl() == null or movie.posterUrl().isEmpty() or movie.posterUrl() == 'null'}">
+                        <div data-poster-placeholder-wrapper>
+                            <div class="movie-poster-placeholder" data-poster-placeholder>
+                                <div class="poster-placeholder-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" stroke-width="1.6"
+                                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <rect x="3" y="3" width="18" height="18" rx="3"/>
+                                        <circle cx="9" cy="9" r="2"/>
+                                        <path d="m21 15-4.35-4.35a1.5 1.5 0 0 0-2.12 0L7 18"/>
+                                    </svg>
+                                </div>
+                                <div class="poster-placeholder-text">Нет постера</div>
+                                <div class="poster-placeholder-sub">Изображение недоступно</div>
                             </div>
-                            <div class="poster-placeholder-text">Нет постера</div>
-                            <div class="poster-placeholder-sub">Изображение недоступно</div>
+                            <th:block th:replace="~{fragments/rating-badge :: ratingBadge(
+                                movieId=${movie.id()},
+                                rating=${movie.rating()}
+                            )}"></th:block>
                         </div>
-                        <th:block th:replace="~{fragments/rating-badge :: ratingBadge(
-                            movieId=${movie.id()},
-                            rating=${movie.rating()}
-                        )}"></th:block>
-                    </a>
+                    </th:block>
                 </div>
                 <div class="media-card-content">
                     <h3 class="media-card-title">
@@ -166,16 +170,17 @@
             </th:block>
         </th:block>
     </div>
-
 </main>
 
 <template id="favouriteCardTemplate">
     <div class="media-card favourites-card"
          data-attr="data-movie-id:id;data-movie-price:price;data-movie-title:title">
         <div class="media-card-poster-link">
-            <a data-attr="href:/movies/{id}">
-                <img class="media-card-poster-img" data-poster-img data-field="posterUrl" src="" alt="Постер"/>
-                <div class="movie-poster-placeholder hidden" data-poster-placeholder>
+            <div data-poster-wrapper style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column;">
+                <a data-attr="href:/movies/{id}" style="display: block; width: 100%; height: 100%;">
+                    <img class="media-card-poster-img" data-poster-img data-field="posterUrl" src="" alt="Постер" style="width: 100%; height: 100%; object-fit: cover; display: block;"/>
+                </a>
+                <div class="movie-poster-placeholder hidden" data-poster-placeholder style="position: absolute; inset: 0; z-index: 2;">
                     <div class="poster-placeholder-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
                              fill="none" stroke="currentColor" stroke-width="1.6"
@@ -188,7 +193,7 @@
                     <div class="poster-placeholder-text">Нет постера</div>
                     <div class="poster-placeholder-sub">Изображение недоступно</div>
                 </div>
-            </a>
+            </div>
         </div>
         <div class="media-card-content">
             <h3 class="media-card-title">

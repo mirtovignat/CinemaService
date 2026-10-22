@@ -14,11 +14,19 @@
         }
     });
 
+    function refreshCounts() {
+        if (typeof UI !== 'undefined' && typeof UI.refreshBadges === 'function') {
+            UI.refreshBadges();
+        }
+    }
+
+    window.refreshCounts = refreshCounts;
+
     window.addEventListener('pageshow', function (event) {
         if (!event.persisted) return;
         if (typeof isAuthenticated === 'function' && !isAuthenticated()) return;
 
-        if (typeof refreshCounts === 'function') refreshCounts();
+        refreshCounts();
 
         if (typeof window.reloadRecommendations === 'function') {
             window.reloadRecommendations();
@@ -38,7 +46,7 @@
     document.addEventListener('visibilitychange', function () {
         if (document.visibilityState !== 'visible') return;
         if (typeof isAuthenticated === 'function' && isAuthenticated()) {
-            if (typeof refreshCounts === 'function') refreshCounts();
+            refreshCounts();
         }
     });
 })();

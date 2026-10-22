@@ -24,7 +24,17 @@
                                 : (sessionUser != null ? sessionUser.username : 'Гость')}"></div>
 
                 <div class="sidebar-profile-phone" id="sidebarPhone"
-                     th:attr="data-raw-phone=${userSidebar != null and userSidebar.phone != null ? userSidebar.phone : ''}"></div>
+                     th:attr="data-raw-phone=${userSidebar != null and userSidebar.phone != null ? userSidebar.phone : ''}">
+                    <th:block th:if="${userSidebar != null and userSidebar.phone != null}">
+                        <span th:with="ph=${userSidebar.phone}, d=${#strings.replace(userSidebar.phone, '[^0-9]', '')}"
+                              th:text="${#strings.length(d) >= 11
+                                       ? '+' + #strings.substring(d, 0, 1) + ' (' + #strings.substring(d, 1, 4) + ') ***-**-' + #strings.substring(d, #strings.length(d) - 2)
+                                       : ph}"></span>
+                    </th:block>
+                    <th:block th:if="${userSidebar == null or userSidebar.phone == null}">
+                        <span class="phone-empty">Телефон не указан</span>
+                    </th:block>
+                </div>
 
                 <div class="sidebar-profile-email" id="sidebarEmail"
                      th:text="${userSidebar != null and userSidebar.email != null ? userSidebar.email : ''}"></div>

@@ -101,7 +101,16 @@
         return item.addedAt || item.watchedAt || item.added_at || item.watched_at || '';
     }
 
+    function normalizePoster(value) {
+        if (value === null || value === undefined) return '';
+        var s = String(value).trim();
+        if (s === 'null' || s === 'undefined') return '';
+        return s;
+    }
+
     function applyDataAttrs(root, item) {
+        var itemPosterUrl = normalizePoster(item.posterUrl != null ? item.posterUrl : item.poster_url);
+
         collectTargets(root, '[data-attr]').forEach(function (el) {
             var spec = el.getAttribute('data-attr') || '';
             spec.split(';').forEach(function (pair) {
@@ -110,6 +119,11 @@
                 var attr = pair.slice(0, idx).trim();
                 var key  = pair.slice(idx + 1).trim();
                 if (!attr || !key) return;
+
+                if (attr === 'data-poster-url') {
+                    el.setAttribute(attr, itemPosterUrl);
+                    return;
+                }
 
                 var value;
                 if (key.indexOf('{') !== -1) {
@@ -192,24 +206,51 @@
             root.setAttribute('data-movie-id', String(item.id));
         }
 
+        if (!root.hasAttribute('data-poster-url')) {
+            root.setAttribute('data-poster-url', itemPosterUrl);
+        }
+
+        var posterContainer = root.querySelector('.history-item-poster');
+        if (posterContainer && !posterContainer.hasAttribute('data-poster-url')) {
+            posterContainer.setAttribute('data-poster-url', itemPosterUrl);
+        }
+
         root.querySelectorAll('img[data-poster-img]').forEach(function (img) {
             var container = img.closest(
                 '.media-card-poster-link, .movie-poster-link, .poster-wrapper, ' +
                 '.history-item-poster, .fav-poster, .rec-poster'
             ) || img.parentNode;
-            var placeholder = container
-                ? container.querySelector('[data-poster-placeholder]')
-                : null;
 
-            var posterUrl = img.getAttribute('src') || item.posterUrl || item.poster_url || '';
+            var placeholder = container ? container.querySelector('[data-poster-placeholder]') : null;
+            var wrapper = container ? container.querySelector('[data-poster-placeholder-wrapper]') : null;
+            var link = img.closest('a');
+
+            var posterUrl = img.getAttribute('src') || itemPosterUrl;
             var empty = !posterUrl || posterUrl === 'null';
+
             if (!empty) {
                 img.setAttribute('src', String(posterUrl));
                 img.style.display = '';
                 if (placeholder) placeholder.classList.add('hidden');
+                if (wrapper) wrapper.style.display = 'none';
+                if (link) {
+                    link.style.display = '';
+                    link.style.pointerEvents = '';
+                }
             } else {
                 img.style.display = 'none';
-                if (placeholder) placeholder.classList.remove('hidden');
+                if (placeholder) {
+                    placeholder.classList.remove('hidden');
+                    placeholder.style.display = '';
+                }
+                if (wrapper) {
+                    wrapper.style.display = 'block';
+                }
+                if (link) {
+                    link.style.display = '';
+                    link.style.opacity = '0';
+                    link.style.pointerEvents = 'none';
+                }
             }
         });
     }
@@ -265,7 +306,7 @@
         var endpoint   = container.getAttribute('data-cursor-endpoint');
         var templateId = container.getAttribute('data-cursor-template');
         var sortAttr   = container.getAttribute('data-cursor-sort') || 'DESC';
-        var sort       = sortAttr.toUpperCase() === 'ASC' ? 'ASC' : 'DESC'; // Приводим к капсу
+        var sort       = sortAttr.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
         var nextCursor = container.getAttribute('data-cursor-next') || null;
         var hasMore    = container.getAttribute('data-cursor-has-more') === 'true';
 
@@ -374,9 +415,19 @@
 
             return fetch(state.endpoint + '?' + params.toString(), {
                 headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                redirect: 'manual',
+                credentials: 'same-origin',
                 cache: 'no-store'
             })
             .then(function (r) {
+                if (r.type === 'opaqueredirect' || r.status === 0) {
+                    window.location.href = '/login';
+                    return Promise.reject(new Error('unauth'));
+                }
+                if (r.redirected) {
+                    window.location.href = r.url;
+                    return Promise.reject(new Error('redirect'));
+                }
                 if (!r.ok) throw new Error('HTTP ' + r.status);
                 return r.json();
             })

@@ -27,15 +27,14 @@ public class MovieRecommendationService {
     private final RatedMovieRepository ratedMovieRepository;
     private final int pageSize;
 
-    public MovieRecommendationService(
-            MovieRepository movieRepository,
-            MovieMapper movieMapper,
-            CartItemRepository cartItemRepository,
-            FavouriteMovieRepository favouriteMovieRepository,
-            PurchasedMovieRepository purchasedMovieRepository,
-            RatedMovieRepository ratedMovieRepository,
-            @Value("${app.recommendations.cursorPageResponse-size:8}") int pageSize
-    ) {
+    public MovieRecommendationService(MovieRepository movieRepository,
+                                      MovieMapper movieMapper,
+                                      CartItemRepository cartItemRepository,
+                                      FavouriteMovieRepository favouriteMovieRepository,
+                                      PurchasedMovieRepository purchasedMovieRepository,
+                                      RatedMovieRepository ratedMovieRepository,
+                                      @Value("${app.recommendations.cursorPageResponse-size:8}")
+                                      int pageSize) {
         this.movieRepository = movieRepository;
         this.movieMapper = movieMapper;
         this.cartItemRepository = cartItemRepository;

@@ -14,7 +14,8 @@ public class ReviewSortResolver {
 
     private final int sortCookieMaxAge;
 
-    public ReviewSortResolver(@Value("${app.reviews.sort-cookie-max-age:31536000}") int sortCookieMaxAge) {
+    public ReviewSortResolver(@Value("${app.reviews.sortDirection-cookie-max-age:31536000}")
+                              int sortCookieMaxAge) {
         this.sortCookieMaxAge = sortCookieMaxAge;
     }
 
@@ -23,15 +24,15 @@ public class ReviewSortResolver {
                                            HttpServletResponse httpServletResponse) {
         SortDirection sortDirection = resolve(reviewsQueryDTO, cookieValue);
 
-        if (isExplicit(reviewsQueryDTO.sort())) {
+        if (isExplicit(reviewsQueryDTO.sortDirection())) {
             writeCookie(httpServletResponse, sortDirection);
         }
         return sortDirection;
     }
 
     public SortDirection resolve(ReviewsQueryDTO reviewsQueryDTO, String cookieValue) {
-        if (reviewsQueryDTO.sort() != null) {
-            return reviewsQueryDTO.sort();
+        if (reviewsQueryDTO.sortDirection() != null) {
+            return reviewsQueryDTO.sortDirection();
         }
         SortDirection fromCookie = parseCookie(cookieValue);
         if (fromCookie != null) {

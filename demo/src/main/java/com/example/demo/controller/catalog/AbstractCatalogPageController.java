@@ -4,12 +4,12 @@ import com.example.demo.cursor.CursorPageRequest;
 import com.example.demo.cursor.context.UserCursorContext;
 import com.example.demo.dto.response.CursorPageResponse;
 import com.example.demo.dto.response.UserCursorPageResponse;
-import com.example.demo.dto.user.SessionUser;
 import com.example.demo.dto.user.UserSidebarViewDTO;
 import com.example.demo.mapper.entity.UserMapper;
 import com.example.demo.service.cursor.CursorPageService;
 import com.example.demo.service.movie.FilterMetaService;
 import com.example.demo.service.user.UserQueryService;
+import com.example.demo.web.resolver.CurrentUserId;
 import lombok.AllArgsConstructor;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,9 +27,8 @@ public abstract class AbstractCatalogPageController<DTO> {
 
     @GetMapping
     public String getPage(@ModelAttribute CursorPageRequest cursorPageRequest,
-                          SessionUser sessionUser,
+                          @CurrentUserId Long userId,
                           Model model) {
-        Long userId = sessionUser.id();
         model.addAttribute("response",
                 cursorService.page(
                         cursorPageRequest.cursor(),
@@ -38,22 +37,16 @@ public abstract class AbstractCatalogPageController<DTO> {
                                 .userId(userId)
                                 .build()));
         model.addAttribute("userSidebarViewDTO",
-                userMapper.toSidebarView(
-                        userQueryService.getUser(userId)
-                )
-        );
+                userMapper.toSidebarView(userQueryService.getUser(userId)));
         model.addAttribute("genres",
-                filterMetaService.getAllGenres()
-        );
+                filterMetaService.getAllGenres());
         return viewName;
     }
 
     @GetMapping("/more")
     @ResponseBody
-    public UserCursorPageResponse<DTO> more(@ModelAttribute
-                                            CursorPageRequest cursorPageRequest,
-                                            SessionUser sessionUser) {
-        Long userId = sessionUser.id();
+    public UserCursorPageResponse<DTO> more(@ModelAttribute CursorPageRequest cursorPageRequest,
+                                            @CurrentUserId Long userId) {
         CursorPageResponse<DTO> cursorPageResponse = cursorService.page(
                 cursorPageRequest.cursor(),
                 cursorPageRequest.direction(),

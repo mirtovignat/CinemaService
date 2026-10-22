@@ -52,7 +52,8 @@ main.catalog-wrapper::-webkit-scrollbar-thumb:hover {
     min-height: 0;
 }
 
-.cart-container {
+.cart-container,
+.favourites-container {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 2rem 1.5rem;
@@ -69,19 +70,23 @@ main.catalog-wrapper::-webkit-scrollbar-thumb:hover {
     opacity: 1;
 }
 
-.cart-card .media-card-poster-link {
+.cart-card .media-card-poster-link,
+.favourites-card .media-card-poster-link {
     position: relative;
 }
 
-.cart-card .poster-overlay {
+.cart-card .poster-overlay,
+.favourites-card .poster-overlay {
     pointer-events: none;
 }
 
-.cart-card .poster-overlay .watch-btn-neon {
+.cart-card .poster-overlay .watch-btn-neon,
+.favourites-card .poster-overlay .watch-btn-neon {
     pointer-events: auto;
 }
 
-.cart-card .media-card-content {
+.cart-card .media-card-content,
+.favourites-card .media-card-content {
     box-sizing: border-box;
     min-height: 147px;
     height: 147px;
@@ -136,7 +141,8 @@ main.catalog-wrapper::-webkit-scrollbar-thumb:hover {
     backdrop-filter: blur(4px);
 }
 
-.clear-cart-btn {
+.clear-cart-btn,
+.clear-favourites-btn {
     background: transparent;
     border: 1px solid var(--glow-danger);
     color: var(--glow-danger);
@@ -153,19 +159,22 @@ main.catalog-wrapper::-webkit-scrollbar-thumb:hover {
     font-family: inherit;
 }
 
-.clear-cart-btn:hover {
+.clear-cart-btn:hover,
+.clear-favourites-btn:hover {
     background: var(--glow-danger);
     color: white;
     box-shadow: 0 0 12px #f43f5e;
 }
 
-.clear-cart-btn svg {
+.clear-cart-btn svg,
+.clear-favourites-btn svg {
     width: 15px;
     height: 15px;
 }
 
 @media (max-width: 1100px) {
-    .cart-container {
+    .cart-container,
+    .favourites-container {
         grid-template-columns: repeat(3, 1fr);
     }
 }
@@ -177,7 +186,8 @@ main.catalog-wrapper::-webkit-scrollbar-thumb:hover {
 }
 
 @media (max-width: 780px) {
-    .cart-container {
+    .cart-container,
+    .favourites-container {
         grid-template-columns: repeat(2, 1fr);
         gap: 1.5rem;
     }
@@ -192,7 +202,8 @@ main.catalog-wrapper::-webkit-scrollbar-thumb:hover {
         padding: 0 0.75rem 0 0.75rem;
     }
 
-    .cart-container {
+    .cart-container,
+    .favourites-container {
         grid-template-columns: 1fr;
         max-width: 320px;
         margin: 0 auto;
@@ -204,7 +215,8 @@ main.catalog-wrapper::-webkit-scrollbar-thumb:hover {
     }
 
     .clear-cart-btn,
-    .checkout-btn {
+    .checkout-btn,
+    .clear-favourites-btn {
         width: 100%;
         justify-content: center;
     }

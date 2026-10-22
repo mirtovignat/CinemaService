@@ -20,8 +20,8 @@ public class MovieSortResolver {
             "releaseDate", "releaseDate"
     );
 
-    public Pageable resolve(int page, int size, String sortBy, String sortDir) {
-        Sort.Direction direction = parseDirection(sortDir);
+    public Pageable resolve(int page, int size, String sortBy, String sortDirection) {
+        Sort.Direction direction = parseDirection(sortDirection);
 
         if (sortBy == null || sortBy.isBlank()) {
             return PageRequest.of(page, size, DEFAULT_SORT);
@@ -35,8 +35,8 @@ public class MovieSortResolver {
         return PageRequest.of(page, size, Sort.by(direction, field, "id"));
     }
 
-    private Sort.Direction parseDirection(String sortDir) {
-        return "asc".equalsIgnoreCase(sortDir)
+    private Sort.Direction parseDirection(String sortDirection) {
+        return "asc".equalsIgnoreCase(sortDirection)
                 ? Sort.Direction.ASC
                 : Sort.Direction.DESC;
     }

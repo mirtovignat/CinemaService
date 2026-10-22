@@ -8,6 +8,7 @@ import com.example.demo.model.entity.User;
 import com.example.demo.service.user.UserCommandService;
 import com.example.demo.service.user.UserQueryService;
 import com.example.demo.util.MessageUtils;
+import com.example.demo.web.resolver.CurrentUserId;
 import com.example.demo.web.security.SessionAuthenticator;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -33,8 +34,7 @@ public class WalletController {
     private final SessionAuthenticator sessionAuthenticator;
 
     @GetMapping("/top-up")
-    public String getTopUpForm(SessionUser sessionUser, Model model) {
-        Long userId = sessionUser.id();
+    public String getTopUpForm(@CurrentUserId Long userId, Model model) {
         if (!model.containsAttribute("topUpFormDTO")) {
             model.addAttribute("topUpFormDTO",
                     TopUpFormDTO.builder()
@@ -46,8 +46,7 @@ public class WalletController {
 
     @GetMapping("/balance")
     @ResponseBody
-    public ResponseEntity<WalletForOwnerViewDTO> balance(SessionUser sessionUser) {
-        Long userId = sessionUser.id();
+    public ResponseEntity<WalletForOwnerViewDTO> balance(@CurrentUserId Long userId) {
         return ResponseEntity.ok(userQueryService.getWalletForOwner(userId));
     }
 
@@ -59,13 +58,14 @@ public class WalletController {
                         HttpServletResponse httpServletResponse,
                         RedirectAttributes redirectAttributes,
                         Model model) {
+        Long userId = sessionUser.id();
         if (bindingResult.hasErrors()) {
-            model.addAttribute("wallet", userQueryService.getWalletForOwner(sessionUser.id()));
+            model.addAttribute("wallet", userQueryService.getWalletForOwner(userId));
             return "account/top-up";
         }
-        User user = userQueryService.getUser(sessionUser.id());
+        User user = userQueryService.getUser(userId);
         userCommandService.saveTopUp(topUpFormDTO.amount(), user);
-        BigDecimal newBalance = userQueryService.getBalance(sessionUser.id());
+        BigDecimal newBalance = userQueryService.getBalance(userId);
         sessionAuthenticator.updateSessionUser(
                 sessionUser.withBalance(newBalance),
                 httpServletRequest,

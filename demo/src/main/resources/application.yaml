@@ -70,8 +70,8 @@ app:
     top-limit: 3
   reviews:
     sort-cookie-max-age: 31536000
-    page-size: 10
+    cursorPageResponse-size: 10
   recommendations:
-    page-size: 10
+    cursorPageResponse-size: 8
   catalog:
-    page-size: 20
+    cursorPageResponse-size: 20

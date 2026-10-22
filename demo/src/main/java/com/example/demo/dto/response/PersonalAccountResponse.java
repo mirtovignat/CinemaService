@@ -12,10 +12,6 @@ import java.util.List;
 public record PersonalAccountResponse(
         UserForOwnerViewDTO userForOwnerViewDTO,
         UserSidebarViewDTO userSidebarViewDTO,
-        long purchasesCount,
-        long ratingsCount,
-        long favouritesCount,
-        long cartCount,
         List<RatedMovieViewDTO> topThreeRatedMovies,
         List<MovieCardViewDTO> recommendedMovies,
         List<String> genres

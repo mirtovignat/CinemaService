@@ -158,9 +158,19 @@
         fetch('/wallet/balance?_=' + Date.now(), {
             method: 'GET',
             headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+            redirect: 'manual',
+            credentials: 'same-origin',
             cache: 'no-store'
         })
         .then(function (r) {
+            if (r.type === 'opaqueredirect' || r.status === 0) {
+                window.location.href = '/login';
+                return null;
+            }
+            if (r.redirected) {
+                window.location.href = r.url;
+                return null;
+            }
             if (r.status !== 200) return null;
             return r.json();
         })
