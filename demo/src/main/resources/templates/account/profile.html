@@ -141,16 +141,10 @@
                                     <span id="panelPhone"
                                           class="editable-text"
                                           th:attr="data-raw-phone=${personalAccountResponse.userForOwnerViewDTO.phone} ?: ''">
-                                        <th:block th:if="${personalAccountResponse.userForOwnerViewDTO.phone != null}">
-                                            <span th:with="ph=${personalAccountResponse.userForOwnerViewDTO.phone}, d=${#strings.replace(personalAccountResponse.userForOwnerViewDTO.phone, '[^0-9]', '')}"
-                                                  th:text="${#strings.length(d) >= 11
-                                                           ? '+' + #strings.substring(d, 0, 1) + ' (' + #strings.substring(d, 1, 4) + ') ***-**-' + #strings.substring(d, #strings.length(d) - 2)
-                                                           : ph}"></span>
-                                        </th:block>
+                                        <span class="js-phone-text"></span>
                                     </span>
                                     <span class="detail-value-empty"
                                           id="panelPhoneEmpty"
-                                          th:style="${#strings.isEmpty(personalAccountResponse.userForOwnerViewDTO.phone)} ? 'display:inline-flex' : 'display:none'"
                                           data-edit-group="phoneGroup"
                                           data-edit-field="PHONE">
                                         <th:block th:replace="~{fragments/icons :: icon-edit}"></th:block>
@@ -162,7 +156,6 @@
                                         id="phoneEditBtn"
                                         type="button"
                                         aria-label="Редактировать телефон"
-                                        th:style="${!#strings.isEmpty(personalAccountResponse.userForOwnerViewDTO.phone)} ? 'display:inline-flex' : 'display:none'"
                                         data-edit-group="phoneGroup"
                                         data-edit-field="PHONE">
                                     <th:block th:replace="~{fragments/icons :: icon-edit}"></th:block>

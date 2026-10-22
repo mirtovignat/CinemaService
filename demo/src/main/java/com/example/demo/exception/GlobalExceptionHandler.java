@@ -32,9 +32,9 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     private static final Map<String, String> FORM_VIEW_BY_REQUEST_URI = Map.of(
-            "/register", "register",
-            "/login", "login",
-            "/settings/change/pwd", "change-password"
+            "/register", "auth/register",
+            "/login", "auth/login",
+            "/settings/change/pwd", "account/change-password"
     );
 
     private final MessageUtils messageUtils;
@@ -217,13 +217,13 @@ public class GlobalExceptionHandler {
     }
 
     private void restoreFormModel(String formViewName, Model model) {
-        if ("register".equals(formViewName) && !model.containsAttribute("registerForm")) {
+        if ("auth/register".equals(formViewName) && !model.containsAttribute("registerForm")) {
             model.addAttribute("registerForm", RegisterFormDTO.getForm());
         }
-        if ("login".equals(formViewName) && !model.containsAttribute("loginForm")) {
+        if ("auth/login".equals(formViewName) && !model.containsAttribute("loginForm")) {
             model.addAttribute("loginForm", LoginFormDTO.builder().build());
         }
-        if ("change-password".equals(formViewName)
+        if ("account/change-password".equals(formViewName)
                 && !model.containsAttribute("passwordChangingDTO")) {
             model.addAttribute("passwordChangingDTO", PasswordChangingDTO.builder().build());
         }

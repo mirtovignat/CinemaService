@@ -2,6 +2,7 @@
     'use strict';
 
     var MAX_DIGITS = 13;
+    var MIN_DIGITS_FOR_MASK = 5;
 
     function digitsOnly(value) {
         return String(value == null ? '' : value).replace(/\D/g, '');
@@ -19,29 +20,62 @@
         };
     }
 
+    function formatFromParts(country, rest) {
+        if (country === '') return '';
+
+        if (rest.length > 10) rest = rest.substring(0, 10);
+
+        var out = '+' + country;
+        if (rest.length === 0) return out;
+
+        out += ' (' + rest.substring(0, 3);
+        if (rest.length >= 3) out += ')';
+        if (rest.length > 3) out += ' ' + rest.substring(3, 6);
+        if (rest.length > 6) out += '-' + rest.substring(6, 8);
+        if (rest.length > 8) out += '-' + rest.substring(8, 10);
+
+        return out;
+    }
+
     function formatPhoneRaw(raw) {
         var digits = digitsOnly(raw);
         if (digits.length === 0) return '';
         if (digits.length > MAX_DIGITS) digits = digits.substring(0, MAX_DIGITS);
 
         var parts = splitCountry(digits);
-        var formatted = '+' + parts.country;
+        return formatFromParts(parts.country, parts.rest);
+    }
+
+    function maskPhone(raw) {
+        if (raw == null) return '';
+        var str = String(raw).trim();
+        if (!str) return '';
+
+        var digits = digitsOnly(str);
+        if (digits.length < MIN_DIGITS_FOR_MASK) return str;
+        if (digits.length > MAX_DIGITS) digits = digits.substring(0, MAX_DIGITS);
+
+        var parts = splitCountry(digits);
         var rest = parts.rest;
 
-        if (rest.length > 0) {
-            formatted += ' (' + rest.substring(0, 3);
-            if (rest.length >= 3) formatted += ')';
-            if (rest.length > 3) formatted += ' ' + rest.substring(3, 6);
-            if (rest.length > 6) formatted += '-' + rest.substring(6, 8);
-            if (rest.length > 8) formatted += '-' + rest.substring(8, 10);
+        var head3 = rest.substring(0, 3);
+        var tail2 = rest.length >= 2 ? rest.substring(rest.length - 2) : rest;
+
+        var result = '+' + parts.country;
+        if (head3) {
+            result += ' (' + head3;
+            if (rest.length >= 3) result += ')';
         }
-        return formatted;
+        result += ' ***-**-' + tail2;
+
+        return result.replace(/\s+/g, ' ').trim();
     }
 
     function countDigitsBefore(text, pos) {
         var count = 0;
         for (var i = 0; i < pos && i < text.length; i++) {
-            if (text.charCodeAt(i) >= 48 && text.charCodeAt(i) <= 57) count++;
+            var code = text.charCodeAt(i);
+            if (code >= 48 && code <= 57) count++;
         }
         return count;
     }
@@ -59,6 +93,16 @@
         return text.length;
     }
 
+    function isDeletion(inputType) {
+        if (!inputType) return false;
+        return inputType.indexOf('delete') === 0;
+    }
+
+    function isCaretAtEnd(input) {
+        return input.selectionStart === input.value.length &&
+               input.selectionEnd === input.value.length;
+    }
+
     function initPhoneField(input) {
         if (!input) return;
         if (input.dataset.phoneMaskInited === '1') return;
@@ -68,48 +112,67 @@
 
         input.addEventListener('beforeinput', function (e) {
             if (!e.inputType) return;
-            if (e.inputType === 'deleteContentBackward' ||
-                e.inputType === 'deleteContentForward' ||
-                e.inputType === 'deleteByCut') {
-                e.preventDefault();
 
-                var start = this.selectionStart;
-                var end = this.selectionEnd;
-                var val = this.value;
-                var newPos = start;
-
-                if (start === end) {
-                    if (e.inputType === 'deleteContentBackward') {
-                        if (start === 0) return;
-                        val = val.slice(0, start - 1) + val.slice(start);
-                        newPos = start - 1;
-                    } else {
-                        if (start >= val.length) return;
-                        val = val.slice(0, start) + val.slice(start + 1);
-                    }
-                } else {
-                    val = val.slice(0, start) + val.slice(end);
+            if (e.inputType === 'deleteContentBackward') {
+                if (this.value === '') {
+                    e.preventDefault();
+                    return;
                 }
 
-                this.value = val;
-                this.setSelectionRange(newPos, newPos);
+                if (!isCaretAtEnd(this)) {
+                    return;
+                }
 
-                skipFormat = true;
-                this.dispatchEvent(new Event('input', { bubbles: true }));
-                skipFormat = false;
+                var digits = digitsOnly(this.value);
+                var countryLen = digits.length > 10 ? digits.length - 10 : digits.length;
+
+                if (countryLen > 1) {
+                    e.preventDefault();
+
+                    var nextDigits = digits.substring(0, countryLen - 1) + digits.substring(countryLen);
+                    var formatted = formatPhoneRaw(nextDigits);
+                    this.value = formatted;
+
+                    try { this.setSelectionRange(formatted.length, formatted.length); } catch (err) {}
+
+                    skipFormat = true;
+                    this.dispatchEvent(new Event('input', { bubbles: true }));
+                    skipFormat = false;
+                    return;
+                }
+
+                return;
+            }
+
+            if (e.inputType === 'deleteContentForward' ||
+                e.inputType === 'deleteByCut') {
+                return;
+            }
+
+            if (e.inputType === 'insertText' && e.data) {
+                if (!/^[0-9]+$/.test(e.data)) {
+                    e.preventDefault();
+                    return;
+                }
+                var currentDigits = digitsOnly(this.value);
+                if (currentDigits.length + e.data.length > MAX_DIGITS) {
+                    e.preventDefault();
+                }
             }
         });
 
         input.addEventListener('keydown', function (e) {
             if (e.ctrlKey || e.metaKey || e.altKey) return;
-            if (e.key.length === 1 && !/[0-9]/.test(e.key)) {
+            if (e.key.length !== 1) return;
+            if (!/[0-9]/.test(e.key)) {
                 e.preventDefault();
             }
         });
 
         input.addEventListener('input', function (e) {
             if (skipFormat) return;
-            if (e.inputType && e.inputType.indexOf('delete') === 0) {
+
+            if (isDeletion(e.inputType)) {
                 return;
             }
 
@@ -119,10 +182,9 @@
 
             if (this.value !== formatted) {
                 this.value = formatted;
+                var newPos = positionFromDigitCount(this.value, digitsBefore);
+                try { this.setSelectionRange(newPos, newPos); } catch (err) {}
             }
-
-            var newPos = positionFromDigitCount(this.value, digitsBefore);
-            this.setSelectionRange(newPos, newPos);
         });
 
         input.addEventListener('paste', function (event) {
@@ -143,7 +205,7 @@
             this.value = formatPhoneRaw(newVal);
 
             var newPos = positionFromDigitCount(this.value, digitsBefore);
-            this.setSelectionRange(newPos, newPos);
+            try { this.setSelectionRange(newPos, newPos); } catch (err) {}
         });
 
         if (input.value) {
@@ -159,11 +221,13 @@
 
     window.PhoneMask = {
         format: formatPhoneRaw,
+        mask: maskPhone,
         init: initPhoneField,
         autoInit: autoInitPhoneMasks
     };
 
     window.formatPhoneRaw = formatPhoneRaw;
+    window.maskPhone = maskPhone;
     window.initPhoneField = initPhoneField;
     window.autoInitPhoneMasks = autoInitPhoneMasks;
 

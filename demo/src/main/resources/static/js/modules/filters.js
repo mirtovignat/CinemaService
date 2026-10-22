@@ -17,104 +17,148 @@
         'X-Requested-With': 'XMLHttpRequest'
     };
 
-    function formatPriceValue(v) {
-        var n = Number(v);
-        if (isNaN(n)) return '';
-        return n.toFixed(2);
+    function formatPriceValue(value) {
+        var numberValue = Number(value);
+        if (isNaN(numberValue)) return '';
+        return numberValue.toFixed(2);
     }
 
-    function splitDuration(totalSeconds) {
-        totalSeconds = Math.max(0, Math.floor(Number(totalSeconds) || 0));
+    function splitDuration(totalSecondsValue) {
+        var safeTotalSeconds = Math.max(0, Math.floor(Number(totalSecondsValue) || 0));
         return {
-            h: Math.floor(totalSeconds / 3600),
-            m: Math.floor((totalSeconds % 3600) / 60),
-            s: totalSeconds % 60
+            h: Math.floor(safeTotalSeconds / 3600),
+            m: Math.floor((safeTotalSeconds % 3600) / 60),
+            s: safeTotalSeconds % 60
         };
     }
 
     function applyPriceLimitsToUi() {
-        var priceFrom = document.getElementById('priceFrom');
-        var priceTo = document.getElementById('priceTo');
+        var priceFromInput = document.getElementById('priceFrom');
+        var priceToInput = document.getElementById('priceTo');
 
-        if (priceFrom) {
-            priceFrom.setAttribute('placeholder', 'От ' + formatPriceValue(FILTER_LIMITS.priceMin) + ' ₽');
+        if (priceFromInput) {
+            priceFromInput.setAttribute('placeholder', 'От ' + formatPriceValue(FILTER_LIMITS.priceMin) + ' ₽');
         }
-        if (priceTo) {
-            priceTo.setAttribute('placeholder', 'До ' + formatPriceValue(FILTER_LIMITS.priceMax) + ' ₽');
+        if (priceToInput) {
+            priceToInput.setAttribute('placeholder', 'До ' + formatPriceValue(FILTER_LIMITS.priceMax) + ' ₽');
         }
 
         document.querySelectorAll(
             '.stepper-btn[data-stepper-target="priceFrom"], .stepper-btn[data-stepper-target="priceTo"]'
-        ).forEach(function (btn) {
-            btn.setAttribute('data-stepper-min', String(FILTER_LIMITS.priceMin));
-            btn.setAttribute('data-stepper-max', String(FILTER_LIMITS.priceMax));
+        ).forEach(function (button) {
+            button.setAttribute('data-stepper-min', String(FILTER_LIMITS.priceMin));
+            button.setAttribute('data-stepper-max', String(FILTER_LIMITS.priceMax));
         });
     }
 
     function applyDurationLimitsToUi() {
-        var max = splitDuration(FILTER_LIMITS.durationMax);
-        var map = {
-            durationFromHours: max.h,
+        var maxDuration = splitDuration(FILTER_LIMITS.durationMax);
+        var maxValuesById = {
+            durationFromHours: maxDuration.h,
             durationFromMinutes: 59,
             durationFromSeconds: 59,
-            durationToHours: max.h,
+            durationToHours: maxDuration.h,
             durationToMinutes: 59,
             durationToSeconds: 59
         };
-        Object.keys(map).forEach(function (id) {
-            var el = document.getElementById(id);
-            if (el) el.setAttribute('data-max', String(map[id]));
+        Object.keys(maxValuesById).forEach(function (elementId) {
+            var element = document.getElementById(elementId);
+            if (element) element.setAttribute('data-max', String(maxValuesById[elementId]));
         });
     }
 
     function applyReleaseDateLimitsToUi() {
-        var dateFrom = document.getElementById('releaseDateFrom');
-        var dateTo = document.getElementById('releaseDateTo');
+        var releaseDateFromInput = document.getElementById('releaseDateFrom');
+        var releaseDateToInput = document.getElementById('releaseDateTo');
 
-        if (dateFrom) {
-            if (FILTER_LIMITS.releaseDateMin) dateFrom.setAttribute('min', FILTER_LIMITS.releaseDateMin);
-            if (FILTER_LIMITS.releaseDateMax) dateFrom.setAttribute('max', FILTER_LIMITS.releaseDateMax);
+        if (releaseDateFromInput) {
+            if (FILTER_LIMITS.releaseDateMin) releaseDateFromInput.setAttribute('min', FILTER_LIMITS.releaseDateMin);
+            if (FILTER_LIMITS.releaseDateMax) releaseDateFromInput.setAttribute('max', FILTER_LIMITS.releaseDateMax);
         }
-        if (dateTo) {
-            if (FILTER_LIMITS.releaseDateMin) dateTo.setAttribute('min', FILTER_LIMITS.releaseDateMin);
-            if (FILTER_LIMITS.releaseDateMax) dateTo.setAttribute('max', FILTER_LIMITS.releaseDateMax);
+        if (releaseDateToInput) {
+            if (FILTER_LIMITS.releaseDateMin) releaseDateToInput.setAttribute('min', FILTER_LIMITS.releaseDateMin);
+            if (FILTER_LIMITS.releaseDateMax) releaseDateToInput.setAttribute('max', FILTER_LIMITS.releaseDateMax);
         }
     }
 
-    function stripEmptyFields(form) {
-        form.querySelectorAll('input, select, textarea').forEach(function (el) {
-            if (el.type === 'checkbox' || el.type === 'radio') {
-                el.disabled = !el.checked;
+    function stripEmptyFields(formElement) {
+        formElement.querySelectorAll('input, select, textarea').forEach(function (fieldElement) {
+            if (fieldElement.type === 'checkbox' || fieldElement.type === 'radio') {
+                fieldElement.disabled = false;
                 return;
             }
-            var value = (el.value || '').trim();
-            el.disabled = value === '';
+            var trimmedValue = (fieldElement.value || '').trim();
+            fieldElement.disabled = trimmedValue === '';
+        });
+
+        disableFullyCheckedCheckboxGroups(formElement);
+    }
+
+    function disableFullyCheckedCheckboxGroups(formElement) {
+        var checkboxGroups = {};
+
+        formElement.querySelectorAll('input[type="checkbox"][name]').forEach(function (checkboxElement) {
+            var checkboxName = checkboxElement.name;
+            if (!checkboxGroups[checkboxName]) {
+                checkboxGroups[checkboxName] = [];
+            }
+            checkboxGroups[checkboxName].push(checkboxElement);
+        });
+
+        Object.keys(checkboxGroups).forEach(function (checkboxName) {
+            var groupCheckboxes = checkboxGroups[checkboxName];
+            var checkedCount = groupCheckboxes.filter(function (checkboxElement) {
+                return checkboxElement.checked;
+            }).length;
+
+            var allChecked = groupCheckboxes.length > 0 && checkedCount === groupCheckboxes.length;
+            var noneChecked = checkedCount === 0;
+
+            if (allChecked || noneChecked) {
+                groupCheckboxes.forEach(function (checkboxElement) {
+                    checkboxElement.disabled = true;
+                });
+                return;
+            }
+
+            groupCheckboxes.forEach(function (checkboxElement) {
+                checkboxElement.disabled = !checkboxElement.checked;
+            });
         });
     }
 
-    function restoreFields(form) {
-        form.querySelectorAll('input, select, textarea').forEach(function (el) {
-            el.disabled = false;
+    function restoreFields(formElement) {
+        formElement.querySelectorAll('input, select, textarea').forEach(function (fieldElement) {
+            fieldElement.disabled = false;
         });
     }
 
-    function enforceCheckboxLimit(dropdownId, maxSelected, label) {
-        var dropdown = document.getElementById(dropdownId);
-        if (!dropdown) return;
+    function enforceCheckboxLimit(dropdownElementId, maxSelectedCount, labelText) {
+        var dropdownElement = document.getElementById(dropdownElementId);
+        if (!dropdownElement) return;
 
-        dropdown.addEventListener('change', function (e) {
-            var target = e.target;
-            if (!target || target.type !== 'checkbox') return;
-            if (target.name !== 'directors' && target.name !== 'genres') return;
+        dropdownElement.addEventListener('change', function (changeEvent) {
+            var targetElement = changeEvent.target;
+            if (!targetElement || targetElement.type !== 'checkbox') return;
+            if (targetElement.name !== 'directors' && targetElement.name !== 'genres') return;
 
-            var checked = dropdown.querySelectorAll(
-                'input[name="' + target.name + '"]:checked'
+            var allCheckboxes = dropdownElement.querySelectorAll(
+                'input[name="' + targetElement.name + '"]'
             );
-            if (checked.length > maxSelected) {
-                target.checked = false;
+            var checkedCheckboxes = dropdownElement.querySelectorAll(
+                'input[name="' + targetElement.name + '"]:checked'
+            );
+
+            var allChecked = allCheckboxes.length > 0 && checkedCheckboxes.length === allCheckboxes.length;
+            if (allChecked) {
+                return;
+            }
+
+            if (checkedCheckboxes.length > maxSelectedCount) {
+                targetElement.checked = false;
                 if (typeof showFlashMessage === 'function') {
                     showFlashMessage(
-                        'Можно выбрать не более ' + maxSelected + ' значений в «' + label + '»',
+                        'Можно выбрать не более ' + maxSelectedCount + ' значений в «' + labelText + '»',
                         'warning'
                     );
                 }
@@ -123,48 +167,48 @@
     }
 
     function validateSearchQuery() {
-        var input = document.getElementById('headerSearchInput');
-        if (!input) return true;
-        var query = input.value.trim();
-        if (query.length === 0) {
-            input.focus();
+        var headerSearchInput = document.getElementById('headerSearchInput');
+        if (!headerSearchInput) return true;
+        var trimmedQuery = headerSearchInput.value.trim();
+        if (trimmedQuery.length === 0) {
+            headerSearchInput.focus();
             return false;
         }
-        if (query.length > 100) {
+        if (trimmedQuery.length > 100) {
             if (typeof showFlashMessage === 'function') {
                 showFlashMessage('Слишком длинный запрос (максимум 100 символов)', 'warning');
             }
-            input.focus();
+            headerSearchInput.focus();
             return false;
         }
         return true;
     }
 
     function closeAllAccordions() {
-        document.querySelectorAll('.accordion-group.active').forEach(function (g) {
-            g.classList.remove('active');
+        document.querySelectorAll('.accordion-group.active').forEach(function (accordionGroupElement) {
+            accordionGroupElement.classList.remove('active');
         });
-        document.querySelectorAll('.accordion-dropdown.active').forEach(function (dd) {
-            dd.classList.remove('active');
+        document.querySelectorAll('.accordion-dropdown.active').forEach(function (accordionDropdownElement) {
+            accordionDropdownElement.classList.remove('active');
         });
     }
 
-    function toggleFiltersModal(show) {
-        var overlay = document.getElementById('filtersModalOverlay');
-        if (!overlay) return;
+    function toggleFiltersModal(shouldShow) {
+        var filtersModalOverlay = document.getElementById('filtersModalOverlay');
+        if (!filtersModalOverlay) return;
 
-        if (typeof show === 'boolean') {
-            if (show) {
-                overlay.classList.add('show');
+        if (typeof shouldShow === 'boolean') {
+            if (shouldShow) {
+                filtersModalOverlay.classList.add('show');
                 document.body.style.overflow = 'hidden';
             } else {
-                overlay.classList.remove('show');
+                filtersModalOverlay.classList.remove('show');
                 document.body.style.overflow = '';
                 closeAllAccordions();
             }
         } else {
-            overlay.classList.toggle('show');
-            if (overlay.classList.contains('show')) {
+            filtersModalOverlay.classList.toggle('show');
+            if (filtersModalOverlay.classList.contains('show')) {
                 document.body.style.overflow = 'hidden';
             } else {
                 document.body.style.overflow = '';
@@ -173,241 +217,243 @@
         }
     }
 
-    function handleOverlayClick(e) {
-        if (e.target && e.target.id === 'filtersModalOverlay') {
+    function handleOverlayClick(clickEvent) {
+        if (clickEvent.target && clickEvent.target.id === 'filtersModalOverlay') {
             toggleFiltersModal(false);
         }
     }
 
     function initFilterAccordions() {
-        document.querySelectorAll('.accordion-trigger').forEach(function (trigger) {
-            trigger.addEventListener('click', function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                var targetId = trigger.getAttribute('data-target');
-                if (!targetId) return;
-                var dropdown = document.getElementById(targetId);
-                if (!dropdown) return;
-                var group = trigger.closest('.accordion-group');
-                if (!group) return;
-                var willOpen = !group.classList.contains('active');
-                group.classList.toggle('active', willOpen);
-                dropdown.classList.toggle('active', willOpen);
+        document.querySelectorAll('.accordion-trigger').forEach(function (accordionTriggerElement) {
+            accordionTriggerElement.addEventListener('click', function (clickEvent) {
+                clickEvent.preventDefault();
+                clickEvent.stopPropagation();
+                var targetElementId = accordionTriggerElement.getAttribute('data-target');
+                if (!targetElementId) return;
+                var accordionDropdownElement = document.getElementById(targetElementId);
+                if (!accordionDropdownElement) return;
+                var accordionGroupElement = accordionTriggerElement.closest('.accordion-group');
+                if (!accordionGroupElement) return;
+                var willOpen = !accordionGroupElement.classList.contains('active');
+                accordionGroupElement.classList.toggle('active', willOpen);
+                accordionDropdownElement.classList.toggle('active', willOpen);
             });
         });
     }
 
     function initFilterClearButtons() {
-        document.querySelectorAll('.filter-clear-btn').forEach(function (btn) {
-            var targetId = btn.getAttribute('data-clear-target');
-            if (!targetId) return;
-            var input = document.getElementById(targetId);
-            if (!input) return;
-            var wrapper = btn.closest('.filter-input-with-clear');
+        document.querySelectorAll('.filter-clear-btn').forEach(function (clearButtonElement) {
+            var targetElementId = clearButtonElement.getAttribute('data-clear-target');
+            if (!targetElementId) return;
+            var targetInputElement = document.getElementById(targetElementId);
+            if (!targetInputElement) return;
+            var wrapperElement = clearButtonElement.closest('.filter-input-with-clear');
 
-            function sync() {
-                if (!wrapper) return;
-                wrapper.classList.toggle('has-value', input.value !== '');
+            function syncHasValueClass() {
+                if (!wrapperElement) return;
+                wrapperElement.classList.toggle('has-value', targetInputElement.value !== '');
             }
 
-            btn.addEventListener('click', function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                input.value = '';
-                input.dispatchEvent(new Event('input', { bubbles: true }));
-                input.dispatchEvent(new Event('change', { bubbles: true }));
-                sync();
-                input.focus();
+            clearButtonElement.addEventListener('click', function (clickEvent) {
+                clickEvent.preventDefault();
+                clickEvent.stopPropagation();
+                targetInputElement.value = '';
+                targetInputElement.dispatchEvent(new Event('input', { bubbles: true }));
+                targetInputElement.dispatchEvent(new Event('change', { bubbles: true }));
+                syncHasValueClass();
+                targetInputElement.focus();
             });
 
-            input.addEventListener('input', sync);
-            input.addEventListener('change', sync);
-            sync();
+            targetInputElement.addEventListener('input', syncHasValueClass);
+            targetInputElement.addEventListener('change', syncHasValueClass);
+            syncHasValueClass();
         });
     }
 
-    function getSurname(fullName) {
-        var s = String(fullName || '').trim();
-        if (!s) return '';
-        var idx = s.indexOf(' ');
-        if (idx === -1) return s;
-        var rest = s.substring(idx + 1).trim();
-        return rest || s;
+    function extractSurname(fullNameValue) {
+        var trimmedFullName = String(fullNameValue || '').trim();
+        if (!trimmedFullName) return '';
+        var firstSpaceIndex = trimmedFullName.indexOf(' ');
+        if (firstSpaceIndex === -1) return trimmedFullName;
+        var remainingPart = trimmedFullName.substring(firstSpaceIndex + 1).trim();
+        return remainingPart || trimmedFullName;
     }
 
-    function normalizeForSort(s) {
-        return String(s || '')
+    function normalizeForSort(value) {
+        return String(value || '')
             .toLocaleLowerCase('ru-RU')
             .replace(/ё/g, 'е');
     }
 
-    function displayDirector(fullName) {
-        var s = String(fullName || '').trim();
-        if (!s) return '';
-        var idx = s.indexOf(' ');
-        if (idx === -1) return s;
-        var first = s.substring(0, idx).trim();
-        var rest = s.substring(idx + 1).trim();
-        if (!rest) return s;
-        return rest + ' ' + first;
+    function displayDirectorName(fullNameValue) {
+        var trimmedFullName = String(fullNameValue || '').trim();
+        if (!trimmedFullName) return '';
+        var firstSpaceIndex = trimmedFullName.indexOf(' ');
+        if (firstSpaceIndex === -1) return trimmedFullName;
+        var firstNamePart = trimmedFullName.substring(0, firstSpaceIndex).trim();
+        var remainingPart = trimmedFullName.substring(firstSpaceIndex + 1).trim();
+        if (!remainingPart) return trimmedFullName;
+        return remainingPart + ' ' + firstNamePart;
     }
 
-    function sortDirectionectorsBySurname(list) {
-        return list.slice().sort(function (a, b) {
-            var sa = normalizeForSort(getSurname(a));
-            var sb = normalizeForSort(getSurname(b));
-            if (sa !== sb) return sa.localeCompare(sb, 'ru-RU');
-            return normalizeForSort(a).localeCompare(normalizeForSort(b), 'ru-RU');
+    function sortDirectorsBySurname(directorList) {
+        return directorList.slice().sort(function (leftDirector, rightDirector) {
+            var leftSurname = normalizeForSort(extractSurname(leftDirector));
+            var rightSurname = normalizeForSort(extractSurname(rightDirector));
+            if (leftSurname !== rightSurname) return leftSurname.localeCompare(rightSurname, 'ru-RU');
+            return normalizeForSort(leftDirector).localeCompare(normalizeForSort(rightDirector), 'ru-RU');
         });
     }
 
-    function sortGenresAlphabetically(list) {
-        return list.slice().sort(function (a, b) {
-            return normalizeForSort(a).localeCompare(normalizeForSort(b), 'ru-RU');
+    function sortGenresAlphabetically(genreList) {
+        return genreList.slice().sort(function (leftGenre, rightGenre) {
+            return normalizeForSort(leftGenre).localeCompare(normalizeForSort(rightGenre), 'ru-RU');
         });
     }
 
-    function buildAccordionCheckbox(name, value, displayText) {
-        var label = document.createElement('label');
-        label.className = 'accordion-item';
-        var input = document.createElement('input');
-        input.type = 'checkbox';
-        input.name = name;
-        input.className = 'accordion-checkbox';
-        input.value = value;
-        var span = document.createElement('span');
-        span.textContent = displayText != null ? displayText : value;
-        label.appendChild(input);
-        label.appendChild(span);
-        return label;
+    function buildAccordionCheckbox(checkboxName, checkboxValue, displayText) {
+        var labelElement = document.createElement('label');
+        labelElement.className = 'accordion-item';
+        var inputElement = document.createElement('input');
+        inputElement.type = 'checkbox';
+        inputElement.name = checkboxName;
+        inputElement.className = 'accordion-checkbox';
+        inputElement.value = checkboxValue;
+        var spanElement = document.createElement('span');
+        spanElement.textContent = displayText != null ? displayText : checkboxValue;
+        labelElement.appendChild(inputElement);
+        labelElement.appendChild(spanElement);
+        return labelElement;
     }
 
-    function fillAccordionList(dropdown, name, items, displayFn) {
-        if (!dropdown) return;
-        var list = dropdown.querySelector('[data-accordion-list]');
-        var empty = dropdown.querySelector('[data-accordion-empty]');
-        if (!list) return;
+    function fillAccordionList(dropdownElement, checkboxName, itemsList, displayFunction) {
+        if (!dropdownElement) return;
+        var accordionListElement = dropdownElement.querySelector('[data-accordion-list]');
+        var accordionEmptyElement = dropdownElement.querySelector('[data-accordion-empty]');
+        if (!accordionListElement) return;
 
-        list.innerHTML = '';
-        (items || []).forEach(function (item) {
-            var display = displayFn ? displayFn(item) : item;
-            list.appendChild(buildAccordionCheckbox(name, item, display));
+        accordionListElement.innerHTML = '';
+        (itemsList || []).forEach(function (itemValue) {
+            var displayValue = displayFunction ? displayFunction(itemValue) : itemValue;
+            accordionListElement.appendChild(buildAccordionCheckbox(checkboxName, itemValue, displayValue));
         });
 
-        if (empty) empty.classList.remove('show');
+        if (accordionEmptyElement) accordionEmptyElement.classList.remove('show');
 
-        var selectedAttr = dropdown.getAttribute('data-selected');
-        if (selectedAttr && selectedAttr.trim() !== '') {
-            var selected = selectedAttr.split(',').map(function (s) { return s.trim(); });
-            list.querySelectorAll('input[name="' + name + '"]').forEach(function (cb) {
-                cb.checked = selected.indexOf(cb.value) !== -1;
+        var selectedAttributeValue = dropdownElement.getAttribute('data-selected');
+        if (selectedAttributeValue && selectedAttributeValue.trim() !== '') {
+            var selectedValues = selectedAttributeValue.split(',').map(function (selectedValue) {
+                return selectedValue.trim();
+            });
+            accordionListElement.querySelectorAll('input[name="' + checkboxName + '"]').forEach(function (checkboxElement) {
+                checkboxElement.checked = selectedValues.indexOf(checkboxElement.value) !== -1;
             });
         }
 
         if (window.FiltersSearch) {
-            window.FiltersSearch.init(dropdown.closest('[data-accordion]') || dropdown);
+            window.FiltersSearch.init(dropdownElement.closest('[data-accordion]') || dropdownElement);
         }
     }
 
     function loadFilterOptions() {
-        var directorsDropdown = document.getElementById('directorsDropdown');
-        var genresDropdown = document.getElementById('genresDropdown');
+        var directorsDropdownElement = document.getElementById('directorsDropdown');
+        var genresDropdownElement = document.getElementById('genresDropdown');
 
-        var requests = [];
+        var requestsList = [];
 
-        if (directorsDropdown) {
-            requests.push(
+        if (directorsDropdownElement) {
+            requestsList.push(
                 fetch('/filters/directors', { headers: AJAX_HEADERS })
-                    .then(function (r) { return r.ok ? r.json() : []; })
-                    .then(function (list) {
+                    .then(function (response) { return response.ok ? response.json() : []; })
+                    .then(function (directorsList) {
                         fillAccordionList(
-                            directorsDropdown,
+                            directorsDropdownElement,
                             'directors',
-                            sortDirectionectorsBySurname(list || []),
-                            displayDirector
+                            sortDirectorsBySurname(directorsList || []),
+                            displayDirectorName
                         );
                     })
                     .catch(function () {
-                        fillAccordionList(directorsDropdown, 'directors', [], displayDirector);
+                        fillAccordionList(directorsDropdownElement, 'directors', [], displayDirectorName);
                     })
             );
         }
 
-        if (genresDropdown) {
-            requests.push(
+        if (genresDropdownElement) {
+            requestsList.push(
                 fetch('/filters/genres', { headers: AJAX_HEADERS })
-                    .then(function (r) { return r.ok ? r.json() : []; })
-                    .then(function (list) {
+                    .then(function (response) { return response.ok ? response.json() : []; })
+                    .then(function (genresList) {
                         fillAccordionList(
-                            genresDropdown,
+                            genresDropdownElement,
                             'genres',
-                            sortGenresAlphabetically(list || [])
+                            sortGenresAlphabetically(genresList || [])
                         );
                     })
-                    .catch(function () { fillAccordionList(genresDropdown, 'genres', []); })
+                    .catch(function () { fillAccordionList(genresDropdownElement, 'genres', []); })
             );
         }
 
-        requests.push(
+        requestsList.push(
             fetch('/filters/min-max/price', { headers: AJAX_HEADERS })
-                .then(function (r) { return r.ok ? r.json() : null; })
-                .then(function (dto) {
-                    if (!dto) return;
-                    if (dto.min != null) FILTER_LIMITS.priceMin = Number(dto.min);
-                    if (dto.max != null) FILTER_LIMITS.priceMax = Number(dto.max);
+                .then(function (response) { return response.ok ? response.json() : null; })
+                .then(function (rangeDto) {
+                    if (!rangeDto) return;
+                    if (rangeDto.min != null) FILTER_LIMITS.priceMin = Number(rangeDto.min);
+                    if (rangeDto.max != null) FILTER_LIMITS.priceMax = Number(rangeDto.max);
                     applyPriceLimitsToUi();
                 })
                 .catch(function () {})
         );
 
-        requests.push(
+        requestsList.push(
             fetch('/filters/min-max/duration', { headers: AJAX_HEADERS })
-                .then(function (r) { return r.ok ? r.json() : null; })
-                .then(function (dto) {
-                    if (!dto) return;
-                    if (dto.min != null) FILTER_LIMITS.durationMin = Number(dto.min);
-                    if (dto.max != null) FILTER_LIMITS.durationMax = Number(dto.max);
+                .then(function (response) { return response.ok ? response.json() : null; })
+                .then(function (rangeDto) {
+                    if (!rangeDto) return;
+                    if (rangeDto.min != null) FILTER_LIMITS.durationMin = Number(rangeDto.min);
+                    if (rangeDto.max != null) FILTER_LIMITS.durationMax = Number(rangeDto.max);
                     applyDurationLimitsToUi();
                 })
                 .catch(function () {})
         );
 
-        requests.push(
+        requestsList.push(
             fetch('/filters/min-max/release-date', { headers: AJAX_HEADERS })
-                .then(function (r) { return r.ok ? r.json() : null; })
-                .then(function (dto) {
-                    if (!dto) return;
-                    if (dto.min != null) FILTER_LIMITS.releaseDateMin = String(dto.min);
-                    if (dto.max != null) FILTER_LIMITS.releaseDateMax = String(dto.max);
+                .then(function (response) { return response.ok ? response.json() : null; })
+                .then(function (rangeDto) {
+                    if (!rangeDto) return;
+                    if (rangeDto.min != null) FILTER_LIMITS.releaseDateMin = String(rangeDto.min);
+                    if (rangeDto.max != null) FILTER_LIMITS.releaseDateMax = String(rangeDto.max);
                     applyReleaseDateLimitsToUi();
                 })
                 .catch(function () {})
         );
 
-        return Promise.all(requests);
+        return Promise.all(requestsList);
     }
 
     function calculateRangeMinutes() {
-        var getVal = function (id) {
-            var el = document.getElementById(id);
-            return el ? (parseInt(el.value, 10) || 0) : 0;
-        };
+        function readIntValue(elementId) {
+            var element = document.getElementById(elementId);
+            return element ? (parseInt(element.value, 10) || 0) : 0;
+        }
 
-        var fromH = getVal('durationFromHours');
-        var fromM = getVal('durationFromMinutes');
-        var fromS = getVal('durationFromSeconds');
-        var toH = getVal('durationToHours');
-        var toM = getVal('durationToMinutes');
-        var toS = getVal('durationToSeconds');
+        var fromHoursValue = readIntValue('durationFromHours');
+        var fromMinutesValue = readIntValue('durationFromMinutes');
+        var fromSecondsValue = readIntValue('durationFromSeconds');
+        var toHoursValue = readIntValue('durationToHours');
+        var toMinutesValue = readIntValue('durationToMinutes');
+        var toSecondsValue = readIntValue('durationToSeconds');
 
-        var totalFromSeconds = (fromH * 3600) + (fromM * 60) + fromS;
-        var totalToSeconds = (toH * 3600) + (toM * 60) + toS;
+        var totalFromSeconds = (fromHoursValue * 3600) + (fromMinutesValue * 60) + fromSecondsValue;
+        var totalToSeconds = (toHoursValue * 3600) + (toMinutesValue * 60) + toSecondsValue;
 
-        var minEl = document.getElementById('minDuration');
-        var maxEl = document.getElementById('maxDuration');
+        var minDurationElement = document.getElementById('minDuration');
+        var maxDurationElement = document.getElementById('maxDuration');
 
-        if (minEl) minEl.value = totalFromSeconds > 0 ? totalFromSeconds : '';
-        if (maxEl) maxEl.value = totalToSeconds > 0 ? totalToSeconds : '';
+        if (minDurationElement) minDurationElement.value = totalFromSeconds > 0 ? totalFromSeconds : '';
+        if (maxDurationElement) maxDurationElement.value = totalToSeconds > 0 ? totalToSeconds : '';
     }
 
     function normalizeDurationFilters() {
@@ -415,42 +461,42 @@
     }
 
     function clearFilterFieldErrors() {
-        document.querySelectorAll('.filter-field-error').forEach(function (el) {
-            el.remove();
+        document.querySelectorAll('.filter-field-error').forEach(function (errorElement) {
+            errorElement.remove();
         });
-        document.querySelectorAll('.filter-input, .accordion-trigger').forEach(function (el) {
-            el.style.borderColor = '';
-            el.style.boxShadow = '';
+        document.querySelectorAll('.filter-input, .accordion-trigger').forEach(function (inputElement) {
+            inputElement.style.borderColor = '';
+            inputElement.style.boxShadow = '';
         });
-        var globalErr = document.getElementById('ratingFilterError');
-        if (globalErr) {
-            globalErr.style.display = 'none';
-            globalErr.innerText = '';
+        var ratingFilterErrorElement = document.getElementById('ratingFilterError');
+        if (ratingFilterErrorElement) {
+            ratingFilterErrorElement.style.display = 'none';
+            ratingFilterErrorElement.innerText = '';
         }
     }
 
-    function showFilterFieldError(input, message) {
-        if (!input) return;
-        var group = input.closest('.filter-group') || input.parentNode;
-        if (group) {
-            var err = document.createElement('div');
-            err.className = 'filter-field-error';
-            err.textContent = message;
-            err.style.color = '#f87171';
-            err.style.fontSize = '0.78rem';
-            err.style.marginTop = '4px';
-            err.style.lineHeight = '1.3';
-            group.appendChild(err);
+    function showFilterFieldError(inputElement, errorMessage) {
+        if (!inputElement) return;
+        var groupElement = inputElement.closest('.filter-group') || inputElement.parentNode;
+        if (groupElement) {
+            var errorElement = document.createElement('div');
+            errorElement.className = 'filter-field-error';
+            errorElement.textContent = errorMessage;
+            errorElement.style.color = '#f87171';
+            errorElement.style.fontSize = '0.78rem';
+            errorElement.style.marginTop = '4px';
+            errorElement.style.lineHeight = '1.3';
+            groupElement.appendChild(errorElement);
         }
-        input.style.borderColor = '#f87171';
-        input.style.boxShadow = '0 0 0 3px rgba(248, 113, 113, 0.3)';
-        try { input.focus(); } catch (e) {}
+        inputElement.style.borderColor = '#f87171';
+        inputElement.style.boxShadow = '0 0 0 3px rgba(248, 113, 113, 0.3)';
+        try { inputElement.focus(); } catch (focusError) {}
     }
 
-    function getCheckboxState(name) {
-        var all = document.querySelectorAll('input[name="' + name + '"]');
-        var checked = document.querySelectorAll('input[name="' + name + '"]:checked');
-        return { total: all.length, checked: checked.length };
+    function getCheckboxState(checkboxName) {
+        var allCheckboxes = document.querySelectorAll('input[name="' + checkboxName + '"]');
+        var checkedCheckboxes = document.querySelectorAll('input[name="' + checkboxName + '"]:checked');
+        return { total: allCheckboxes.length, checked: checkedCheckboxes.length };
     }
 
     function validateFilter() {
@@ -459,144 +505,144 @@
 
         var hasError = false;
 
-        var priceFrom = document.getElementById('priceFrom');
-        var priceTo = document.getElementById('priceTo');
-        var ratingFrom = document.getElementById('ratingFrom');
-        var ratingTo = document.getElementById('ratingTo');
-        var dateFrom = document.getElementById('releaseDateFrom');
-        var dateTo = document.getElementById('releaseDateTo');
-        var titleInput = document.getElementById('headerSearchInput');
+        var priceFromInput = document.getElementById('priceFrom');
+        var priceToInput = document.getElementById('priceTo');
+        var ratingFromInput = document.getElementById('ratingFrom');
+        var ratingToInput = document.getElementById('ratingTo');
+        var releaseDateFromInput = document.getElementById('releaseDateFrom');
+        var releaseDateToInput = document.getElementById('releaseDateTo');
+        var headerSearchInput = document.getElementById('headerSearchInput');
 
-        var fromH = parseInt((document.getElementById('durationFromHours') || {}).value || '0', 10);
-        var fromM = parseInt((document.getElementById('durationFromMinutes') || {}).value || '0', 10);
-        var fromS = parseInt((document.getElementById('durationFromSeconds') || {}).value || '0', 10);
-        var toH = parseInt((document.getElementById('durationToHours') || {}).value || '0', 10);
-        var toM = parseInt((document.getElementById('durationToMinutes') || {}).value || '0', 10);
-        var toS = parseInt((document.getElementById('durationToSeconds') || {}).value || '0', 10);
-        var fromTotal = fromH * 3600 + fromM * 60 + fromS;
-        var toTotal = toH * 3600 + toM * 60 + toS;
+        var fromHoursValue = parseInt((document.getElementById('durationFromHours') || {}).value || '0', 10);
+        var fromMinutesValue = parseInt((document.getElementById('durationFromMinutes') || {}).value || '0', 10);
+        var fromSecondsValue = parseInt((document.getElementById('durationFromSeconds') || {}).value || '0', 10);
+        var toHoursValue = parseInt((document.getElementById('durationToHours') || {}).value || '0', 10);
+        var toMinutesValue = parseInt((document.getElementById('durationToMinutes') || {}).value || '0', 10);
+        var toSecondsValue = parseInt((document.getElementById('durationToSeconds') || {}).value || '0', 10);
+        var totalFromSeconds = fromHoursValue * 3600 + fromMinutesValue * 60 + fromSecondsValue;
+        var totalToSeconds = toHoursValue * 3600 + toMinutesValue * 60 + toSecondsValue;
 
         var priceErrorText =
             'Минимальная цена — ' + formatPriceValue(FILTER_LIMITS.priceMin) +
             ' ₽, максимальная — ' + formatPriceValue(FILTER_LIMITS.priceMax) + ' ₽';
 
-        var pfVal = null;
-        var ptVal = null;
+        var parsedPriceFrom = null;
+        var parsedPriceTo = null;
 
-        if (priceFrom && priceFrom.value.trim() !== '') {
-            pfVal = parseFloat(priceFrom.value.replace(',', '.'));
-            if (isNaN(pfVal) || pfVal < FILTER_LIMITS.priceMin || pfVal > FILTER_LIMITS.priceMax) {
-                showFilterFieldError(priceFrom, priceErrorText);
+        if (priceFromInput && priceFromInput.value.trim() !== '') {
+            parsedPriceFrom = parseFloat(priceFromInput.value.replace(',', '.'));
+            if (isNaN(parsedPriceFrom) || parsedPriceFrom < FILTER_LIMITS.priceMin || parsedPriceFrom > FILTER_LIMITS.priceMax) {
+                showFilterFieldError(priceFromInput, priceErrorText);
                 hasError = true;
             } else {
-                priceFrom.value = pfVal.toFixed(2);
+                priceFromInput.value = parsedPriceFrom.toFixed(2);
             }
         }
 
-        if (!hasError && priceTo && priceTo.value.trim() !== '') {
-            ptVal = parseFloat(priceTo.value.replace(',', '.'));
-            if (isNaN(ptVal) || ptVal < FILTER_LIMITS.priceMin || ptVal > FILTER_LIMITS.priceMax) {
-                showFilterFieldError(priceTo, priceErrorText);
+        if (!hasError && priceToInput && priceToInput.value.trim() !== '') {
+            parsedPriceTo = parseFloat(priceToInput.value.replace(',', '.'));
+            if (isNaN(parsedPriceTo) || parsedPriceTo < FILTER_LIMITS.priceMin || parsedPriceTo > FILTER_LIMITS.priceMax) {
+                showFilterFieldError(priceToInput, priceErrorText);
                 hasError = true;
             } else {
-                priceTo.value = ptVal.toFixed(2);
+                priceToInput.value = parsedPriceTo.toFixed(2);
             }
         }
 
-        if (!hasError && pfVal !== null && ptVal !== null && pfVal > ptVal) {
-            showFilterFieldError(priceFrom, 'Цена «от» не может быть больше цены «до»');
+        if (!hasError && parsedPriceFrom !== null && parsedPriceTo !== null && parsedPriceFrom > parsedPriceTo) {
+            showFilterFieldError(priceFromInput, 'Цена «от» не может быть больше цены «до»');
             hasError = true;
         }
 
-        var rfVal = null;
-        var rtVal = null;
+        var parsedRatingFrom = null;
+        var parsedRatingTo = null;
 
-        if (ratingFrom && ratingFrom.value.trim() !== '') {
-            rfVal = parseFloat(ratingFrom.value.replace(',', '.'));
-            if (isNaN(rfVal) || rfVal < 0.1 || rfVal > 10) {
-                showFilterFieldError(ratingFrom, 'Рейтинг «от» должен быть от 0.1 до 10');
+        if (ratingFromInput && ratingFromInput.value.trim() !== '') {
+            parsedRatingFrom = parseFloat(ratingFromInput.value.replace(',', '.'));
+            if (isNaN(parsedRatingFrom) || parsedRatingFrom < 0.1 || parsedRatingFrom > 10) {
+                showFilterFieldError(ratingFromInput, 'Рейтинг «от» должен быть от 0.1 до 10');
                 hasError = true;
             } else {
-                ratingFrom.value = rfVal.toFixed(1);
+                ratingFromInput.value = parsedRatingFrom.toFixed(1);
             }
         }
 
-        if (!hasError && ratingTo && ratingTo.value.trim() !== '') {
-            rtVal = parseFloat(ratingTo.value.replace(',', '.'));
-            if (isNaN(rtVal) || rtVal < 0.1 || rtVal > 10) {
-                showFilterFieldError(ratingTo, 'Рейтинг «до» должен быть от 0.1 до 10');
+        if (!hasError && ratingToInput && ratingToInput.value.trim() !== '') {
+            parsedRatingTo = parseFloat(ratingToInput.value.replace(',', '.'));
+            if (isNaN(parsedRatingTo) || parsedRatingTo < 0.1 || parsedRatingTo > 10) {
+                showFilterFieldError(ratingToInput, 'Рейтинг «до» должен быть от 0.1 до 10');
                 hasError = true;
             } else {
-                ratingTo.value = rtVal.toFixed(1);
+                ratingToInput.value = parsedRatingTo.toFixed(1);
             }
         }
 
-        if (!hasError && rfVal !== null && rtVal !== null && rfVal > rtVal) {
-            showFilterFieldError(ratingFrom, 'Рейтинг «от» не может быть больше рейтинга «до»');
+        if (!hasError && parsedRatingFrom !== null && parsedRatingTo !== null && parsedRatingFrom > parsedRatingTo) {
+            showFilterFieldError(ratingFromInput, 'Рейтинг «от» не может быть больше рейтинга «до»');
             hasError = true;
         }
 
-        var fromValue = dateFrom ? dateFrom.value : '';
-        var toValue = dateTo ? dateTo.value : '';
+        var releaseDateFromValue = releaseDateFromInput ? releaseDateFromInput.value : '';
+        var releaseDateToValue = releaseDateToInput ? releaseDateToInput.value : '';
 
-        var dateRangeResult = Validators.dateRange(fromValue, toValue);
-        if (!dateRangeResult.ok) {
-            var targetInput = dateRangeResult.field === 'to' ? dateTo : dateFrom;
-            showFilterFieldError(targetInput, dateRangeResult.error);
+        var dateRangeValidationResult = Validators.dateRange(releaseDateFromValue, releaseDateToValue);
+        if (!dateRangeValidationResult.ok) {
+            var targetDateInput = dateRangeValidationResult.field === 'to' ? releaseDateToInput : releaseDateFromInput;
+            showFilterFieldError(targetDateInput, dateRangeValidationResult.error);
             hasError = true;
         } else {
-            if (fromValue && FILTER_LIMITS.releaseDateMin && fromValue < FILTER_LIMITS.releaseDateMin) {
-                showFilterFieldError(dateFrom, 'Дата «от» не может быть раньше ' + FILTER_LIMITS.releaseDateMin);
+            if (releaseDateFromValue && FILTER_LIMITS.releaseDateMin && releaseDateFromValue < FILTER_LIMITS.releaseDateMin) {
+                showFilterFieldError(releaseDateFromInput, 'Дата «от» не может быть раньше ' + FILTER_LIMITS.releaseDateMin);
                 hasError = true;
             }
-            if (!hasError && fromValue && FILTER_LIMITS.releaseDateMax && fromValue > FILTER_LIMITS.releaseDateMax) {
-                showFilterFieldError(dateFrom, 'Дата «от» не может быть позже ' + FILTER_LIMITS.releaseDateMax);
+            if (!hasError && releaseDateFromValue && FILTER_LIMITS.releaseDateMax && releaseDateFromValue > FILTER_LIMITS.releaseDateMax) {
+                showFilterFieldError(releaseDateFromInput, 'Дата «от» не может быть позже ' + FILTER_LIMITS.releaseDateMax);
                 hasError = true;
             }
-            if (!hasError && toValue && FILTER_LIMITS.releaseDateMin && toValue < FILTER_LIMITS.releaseDateMin) {
-                showFilterFieldError(dateTo, 'Дата «до» не может быть раньше ' + FILTER_LIMITS.releaseDateMin);
+            if (!hasError && releaseDateToValue && FILTER_LIMITS.releaseDateMin && releaseDateToValue < FILTER_LIMITS.releaseDateMin) {
+                showFilterFieldError(releaseDateToInput, 'Дата «до» не может быть раньше ' + FILTER_LIMITS.releaseDateMin);
                 hasError = true;
             }
-            if (!hasError && toValue && FILTER_LIMITS.releaseDateMax && toValue > FILTER_LIMITS.releaseDateMax) {
-                showFilterFieldError(dateTo, 'Дата «до» не может быть позже ' + FILTER_LIMITS.releaseDateMax);
+            if (!hasError && releaseDateToValue && FILTER_LIMITS.releaseDateMax && releaseDateToValue > FILTER_LIMITS.releaseDateMax) {
+                showFilterFieldError(releaseDateToInput, 'Дата «до» не может быть позже ' + FILTER_LIMITS.releaseDateMax);
                 hasError = true;
             }
         }
 
-        var fromHoursEl = document.getElementById('durationFromHours');
-        var fromMinsEl = document.getElementById('durationFromMinutes');
-        var fromSecsEl = document.getElementById('durationFromSeconds');
-        var toHoursEl = document.getElementById('durationToHours');
-        var toMinsEl = document.getElementById('durationToMinutes');
-        var toSecsEl = document.getElementById('durationToSeconds');
+        var durationFromHoursElement = document.getElementById('durationFromHours');
+        var durationFromMinutesElement = document.getElementById('durationFromMinutes');
+        var durationFromSecondsElement = document.getElementById('durationFromSeconds');
+        var durationToHoursElement = document.getElementById('durationToHours');
+        var durationToMinutesElement = document.getElementById('durationToMinutes');
+        var durationToSecondsElement = document.getElementById('durationToSeconds');
 
-        var maxDur = splitDuration(FILTER_LIMITS.durationMax);
+        var maxDurationValues = splitDuration(FILTER_LIMITS.durationMax);
         var durationErrorText =
             'Минимальная длительность — ' + FILTER_LIMITS.durationMin + ' сек., ' +
-            'максимальная — ' + maxDur.h + ' ч. ' + maxDur.m + ' мин. ' + maxDur.s + ' сек.';
+            'максимальная — ' + maxDurationValues.h + ' ч. ' + maxDurationValues.m + ' мин. ' + maxDurationValues.s + ' сек.';
 
-        var fromAllZero = fromH === 0 && fromM === 0 && fromS === 0 &&
-            (fromHoursEl.value !== '' || fromMinsEl.value !== '' || fromSecsEl.value !== '');
+        var fromAllZero = fromHoursValue === 0 && fromMinutesValue === 0 && fromSecondsValue === 0 &&
+            (durationFromHoursElement.value !== '' || durationFromMinutesElement.value !== '' || durationFromSecondsElement.value !== '');
 
-        var toAllZero = toH === 0 && toM === 0 && toS === 0 &&
-            (toHoursEl.value !== '' || toMinsEl.value !== '' || toSecsEl.value !== '');
+        var toAllZero = toHoursValue === 0 && toMinutesValue === 0 && toSecondsValue === 0 &&
+            (durationToHoursElement.value !== '' || durationToMinutesElement.value !== '' || durationToSecondsElement.value !== '');
 
-        if (fromAllZero || fromH > maxDur.h || fromM > 59 || fromS > 59) {
-            showFilterFieldError(fromHoursEl, durationErrorText);
+        if (fromAllZero || fromHoursValue > maxDurationValues.h || fromMinutesValue > 59 || fromSecondsValue > 59) {
+            showFilterFieldError(durationFromHoursElement, durationErrorText);
             hasError = true;
         }
 
-        if (!hasError && (toAllZero || toH > maxDur.h || toM > 59 || toS > 59)) {
-            showFilterFieldError(toHoursEl, durationErrorText);
+        if (!hasError && (toAllZero || toHoursValue > maxDurationValues.h || toMinutesValue > 59 || toSecondsValue > 59)) {
+            showFilterFieldError(durationToHoursElement, durationErrorText);
             hasError = true;
         }
 
-        if (!hasError && toTotal > 0 && toTotal < FILTER_LIMITS.durationMin) {
-            showFilterFieldError(toHoursEl, 'Длительность «до» должна быть не менее ' + FILTER_LIMITS.durationMin + ' сек.');
+        if (!hasError && totalToSeconds > 0 && totalToSeconds < FILTER_LIMITS.durationMin) {
+            showFilterFieldError(durationToHoursElement, 'Длительность «до» должна быть не менее ' + FILTER_LIMITS.durationMin + ' сек.');
             hasError = true;
         }
 
-        if (!hasError && fromTotal > 0 && toTotal > 0 && fromTotal > toTotal) {
+        if (!hasError && totalFromSeconds > 0 && totalToSeconds > 0 && totalFromSeconds > totalToSeconds) {
             showFilterFieldError(
                 document.getElementById('durationFromHours'),
                 'Длительность «от» не может быть больше длительности «до»'
@@ -614,21 +660,21 @@
 
         var isWideFilter = true;
 
-        if (pfVal !== null && pfVal > FILTER_LIMITS.priceMin) isWideFilter = false;
-        if (ptVal !== null && ptVal < FILTER_LIMITS.priceMax) isWideFilter = false;
-        if (rfVal !== null && rfVal > 0.1) isWideFilter = false;
-        if (rtVal !== null && rtVal < 10) isWideFilter = false;
+        if (parsedPriceFrom !== null && parsedPriceFrom > FILTER_LIMITS.priceMin) isWideFilter = false;
+        if (parsedPriceTo !== null && parsedPriceTo < FILTER_LIMITS.priceMax) isWideFilter = false;
+        if (parsedRatingFrom !== null && parsedRatingFrom > 0.1) isWideFilter = false;
+        if (parsedRatingTo !== null && parsedRatingTo < 10) isWideFilter = false;
 
-        if (fromTotal >= FILTER_LIMITS.durationMin) isWideFilter = false;
-        if (toTotal > 0) isWideFilter = false;
+        if (totalFromSeconds >= FILTER_LIMITS.durationMin) isWideFilter = false;
+        if (totalToSeconds > 0) isWideFilter = false;
         if (genresMeaningful) isWideFilter = false;
         if (directorsMeaningful) isWideFilter = false;
-        if (titleInput && titleInput.value.trim() !== '') isWideFilter = false;
-        if (fromValue) isWideFilter = false;
-        if (toValue) isWideFilter = false;
+        if (headerSearchInput && headerSearchInput.value.trim() !== '') isWideFilter = false;
+        if (releaseDateFromValue) isWideFilter = false;
+        if (releaseDateToValue) isWideFilter = false;
 
-        var sortByField = getHiddenSortField('sortBy');
-        if (sortByField && sortByField.value.trim() !== '') isWideFilter = false;
+        var sortByHiddenField = getHiddenSortField('sortBy');
+        if (sortByHiddenField && sortByHiddenField.value.trim() !== '') isWideFilter = false;
 
         if (isWideFilter) {
             toggleFiltersModal(false);
@@ -641,183 +687,180 @@
         return true;
     }
 
-    function stepFilterValue(inputId, delta, min, max, decimals) {
-        var input = document.getElementById(inputId);
-        if (!input) return;
-        var current = parseFloat(input.value.replace(',', '.'));
-        if (isNaN(current)) current = 0;
-        var newValue = current + delta;
-        var factor = Math.pow(10, decimals);
-        newValue = Math.round(newValue * factor) / factor;
-        if (min !== null && newValue < min) newValue = min;
-        if (max !== null && newValue > max) newValue = max;
-        input.value = newValue.toFixed(decimals);
-        input.dispatchEvent(new Event('input', { bubbles: true }));
+    function stepFilterValue(inputElementId, deltaValue, minValue, maxValue, decimalPlaces) {
+        var inputElement = document.getElementById(inputElementId);
+        if (!inputElement) return;
+        var currentValue = parseFloat(inputElement.value.replace(',', '.'));
+        if (isNaN(currentValue)) currentValue = 0;
+        var nextValue = currentValue + deltaValue;
+        var decimalFactor = Math.pow(10, decimalPlaces);
+        nextValue = Math.round(nextValue * decimalFactor) / decimalFactor;
+        if (minValue !== null && nextValue < minValue) nextValue = minValue;
+        if (maxValue !== null && nextValue > maxValue) nextValue = maxValue;
+        inputElement.value = nextValue.toFixed(decimalPlaces);
+        inputElement.dispatchEvent(new Event('input', { bubbles: true }));
     }
 
     var filterSteppers = {};
 
-    function startSteppingFilter(inputId, delta, min, max, decimals, button) {
-        if (!filterSteppers[inputId]) {
-            filterSteppers[inputId] = createStepper({
-                onStep: function (d) {
-                    stepFilterValue(inputId, d, min, max, decimals);
+    function startSteppingFilter(inputElementId, deltaValue, minValue, maxValue, decimalPlaces, buttonElement) {
+        if (!filterSteppers[inputElementId]) {
+            filterSteppers[inputElementId] = createStepper({
+                onStep: function (stepDelta) {
+                    stepFilterValue(inputElementId, stepDelta, minValue, maxValue, decimalPlaces);
                 }
             });
         }
-        filterSteppers[inputId].start(delta, button);
+        filterSteppers[inputElementId].start(deltaValue, buttonElement);
     }
 
-    function stopSteppingFilter(button) {
-        Object.keys(filterSteppers).forEach(function (key) {
-            filterSteppers[key].stop(button);
+    function stopSteppingFilter(buttonElement) {
+        Object.keys(filterSteppers).forEach(function (inputElementId) {
+            filterSteppers[inputElementId].stop(buttonElement);
         });
-        if (button) button.classList.remove('holding');
+        if (buttonElement) buttonElement.classList.remove('holding');
     }
 
-    function setupSelectAllCheckbox(dropdownId, name) {
-        var dropdown = document.getElementById(dropdownId);
-        if (!dropdown) return;
-        if (!dropdown.querySelector('input[name="' + name + '"]')) return;
+    function setupSelectAllCheckbox(dropdownElementId, checkboxName) {
+        var dropdownElement = document.getElementById(dropdownElementId);
+        if (!dropdownElement) return;
+        if (!dropdownElement.querySelector('input[name="' + checkboxName + '"]')) return;
 
-        var existing = dropdown.querySelector('.accordion-select-all');
-        if (existing) existing.remove();
+        var existingSelectAllElement = dropdownElement.querySelector('.accordion-select-all');
+        if (existingSelectAllElement) existingSelectAllElement.remove();
 
-        var wrap = document.createElement('label');
-        wrap.className = 'accordion-select-all';
+        var wrapperElement = document.createElement('label');
+        wrapperElement.className = 'accordion-select-all';
 
-        var cb = document.createElement('input');
-        cb.type = 'checkbox';
-        cb.className = 'accordion-checkbox';
+        var selectAllCheckbox = document.createElement('input');
+        selectAllCheckbox.type = 'checkbox';
+        selectAllCheckbox.className = 'accordion-checkbox';
 
-        var span = document.createElement('span');
-        span.textContent = 'Выбрать всё';
+        var labelElement = document.createElement('span');
+        labelElement.textContent = 'Выбрать всё';
 
-        wrap.appendChild(cb);
-        wrap.appendChild(span);
+        wrapperElement.appendChild(selectAllCheckbox);
+        wrapperElement.appendChild(labelElement);
 
         function getVisibleItems() {
             return Array.prototype.slice.call(
-                dropdown.querySelectorAll('.accordion-item:not(.is-hidden)')
+                dropdownElement.querySelectorAll('.accordion-item:not(.is-hidden)')
             );
         }
 
         function getVisibleCheckboxes() {
-            return getVisibleItems().map(function (item) {
-                return item.querySelector('input[name="' + name + '"]');
-            }).filter(Boolean);
+            return getVisibleItems()
+                .map(function (itemElement) {
+                    return itemElement.querySelector('input[name="' + checkboxName + '"]');
+                })
+                .filter(Boolean);
         }
 
         function updateState() {
-            var visibleCbs = getVisibleCheckboxes();
-            if (visibleCbs.length === 0) {
-                cb.checked = false;
-                cb.indeterminate = false;
+            var visibleCheckboxes = getVisibleCheckboxes();
+            if (visibleCheckboxes.length === 0) {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
                 return;
             }
-            var checkedCount = visibleCbs.filter(function (x) { return x.checked; }).length;
-            var allChecked = checkedCount === visibleCbs.length;
-            var noneChecked = checkedCount === 0;
-            cb.checked = allChecked;
-            cb.indeterminate = !allChecked && !noneChecked;
+            var checkedCount = visibleCheckboxes.filter(function (checkboxElement) {
+                return checkboxElement.checked;
+            }).length;
+            var allChecked = checkedCount === visibleCheckboxes.length;
+            selectAllCheckbox.checked = allChecked;
+            selectAllCheckbox.indeterminate = false;
         }
 
-        wrap.addEventListener('click', function (e) {
-            e.preventDefault();
+        wrapperElement.addEventListener('click', function (clickEvent) {
+            clickEvent.preventDefault();
 
-            var visibleCbs = getVisibleCheckboxes();
-            if (visibleCbs.length === 0) return;
+            var visibleCheckboxes = getVisibleCheckboxes();
+            if (visibleCheckboxes.length === 0) return;
 
-            var checkedCount = visibleCbs.filter(function (x) { return x.checked; }).length;
-            var allChecked = checkedCount === visibleCbs.length;
+            var checkedCount = visibleCheckboxes.filter(function (checkboxElement) {
+                return checkboxElement.checked;
+            }).length;
+            var allChecked = checkedCount === visibleCheckboxes.length;
 
-            if (!allChecked && visibleCbs.length > MAX_SELECTED_PER_DROPDOWN) {
-                if (typeof showFlashMessage === 'function') {
-                    showFlashMessage(
-                        'Можно выбрать не более ' + MAX_SELECTED_PER_DROPDOWN + ' значений',
-                        'warning'
-                    );
-                }
-                visibleCbs.forEach(function (item, index) {
-                    item.checked = index < MAX_SELECTED_PER_DROPDOWN;
-                });
-            } else {
-                visibleCbs.forEach(function (item) { item.checked = !allChecked; });
-            }
+            visibleCheckboxes.forEach(function (checkboxElement) {
+                checkboxElement.checked = !allChecked;
+            });
+
             updateState();
         });
 
-        dropdown.addEventListener('change', function (e) {
-            if (e.target && e.target.name === name) {
+        dropdownElement.addEventListener('change', function (changeEvent) {
+            if (changeEvent.target && changeEvent.target.name === checkboxName) {
                 updateState();
             }
         });
 
-        var list = dropdown.querySelector('[data-accordion-list]');
-        if (list) {
-            list.insertBefore(wrap, list.firstChild);
+        var accordionListElement = dropdownElement.querySelector('[data-accordion-list]');
+        if (accordionListElement) {
+            accordionListElement.insertBefore(wrapperElement, accordionListElement.firstChild);
         } else {
-            dropdown.insertBefore(wrap, dropdown.firstChild);
+            dropdownElement.insertBefore(wrapperElement, dropdownElement.firstChild);
         }
 
         updateState();
 
         window.__selectAllState = window.__selectAllState || {};
-        window.__selectAllState[dropdownId] = updateState;
+        window.__selectAllState[dropdownElementId] = updateState;
     }
 
     function resetFiltersForm() {
-        var form = document.getElementById('filterForm');
-        if (!form) return;
+        var filterFormElement = document.getElementById('filterForm');
+        if (!filterFormElement) return;
 
-        form.querySelectorAll('input[type="text"]').forEach(function (input) {
-            input.value = '';
-            input.style.borderColor = '';
-            input.style.boxShadow = '';
+        filterFormElement.querySelectorAll('input[type="text"]').forEach(function (inputElement) {
+            inputElement.value = '';
+            inputElement.style.borderColor = '';
+            inputElement.style.boxShadow = '';
         });
 
-        form.querySelectorAll('input[type="date"]').forEach(function (input) {
-            input.value = '';
-            input.style.borderColor = '';
-            input.style.boxShadow = '';
+        filterFormElement.querySelectorAll('input[type="date"]').forEach(function (inputElement) {
+            inputElement.value = '';
+            inputElement.style.borderColor = '';
+            inputElement.style.boxShadow = '';
         });
 
-        form.querySelectorAll('input[type="checkbox"]').forEach(function (cb) {
-            cb.checked = false;
-            cb.indeterminate = false;
+        filterFormElement.querySelectorAll('input[type="checkbox"]').forEach(function (checkboxElement) {
+            checkboxElement.checked = false;
+            checkboxElement.indeterminate = false;
+            checkboxElement.disabled = false;
         });
 
-        var minEl = document.getElementById('minDuration');
-        var maxEl = document.getElementById('maxDuration');
-        if (minEl) minEl.value = '';
-        if (maxEl) maxEl.value = '';
+        var minDurationElement = document.getElementById('minDuration');
+        var maxDurationElement = document.getElementById('maxDuration');
+        if (minDurationElement) minDurationElement.value = '';
+        if (maxDurationElement) maxDurationElement.value = '';
 
         clearFilterFieldErrors();
         closeAllAccordions();
 
-        document.querySelectorAll('.filter-input-with-clear.has-value').forEach(function (el) {
-            el.classList.remove('has-value');
+        document.querySelectorAll('.filter-input-with-clear.has-value').forEach(function (element) {
+            element.classList.remove('has-value');
         });
 
-        document.querySelectorAll('.accordion-search.has-value').forEach(function (el) {
-            el.classList.remove('has-value');
+        document.querySelectorAll('.accordion-search.has-value').forEach(function (element) {
+            element.classList.remove('has-value');
         });
 
-        document.querySelectorAll('[data-accordion-search-input]').forEach(function (input) {
-            input.value = '';
+        document.querySelectorAll('[data-accordion-search-input]').forEach(function (inputElement) {
+            inputElement.value = '';
         });
 
-        document.querySelectorAll('[data-accordion-list] .accordion-item.is-hidden').forEach(function (item) {
-            item.classList.remove('is-hidden');
+        document.querySelectorAll('[data-accordion-list] .accordion-item.is-hidden').forEach(function (itemElement) {
+            itemElement.classList.remove('is-hidden');
         });
 
-        document.querySelectorAll('[data-accordion-empty]').forEach(function (empty) {
-            empty.classList.remove('show');
+        document.querySelectorAll('[data-accordion-empty]').forEach(function (emptyElement) {
+            emptyElement.classList.remove('show');
         });
 
         if (window.__selectAllState) {
-            Object.keys(window.__selectAllState).forEach(function (key) {
-                try { window.__selectAllState[key](); } catch (e) {}
+            Object.keys(window.__selectAllState).forEach(function (dropdownElementId) {
+                try { window.__selectAllState[dropdownElementId](); } catch (stateError) {}
             });
         }
 
@@ -852,122 +895,124 @@
     }
 
     function initFormSubmit() {
-        var form = document.getElementById('filterForm');
-        if (!form) return;
+        var filterFormElement = document.getElementById('filterForm');
+        if (!filterFormElement) return;
 
-        form.addEventListener('submit', function (e) {
+        filterFormElement.addEventListener('submit', function (submitEvent) {
             if (typeof validateFilter === 'function' && !validateFilter()) {
-                e.preventDefault();
+                submitEvent.preventDefault();
                 return;
             }
-            stripEmptyFields(form);
+            stripEmptyFields(filterFormElement);
         });
 
-        window.addEventListener('pageshow', function (e) {
-            if (e.persisted) restoreFields(form);
+        window.addEventListener('pageshow', function (pageShowEvent) {
+            if (pageShowEvent.persisted) restoreFields(filterFormElement);
         });
     }
 
     function readSortFromUrl() {
-        var search = window.location.search || '';
-        if (search.charAt(0) === '?') search = search.substring(1);
-        if (!search) return null;
+        var searchString = window.location.search || '';
+        if (searchString.charAt(0) === '?') searchString = searchString.substring(1);
+        if (!searchString) return null;
 
-        var parts = search.split('&');
-        var key = null;
-        var dir = null;
+        var searchParts = searchString.split('&');
+        var sortByValue = null;
+        var sortDirectionValue = null;
 
-        for (var i = 0; i < parts.length; i++) {
-            var kv = parts[i].split('=');
-            var name = decodeURIComponent(kv[0] || '');
-            var value = decodeURIComponent(kv[1] || '');
-            if (name === 'sortBy') key = value;
-            if (name === 'sortDirection') dir = value.toUpperCase(); // Изменили sortDirection на sortDirection
+        for (var partIndex = 0; partIndex < searchParts.length; partIndex++) {
+            var keyValuePair = searchParts[partIndex].split('=');
+            var parameterName = decodeURIComponent(keyValuePair[0] || '');
+            var parameterValue = decodeURIComponent(keyValuePair[1] || '');
+            if (parameterName === 'sortBy') sortByValue = parameterValue;
+            if (parameterName === 'sortDirection') sortDirectionValue = parameterValue.toUpperCase();
         }
 
-        if (!key || !dir) return null;
-        if (dir !== 'ASC' && dir !== 'DESC') return null;
-        return { key: key, dir: dir };
+        if (!sortByValue || !sortDirectionValue) return null;
+        if (sortDirectionValue !== 'ASC' && sortDirectionValue !== 'DESC') return null;
+        return { key: sortByValue, dir: sortDirectionValue };
     }
 
-    function getHiddenSortField(name) {
-        var all = document.querySelectorAll('input[name="' + name + '"]');
-        return all.length ? all[0] : null;
+    function getHiddenSortField(fieldName) {
+        var allFields = document.querySelectorAll('input[name="' + fieldName + '"]');
+        return allFields.length ? allFields[0] : null;
     }
 
-    function updateSortButtons(state) {
-        var btns = document.querySelectorAll('.sort-filter-btn');
-        for (var i = 0; i < btns.length; i++) {
-            var btn = btns[i];
-            var key = btn.getAttribute('data-sort-key');
-            var dir = btn.getAttribute('data-sort-dir').toUpperCase();
-            if (state && state.key === key && state.dir.toUpperCase() === dir) {
-                btn.classList.add('active');
+    function updateSortButtons(sortState) {
+        var sortButtons = document.querySelectorAll('.sort-filter-btn');
+        for (var buttonIndex = 0; buttonIndex < sortButtons.length; buttonIndex++) {
+            var sortButton = sortButtons[buttonIndex];
+            var sortKey = sortButton.getAttribute('data-sort-key');
+            var sortDirection = sortButton.getAttribute('data-sort-dir').toUpperCase();
+            if (sortState && sortState.key === sortKey && sortState.dir.toUpperCase() === sortDirection) {
+                sortButton.classList.add('active');
             } else {
-                btn.classList.remove('active');
+                sortButton.classList.remove('active');
             }
         }
     }
 
-    function syncHiddenSortFields(state) {
-        var byEl = getHiddenSortField('sortBy');
-        var dirEl = getHiddenSortField('sortDirection'); // Изменили на sortDirection
-        if (byEl) byEl.value = state ? state.key : '';
-        if (dirEl) dirEl.value = state ? state.dir.toUpperCase() : '';
+    function syncHiddenSortFields(sortState) {
+        var sortByHiddenField = getHiddenSortField('sortBy');
+        var sortDirectionHiddenField = getHiddenSortField('sortDirection');
+        if (sortByHiddenField) sortByHiddenField.value = sortState ? sortState.key : '';
+        if (sortDirectionHiddenField) sortDirectionHiddenField.value = sortState ? sortState.dir.toUpperCase() : '';
     }
 
     function getCurrentSortSelection() {
-        var byEl = getHiddenSortField('sortBy');
-        var dirEl = getHiddenSortField('sortDirection'); // Изменили на sortDirection
-        if (!byEl || !dirEl) return null;
-        var key = (byEl.value || '').trim();
-        var dir = (dirEl.value || '').trim().toUpperCase();
-        if (!key || !dir) return null;
-        if (dir !== 'ASC' && dir !== 'DESC') return null;
-        return { key: key, dir: dir };
+        var sortByHiddenField = getHiddenSortField('sortBy');
+        var sortDirectionHiddenField = getHiddenSortField('sortDirection');
+        if (!sortByHiddenField || !sortDirectionHiddenField) return null;
+        var sortKey = (sortByHiddenField.value || '').trim();
+        var sortDirection = (sortDirectionHiddenField.value || '').trim().toUpperCase();
+        if (!sortKey || !sortDirection) return null;
+        if (sortDirection !== 'ASC' && sortDirection !== 'DESC') return null;
+        return { key: sortKey, dir: sortDirection };
     }
 
     function initFilterSort() {
         if (window.__filterSortInitDone) return;
         window.__filterSortInitDone = true;
 
-        var urlState = readSortFromUrl();
-        updateSortButtons(urlState);
-        syncHiddenSortFields(urlState);
+        var urlSortState = readSortFromUrl();
+        updateSortButtons(urlSortState);
+        syncHiddenSortFields(urlSortState);
 
-        document.addEventListener('click', function (e) {
-            var target = e.target;
-            while (target && target !== document) {
-                if (target.classList && target.classList.contains('sort-filter-btn')) break;
-                target = target.parentNode;
+        document.addEventListener('click', function (clickEvent) {
+            var targetElement = clickEvent.target;
+            while (targetElement && targetElement !== document) {
+                if (targetElement.classList && targetElement.classList.contains('sort-filter-btn')) break;
+                targetElement = targetElement.parentNode;
             }
-            if (!target || target === document) return;
+            if (!targetElement || targetElement === document) return;
 
-            e.preventDefault();
+            clickEvent.preventDefault();
 
-            var key = target.getAttribute('data-sort-key');
-            var dir = target.getAttribute('data-sort-dir').toUpperCase();
-            if (!key || !dir) return;
+            var sortKey = targetElement.getAttribute('data-sort-key');
+            var sortDirection = targetElement.getAttribute('data-sort-dir').toUpperCase();
+            if (!sortKey || !sortDirection) return;
 
-            var current = getCurrentSortSelection();
-            var isSame = current && current.key === key && current.dir === dir;
+            var currentSortSelection = getCurrentSortSelection();
+            var isSameSelection = currentSortSelection
+                && currentSortSelection.key === sortKey
+                && currentSortSelection.dir === sortDirection;
 
-            if (isSame) {
+            if (isSameSelection) {
                 updateSortButtons(null);
                 syncHiddenSortFields(null);
             } else {
-                updateSortButtons({ key: key, dir: dir });
-                syncHiddenSortFields({ key: key, dir: dir });
+                updateSortButtons({ key: sortKey, dir: sortDirection });
+                syncHiddenSortFields({ key: sortKey, dir: sortDirection });
             }
         });
     }
 
     function initAll() {
-        try { initFilterSort(); } catch (e) { console.error('[filters] sort init failed', e); }
-        try { initFilterMasks(); } catch (e) { console.error('[filters] masks init failed', e); }
-        try { initFilterAccordions(); } catch (e) { console.error('[filters] accordions init failed', e); }
-        try { initFilterClearButtons(); } catch (e) { console.error('[filters] clear buttons init failed', e); }
-        try { initFormSubmit(); } catch (e) { console.error('[filters] form submit init failed', e); }
+        try { initFilterSort(); } catch (sortInitError) { console.error('[filters] sort init failed', sortInitError); }
+        try { initFilterMasks(); } catch (masksInitError) { console.error('[filters] masks init failed', masksInitError); }
+        try { initFilterAccordions(); } catch (accordionsInitError) { console.error('[filters] accordions init failed', accordionsInitError); }
+        try { initFilterClearButtons(); } catch (clearButtonsInitError) { console.error('[filters] clear buttons init failed', clearButtonsInitError); }
+        try { initFormSubmit(); } catch (formSubmitInitError) { console.error('[filters] form submit init failed', formSubmitInitError); }
     }
 
     if (document.readyState === 'loading') {

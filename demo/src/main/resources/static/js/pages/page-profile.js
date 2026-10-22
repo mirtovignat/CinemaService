@@ -5,6 +5,16 @@
     const ICON_CROSS = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>`;
     const ICON_CLEAR = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
 
+    function readRawPhone(group) {
+        if (!group) return '';
+        var source = group.querySelector('[data-raw-phone]');
+        if (source) {
+            var raw = source.getAttribute('data-raw-phone');
+            if (raw != null) return String(raw).trim();
+        }
+        return '';
+    }
+
     function setupProfileFieldEdit(groupId, fieldName) {
         const group = document.getElementById(groupId);
         if (!group) return;
@@ -12,27 +22,33 @@
         if (!editBtn) return;
 
         const valueContainer = group.querySelector('.contact-value');
-        const textSpan = group.querySelector('.editable-text');
-        const emptySpan = group.querySelector('.detail-value-empty');
-        const errorSpan = group.querySelector('.field-error');
         const oldHtml = valueContainer.innerHTML;
 
         const activateEdit = () => {
             if (group.querySelector('.inline-edit-wrapper')) return;
 
             const currentTextSpan = group.querySelector('.editable-text');
-            const currentEmptySpan = group.querySelector('.detail-value-empty');
             const currentErrorSpan = group.querySelector('.field-error');
 
             let currentText = '';
-            if (currentTextSpan) {
-                currentText = currentTextSpan.getAttribute('data-raw-phone')
-                    || currentTextSpan.textContent.trim();
+            if (fieldName === 'PHONE') {
+                currentText = readRawPhone(group);
+            } else if (currentTextSpan) {
+                currentText = currentTextSpan.textContent.trim();
             }
-            if (currentText === 'Телефон не указан' || currentText === 'Добавить номер') currentText = '';
+
+            if (currentText === 'Телефон не указан' || currentText === 'Добавить номер') {
+                currentText = '';
+            }
 
             const originalValue = currentText;
             const isPhone = fieldName === 'PHONE';
+
+            const valueForInput = (isPhone && currentText)
+                ? (typeof window.PhoneMask !== 'undefined'
+                    ? window.PhoneMask.format(currentText)
+                    : currentText)
+                : currentText;
 
             valueContainer.innerHTML = `
                 <div class="inline-edit-wrapper">
@@ -41,7 +57,7 @@
                             <input type="text"
                                    class="inline-edit-input"
                                    placeholder="Введите значение..."
-                                   value="${currentText}"
+                                   value="${valueForInput}"
                                    ${isPhone ? 'data-phone-mask' : ''}>
                             <button type="button" class="inline-edit-clear">${ICON_CLEAR}</button>
                         </div>
@@ -61,7 +77,9 @@
                     window.initPhoneField(input);
                 }
                 if (currentText) {
-                    input.value = currentText;
+                    input.value = (typeof window.PhoneMask !== 'undefined')
+                        ? window.PhoneMask.format(currentText)
+                        : currentText;
                 }
             }
 
@@ -97,6 +115,9 @@
                 valueContainer.innerHTML = oldHtml;
                 if (currentErrorSpan) currentErrorSpan.textContent = '';
                 setupProfileFieldEdit(groupId, fieldName);
+                if (fieldName === 'PHONE' && typeof window.maskProfilePhoneOnLoad === 'function') {
+                    window.maskProfilePhoneOnLoad();
+                }
             };
 
             btnCancel.addEventListener('click', cancelEdit);
@@ -119,17 +140,21 @@
                 clearError();
                 btnDone.disabled = true;
 
-                const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
-                const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+                const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
+                const csrfTokenMeta = document.querySelector('meta[name="_csrf"]');
+                const csrfHeader = csrfHeaderMeta ? csrfHeaderMeta.content : 'X-CSRF-TOKEN';
+                const csrfToken = csrfTokenMeta ? csrfTokenMeta.content : '';
+
+                const headers = {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                };
+                headers[csrfHeader] = csrfToken;
 
                 fetch('/settings/change/field', {
                     method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        [csrfHeader]: csrfToken
-                    },
+                    headers: headers,
                     redirect: 'manual',
                     credentials: 'same-origin',
                     body: JSON.stringify({ identifier: fieldName, field: val })
@@ -214,7 +239,27 @@
         bindTextClick();
     }
 
+    function syncPhoneEmptyState() {
+        var group = document.getElementById('phoneGroup');
+        if (!group) return;
+        var phoneEl = document.getElementById('panelPhone');
+        var emptyEl = document.getElementById('panelPhoneEmpty');
+        var editBtn = document.getElementById('phoneEditBtn');
+        if (!phoneEl) return;
+
+        var raw = (phoneEl.dataset.rawPhone || '').trim();
+        var hasPhone = !!raw;
+
+        if (emptyEl) emptyEl.style.display = hasPhone ? 'none' : 'inline-flex';
+        if (editBtn) editBtn.style.display = hasPhone ? 'inline-flex' : 'none';
+    }
+
     function init() {
+        if (typeof window.maskProfilePhoneOnLoad === 'function') {
+            window.maskProfilePhoneOnLoad();
+        }
+        syncPhoneEmptyState();
+
         setupProfileFieldEdit('usernameGroup', 'USERNAME');
         setupProfileFieldEdit('emailGroup', 'EMAIL');
         setupProfileFieldEdit('phoneGroup', 'PHONE');

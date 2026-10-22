@@ -145,11 +145,8 @@
 
     function maskPhoneElement(el) {
         if (!el) return;
-        var raw = (el.textContent || '').trim();
+        var raw = (el.getAttribute('data-raw-phone') || el.textContent || '').trim();
         if (!raw) return;
-        if (raw.indexOf('***') !== -1) return;
-        var digits = raw.replace(/\D/g, '');
-        if (digits.length < 5) return;
         if (typeof window.maskPhone !== 'function') return;
         el.textContent = window.maskPhone(raw);
     }
@@ -192,6 +189,7 @@
 
             var phoneEl = document.getElementById('userPhone');
             if (phoneEl && dto.phone != null) {
+                phoneEl.setAttribute('data-raw-phone', dto.phone);
                 phoneEl.textContent = (typeof window.maskPhone === 'function')
                     ? window.maskPhone(dto.phone)
                     : dto.phone;
@@ -439,7 +437,11 @@
         }
 
         var phoneEl = document.getElementById('userPhone');
-        maskPhoneElement(phoneEl);
+        if (phoneEl) {
+            var rawPhone = userData.getAttribute('data-phone') || '';
+            if (rawPhone) phoneEl.setAttribute('data-raw-phone', rawPhone);
+            maskPhoneElement(phoneEl);
+        }
 
         var balanceEl = document.getElementById('balanceValue');
         if (balanceEl && balanceEl.textContent) {

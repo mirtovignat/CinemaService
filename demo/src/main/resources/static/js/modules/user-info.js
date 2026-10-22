@@ -8,6 +8,14 @@
         return name.trim().charAt(0).toUpperCase() || '?';
     }
 
+    function maskValue(raw) {
+        if (!raw) return '';
+        if (typeof window.maskPhone === 'function') {
+            return window.maskPhone(raw);
+        }
+        return raw;
+    }
+
     function updateHeader(user) {
         if (!user) return;
         document.querySelectorAll('.user-avatar-letter').forEach(function (el) {
@@ -48,9 +56,7 @@
                 phoneEl.textContent = EMPTY_PHONE_TEXT;
                 phoneEl.classList.add('phone-empty');
             } else {
-                phoneEl.textContent = typeof window.maskPhone === 'function'
-                    ? window.maskPhone(rawPhone)
-                    : rawPhone;
+                phoneEl.textContent = maskValue(rawPhone);
                 phoneEl.classList.remove('phone-empty');
             }
         }
@@ -70,32 +76,31 @@
     function maskSidebarPhoneOnLoad() {
         var phoneEl = document.getElementById('sidebarPhone');
         if (!phoneEl) return;
-        var raw = (phoneEl.dataset.rawPhone || phoneEl.textContent || '').trim();
+        var raw = (phoneEl.dataset.rawPhone || '').trim();
         if (!raw) {
             phoneEl.textContent = EMPTY_PHONE_TEXT;
             phoneEl.classList.add('phone-empty');
             return;
         }
-        if (raw.indexOf('***') !== -1) return;
-        var digits = raw.replace(/\D/g, '');
-        if (digits.length < 5) return;
-        phoneEl.textContent = typeof window.maskPhone === 'function'
-            ? window.maskPhone(raw)
-            : raw;
+        phoneEl.textContent = maskValue(raw);
         phoneEl.classList.remove('phone-empty');
     }
 
     function maskProfilePhoneOnLoad() {
         var phoneEl = document.getElementById('panelPhone');
         if (!phoneEl) return;
-        var raw = (phoneEl.dataset.rawPhone || phoneEl.textContent || '').trim();
-        if (!raw) return;
-        if (raw.indexOf('***') !== -1) return;
-        var digits = raw.replace(/\D/g, '');
-        if (digits.length < 5) return;
-        phoneEl.textContent = typeof window.maskPhone === 'function'
-            ? window.maskPhone(raw)
-            : raw;
+
+        var raw = (phoneEl.dataset.rawPhone || '').trim();
+        var textHost = phoneEl.querySelector('.js-phone-text') || phoneEl;
+
+        if (!raw) {
+            phoneEl.classList.add('has-no-phone');
+            if (textHost !== phoneEl) textHost.textContent = '';
+            return;
+        }
+
+        phoneEl.classList.remove('has-no-phone');
+        textHost.textContent = maskValue(raw);
     }
 
     function init() {
@@ -104,6 +109,8 @@
     }
 
     window.updateSidebarAndHeader = updateAll;
+    window.maskSidebarPhoneOnLoad = maskSidebarPhoneOnLoad;
+    window.maskProfilePhoneOnLoad = maskProfilePhoneOnLoad;
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init, { once: true });

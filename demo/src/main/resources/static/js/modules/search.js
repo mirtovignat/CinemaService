@@ -22,14 +22,14 @@
 
     function formatAddedDate(raw) {
         if (!raw) return '';
-        var d = new Date(raw);
-        if (isNaN(d.getTime())) return '';
-        var pad = function (n) { return String(n).padStart(2, '0'); };
-        return pad(d.getDate()) + '.' + pad(d.getMonth() + 1) + '.' + d.getFullYear() +
-               ', ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+        var dateValue = new Date(raw);
+        if (isNaN(dateValue.getTime())) return '';
+        var padTwo = function (n) { return String(n).padStart(2, '0'); };
+        return padTwo(dateValue.getDate()) + '.' + padTwo(dateValue.getMonth() + 1) + '.' + dateValue.getFullYear() +
+               ', ' + padTwo(dateValue.getHours()) + ':' + padTwo(dateValue.getMinutes());
     }
 
-    function getTitleElement(item) {
+    function getTitleElement(itemElement) {
         var selectors = [
             '.history-item-title',
             '.media-card-title a',
@@ -43,85 +43,85 @@
             '.cart-card-title a',
             '.cart-card-title'
         ];
-        for (var i = 0; i < selectors.length; i++) {
-            var el = item.querySelector(selectors[i]);
-            if (el) return el;
+        for (var selectorIndex = 0; selectorIndex < selectors.length; selectorIndex++) {
+            var element = itemElement.querySelector(selectors[selectorIndex]);
+            if (element) return element;
         }
         return null;
     }
 
-    function getTitleFromItem(item) {
-        var el = getTitleElement(item);
-        if (!el) return '';
-        return (el.getAttribute('data-title') || el.textContent || '').trim();
+    function getTitleFromItem(itemElement) {
+        var titleElement = getTitleElement(itemElement);
+        if (!titleElement) return '';
+        return (titleElement.getAttribute('data-title') || titleElement.textContent || '').trim();
     }
 
-    function getMovieIdFromItem(item) {
-        return item.getAttribute('data-movie-id') || '';
+    function getMovieIdFromItem(itemElement) {
+        return itemElement.getAttribute('data-movie-id') || '';
     }
 
-    function getHistoryIdFromItem(item) {
-        return item.getAttribute('data-history-id') || '';
+    function getHistoryIdFromItem(itemElement) {
+        return itemElement.getAttribute('data-history-id') || '';
     }
 
-    function getMetaFromItem(item) {
-        var raw = item.getAttribute('data-added-at') || item.getAttribute('data-date') || '';
-        return formatAddedDate(raw);
+    function getMetaFromItem(itemElement) {
+        var rawDateValue = itemElement.getAttribute('data-added-at') || itemElement.getAttribute('data-date') || '';
+        return formatAddedDate(rawDateValue);
     }
 
-    function getItemUniqueKey(item) {
-        var historyId = getHistoryIdFromItem(item);
+    function getItemUniqueKey(itemElement) {
+        var historyId = getHistoryIdFromItem(itemElement);
         if (historyId) return 'h_' + historyId;
-        var movieId = getMovieIdFromItem(item);
+        var movieId = getMovieIdFromItem(itemElement);
         if (movieId) return 'm_' + movieId;
         return '';
     }
 
     function getContainers() {
-        var containers = [];
-        document.querySelectorAll('.history-container').forEach(function (el) {
-            containers.push({ root: el, itemSelector: '.history-item' });
+        var containersList = [];
+        document.querySelectorAll('.history-container').forEach(function (containerElement) {
+            containersList.push({ root: containerElement, itemSelector: '.history-item' });
         });
-        document.querySelectorAll('.library-container').forEach(function (el) {
-            containers.push({ root: el, itemSelector: '.library-card' });
+        document.querySelectorAll('.library-container').forEach(function (containerElement) {
+            containersList.push({ root: containerElement, itemSelector: '.library-card' });
         });
-        document.querySelectorAll('.favourites-container').forEach(function (el) {
-            containers.push({ root: el, itemSelector: '.favourites-card' });
+        document.querySelectorAll('.favourites-container').forEach(function (containerElement) {
+            containersList.push({ root: containerElement, itemSelector: '.favourites-card' });
         });
-        document.querySelectorAll('.cart-container').forEach(function (el) {
-            containers.push({ root: el, itemSelector: '.cart-card' });
+        document.querySelectorAll('.cart-container').forEach(function (containerElement) {
+            containersList.push({ root: containerElement, itemSelector: '.cart-card' });
         });
-        document.querySelectorAll('.movies-grid').forEach(function (el) {
-            containers.push({ root: el, itemSelector: '.movie-card' });
+        document.querySelectorAll('.movies-grid').forEach(function (containerElement) {
+            containersList.push({ root: containerElement, itemSelector: '.movie-card' });
         });
-        return containers;
+        return containersList;
     }
 
     function collectAllItems() {
-        var containers = getContainers();
-        var result = [];
-        containers.forEach(function (config) {
-            config.root.querySelectorAll(config.itemSelector).forEach(function (item) {
-                var title = getTitleFromItem(item);
-                if (!title) return;
-                result.push({
-                    element: item,
-                    title: title,
-                    normalized: normalize(title),
-                    id: getMovieIdFromItem(item),
-                    historyId: getHistoryIdFromItem(item),
-                    uniqueKey: getItemUniqueKey(item),
-                    meta: getMetaFromItem(item)
+        var containersList = getContainers();
+        var resultItems = [];
+        containersList.forEach(function (containerConfig) {
+            containerConfig.root.querySelectorAll(containerConfig.itemSelector).forEach(function (itemElement) {
+                var itemTitle = getTitleFromItem(itemElement);
+                if (!itemTitle) return;
+                resultItems.push({
+                    element: itemElement,
+                    title: itemTitle,
+                    normalized: normalize(itemTitle),
+                    id: getMovieIdFromItem(itemElement),
+                    historyId: getHistoryIdFromItem(itemElement),
+                    uniqueKey: getItemUniqueKey(itemElement),
+                    meta: getMetaFromItem(itemElement)
                 });
             });
         });
-        return result;
+        return resultItems;
     }
 
     function showAllItems() {
-        getContainers().forEach(function (config) {
-            config.root.querySelectorAll(config.itemSelector).forEach(function (item) {
-                item.style.display = '';
+        getContainers().forEach(function (containerConfig) {
+            containerConfig.root.querySelectorAll(containerConfig.itemSelector).forEach(function (itemElement) {
+                itemElement.style.display = '';
             });
         });
         updateGroupVisibility();
@@ -129,9 +129,9 @@
     }
 
     function hideAllItems() {
-        getContainers().forEach(function (config) {
-            config.root.querySelectorAll(config.itemSelector).forEach(function (item) {
-                item.style.display = 'none';
+        getContainers().forEach(function (containerConfig) {
+            containerConfig.root.querySelectorAll(containerConfig.itemSelector).forEach(function (itemElement) {
+                itemElement.style.display = 'none';
             });
         });
         updateGroupVisibility();
@@ -139,10 +139,10 @@
     }
 
     function applyFilterToItems(visibleItems) {
-        var visibleSet = new Set(visibleItems.map(function (x) { return x.element; }));
-        getContainers().forEach(function (config) {
-            config.root.querySelectorAll(config.itemSelector).forEach(function (item) {
-                item.style.display = visibleSet.has(item) ? '' : 'none';
+        var visibleSet = new Set(visibleItems.map(function (entry) { return entry.element; }));
+        getContainers().forEach(function (containerConfig) {
+            containerConfig.root.querySelectorAll(containerConfig.itemSelector).forEach(function (itemElement) {
+                itemElement.style.display = visibleSet.has(itemElement) ? '' : 'none';
             });
         });
         updateGroupVisibility();
@@ -150,66 +150,68 @@
     }
 
     function updateGroupVisibility() {
-        document.querySelectorAll('.history-day-group').forEach(function (group) {
+        document.querySelectorAll('.history-day-group').forEach(function (groupElement) {
             var anyVisible = Array.from(
-                group.querySelectorAll('.history-item')
-            ).some(function (item) { return item.style.display !== 'none'; });
-            group.style.display = anyVisible ? '' : 'none';
+                groupElement.querySelectorAll('.history-item')
+            ).some(function (itemElement) {
+                return itemElement.style.display !== 'none';
+            });
+            groupElement.style.display = anyVisible ? '' : 'none';
         });
     }
 
     function updateEmptyState(showEmpty) {
-        var emptyEl = document.querySelector('[data-catalog-search-empty]');
-        if (emptyEl) emptyEl.classList.toggle('show', !!showEmpty);
+        var emptyElement = document.querySelector('[data-catalog-search-empty]');
+        if (emptyElement) emptyElement.classList.toggle('show', !!showEmpty);
     }
 
     function applyFilterByText(query) {
-        var raw = String(query || '').trim();
+        var rawQuery = String(query || '').trim();
 
-        if (!raw) { showAllItems(); return; }
+        if (!rawQuery) { showAllItems(); return; }
 
-        if (!hasMeaningfulChars(raw)) {
+        if (!hasMeaningfulChars(rawQuery)) {
             hideAllItems();
             return;
         }
 
-        var normalized = normalize(raw);
-        if (!normalized) {
+        var normalizedQuery = normalize(rawQuery);
+        if (!normalizedQuery) {
             hideAllItems();
             return;
         }
 
-        var matched = collectAllItems().filter(function (entry) {
-            return entry.normalized.indexOf(normalized) === 0;
+        var matchedItems = collectAllItems().filter(function (entry) {
+            return entry.normalized.indexOf(normalizedQuery) === 0;
         });
-        applyFilterToItems(matched);
+        applyFilterToItems(matchedItems);
     }
 
     function applyFilterByUniqueKey(uniqueKey) {
         if (!uniqueKey) { showAllItems(); return; }
-        var matched = collectAllItems().filter(function (entry) {
+        var matchedItems = collectAllItems().filter(function (entry) {
             return entry.uniqueKey === uniqueKey;
         });
-        applyFilterToItems(matched);
+        applyFilterToItems(matchedItems);
     }
 
     function longestCommonPrefix(titles) {
         if (!titles || titles.length === 0) return '';
         if (titles.length === 1) return titles[0];
 
-        var first = titles[0];
-        var last = titles[0];
-        for (var i = 1; i < titles.length; i++) {
-            if (titles[i] < first) first = titles[i];
-            if (titles[i] > last) last = titles[i];
+        var firstTitle = titles[0];
+        var lastTitle = titles[0];
+        for (var titleIndex = 1; titleIndex < titles.length; titleIndex++) {
+            if (titles[titleIndex] < firstTitle) firstTitle = titles[titleIndex];
+            if (titles[titleIndex] > lastTitle) lastTitle = titles[titleIndex];
         }
 
-        var len = 0;
-        var max = Math.min(first.length, last.length);
-        while (len < max && first.charAt(len) === last.charAt(len)) {
-            len++;
+        var commonLength = 0;
+        var maxLength = Math.min(firstTitle.length, lastTitle.length);
+        while (commonLength < maxLength && firstTitle.charAt(commonLength) === lastTitle.charAt(commonLength)) {
+            commonLength++;
         }
-        return first.substring(0, len);
+        return firstTitle.substring(0, commonLength);
     }
 
     var LAST_SEARCH_KEY = 'lastSearchQuery';
@@ -221,15 +223,15 @@
         try {
             sessionStorage.setItem(LAST_SEARCH_KEY, query);
             sessionStorage.setItem(LAST_SEARCH_AT_KEY, String(Date.now()));
-        } catch (e) {}
+        } catch (storageError) {}
     }
 
     function readLastSearch() {
         try {
-            var value = sessionStorage.getItem(LAST_SEARCH_KEY);
-            if (!value) return null;
-            return value;
-        } catch (e) {
+            var storedValue = sessionStorage.getItem(LAST_SEARCH_KEY);
+            if (!storedValue) return null;
+            return storedValue;
+        } catch (storageError) {
             return null;
         }
     }
@@ -238,30 +240,15 @@
         try {
             sessionStorage.removeItem(LAST_SEARCH_KEY);
             sessionStorage.removeItem(LAST_SEARCH_AT_KEY);
-        } catch (e) {}
+        } catch (storageError) {}
     }
 
     function markPending() {
-        try {
-            sessionStorage.setItem(PENDING_KEY, '1');
-        } catch (e) {}
-    }
-
-    function consumePending() {
-        try {
-            var v = sessionStorage.getItem(PENDING_KEY);
-            if (v === '1') {
-                sessionStorage.removeItem(PENDING_KEY);
-                return true;
-            }
-        } catch (e) {}
-        return false;
+        try { sessionStorage.setItem(PENDING_KEY, '1'); } catch (storageError) {}
     }
 
     function clearPending() {
-        try {
-            sessionStorage.removeItem(PENDING_KEY);
-        } catch (e) {}
+        try { sessionStorage.removeItem(PENDING_KEY); } catch (storageError) {}
     }
 
     function isMovieDetailsPage() {
@@ -277,15 +264,15 @@
     var catalogSearchInputRef = null;
 
     function initCatalogSearch() {
-        var input = document.querySelector('[data-catalog-search-input]');
-        var clearBtn = document.querySelector('[data-catalog-search-clear]');
-        var wrapper = document.querySelector('[data-catalog-search-wrapper]');
-        var box = document.querySelector('[data-catalog-search-suggestions]');
-        var typedEl = document.querySelector('[data-catalog-search-typed]');
-        var hintEl = document.querySelector('[data-catalog-search-hint]');
-        if (!input || !wrapper) return;
+        var catalogSearchInput = document.querySelector('[data-catalog-search-input]');
+        var catalogSearchClearButton = document.querySelector('[data-catalog-search-clear]');
+        var catalogSearchWrapper = document.querySelector('[data-catalog-search-wrapper]');
+        var catalogSearchBox = document.querySelector('[data-catalog-search-suggestions]');
+        var catalogSearchTypedElement = document.querySelector('[data-catalog-search-typed]');
+        var catalogSearchHintElement = document.querySelector('[data-catalog-search-hint]');
+        if (!catalogSearchInput || !catalogSearchWrapper) return;
 
-        catalogSearchInputRef = input;
+        catalogSearchInputRef = catalogSearchInput;
 
         var ELLIPSIS = '…';
         var currentTopMatch = null;
@@ -304,19 +291,22 @@
         }
 
         function updateClearVisibility() {
-            wrapper.classList.toggle('has-value', input.value.trim().length > 0);
+            catalogSearchWrapper.classList.toggle('has-value', catalogSearchInput.value.trim().length > 0);
         }
 
         function hideSuggestions() {
-            if (box) { box.classList.remove('show'); box.textContent = ''; }
+            if (catalogSearchBox) {
+                catalogSearchBox.classList.remove('show');
+                catalogSearchBox.textContent = '';
+            }
         }
 
         function hideAutocomplete() {
-            if (!typedEl || !hintEl) return;
+            if (!catalogSearchTypedElement || !catalogSearchHintElement) return;
             currentTopMatch = null;
-            wrapper.classList.remove('has-autocomplete');
-            typedEl.textContent = '';
-            hintEl.textContent = '';
+            catalogSearchWrapper.classList.remove('has-autocomplete');
+            catalogSearchTypedElement.textContent = '';
+            catalogSearchHintElement.textContent = '';
         }
 
         function normalizeForMatch(value) {
@@ -327,21 +317,21 @@
 
         function getMatches(value) {
             if (!hasMeaningfulChars(value)) return [];
-            var normalized = normalize(value);
-            if (!normalized) return [];
+            var normalizedValue = normalize(value);
+            if (!normalizedValue) return [];
             return collectAllItems().filter(function (entry) {
-                return entry.normalized.indexOf(normalized) === 0;
+                return entry.normalized.indexOf(normalizedValue) === 0;
             });
         }
 
-        function renderAutocomplete(typed, titles) {
-            if (!typed || !titles || titles.length !== 1 || !typedEl || !hintEl) {
+        function renderAutocomplete(typedValue, titles) {
+            if (!typedValue || !titles || titles.length !== 1 || !catalogSearchTypedElement || !catalogSearchHintElement) {
                 hideAutocomplete();
                 return;
             }
 
             var fullTitle = titles[0];
-            var typedLower = normalizeForMatch(typed);
+            var typedLower = normalizeForMatch(typedValue);
             var fullLower = normalizeForMatch(fullTitle);
 
             if (fullLower.indexOf(typedLower) !== 0) {
@@ -349,51 +339,51 @@
                 return;
             }
 
-            var rest = fullTitle.substring(typed.length);
-            if (!rest) {
+            var remainingPart = fullTitle.substring(typedValue.length);
+            if (!remainingPart) {
                 hideAutocomplete();
                 return;
             }
 
-            typedEl.textContent = typed;
-            hintEl.textContent = rest;
-            wrapper.classList.add('has-autocomplete');
+            catalogSearchTypedElement.textContent = typedValue;
+            catalogSearchHintElement.textContent = remainingPart;
+            catalogSearchWrapper.classList.add('has-autocomplete');
         }
 
-        function buildTruncatedQuery(clean) {
-            var matches = getMatches(clean);
-            if (matches.length === 0) return clean;
+        function buildTruncatedQuery(cleanQuery) {
+            var matches = getMatches(cleanQuery);
+            if (matches.length === 0) return cleanQuery;
             if (matches.length === 1) return matches[0].title;
 
-            var titles = matches.map(function (m) { return m.title; });
-            var prefix = longestCommonPrefix(titles);
+            var titles = matches.map(function (matchEntry) { return matchEntry.title; });
+            var commonPrefix = longestCommonPrefix(titles);
 
-            if (!prefix || prefix.length <= clean.length) {
-                return clean + ELLIPSIS;
+            if (!commonPrefix || commonPrefix.length <= cleanQuery.length) {
+                return cleanQuery + ELLIPSIS;
             }
-            return prefix + ELLIPSIS;
+            return commonPrefix + ELLIPSIS;
         }
 
         function applyEllipsisIfNeeded() {
             if (lockedUniqueKey) return;
 
-            var rawValue = String(input.value || '').trim();
+            var rawValue = String(catalogSearchInput.value || '').trim();
             if (!rawValue) return;
 
             if (!hasMeaningfulChars(rawValue)) {
                 return;
             }
 
-            var clean = stripEllipsis(rawValue);
-            var matches = getMatches(clean);
+            var cleanQuery = stripEllipsis(rawValue);
+            var matches = getMatches(cleanQuery);
             if (matches.length === 1) {
-                var title = matches[0].title;
-                input.value = title;
-                input.setSelectionRange(title.length, title.length);
+                var singleTitle = matches[0].title;
+                catalogSearchInput.value = singleTitle;
+                catalogSearchInput.setSelectionRange(singleTitle.length, singleTitle.length);
             } else if (matches.length > 1) {
-                input.value = buildTruncatedQuery(clean);
+                catalogSearchInput.value = buildTruncatedQuery(cleanQuery);
             } else {
-                input.value = clean;
+                catalogSearchInput.value = cleanQuery;
             }
         }
 
@@ -410,23 +400,23 @@
             var matches = getMatches(currentTopMatch);
             if (matches.length === 0) return false;
 
-            var entry = matches[0];
-            input.value = entry.title;
-            input.setSelectionRange(entry.title.length, entry.title.length);
+            var firstMatch = matches[0];
+            catalogSearchInput.value = firstMatch.title;
+            catalogSearchInput.setSelectionRange(firstMatch.title.length, firstMatch.title.length);
 
             hideAutocomplete();
             hideSuggestions();
 
-            lockByUniqueKey(entry.uniqueKey);
-            applyFilterByUniqueKey(entry.uniqueKey);
+            lockByUniqueKey(firstMatch.uniqueKey);
+            applyFilterByUniqueKey(firstMatch.uniqueKey);
             return true;
         }
 
         function applySuggestion(entry) {
             if (!entry) return;
 
-            input.value = entry.title;
-            input.setSelectionRange(entry.title.length, entry.title.length);
+            catalogSearchInput.value = entry.title;
+            catalogSearchInput.setSelectionRange(entry.title.length, entry.title.length);
             updateClearVisibility();
             hideSuggestions();
             hideAutocomplete();
@@ -439,95 +429,95 @@
             if (currentTopMatch) {
                 var matches = getMatches(currentTopMatch);
                 if (matches.length === 1) {
-                    input.value = matches[0].title;
+                    catalogSearchInput.value = matches[0].title;
                 } else {
-                    input.value = currentTopMatch;
+                    catalogSearchInput.value = currentTopMatch;
                 }
-                input.setSelectionRange(input.value.length, input.value.length);
+                catalogSearchInput.setSelectionRange(catalogSearchInput.value.length, catalogSearchInput.value.length);
                 hideAutocomplete();
                 return;
             }
 
-            var raw = String(input.value || '').trim();
-            if (!raw) return;
-            if (!hasMeaningfulChars(raw)) return;
+            var rawValue = String(catalogSearchInput.value || '').trim();
+            if (!rawValue) return;
+            if (!hasMeaningfulChars(rawValue)) return;
 
-            var normalized = capitalizeFirst(raw);
-            input.value = normalized;
-            input.setSelectionRange(normalized.length, normalized.length);
+            var normalizedValue = capitalizeFirst(rawValue);
+            catalogSearchInput.value = normalizedValue;
+            catalogSearchInput.setSelectionRange(normalizedValue.length, normalizedValue.length);
         }
 
         var activeSuggestionIndex = -1;
 
-        function getSuggestionEls() {
-            if (!box) return [];
-            return Array.prototype.slice.call(box.querySelectorAll('.catalog-search-suggestion'));
+        function getSuggestionElements() {
+            if (!catalogSearchBox) return [];
+            return Array.prototype.slice.call(catalogSearchBox.querySelectorAll('.catalog-search-suggestion'));
         }
 
         function setActiveSuggestion(index) {
-            var els = getSuggestionEls();
-            els.forEach(function (el) { el.classList.remove('is-active'); });
+            var suggestionElements = getSuggestionElements();
+            suggestionElements.forEach(function (element) { element.classList.remove('is-active'); });
             activeSuggestionIndex = index;
-            if (index >= 0 && index < els.length) {
-                els[index].classList.add('is-active');
+            if (index >= 0 && index < suggestionElements.length) {
+                suggestionElements[index].classList.add('is-active');
                 try {
-                    els[index].scrollIntoView({ block: 'nearest' });
-                } catch (e) {}
+                    suggestionElements[index].scrollIntoView({ block: 'nearest' });
+                } catch (scrollError) {}
             }
         }
 
         function resetActiveSuggestion() {
             activeSuggestionIndex = -1;
-            getSuggestionEls().forEach(function (el) { el.classList.remove('is-active'); });
+            getSuggestionElements().forEach(function (element) { element.classList.remove('is-active'); });
         }
 
         function handleArrow(direction) {
-            var els = getSuggestionEls();
-            if (!box || els.length === 0 || !box.classList.contains('show')) {
+            var suggestionElements = getSuggestionElements();
+            if (!catalogSearchBox || suggestionElements.length === 0 || !catalogSearchBox.classList.contains('show')) {
                 return false;
             }
-            var next;
+            var nextIndex;
             if (direction === 'down') {
                 if (activeSuggestionIndex < 0) {
-                    next = 0;
+                    nextIndex = 0;
                 } else {
-                    next = (activeSuggestionIndex + 1) % els.length;
+                    nextIndex = (activeSuggestionIndex + 1) % suggestionElements.length;
                 }
             } else {
                 if (activeSuggestionIndex < 0) {
-                    next = els.length - 1;
+                    nextIndex = suggestionElements.length - 1;
                 } else {
-                    next = (activeSuggestionIndex - 1 + els.length) % els.length;
+                    nextIndex = (activeSuggestionIndex - 1 + suggestionElements.length) % suggestionElements.length;
                 }
             }
-            setActiveSuggestion(next);
+            setActiveSuggestion(nextIndex);
             return true;
         }
 
-        input.addEventListener('input', function () {
+        catalogSearchInput.addEventListener('input', function () {
             unlock();
             resetActiveSuggestion();
 
-            if (isTruncated(input.value)) {
-                input.value = stripEllipsis(input.value);
+            if (isTruncated(catalogSearchInput.value)) {
+                catalogSearchInput.value = stripEllipsis(catalogSearchInput.value);
             }
             updateClearVisibility();
             hideAutocomplete();
 
-            var value = input.value;
-            if (!value) {
+            var currentValue = catalogSearchInput.value;
+            if (!currentValue) {
                 hideSuggestions();
                 showAllItems();
                 return;
             }
 
-            if (!hasMeaningfulChars(value)) {
+            if (!hasMeaningfulChars(currentValue)) {
                 hideSuggestions();
                 hideAllItems();
                 return;
             }
 
-            var matches = getMatches(value);
+            var matches = getMatches(currentValue);
 
             if (matches.length === 0) {
                 hideAllItems();
@@ -535,99 +525,99 @@
 
             if (matches.length === 1) {
                 currentTopMatch = matches[0].title;
-                renderAutocomplete(value, [matches[0].title]);
+                renderAutocomplete(currentValue, [matches[0].title]);
             }
 
-            if (box) {
-                box.textContent = '';
+            if (catalogSearchBox) {
+                catalogSearchBox.textContent = '';
                 if (matches.length === 0) {
-                    box.classList.remove('show');
+                    catalogSearchBox.classList.remove('show');
                 } else {
                     matches.slice(0, 8).forEach(function (entry) {
-                        var el = document.createElement('div');
-                        el.className = 'catalog-search-suggestion';
-                        el.setAttribute('data-suggestion-id', entry.id);
-                        el.setAttribute('data-suggestion-key', entry.uniqueKey);
+                        var suggestionElement = document.createElement('div');
+                        suggestionElement.className = 'catalog-search-suggestion';
+                        suggestionElement.setAttribute('data-suggestion-id', entry.id);
+                        suggestionElement.setAttribute('data-suggestion-key', entry.uniqueKey);
 
-                        var t = document.createElement('span');
-                        t.className = 'catalog-search-suggestion-title';
-                        t.textContent = entry.title;
-                        el.appendChild(t);
+                        var titleSpanElement = document.createElement('span');
+                        titleSpanElement.className = 'catalog-search-suggestion-title';
+                        titleSpanElement.textContent = entry.title;
+                        suggestionElement.appendChild(titleSpanElement);
 
                         if (entry.meta) {
-                            var m = document.createElement('span');
-                            m.className = 'catalog-search-suggestion-meta';
-                            m.textContent = entry.meta;
-                            el.appendChild(m);
+                            var metaSpanElement = document.createElement('span');
+                            metaSpanElement.className = 'catalog-search-suggestion-meta';
+                            metaSpanElement.textContent = entry.meta;
+                            suggestionElement.appendChild(metaSpanElement);
                         }
 
-                        el.addEventListener('pointerdown', function (e) {
-                            e.preventDefault();
+                        suggestionElement.addEventListener('pointerdown', function (pointerEvent) {
+                            pointerEvent.preventDefault();
                             pointerDownInsideBox = true;
                             applySuggestion(entry);
-                            input.blur();
+                            catalogSearchInput.blur();
                         });
 
-                        el.addEventListener('mouseenter', function () {
-                            var idx = getSuggestionEls().indexOf(el);
-                            if (idx >= 0) setActiveSuggestion(idx);
+                        suggestionElement.addEventListener('mouseenter', function () {
+                            var hoveredIndex = getSuggestionElements().indexOf(suggestionElement);
+                            if (hoveredIndex >= 0) setActiveSuggestion(hoveredIndex);
                         });
 
-                        box.appendChild(el);
+                        catalogSearchBox.appendChild(suggestionElement);
                     });
-                    box.classList.add('show');
+                    catalogSearchBox.classList.add('show');
                 }
             }
         });
 
-        input.addEventListener('focus', function () {
-            if (isTruncated(input.value)) {
-                input.value = stripEllipsis(input.value);
+        catalogSearchInput.addEventListener('focus', function () {
+            if (isTruncated(catalogSearchInput.value)) {
+                catalogSearchInput.value = stripEllipsis(catalogSearchInput.value);
                 updateClearVisibility();
             }
         });
 
-        input.addEventListener('keydown', function (e) {
-            if (e.key === 'ArrowDown') {
+        catalogSearchInput.addEventListener('keydown', function (keyboardEvent) {
+            if (keyboardEvent.key === 'ArrowDown') {
                 if (handleArrow('down')) {
-                    e.preventDefault();
+                    keyboardEvent.preventDefault();
                     return;
                 }
             }
 
-            if (e.key === 'ArrowUp') {
+            if (keyboardEvent.key === 'ArrowUp') {
                 if (handleArrow('up')) {
-                    e.preventDefault();
+                    keyboardEvent.preventDefault();
                     return;
                 }
             }
 
-            if (e.key === 'Enter') {
-                e.preventDefault();
+            if (keyboardEvent.key === 'Enter') {
+                keyboardEvent.preventDefault();
 
                 if (activeSuggestionIndex >= 0) {
-                    var activeEl = getSuggestionEls()[activeSuggestionIndex];
-                    if (activeEl) {
-                        var key = activeEl.getAttribute('data-suggestion-key');
-                        var title = activeEl.querySelector('.catalog-search-suggestion-title');
-                        var text = title ? title.textContent.trim() : '';
-                        if (text) {
-                            input.value = text;
-                            input.setSelectionRange(text.length, text.length);
+                    var activeElement = getSuggestionElements()[activeSuggestionIndex];
+                    if (activeElement) {
+                        var activeKey = activeElement.getAttribute('data-suggestion-key');
+                        var activeTitleElement = activeElement.querySelector('.catalog-search-suggestion-title');
+                        var activeText = activeTitleElement ? activeTitleElement.textContent.trim() : '';
+                        if (activeText) {
+                            catalogSearchInput.value = activeText;
+                            catalogSearchInput.setSelectionRange(activeText.length, activeText.length);
                             updateClearVisibility();
                             hideSuggestions();
                             hideAutocomplete();
-                            lockByUniqueKey(key);
-                            applyFilterByUniqueKey(key);
+                            lockByUniqueKey(activeKey);
+                            applyFilterByUniqueKey(activeKey);
                             resetActiveSuggestion();
                             return;
                         }
                     }
                 }
 
-                var raw = String(input.value || '').trim();
+                var rawValue = String(catalogSearchInput.value || '').trim();
 
-                if (!hasMeaningfulChars(raw)) {
+                if (!hasMeaningfulChars(rawValue)) {
                     hideSuggestions();
                     hideAutocomplete();
                     hideAllItems();
@@ -635,8 +625,8 @@
                 }
 
                 prepareForSubmit();
-                var clean = stripEllipsis(input.value);
-                applyFilterByText(clean);
+                var cleanValue = stripEllipsis(catalogSearchInput.value);
+                applyFilterByText(cleanValue);
                 applyEllipsisIfNeeded();
                 updateClearVisibility();
                 hideSuggestions();
@@ -645,12 +635,12 @@
                 return;
             }
 
-            if (e.key === 'Tab' || e.key === 'ArrowRight') {
-                if (wrapper.classList.contains('has-autocomplete')) {
-                    var caretAtEnd = input.selectionStart === input.value.length
-                        && input.selectionEnd === input.value.length;
+            if (keyboardEvent.key === 'Tab' || keyboardEvent.key === 'ArrowRight') {
+                if (catalogSearchWrapper.classList.contains('has-autocomplete')) {
+                    var caretAtEnd = catalogSearchInput.selectionStart === catalogSearchInput.value.length
+                        && catalogSearchInput.selectionEnd === catalogSearchInput.value.length;
                     if (caretAtEnd) {
-                        e.preventDefault();
+                        keyboardEvent.preventDefault();
                         acceptAutocomplete();
                         updateClearVisibility();
                         return;
@@ -658,21 +648,25 @@
                 }
             }
 
-            if (e.key === 'Escape') {
+            if (keyboardEvent.key === 'Escape') {
                 hideSuggestions();
                 hideAutocomplete();
                 resetActiveSuggestion();
             }
         });
 
-        input.addEventListener('blur', function () {
+        catalogSearchInput.addEventListener('blur', function () {
             setTimeout(function () {
                 if (pointerDownInsideBox) {
                     pointerDownInsideBox = false;
                     return;
                 }
-                if (!input.value) { hideSuggestions(); hideAutocomplete(); return; }
-                if (!hasMeaningfulChars(input.value)) {
+                if (!catalogSearchInput.value) {
+                    hideSuggestions();
+                    hideAutocomplete();
+                    return;
+                }
+                if (!hasMeaningfulChars(catalogSearchInput.value)) {
                     hideSuggestions();
                     hideAutocomplete();
                     return;
@@ -685,15 +679,15 @@
             }, 150);
         });
 
-        if (clearBtn) {
-            clearBtn.addEventListener('click', function () {
-                input.value = '';
+        if (catalogSearchClearButton) {
+            catalogSearchClearButton.addEventListener('click', function () {
+                catalogSearchInput.value = '';
                 unlock();
                 updateClearVisibility();
                 hideSuggestions();
                 hideAutocomplete();
                 showAllItems();
-                input.focus();
+                catalogSearchInput.focus();
             });
         }
 
@@ -705,39 +699,40 @@
                 applyFilterByUniqueKey(lockedUniqueKey);
                 return;
             }
-            var value = String(catalogSearchInputRef.value || '').trim();
-            if (!value) {
+            var currentValue = String(catalogSearchInputRef.value || '').trim();
+            if (!currentValue) {
                 showAllItems();
                 return;
             }
-            if (!hasMeaningfulChars(value)) {
+            if (!hasMeaningfulChars(currentValue)) {
                 hideAllItems();
                 return;
             }
-            applyFilterByText(stripEllipsis(value));
+            applyFilterByText(stripEllipsis(currentValue));
         };
     }
 
     function initHeaderSearch() {
-        var input      = document.getElementById('headerSearchInput');
-        var box        = document.getElementById('headerSuggestions');
-        var form       = document.getElementById('headerSearchForm');
-        var wrapper    = document.getElementById('headerSearchWrapper');
-        var typedEl    = document.getElementById('headerAutocompleteTyped');
-        var hintEl     = document.getElementById('headerAutocompleteHint');
-        var filtersBtn = document.getElementById('headerFiltersBtn');
-        var submitBtn  = document.getElementById('headerSearchSubmitBtn');
-        var clearBtn   = document.getElementById('headerSearchClear');
+        var headerSearchInput = document.getElementById('headerSearchInput');
+        var headerSuggestionsBox = document.getElementById('headerSuggestions');
+        var headerSearchForm = document.getElementById('headerSearchForm');
+        var headerSearchWrapper = document.getElementById('headerSearchWrapper');
+        var headerAutocompleteTypedElement = document.getElementById('headerAutocompleteTyped');
+        var headerAutocompleteHintElement = document.getElementById('headerAutocompleteHint');
+        var headerFiltersButton = document.getElementById('headerFiltersBtn');
+        var headerSearchSubmitButton = document.getElementById('headerSearchSubmitBtn');
+        var headerSearchClearButton = document.getElementById('headerSearchClear');
 
-        if (!input || !box || !form || !wrapper || !typedEl || !hintEl) return;
+        if (!headerSearchInput || !headerSuggestionsBox || !headerSearchForm || !headerSearchWrapper
+                || !headerAutocompleteTypedElement || !headerAutocompleteHintElement) return;
 
         var ELLIPSIS = '…';
 
         function getUrlTitle() {
             try {
-                var params = new URLSearchParams(window.location.search);
-                return params.get('title') || '';
-            } catch (e) {
+                var urlParameters = new URLSearchParams(window.location.search);
+                return urlParameters.get('title') || '';
+            } catch (urlError) {
                 return '';
             }
         }
@@ -750,42 +745,42 @@
 
         function getCardTitles() {
             return Array.from(document.querySelectorAll('.movies-grid .movie-card'))
-                .map(function (card) {
-                    var t = card.querySelector('.movie-card-title a, .media-card-title a');
-                    return t ? t.textContent.trim() : '';
+                .map(function (cardElement) {
+                    var titleElement = cardElement.querySelector('.movie-card-title a, .media-card-title a');
+                    return titleElement ? titleElement.textContent.trim() : '';
                 })
-                .filter(function (t) { return t.length > 0; });
+                .filter(function (title) { return title.length > 0; });
         }
 
         function updateClearVisibility() {
-            wrapper.classList.toggle('has-value', input.value.trim().length > 0);
+            headerSearchWrapper.classList.toggle('has-value', headerSearchInput.value.trim().length > 0);
         }
 
-        function buildTruncatedFromCards(source) {
-            var cards = getCardTitles();
-            if (cards.length <= 1) return source;
+        function buildTruncatedFromCards(sourceValue) {
+            var cardTitles = getCardTitles();
+            if (cardTitles.length <= 1) return sourceValue;
 
-            var prefix = longestCommonPrefix(cards);
-            if (!prefix || prefix.length <= source.length) {
-                return source + ELLIPSIS;
+            var commonPrefix = longestCommonPrefix(cardTitles);
+            if (!commonPrefix || commonPrefix.length <= sourceValue.length) {
+                return sourceValue + ELLIPSIS;
             }
-            return prefix + ELLIPSIS;
+            return commonPrefix + ELLIPSIS;
         }
 
         function hideAutocomplete() {
             currentTopMatch = null;
-            wrapper.classList.remove('has-autocomplete');
-            typedEl.textContent = '';
-            hintEl.textContent  = '';
+            headerSearchWrapper.classList.remove('has-autocomplete');
+            headerAutocompleteTypedElement.textContent = '';
+            headerAutocompleteHintElement.textContent  = '';
         }
 
         function hideDropdown() {
-            box.style.display = 'none';
-            box.textContent = '';
+            headerSuggestionsBox.style.display = 'none';
+            headerSuggestionsBox.textContent = '';
         }
 
         function resetSearchState() {
-            input.value = '';
+            headerSearchInput.value = '';
             updateClearVisibility();
             hideDropdown();
             hideAutocomplete();
@@ -794,14 +789,14 @@
         function restoreQuery() {
             var urlTitle = getUrlTitle();
             if (urlTitle) {
-                input.value = buildTruncatedFromCards(urlTitle);
+                headerSearchInput.value = buildTruncatedFromCards(urlTitle);
                 return;
             }
 
             if (isMovieDetailsPage()) {
-                var saved = readLastSearch();
-                if (saved) {
-                    input.value = saved;
+                var savedSearch = readLastSearch();
+                if (savedSearch) {
+                    headerSearchInput.value = savedSearch;
                     updateClearVisibility();
                     return;
                 }
@@ -827,14 +822,14 @@
                 .replace(/ё/g, 'е');
         }
 
-        function renderAutocomplete(typed, titles) {
-            if (!typed || !titles || titles.length !== 1 || !typedEl || !hintEl) {
+        function renderAutocomplete(typedValue, titles) {
+            if (!typedValue || !titles || titles.length !== 1 || !headerAutocompleteTypedElement || !headerAutocompleteHintElement) {
                 hideAutocomplete();
                 return;
             }
 
             var fullTitle = titles[0];
-            var typedLower = normalizeForMatch(typed);
+            var typedLower = normalizeForMatch(typedValue);
             var fullLower = normalizeForMatch(fullTitle);
 
             if (fullLower.indexOf(typedLower) !== 0) {
@@ -842,106 +837,106 @@
                 return;
             }
 
-            var rest = fullTitle.substring(typed.length);
-            if (!rest) {
+            var remainingPart = fullTitle.substring(typedValue.length);
+            if (!remainingPart) {
                 hideAutocomplete();
                 return;
             }
 
-            typedEl.textContent = typed;
-            hintEl.textContent = rest;
-            wrapper.classList.add('has-autocomplete');
+            headerAutocompleteTypedElement.textContent = typedValue;
+            headerAutocompleteHintElement.textContent = remainingPart;
+            headerSearchWrapper.classList.add('has-autocomplete');
         }
 
         function acceptAutocomplete() {
             if (!currentTopMatch) return false;
-            input.value = currentTopMatch;
-            input.setSelectionRange(input.value.length, input.value.length);
+            headerSearchInput.value = currentTopMatch;
+            headerSearchInput.setSelectionRange(headerSearchInput.value.length, headerSearchInput.value.length);
             hideAutocomplete();
             updateClearVisibility();
             return true;
         }
 
-        function renderDropdownItems(list) {
-            box.textContent = '';
-            list.forEach(function (item) {
-                var row = document.createElement('div');
-                row.className = 'suggestion-item';
-                row.setAttribute('data-id', item.id || '');
+        function renderDropdownItems(itemsList) {
+            headerSuggestionsBox.textContent = '';
+            itemsList.forEach(function (item) {
+                var rowElement = document.createElement('div');
+                rowElement.className = 'suggestion-item';
+                rowElement.setAttribute('data-id', item.id || '');
 
-                var t = document.createElement('span');
-                t.className = 'suggestion-title';
-                t.textContent = item.title || '';
-                row.appendChild(t);
+                var titleElement = document.createElement('span');
+                titleElement.className = 'suggestion-title';
+                titleElement.textContent = item.title || '';
+                rowElement.appendChild(titleElement);
 
-                row.addEventListener('mouseenter', function () {
-                    var idx = getSuggestionEls().indexOf(row);
-                    if (idx >= 0) setActiveSuggestion(idx);
+                rowElement.addEventListener('mouseenter', function () {
+                    var hoveredIndex = getSuggestionElements().indexOf(rowElement);
+                    if (hoveredIndex >= 0) setActiveSuggestion(hoveredIndex);
                 });
 
-                box.appendChild(row);
+                headerSuggestionsBox.appendChild(rowElement);
             });
         }
 
-        function getSuggestionEls() {
-            return Array.prototype.slice.call(box.querySelectorAll('.suggestion-item'));
+        function getSuggestionElements() {
+            return Array.prototype.slice.call(headerSuggestionsBox.querySelectorAll('.suggestion-item'));
         }
 
         function setActiveSuggestion(index) {
-            var els = getSuggestionEls();
-            els.forEach(function (el) { el.classList.remove('is-active'); });
+            var suggestionElements = getSuggestionElements();
+            suggestionElements.forEach(function (element) { element.classList.remove('is-active'); });
             activeSuggestionIndex = index;
-            if (index >= 0 && index < els.length) {
-                els[index].classList.add('is-active');
+            if (index >= 0 && index < suggestionElements.length) {
+                suggestionElements[index].classList.add('is-active');
                 try {
-                    els[index].scrollIntoView({ block: 'nearest' });
-                } catch (e) {}
+                    suggestionElements[index].scrollIntoView({ block: 'nearest' });
+                } catch (scrollError) {}
             }
         }
 
         function resetActiveSuggestion() {
             activeSuggestionIndex = -1;
-            getSuggestionEls().forEach(function (el) { el.classList.remove('is-active'); });
+            getSuggestionElements().forEach(function (element) { element.classList.remove('is-active'); });
         }
 
         function handleArrow(direction) {
-            var els = getSuggestionEls();
-            if (els.length === 0) return false;
-            if (box.style.display !== 'flex') return false;
-            var next;
+            var suggestionElements = getSuggestionElements();
+            if (suggestionElements.length === 0) return false;
+            if (headerSuggestionsBox.style.display !== 'flex') return false;
+            var nextIndex;
             if (direction === 'down') {
                 if (activeSuggestionIndex < 0) {
-                    next = 0;
+                    nextIndex = 0;
                 } else {
-                    next = (activeSuggestionIndex + 1) % els.length;
+                    nextIndex = (activeSuggestionIndex + 1) % suggestionElements.length;
                 }
             } else {
                 if (activeSuggestionIndex < 0) {
-                    next = els.length - 1;
+                    nextIndex = suggestionElements.length - 1;
                 } else {
-                    next = (activeSuggestionIndex - 1 + els.length) % els.length;
+                    nextIndex = (activeSuggestionIndex - 1 + suggestionElements.length) % suggestionElements.length;
                 }
             }
-            setActiveSuggestion(next);
+            setActiveSuggestion(nextIndex);
             return true;
         }
 
         function applyActiveSuggestion() {
             if (activeSuggestionIndex < 0) return false;
-            var row = getSuggestionEls()[activeSuggestionIndex];
-            if (!row) return false;
+            var activeRowElement = getSuggestionElements()[activeSuggestionIndex];
+            if (!activeRowElement) return false;
 
-            var titleEl = row.querySelector('.suggestion-title');
-            var text = titleEl ? titleEl.textContent.trim() : '';
-            if (!text) return false;
+            var activeTitleElement = activeRowElement.querySelector('.suggestion-title');
+            var activeText = activeTitleElement ? activeTitleElement.textContent.trim() : '';
+            if (!activeText) return false;
 
-            input.value = text;
-            input.setSelectionRange(text.length, text.length);
+            headerSearchInput.value = activeText;
+            headerSearchInput.setSelectionRange(activeText.length, activeText.length);
             hideAutocomplete();
             hideDropdown();
             updateClearVisibility();
             resetActiveSuggestion();
-            input.focus();
+            headerSearchInput.focus();
 
             if (typeof validateSearchQuery === 'function' && validateSearchQuery()) {
                 commitAndSubmit();
@@ -950,77 +945,77 @@
         }
 
         function commitAndSubmit() {
-            var raw = String(input.value || '').trim();
-            if (!hasMeaningfulChars(raw)) {
+            var rawValue = String(headerSearchInput.value || '').trim();
+            if (!hasMeaningfulChars(rawValue)) {
                 hideAutocomplete();
                 hideDropdown();
                 return;
             }
 
-            var clean = raw;
-            if (isTruncated(clean)) {
-                clean = clean.substring(0, clean.length - 1).trim();
+            var cleanValue = rawValue;
+            if (isTruncated(cleanValue)) {
+                cleanValue = cleanValue.substring(0, cleanValue.length - 1).trim();
             }
 
             if (currentTopMatch) {
-                var typedLower = normalizeForMatch(clean);
+                var typedLower = normalizeForMatch(cleanValue);
                 var topLower = normalizeForMatch(currentTopMatch);
                 if (topLower.indexOf(typedLower) === 0) {
-                    clean = currentTopMatch;
+                    cleanValue = currentTopMatch;
                 }
             } else {
-                clean = capitalizeFirst(clean);
+                cleanValue = capitalizeFirst(cleanValue);
             }
 
-            input.value = clean;
-            input.setSelectionRange(clean.length, clean.length);
+            headerSearchInput.value = cleanValue;
+            headerSearchInput.setSelectionRange(cleanValue.length, cleanValue.length);
             updateClearVisibility();
             hideDropdown();
 
-            var truncated = buildTruncatedFromCards(clean);
+            var truncatedValue = buildTruncatedFromCards(cleanValue);
 
-            if (truncated && truncated.length > clean.length) {
-                typedEl.textContent = clean;
-                hintEl.textContent = truncated.substring(clean.length);
-                wrapper.classList.add('has-autocomplete');
+            if (truncatedValue && truncatedValue.length > cleanValue.length) {
+                headerAutocompleteTypedElement.textContent = cleanValue;
+                headerAutocompleteHintElement.textContent = truncatedValue.substring(cleanValue.length);
+                headerSearchWrapper.classList.add('has-autocomplete');
             } else {
                 hideAutocomplete();
             }
 
-            saveLastSearch(clean);
+            saveLastSearch(cleanValue);
             markPending();
 
             window.setTimeout(function () {
-                form.submit();
+                headerSearchForm.submit();
             }, 120);
         }
 
-        function applySuggestion(row) {
-            if (!row) return;
-            var titleEl = row.querySelector('.suggestion-title');
-            var text = titleEl ? titleEl.textContent.trim() : '';
-            if (!text) return;
+        function applySuggestion(rowElement) {
+            if (!rowElement) return;
+            var titleElement = rowElement.querySelector('.suggestion-title');
+            var suggestionText = titleElement ? titleElement.textContent.trim() : '';
+            if (!suggestionText) return;
 
-            input.value = text;
-            input.setSelectionRange(text.length, text.length);
+            headerSearchInput.value = suggestionText;
+            headerSearchInput.setSelectionRange(suggestionText.length, suggestionText.length);
             hideAutocomplete();
             hideDropdown();
             updateClearVisibility();
             resetActiveSuggestion();
-            input.focus();
+            headerSearchInput.focus();
 
             if (typeof validateSearchQuery === 'function' && validateSearchQuery()) {
                 commitAndSubmit();
             }
         }
 
-        box.addEventListener('pointerdown', function (e) {
-            var row = e.target.closest('.suggestion-item');
-            if (!row) return;
-            e.preventDefault();
-            e.stopPropagation();
+        headerSuggestionsBox.addEventListener('pointerdown', function (pointerEvent) {
+            var rowElement = pointerEvent.target.closest('.suggestion-item');
+            if (!rowElement) return;
+            pointerEvent.preventDefault();
+            pointerEvent.stopPropagation();
             pointerDownInsideBox = true;
-            applySuggestion(row);
+            applySuggestion(rowElement);
         }, true);
 
         function fetchSuggestions(query) {
@@ -1028,36 +1023,37 @@
                 hideDropdown();
                 hideAutocomplete();
                 resetActiveSuggestion();
+                pendingMoveToList = false;
                 return;
             }
 
             fetch('/movies/suggestions?query=' + encodeURIComponent(query))
-                .then(function (resp) { return resp.json(); })
-                .then(function (data) {
-                    if (!data || data.length === 0) {
+                .then(function (response) { return response.json(); })
+                .then(function (suggestionsList) {
+                    if (!suggestionsList || suggestionsList.length === 0) {
                         hideDropdown();
                         hideAutocomplete();
                         resetActiveSuggestion();
                         pendingMoveToList = false;
                         return;
                     }
-                    renderDropdownItems(data);
-                    box.style.display = 'flex';
+                    renderDropdownItems(suggestionsList);
+                    headerSuggestionsBox.style.display = 'flex';
                     resetActiveSuggestion();
 
-                    var typedVal = input.value;
-                    var q = normalizeForMatch(typedVal);
-                    var titles = data
-                        .map(function (it) { return it && it.title ? it.title : ''; })
-                        .filter(function (t) { return t.length > 0; });
+                    var typedValue = headerSearchInput.value;
+                    var normalizedTyped = normalizeForMatch(typedValue);
+                    var titles = suggestionsList
+                        .map(function (item) { return item && item.title ? item.title : ''; })
+                        .filter(function (title) { return title.length > 0; });
 
-                    var matching = titles.filter(function (t) {
-                        return normalizeForMatch(t).indexOf(q) === 0;
+                    var matchingTitles = titles.filter(function (title) {
+                        return normalizeForMatch(title).indexOf(normalizedTyped) === 0;
                     });
 
-                    if (matching.length === 1) {
-                        currentTopMatch = matching[0];
-                        renderAutocomplete(typedVal, [matching[0]]);
+                    if (matchingTitles.length === 1) {
+                        currentTopMatch = matchingTitles[0];
+                        renderAutocomplete(typedValue, [matchingTitles[0]]);
                     } else {
                         hideAutocomplete();
                     }
@@ -1075,22 +1071,22 @@
                 });
         }
 
-        input.addEventListener('beforeinput', function (e) {
+        headerSearchInput.addEventListener('beforeinput', function (beforeInputEvent) {
             if (!currentTopMatch) return;
-            if (e.inputType !== 'insertText' || !e.data) return;
-            var typedLen = input.value.length;
-            var expected = currentTopMatch.charAt(typedLen);
-            if (e.data.toLowerCase() !== expected.toLowerCase()) {
+            if (beforeInputEvent.inputType !== 'insertText' || !beforeInputEvent.data) return;
+            var typedLength = headerSearchInput.value.length;
+            var expectedCharacter = currentTopMatch.charAt(typedLength);
+            if (beforeInputEvent.data.toLowerCase() !== expectedCharacter.toLowerCase()) {
                 hideAutocomplete();
             }
         });
 
-        input.addEventListener('input', function () {
-            var val = this.value;
+        headerSearchInput.addEventListener('input', function () {
+            var currentValue = headerSearchInput.value;
 
-            if (isTruncated(val)) {
-                val = val.substring(0, val.length - 1);
-                this.value = val;
+            if (isTruncated(currentValue)) {
+                currentValue = currentValue.substring(0, currentValue.length - 1);
+                headerSearchInput.value = currentValue;
             }
 
             hideAutocomplete();
@@ -1098,60 +1094,62 @@
             resetActiveSuggestion();
             pendingMoveToList = false;
 
-            if (val === '') {
+            if (currentValue === '') {
                 hideDropdown();
                 return;
             }
 
-            if (!hasMeaningfulChars(val)) {
+            if (!hasMeaningfulChars(currentValue)) {
                 hideDropdown();
                 return;
             }
 
             clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(function () { fetchSuggestions(val.trim()); }, 300);
+            debounceTimer = setTimeout(function () {
+                fetchSuggestions(currentValue.trim());
+            }, 300);
         });
 
-        input.addEventListener('keydown', function (e) {
-            if (e.key === 'ArrowDown') {
+        headerSearchInput.addEventListener('keydown', function (keyboardEvent) {
+            if (keyboardEvent.key === 'ArrowDown') {
                 if (handleArrow('down')) {
-                    e.preventDefault();
+                    keyboardEvent.preventDefault();
                     return;
                 }
-                if (hasMeaningfulChars(input.value)) {
-                    e.preventDefault();
+                if (hasMeaningfulChars(headerSearchInput.value)) {
+                    keyboardEvent.preventDefault();
                     pendingMoveToList = true;
                     clearTimeout(debounceTimer);
-                    fetchSuggestions(input.value.trim());
+                    fetchSuggestions(headerSearchInput.value.trim());
                     return;
                 }
             }
 
-            if (e.key === 'ArrowUp') {
+            if (keyboardEvent.key === 'ArrowUp') {
                 if (handleArrow('up')) {
-                    e.preventDefault();
+                    keyboardEvent.preventDefault();
                     return;
                 }
             }
 
-            if (currentTopMatch && (e.key === 'ArrowRight' || e.key === 'Tab')) {
-                var caretAtEnd = input.selectionStart === input.value.length
-                    && input.selectionEnd === input.value.length;
+            if (currentTopMatch && (keyboardEvent.key === 'ArrowRight' || keyboardEvent.key === 'Tab')) {
+                var caretAtEnd = headerSearchInput.selectionStart === headerSearchInput.value.length
+                    && headerSearchInput.selectionEnd === headerSearchInput.value.length;
                 if (caretAtEnd) {
-                    e.preventDefault();
+                    keyboardEvent.preventDefault();
                     acceptAutocomplete();
                     return;
                 }
             }
-            if (e.key === 'Escape') {
+            if (keyboardEvent.key === 'Escape') {
                 hideAutocomplete();
                 hideDropdown();
                 resetActiveSuggestion();
                 pendingMoveToList = false;
                 return;
             }
-            if (e.key === 'Enter') {
-                e.preventDefault();
+            if (keyboardEvent.key === 'Enter') {
+                keyboardEvent.preventDefault();
                 if (activeSuggestionIndex >= 0) {
                     if (applyActiveSuggestion()) return;
                 }
@@ -1160,7 +1158,7 @@
             }
         });
 
-        input.addEventListener('blur', function () {
+        headerSearchInput.addEventListener('blur', function () {
             setTimeout(function () {
                 if (pointerDownInsideBox) {
                     pointerDownInsideBox = false;
@@ -1172,49 +1170,49 @@
             }, 200);
         });
 
-        if (filtersBtn && !filtersBtn.dataset.bound) {
-            filtersBtn.dataset.bound = '1';
-            filtersBtn.addEventListener('click', function (e) {
-                e.preventDefault();
+        if (headerFiltersButton && !headerFiltersButton.dataset.bound) {
+            headerFiltersButton.dataset.bound = '1';
+            headerFiltersButton.addEventListener('click', function (clickEvent) {
+                clickEvent.preventDefault();
                 if (typeof toggleFiltersModal === 'function') toggleFiltersModal(true);
             });
         }
 
-        if (submitBtn && !submitBtn.dataset.bound) {
-            submitBtn.dataset.bound = '1';
-            submitBtn.addEventListener('click', function (e) {
-                e.preventDefault();
+        if (headerSearchSubmitButton && !headerSearchSubmitButton.dataset.bound) {
+            headerSearchSubmitButton.dataset.bound = '1';
+            headerSearchSubmitButton.addEventListener('click', function (clickEvent) {
+                clickEvent.preventDefault();
                 if (typeof validateSearchQuery === 'function' && !validateSearchQuery()) return;
                 commitAndSubmit();
             });
         }
 
-        if (!form.dataset.bound) {
-            form.dataset.bound = '1';
-            form.addEventListener('submit', function (e) {
-                e.preventDefault();
+        if (!headerSearchForm.dataset.bound) {
+            headerSearchForm.dataset.bound = '1';
+            headerSearchForm.addEventListener('submit', function (submitEvent) {
+                submitEvent.preventDefault();
                 if (typeof validateSearchQuery === 'function' && !validateSearchQuery()) return;
                 commitAndSubmit();
             });
         }
 
-        if (clearBtn && !clearBtn.dataset.bound) {
-            clearBtn.dataset.bound = '1';
-            clearBtn.addEventListener('click', function (e) {
-                e.preventDefault();
-                input.value = '';
+        if (headerSearchClearButton && !headerSearchClearButton.dataset.bound) {
+            headerSearchClearButton.dataset.bound = '1';
+            headerSearchClearButton.addEventListener('click', function (clickEvent) {
+                clickEvent.preventDefault();
+                headerSearchInput.value = '';
                 clearPending();
                 hideAutocomplete();
                 hideDropdown();
                 resetActiveSuggestion();
                 pendingMoveToList = false;
                 updateClearVisibility();
-                input.focus();
+                headerSearchInput.focus();
             });
         }
 
-        window.addEventListener('pageshow', function (e) {
-            if (e.persisted) restoreQuery();
+        window.addEventListener('pageshow', function (pageShowEvent) {
+            if (pageShowEvent.persisted) restoreQuery();
         });
     }
 

@@ -242,6 +242,15 @@
         });
     }
 
+    function formatReviewDates() {
+        document.querySelectorAll('.js-review-date[data-date]').forEach(function (el) {
+            var raw = el.getAttribute('data-date');
+            if (raw && window.formatDateTime) {
+                el.textContent = window.formatDateTime(raw);
+            }
+        });
+    }
+
     window.reviewsUI = {
         upsertOwn(targetMovieId, review, isNew, movieTitle) {
             if (String(targetMovieId) !== String(movieId)) return;
@@ -290,6 +299,7 @@
             setTopAddBtnVisible(false);
             setNoReviewsBlockVisible(false);
             ensureEndMarkerRecheck();
+            formatReviewDates();
         },
 
         removeOwn(targetMovieId) {
@@ -329,6 +339,10 @@
 
         bindOwnCardActions(card, movieTitle) {
             bindOwnCardActions(card, movieTitle);
+        },
+
+        formatDates() {
+            formatReviewDates();
         }
     };
 
@@ -501,6 +515,7 @@
 
     bindExistingCards();
     initTopAddBtn();
+    formatReviewDates();
 
     function appendEndMarker() {
         if (list.parentNode && list.parentNode.querySelector('.reviews-end')) return;
@@ -638,6 +653,7 @@
                     if (el) fragment.appendChild(el);
                 });
                 list.appendChild(fragment);
+                formatReviewDates();
             } else {
                 hasMore = false;
             }
@@ -673,15 +689,6 @@
             wrapper.classList.remove('is-loading');
             if (spinner) spinner.style.display = 'none';
         }
-    }
-
-    function formatReviewDates() {
-        document.querySelectorAll('.js-review-date[data-date]').forEach(function (el) {
-            var raw = el.getAttribute('data-date');
-            if (raw && window.formatDateTime) {
-                el.textContent = window.formatDateTime(raw);
-            }
-        });
     }
 
     if (document.readyState === 'loading') {
