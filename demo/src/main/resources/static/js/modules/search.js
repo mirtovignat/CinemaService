@@ -6,6 +6,7 @@
 
     var DEFAULT_STORAGE_KEY = 'lastSearchQuery';
     var SEARCH_CLEARED_KEY = 'searchClearedFlag';
+    var KNOWN_TITLES_KEY = 'knownTitles';
 
     function hasMeaningfulChars(value) {
         return /[a-zа-я0-9ё]/i.test(String(value || ''));
@@ -21,6 +22,44 @@
         return String(value || '')
             .toLocaleLowerCase('ru-RU')
             .replace(/ё/g, 'е');
+    }
+
+    function readKnownTitles() {
+        try {
+            var raw = sessionStorage.getItem(KNOWN_TITLES_KEY);
+            if (!raw) return [];
+            var parsed = JSON.parse(raw);
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (e) { return []; }
+    }
+
+    function rememberKnownTitles(titles) {
+        if (!titles || titles.length === 0) return;
+        try {
+            var existing = readKnownTitles();
+            var seen = new Set(existing.map(normalizeForMatch));
+            var added = false;
+            titles.forEach(function (t) {
+                var n = normalizeForMatch(t);
+                if (n && !seen.has(n)) {
+                    existing.push(t);
+                    seen.add(n);
+                    added = true;
+                }
+            });
+            if (added) {
+                if (existing.length > 500) existing = existing.slice(-500);
+                sessionStorage.setItem(KNOWN_TITLES_KEY, JSON.stringify(existing));
+            }
+        } catch (e) {}
+    }
+
+    function isKnownFullTitle(value) {
+        var n = normalizeForMatch(value);
+        if (!n) return false;
+        return readKnownTitles().some(function (t) {
+            return normalizeForMatch(t) === n;
+        });
     }
 
     function isMovieDetailsPage() {
@@ -81,7 +120,15 @@
                 var raw = entry.title != null ? entry.title : entry.movieTitle;
                 if (raw != null) {
                     var t = String(raw).trim();
-                    if (t) result.push({ title: t });
+                    if (t) {
+                        var item = { title: t };
+                        if (entry.watchCount != null) {
+                            var wc = Number(entry.watchCount);
+                            if (!isNaN(wc) && wc > 0) item.watchCount = wc;
+                        }
+                        if (entry.movieId != null) item.movieId = entry.movieId;
+                        result.push(item);
+                    }
                 }
             }
         }
@@ -134,6 +181,16 @@
             if (max === 0) return '';
         }
         return first.substring(0, max);
+    }
+
+    function findExactTitle(titles, value) {
+        if (!titles || titles.length === 0) return null;
+        var normalized = normalizeForMatch(value);
+        if (!normalized) return null;
+        for (var i = 0; i < titles.length; i++) {
+            if (normalizeForMatch(titles[i]) === normalized) return titles[i];
+        }
+        return null;
     }
 
     function createSearchEngine(config) {
@@ -194,6 +251,7 @@
             if (!allTitles || allTitles.length === 0) return typedValue;
             var prefix = commonPrefixOriginal(allTitles);
             var visual = prefix.length >= typedValue.length ? prefix : typedValue;
+            if (findExactTitle(allTitles, visual)) return visual;
             return visual + '…';
         }
 
@@ -240,7 +298,15 @@
                 var titleSpan = document.createElement('span');
                 titleSpan.className = suggestionTitleClass;
                 titleSpan.textContent = entry.title;
+                titleSpan.title = entry.title;
                 row.appendChild(titleSpan);
+
+                if (entry.watchCount != null && entry.watchCount > 1) {
+                    var metaSpan = document.createElement('span');
+                    metaSpan.className = 'catalog-suggestion-meta';
+                    metaSpan.textContent = '(' + entry.watchCount + ')';
+                    row.appendChild(metaSpan);
+                }
 
                 row.addEventListener('mouseenter', function () {
                     var idx = getSuggestionElements().indexOf(row);
@@ -258,6 +324,7 @@
             fetchSuggestionsPayload(url).then(function (entries) {
                 lastFetchedQuery = query;
                 lastFetchedTitles = (entries || []).map(function (e) { return e.title; });
+                rememberKnownTitles(lastFetchedTitles);
 
                 if (!entries || entries.length === 0) { hideSuggestions(); hideAutocomplete(); return; }
                 renderSuggestions(entries);
@@ -294,12 +361,7 @@
 
         function submitFromSuggestion(title) {
             if (!title) return;
-            var typed = String(input.value || '').trim();
-            var query = lastFetchedQuery && hasMeaningfulChars(lastFetchedQuery)
-                ? lastFetchedQuery
-                : capitalizeFirst(typed.replace(/…+$/, '').trim());
-            if (!query) return;
-            submitRaw(query, title + '…');
+            submitRaw(title, title);
         }
 
         function doSubmit() {
@@ -307,6 +369,19 @@
             if (!hasMeaningfulChars(raw)) return;
 
             var cleanValue = capitalizeFirst(raw.replace(/…+$/, '').trim());
+
+            var exactFromFetched = findExactTitle(lastFetchedTitles, cleanValue);
+            if (exactFromFetched) {
+                submitRaw(exactFromFetched, exactFromFetched);
+                return;
+            }
+
+            var urlParam = new URLSearchParams(window.location.search).get(queryParamName);
+            if (urlParam && normalizeForMatch(urlParam) === normalizeForMatch(cleanValue)
+                && isKnownFullTitle(cleanValue)) {
+                submitRaw(cleanValue, cleanValue);
+                return;
+            }
 
             var visualValue;
             var nClean = normalizeForMatch(cleanValue);
@@ -318,6 +393,8 @@
                 visualValue = buildVisualQuery(cleanValue, lastFetchedTitles);
             } else if (currentTopMatch && normalizeForMatch(currentTopMatch).length > nClean.length) {
                 visualValue = currentTopMatch + '…';
+            } else if (isKnownFullTitle(cleanValue)) {
+                visualValue = cleanValue;
             } else {
                 visualValue = cleanValue + '…';
             }
@@ -395,6 +472,7 @@
         if (clear) {
             clear.addEventListener('click', function (e) {
                 e.preventDefault();
+                e.stopPropagation();
                 input.value = '';
                 var hiddenField = form.querySelector('input[type="hidden"][name="' + queryParamName + '"]');
                 if (hiddenField) hiddenField.value = '';
@@ -406,6 +484,9 @@
         }
 
         form.addEventListener('submit', function (e) { e.preventDefault(); doSubmit(); });
+
+        syncClear();
+
         return { submit: doSubmit, setValue: function(v) { input.value = v || ''; syncClear(); } };
     }
 
@@ -435,8 +516,8 @@
             suggestionsBox: document.getElementById('headerSuggestions'),
             typedEl: document.getElementById('headerAutocompleteTyped'),
             hintEl: document.getElementById('headerAutocompleteHint'),
-            suggestionRowClass: 'suggestion-item',
-            suggestionTitleClass: 'suggestion-title',
+            suggestionRowClass: 'catalog-suggestion-item',
+            suggestionTitleClass: 'catalog-suggestion-title',
             queryParamName: 'title',
             getSuggestionsUrl: function (q) { return '/movies/suggestions?query=' + encodeURIComponent(q); },
             submitForm: function () {
@@ -492,6 +573,7 @@
             form: form,
             input: input,
             wrapper: wrapper,
+            clear: document.querySelector('[data-catalog-search-clear]'),
             suggestionsBox: document.querySelector('[data-catalog-search-suggestions]'),
             queryParamName: 'query',
             getSuggestionsUrl: function (q) {
@@ -505,6 +587,7 @@
             },
             onEmptyAfterClear: function () {
                 writeLastSearch(storageKey, '');
+                window.location.replace(window.location.pathname);
             }
         });
 

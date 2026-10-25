@@ -3,13 +3,13 @@ package com.example.demo.controller.catalog;
 import com.example.demo.cursor.CursorPageRequest;
 import com.example.demo.cursor.context.UserCursorContext;
 import com.example.demo.dto.catalog.LibrarianMovieViewDTO;
+import com.example.demo.dto.catalog.WatchedSuggestionDTO;
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.dto.response.CursorPageResponse;
 import com.example.demo.dto.response.UserCursorPageResponse;
 import com.example.demo.dto.user.UserSidebarViewDTO;
 import com.example.demo.exception.SuccessCode;
 import com.example.demo.mapper.entity.UserMapper;
-import com.example.demo.repository.projection.WatchedSuggestionProjection;
 import com.example.demo.service.catalog.WatchedHistoryService;
 import com.example.demo.service.cursor.SuggestionService;
 import com.example.demo.service.cursor.WatchedHistoryCursorService;
@@ -83,10 +83,19 @@ public class WatchedHistoryController {
 
     @GetMapping("/suggestions")
     @ResponseBody
-    public List<WatchedSuggestionProjection> suggestions(@RequestParam(value = "query", required = false, defaultValue = "") String query,
-                                                         @CurrentUserId(required = false) Long userId) {
+    public List<WatchedSuggestionDTO> suggestions(@RequestParam(value = "query", required = false, defaultValue = "") String query,
+                                                  @CurrentUserId(required = false) Long userId) {
         return suggestionService.suggest(userId, query,
-                (uId, normalizedQuery) -> watchedHistoryCursorService.findGroupedWatchedSuggestionsStartingWith(uId, normalizedQuery, PageRequest.of(0, 10)));
+                (uId, normalizedQuery) -> watchedHistoryCursorService
+                        .findGroupedWatchedSuggestionsStartingWith(uId, normalizedQuery, PageRequest.of(0, 10))
+                        .stream()
+                        .map(projection -> new WatchedSuggestionDTO(
+                                projection.getMovieId(),
+                                projection.getTitle(),
+                                projection.getWatchCount(),
+                                projection.getLastWatchedAt()
+                        ))
+                        .toList());
     }
 
     @PostMapping("/add/{id}")

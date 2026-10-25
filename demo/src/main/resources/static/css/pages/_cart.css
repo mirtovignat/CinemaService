@@ -103,15 +103,15 @@ main.catalog-wrapper::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(135deg, var(--glow-primary), #6366f1);
     border: none;
     color: white;
-    padding: 0.45rem 1.3rem;
+    padding: 0.35rem 1rem;
     border-radius: 60px;
     font-weight: 700;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     cursor: pointer;
     transition: 0.3s;
     display: inline-flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.4rem;
     box-shadow: 0 8px 30px rgba(99, 102, 241, 0.3);
     white-space: nowrap;
     font-family: inherit;
@@ -125,19 +125,19 @@ main.catalog-wrapper::-webkit-scrollbar-thumb:hover {
 .checkout-btn .btn-text {
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.3rem;
 }
 
 .checkout-btn svg {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
 }
 
 .btn-price {
     background: rgba(255, 255, 255, 0.2);
-    padding: 0.12rem 0.65rem;
+    padding: 0.1rem 0.5rem;
     border-radius: 40px;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     backdrop-filter: blur(4px);
 }
 
@@ -146,16 +146,16 @@ main.catalog-wrapper::-webkit-scrollbar-thumb:hover {
     background: transparent;
     border: 1px solid var(--glow-danger);
     color: var(--glow-danger);
-    padding: 0.4rem 1.2rem;
+    padding: 0.35rem 0.8rem;
     border-radius: 60px;
     font-weight: 600;
-    font-size: 0.82rem;
+    font-size: 0.78rem;
     cursor: pointer;
     transition: 0.2s;
     white-space: nowrap;
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.3rem;
     font-family: inherit;
 }
 
@@ -168,8 +168,8 @@ main.catalog-wrapper::-webkit-scrollbar-thumb:hover {
 
 .clear-cart-btn svg,
 .clear-favourites-btn svg {
-    width: 15px;
-    height: 15px;
+    width: 14px;
+    height: 14px;
 }
 
 @media (max-width: 1100px) {

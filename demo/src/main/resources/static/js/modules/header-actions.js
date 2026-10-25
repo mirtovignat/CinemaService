@@ -22,11 +22,34 @@
             });
         }
 
+        // Обработчик кнопки фильтров
+        var filtersBtn = document.getElementById('headerFiltersBtn');
+        if (filtersBtn && filtersBtn.dataset.headerBound !== '1') {
+            filtersBtn.dataset.headerBound = '1';
+            filtersBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (typeof window.toggleFiltersModal === 'function') {
+                    window.toggleFiltersModal();
+                }
+            });
+        }
+
         var userMenuAddAccount = document.getElementById('userMenuAddAccount');
         if (userMenuAddAccount && userMenuAddAccount.dataset.headerBound !== '1') {
             userMenuAddAccount.dataset.headerBound = '1';
             userMenuAddAccount.addEventListener('click', function () {
                 window.location.href = '/login';
+            });
+        }
+
+        var userMenuToggle = document.getElementById('userMenuToggle');
+        if (userMenuToggle && userMenuToggle.dataset.headerBound !== '1') {
+            userMenuToggle.dataset.headerBound = '1';
+            userMenuToggle.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (typeof window.toggleUserMenu === 'function') window.toggleUserMenu();
             });
         }
 

@@ -35,7 +35,13 @@ public abstract class AbstractCursorService<EntityType, DataType, ContextType>
             cursorValue = cursorCodec.decode(rawCursor).value();
         }
 
-        String normalizedQuery = titleNormalizer.normalizeOptional(query).orElse(null);
+        String normalizedQuery = null;
+        if (query != null && !query.isBlank()) {
+            String trimmed = query.trim().toLowerCase().replace('ё', 'е');
+            if (!trimmed.isBlank()) {
+                normalizedQuery = trimmed;
+            }
+        }
 
         Slice<EntityType> slice = fetchSlice(
                 cursorValue,

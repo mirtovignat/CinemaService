@@ -1312,7 +1312,20 @@
         });
     }
 
+    function initFiltersOpenButton() {
+        var filtersBtn = document.getElementById('headerFiltersBtn');
+        if (!filtersBtn) return;
+        if (filtersBtn.dataset.filtersOpenBound === '1') return;
+        filtersBtn.dataset.filtersOpenBound = '1';
+        filtersBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleFiltersModal();
+        });
+    }
+
     function initAll() {
+        try { initFiltersOpenButton(); } catch (openInitError) { console.error('[filters] open button init failed', openInitError); }
         try { initFilterSort(); } catch (sortInitError) { console.error('[filters] sort init failed', sortInitError); }
         try { initFilterMasks(); } catch (masksInitError) { console.error('[filters] masks init failed', masksInitError); }
         try { initFilterAccordions(); } catch (accordionsInitError) { console.error('[filters] accordions init failed', accordionsInitError); }
