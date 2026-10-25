@@ -2,6 +2,7 @@ package com.example.demo.web;
 
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.exception.ErrorCode;
+import com.example.demo.util.MessageUtils;
 import com.example.demo.web.util.RequestUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,6 +19,7 @@ import java.io.IOException;
 public class AjaxAwareEntryPoint implements AuthenticationEntryPoint {
 
     private final ObjectMapper objectMapper;
+    private final MessageUtils messageUtils;
 
     @Override
     public void commence(HttpServletRequest httpServletRequest,
@@ -26,9 +28,10 @@ public class AjaxAwareEntryPoint implements AuthenticationEntryPoint {
         if (RequestUtils.isAjaxRequest(httpServletRequest)) {
             httpServletResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             httpServletResponse.setContentType("application/json;charset=UTF-8");
+            String errorMessage = messageUtils.getError(ErrorCode.NOT_AUTHORIZED);
             objectMapper.writeValue(
                     httpServletResponse.getWriter(),
-                    ApiResponse.error(ErrorCode.NOT_AUTHORIZED, null)
+                    ApiResponse.error(ErrorCode.NOT_AUTHORIZED, errorMessage)
             );
         } else {
             httpServletResponse.sendRedirect("/login");

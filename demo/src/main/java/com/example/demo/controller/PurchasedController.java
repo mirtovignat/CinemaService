@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.response.ApiResponse;
+import com.example.demo.dto.response.PurchasedMovieResponse;
 import com.example.demo.dto.user.SessionUser;
 import com.example.demo.exception.SuccessCode;
 import com.example.demo.service.catalog.PurchasedCommandService;
@@ -14,7 +15,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.math.BigDecimal;
 
@@ -28,8 +28,7 @@ public class PurchasedController {
     private final ApiResponseFactory apiResponseFactory;
 
     @PostMapping("/add/bulk")
-    @ResponseBody
-    public ResponseEntity<ApiResponse> buyMovies(
+    public ResponseEntity<ApiResponse<PurchasedMovieResponse>> buyMovies(
             SessionUser sessionUser,
             HttpServletRequest httpServletRequest,
             HttpServletResponse httpServletResponse) {
@@ -38,8 +37,7 @@ public class PurchasedController {
     }
 
     @PostMapping("/add/{id}")
-    @ResponseBody
-    public ResponseEntity<ApiResponse> buyMovie(
+    public ResponseEntity<ApiResponse<PurchasedMovieResponse>> buyMovie(
             @PathVariable Long id,
             SessionUser sessionUser,
             HttpServletRequest httpServletRequest,
@@ -56,15 +54,17 @@ public class PurchasedController {
         );
     }
 
-    private ResponseEntity<ApiResponse> respond(SessionUser sessionUser,
-                                                BigDecimal newBalance,
-                                                HttpServletRequest httpServletRequest,
-                                                HttpServletResponse httpServletResponse) {
+    private ResponseEntity<ApiResponse<PurchasedMovieResponse>> respond(SessionUser sessionUser,
+                                                                        BigDecimal newBalance,
+                                                                        HttpServletRequest httpServletRequest,
+                                                                        HttpServletResponse httpServletResponse) {
         sessionAuthenticator.updateSessionUser(
                 sessionUser.withBalance(newBalance),
                 httpServletRequest,
                 httpServletResponse
         );
-        return apiResponseFactory.ok(SuccessCode.PURCHASED);
+        return apiResponseFactory.ok(SuccessCode.PURCHASED, PurchasedMovieResponse.builder()
+                .newBalance(newBalance)
+                .build());
     }
 }

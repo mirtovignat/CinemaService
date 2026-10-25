@@ -254,6 +254,13 @@ main.reviews-main {
     box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
 }
 
+/* Иконка удалённого пользователя — приглушённый красноватый фон и обводка */
+.review-card .avatar:has(.avatar-svg),
+.review-card .avatar.avatar--deleted {
+    background: rgba(100, 116, 139, 0.25);
+    box-shadow: none;
+}
+
 .review-card .avatar .avatar-svg {
     display: inline-flex;
     align-items: center;
@@ -270,6 +277,13 @@ main.reviews-main {
     display: block;
 }
 
+/* Сам SVG удалённого пользователя — красноватый, чтобы не сливался с фоном */
+.review-card .avatar .avatar-svg svg {
+    stroke: #f87171;
+    color: #f87171;
+    opacity: 0.9;
+}
+
 .review-username {
     font-weight: 600;
     color: #e2e8f0;
@@ -277,6 +291,19 @@ main.reviews-main {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    min-width: 0;
+}
+
+.deleted-badge {
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: #64748b;
+    font-style: italic;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .review-meta {
@@ -600,6 +627,7 @@ p.is-muted {
         padding: 0.28rem 0.7rem;
     }
 }
+
 .back-btn-reviews {
     display: inline-flex;
     align-items: center;

@@ -15,8 +15,10 @@
     var dragState = null;
 
     function activeUsername() {
-        var el = document.getElementById('currentUserData');
-        return el && el.dataset.username ? el.dataset.username : '';
+        var currentUserDataElement = document.getElementById('currentUserData');
+        return currentUserDataElement && currentUserDataElement.dataset.username
+            ? currentUserDataElement.dataset.username
+            : '';
     }
 
     function read() {
@@ -25,54 +27,54 @@
             if (!raw) return [];
             var parsed = JSON.parse(raw);
             return Array.isArray(parsed) ? parsed : [];
-        } catch (e) {
+        } catch (error) {
             return [];
         }
     }
 
-    function write(list) {
+    function write(accountList) {
         try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(list.slice(0, MAX_ACCOUNTS)));
-        } catch (e) {}
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(accountList.slice(0, MAX_ACCOUNTS)));
+        } catch (error) {}
     }
 
-    function firstLetter(value) {
-        if (!value) return '?';
-        return value.trim().charAt(0).toUpperCase() || '?';
+    function firstLetter(username) {
+        if (!username) return '?';
+        return username.trim().charAt(0).toUpperCase() || '?';
     }
 
     function upsert(username) {
         if (!username) return;
-        var list = read();
-        var lower = username.toLowerCase();
-        var index = list.findIndex(function (a) {
-            return a.username.toLowerCase() === lower;
+        var accountList = read();
+        var lowerUsername = username.toLowerCase();
+        var existingIndex = accountList.findIndex(function (account) {
+            return account.username.toLowerCase() === lowerUsername;
         });
-        list.forEach(function (a) { a.active = false; });
+        accountList.forEach(function (account) { account.active = false; });
         var entry = {
             username: username,
             avatarLetter: firstLetter(username),
             active: true
         };
-        if (index !== -1) list[index] = entry;
-        else list.unshift(entry);
-        write(list);
+        if (existingIndex !== -1) accountList[existingIndex] = entry;
+        else accountList.unshift(entry);
+        write(accountList);
     }
 
     function rename(oldUsername, newUsername) {
         if (!oldUsername || !newUsername) return;
         if (oldUsername === newUsername) return;
 
-        var list = read();
-        var oldLower = oldUsername.toLowerCase();
-        var newLower = newUsername.toLowerCase();
+        var accountList = read();
+        var oldLowerUsername = oldUsername.toLowerCase();
+        var newLowerUsername = newUsername.toLowerCase();
 
-        var entry = list.find(function (a) {
-            return a.username.toLowerCase() === oldLower;
+        var entry = accountList.find(function (account) {
+            return account.username.toLowerCase() === oldLowerUsername;
         });
 
         if (!entry) {
-            entry = list.find(function (a) { return a.active; });
+            entry = accountList.find(function (account) { return account.active; });
         }
 
         if (!entry) {
@@ -81,54 +83,69 @@
             return;
         }
 
-        var duplicate = list.find(function (a) {
-            return a !== entry && a.username.toLowerCase() === newLower;
+        var duplicate = accountList.find(function (account) {
+            return account !== entry && account.username.toLowerCase() === newLowerUsername;
         });
 
         if (duplicate) {
-            list = list.filter(function (a) { return a !== duplicate; });
+            accountList = accountList.filter(function (account) { return account !== duplicate; });
         }
 
         entry.username = newUsername;
         entry.avatarLetter = firstLetter(newUsername);
 
-        list.forEach(function (a) {
-            a.active = (a === entry);
+        accountList.forEach(function (account) {
+            account.active = (account === entry);
         });
 
-        write(list);
+        write(accountList);
         render();
     }
 
     function remove(username) {
         if (!username) return;
         if (username.toLowerCase() === activeUsername().toLowerCase()) return;
-        var lower = username.toLowerCase();
-        var list = read().filter(function (a) {
-            return a.username.toLowerCase() !== lower;
+        var lowerUsername = username.toLowerCase();
+        var accountList = read().filter(function (account) {
+            return account.username.toLowerCase() !== lowerUsername;
         });
-        write(list);
+        write(accountList);
+    }
+
+    function removeCurrent() {
+        var currentUsername = activeUsername();
+        if (!currentUsername) return;
+
+        var accountList = read();
+        var lowerUsername = currentUsername.toLowerCase();
+
+        var filteredList = accountList.filter(function (account) {
+            return account.username.toLowerCase() !== lowerUsername;
+        });
+
+        write(filteredList);
+        render();
     }
 
     function clearAllExceptActive() {
-        var current = activeUsername();
-        if (!current) {
+        var currentUsername = activeUsername();
+        if (!currentUsername) {
             write([]);
             return;
         }
-        var list = read().filter(function (a) {
-            return a.username.toLowerCase() === current.toLowerCase();
+        var accountList = read().filter(function (account) {
+            return account.username.toLowerCase() === currentUsername.toLowerCase();
         });
-        if (list.length === 0) {
-            list = [{
-                username: current,
-                avatarLetter: firstLetter(current),
+        if (accountList.length === 0) {
+            accountList = [{
+                username: currentUsername,
+                avatarLetter: firstLetter(currentUsername),
                 active: true
             }];
         } else {
-            list[0].active = true;
+            accountList[0].active = true;
         }
-        write(list);
+        write(accountList);
     }
 
     function persistDomOrder() {
@@ -142,8 +159,8 @@
         rows.forEach(function (row) {
             var username = row.getAttribute('data-username');
             if (!username) return;
-            var original = read().find(function (a) {
-                return a.username.toLowerCase() === username.toLowerCase();
+            var original = read().find(function (account) {
+                return account.username.toLowerCase() === username.toLowerCase();
             });
             if (!original) return;
             if (original.active) activeItem = original;
@@ -156,29 +173,29 @@
 
     function captureRects(container) {
         var map = new Map();
-        container.querySelectorAll('.account-switcher-item').forEach(function (el) {
-            map.set(el, el.getBoundingClientRect());
+        container.querySelectorAll('.account-switcher-item').forEach(function (element) {
+            map.set(element, element.getBoundingClientRect());
         });
         return map;
     }
 
-    function playFlip(container, firstRects, excludeEl) {
-        container.querySelectorAll('.account-switcher-item').forEach(function (el) {
-            if (el === excludeEl) return;
-            var first = firstRects.get(el);
+    function playFlip(container, firstRects, excludeElement) {
+        container.querySelectorAll('.account-switcher-item').forEach(function (element) {
+            if (element === excludeElement) return;
+            var first = firstRects.get(element);
             if (!first) return;
 
-            var last = el.getBoundingClientRect();
-            var dx = first.left - last.left;
-            var dy = first.top - last.top;
+            var last = element.getBoundingClientRect();
+            var deltaX = first.left - last.left;
+            var deltaY = first.top - last.top;
 
-            if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
+            if (Math.abs(deltaX) < 0.5 && Math.abs(deltaY) < 0.5) return;
 
-            el.classList.add('is-flying');
+            element.classList.add('is-flying');
 
-            var anim = el.animate(
+            var animation = element.animate(
                 [
-                    { transform: 'translate(' + dx + 'px, ' + dy + 'px)' },
+                    { transform: 'translate(' + deltaX + 'px, ' + deltaY + 'px)' },
                     { transform: 'translate(0, 0)' }
                 ],
                 {
@@ -188,8 +205,8 @@
                 }
             );
 
-            anim.onfinish = function () {
-                el.classList.remove('is-flying');
+            animation.onfinish = function () {
+                element.classList.remove('is-flying');
             };
         });
     }
@@ -199,31 +216,31 @@
             container.querySelectorAll('.account-switcher-item:not(.is-dragging)')
         );
 
-        var from = dragState.row;
+        var fromRow = dragState.row;
 
-        var candidates = rows.filter(function (r) {
-            return !r.classList.contains('active');
+        var candidates = rows.filter(function (row) {
+            return !row.classList.contains('active');
         });
 
         if (!candidates.length) return null;
 
-        for (var i = 0; i < candidates.length; i++) {
-            var row = candidates[i];
+        for (var index = 0; index < candidates.length; index++) {
+            var row = candidates[index];
             var rect = row.getBoundingClientRect();
 
             if (cursorY < rect.top + rect.height / 2) {
-                if (from.nextElementSibling === row) {
+                if (fromRow.nextElementSibling === row) {
                     return { row: row, before: true, noop: true };
                 }
                 return { row: row, before: true };
             }
         }
 
-        var last = candidates[candidates.length - 1];
-        if (from.previousElementSibling === last) {
-            return { row: last, before: false, noop: true };
+        var lastRow = candidates[candidates.length - 1];
+        if (fromRow.previousElementSibling === lastRow) {
+            return { row: lastRow, before: false, noop: true };
         }
-        return { row: last, before: false };
+        return { row: lastRow, before: false };
     }
 
     function handleDragMove(container, cursorY) {
@@ -247,16 +264,16 @@
         dragState.lastTarget = row;
         dragState.lastBefore = before;
 
-        var from = dragState.row;
+        var fromRow = dragState.row;
         var firstRects = captureRects(container);
 
         if (before) {
-            container.insertBefore(from, row);
+            container.insertBefore(fromRow, row);
         } else {
-            container.insertBefore(from, row.nextSibling);
+            container.insertBefore(fromRow, row.nextSibling);
         }
 
-        playFlip(container, firstRects, from);
+        playFlip(container, firstRects, fromRow);
     }
 
     function buildRow(account, index) {
@@ -268,39 +285,39 @@
         row.setAttribute('data-index', String(index));
         row.setAttribute('data-username', account.username);
 
-        var avatar = document.createElement('span');
-        avatar.className = 'account-switcher-avatar';
-        avatar.textContent = account.avatarLetter;
+        var avatarElement = document.createElement('span');
+        avatarElement.className = 'account-switcher-avatar';
+        avatarElement.textContent = account.avatarLetter;
 
-        var name = document.createElement('span');
-        name.className = 'account-switcher-name';
-        name.textContent = account.username;
+        var nameElement = document.createElement('span');
+        nameElement.className = 'account-switcher-name';
+        nameElement.textContent = account.username;
 
-        row.appendChild(avatar);
-        row.appendChild(name);
+        row.appendChild(avatarElement);
+        row.appendChild(nameElement);
 
         if (account.active) {
             return row;
         }
 
-        var removeBtn = document.createElement('button');
-        removeBtn.type = 'button';
-        removeBtn.className = 'account-switcher-remove';
-        removeBtn.title = 'Удалить из списка';
-        removeBtn.setAttribute('aria-label', 'Удалить из списка');
-        removeBtn.innerHTML = REMOVE_ICON;
-        removeBtn.addEventListener('click', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
+        var removeButton = document.createElement('button');
+        removeButton.type = 'button';
+        removeButton.className = 'account-switcher-remove';
+        removeButton.title = 'Удалить из списка';
+        removeButton.setAttribute('aria-label', 'Удалить из списка');
+        removeButton.innerHTML = REMOVE_ICON;
+        removeButton.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
             remove(account.username);
             render();
         });
-        row.appendChild(removeBtn);
+        row.appendChild(removeButton);
 
         row.setAttribute('draggable', 'true');
 
-        row.addEventListener('dragstart', function (e) {
+        row.addEventListener('dragstart', function (event) {
             dragState = {
                 username: account.username,
                 row: row,
@@ -316,9 +333,9 @@
             });
 
             try {
-                e.dataTransfer.effectAllowed = 'move';
-                e.dataTransfer.setData('text/plain', account.username);
-            } catch (err) {}
+                event.dataTransfer.effectAllowed = 'move';
+                event.dataTransfer.setData('text/plain', account.username);
+            } catch (error) {}
         });
 
         row.addEventListener('dragend', function () {
@@ -340,24 +357,24 @@
         if (container.dataset.dragBound === '1') return;
         container.dataset.dragBound = '1';
 
-        container.addEventListener('dragover', function (e) {
+        container.addEventListener('dragover', function (event) {
             if (!dragState) return;
-            e.preventDefault();
+            event.preventDefault();
 
-            try { e.dataTransfer.dropEffect = 'move'; } catch (err) {}
+            try { event.dataTransfer.dropEffect = 'move'; } catch (error) {}
 
-            handleDragMove(container, e.clientY);
+            handleDragMove(container, event.clientY);
         });
 
-        container.addEventListener('drop', function (e) {
+        container.addEventListener('drop', function (event) {
             if (!dragState) return;
-            e.preventDefault();
+            event.preventDefault();
             dragState = null;
             persistDomOrder();
         });
 
-        container.addEventListener('dragleave', function (e) {
-            if (container.contains(e.relatedTarget)) return;
+        container.addEventListener('dragleave', function (event) {
+            if (container.contains(event.relatedTarget)) return;
             if (!dragState) return;
             dragState.lastTarget = null;
             dragState.lastBefore = null;
@@ -374,10 +391,10 @@
         var pressed = false;
         var handled = false;
 
-        function block(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+        function block(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (event.stopImmediatePropagation) event.stopImmediatePropagation();
         }
 
         function runClear() {
@@ -393,46 +410,46 @@
             }, 0);
         }
 
-        clearRow.addEventListener('pointerdown', function (e) {
-            block(e);
+        clearRow.addEventListener('pointerdown', function (event) {
+            block(event);
             pressed = true;
         }, true);
 
-        clearRow.addEventListener('mousedown', function (e) {
-            block(e);
+        clearRow.addEventListener('mousedown', function (event) {
+            block(event);
             pressed = true;
         }, true);
 
-        clearRow.addEventListener('pointerup', function (e) {
-            block(e);
+        clearRow.addEventListener('pointerup', function (event) {
+            block(event);
             if (pressed) {
                 pressed = false;
                 runClear();
             }
         }, true);
 
-        clearRow.addEventListener('mouseup', function (e) {
-            block(e);
+        clearRow.addEventListener('mouseup', function (event) {
+            block(event);
             if (pressed) {
                 pressed = false;
                 runClear();
             }
         }, true);
 
-        clearRow.addEventListener('click', function (e) {
-            block(e);
+        clearRow.addEventListener('click', function (event) {
+            block(event);
             if (!handled) runClear();
         }, true);
 
-        clearRow.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter' || e.key === ' ') {
-                block(e);
+        clearRow.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                block(event);
                 runClear();
             }
         });
 
-        clearRow.addEventListener('dragstart', function (e) {
-            e.preventDefault();
+        clearRow.addEventListener('dragstart', function (event) {
+            event.preventDefault();
         });
 
         return clearRow;
@@ -442,28 +459,28 @@
         var container = document.getElementById('accountSwitcher');
         if (!container) return;
 
-        var list = read();
+        var accountList = read();
 
-        list.sort(function (a, b) {
-            if (a.active && !b.active) return -1;
-            if (!a.active && b.active) return 1;
+        accountList.sort(function (firstAccount, secondAccount) {
+            if (firstAccount.active && !secondAccount.active) return -1;
+            if (!firstAccount.active && secondAccount.active) return 1;
             return 0;
         });
 
         container.textContent = '';
 
-        if (list.length === 0) {
+        if (accountList.length === 0) {
             container.style.display = 'none';
             return;
         }
 
         container.style.display = '';
 
-        list.forEach(function (account, index) {
+        accountList.forEach(function (account, index) {
             container.appendChild(buildRow(account, index));
         });
 
-        if (list.length > 1) {
+        if (accountList.length > 1) {
             container.appendChild(buildClearRow());
         }
 
@@ -471,31 +488,31 @@
     }
 
     function init() {
-        var current = activeUsername();
-        if (!current) {
+        var currentUsername = activeUsername();
+        if (!currentUsername) {
             render();
             return;
         }
 
-        var list = read();
+        var accountList = read();
 
-        var index = list.findIndex(function (a) {
-            return a.username.toLowerCase() === current.toLowerCase();
+        var existingIndex = accountList.findIndex(function (account) {
+            return account.username.toLowerCase() === currentUsername.toLowerCase();
         });
 
-        if (index === -1) {
-            list.unshift({
-                username: current,
-                avatarLetter: firstLetter(current),
+        if (existingIndex === -1) {
+            accountList.unshift({
+                username: currentUsername,
+                avatarLetter: firstLetter(currentUsername),
                 active: true
             });
         }
 
-        list.forEach(function (a) {
-            a.active = a.username.toLowerCase() === current.toLowerCase();
+        accountList.forEach(function (account) {
+            account.active = account.username.toLowerCase() === currentUsername.toLowerCase();
         });
 
-        write(list);
+        write(accountList);
         render();
     }
 
@@ -504,6 +521,7 @@
         upsert: upsert,
         rename: rename,
         remove: remove,
+        removeCurrent: removeCurrent,
         clearAllExceptActive: clearAllExceptActive,
         render: render,
         read: read
@@ -515,7 +533,7 @@
         init();
     }
 
-    window.addEventListener('pageshow', function (e) {
-        if (e.persisted) init();
+    window.addEventListener('pageshow', function (event) {
+        if (event.persisted) init();
     });
 })();

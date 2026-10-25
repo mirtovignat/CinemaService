@@ -8,7 +8,7 @@ import com.example.demo.mapper.entity.UserMapper;
 import com.example.demo.model.base.DeletableState;
 import com.example.demo.model.entity.User;
 import com.example.demo.repository.entity.UserRepository;
-import com.example.demo.util.normalizer.PhoneNormalizer;
+import com.example.demo.util.PhoneNormalizer;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

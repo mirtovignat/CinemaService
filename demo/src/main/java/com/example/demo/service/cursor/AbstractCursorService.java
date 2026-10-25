@@ -1,10 +1,10 @@
 package com.example.demo.service.cursor;
 
 import com.example.demo.cursor.Cursor;
+import com.example.demo.cursor.CursorUtils;
 import com.example.demo.cursor.SortDirection;
 import com.example.demo.cursor.codec.CursorCodec;
 import com.example.demo.dto.response.CursorPageResponse;
-import com.example.demo.util.normalizer.TitleNormalizer;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
@@ -19,7 +19,6 @@ public abstract class AbstractCursorService<EntityType, DataType, ContextType>
         implements CursorPageService<ContextType, DataType> {
 
     private final CursorCodec cursorCodec;
-    private final TitleNormalizer titleNormalizer;
     private final int defaultPageSize;
     private final Function<EntityType, String> cursorValueExtractor;
     private final Function<List<EntityType>, List<DataType>> contentMapper;
@@ -30,18 +29,11 @@ public abstract class AbstractCursorService<EntityType, DataType, ContextType>
                                              String query,
                                              ContextType contextType) {
 
-        String cursorValue = null;
-        if (StringUtils.hasText(rawCursor)) {
-            cursorValue = cursorCodec.decode(rawCursor).value();
-        }
+        String cursorValue = StringUtils.hasText(rawCursor)
+                ? cursorCodec.decode(rawCursor).value()
+                : null;
 
-        String normalizedQuery = null;
-        if (query != null && !query.isBlank()) {
-            String trimmed = query.trim().toLowerCase().replace('ё', 'е');
-            if (!trimmed.isBlank()) {
-                normalizedQuery = trimmed;
-            }
-        }
+        String normalizedQuery = CursorUtils.normalizeQuery(query);
 
         Slice<EntityType> slice = fetchSlice(
                 cursorValue,

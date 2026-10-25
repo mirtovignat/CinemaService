@@ -49,10 +49,14 @@
             return;
         }
 
-        var btn = document.querySelector('#deleteAccountModal .modal-delete');
-        if (btn) {
-            btn.disabled = true;
-            btn.textContent = 'Удаляем...';
+        if (window.AccountSwitcher && typeof window.AccountSwitcher.removeCurrent === 'function') {
+            window.AccountSwitcher.removeCurrent();
+        }
+
+        var confirmButton = document.querySelector('#deleteAccountModal .modal-delete');
+        if (confirmButton) {
+            confirmButton.disabled = true;
+            confirmButton.textContent = 'Удаляем...';
         }
 
         form.submit();
@@ -102,8 +106,8 @@
         init();
     }
 
-    window.addEventListener('pageshow', function (e) {
-        if (e.persisted) moveDeleteModalToBody();
+    window.addEventListener('pageshow', function (event) {
+        if (event.persisted) moveDeleteModalToBody();
     });
 
     window.toggleSidebar = toggleSidebar;

@@ -39,11 +39,11 @@
             var existing = readKnownTitles();
             var seen = new Set(existing.map(normalizeForMatch));
             var added = false;
-            titles.forEach(function (t) {
-                var n = normalizeForMatch(t);
-                if (n && !seen.has(n)) {
-                    existing.push(t);
-                    seen.add(n);
+            titles.forEach(function (title) {
+                var normalizedTitle = normalizeForMatch(title);
+                if (normalizedTitle && !seen.has(normalizedTitle)) {
+                    existing.push(title);
+                    seen.add(normalizedTitle);
                     added = true;
                 }
             });
@@ -55,10 +55,10 @@
     }
 
     function isKnownFullTitle(value) {
-        var n = normalizeForMatch(value);
-        if (!n) return false;
-        return readKnownTitles().some(function (t) {
-            return normalizeForMatch(t) === n;
+        var normalizedValue = normalizeForMatch(value);
+        if (!normalizedValue) return false;
+        return readKnownTitles().some(function (title) {
+            return normalizeForMatch(title) === normalizedValue;
         });
     }
 
@@ -114,19 +114,23 @@
             var entry = items[i];
             if (entry == null) continue;
             if (typeof entry === 'string') {
-                var s = entry.trim();
-                if (s) result.push({ title: s });
+                var stringTitle = entry.trim();
+                if (stringTitle) result.push({ title: stringTitle, movieId: null });
             } else if (typeof entry === 'object') {
-                var raw = entry.title != null ? entry.title : entry.movieTitle;
-                if (raw != null) {
-                    var t = String(raw).trim();
-                    if (t) {
-                        var item = { title: t };
-                        if (entry.watchCount != null) {
-                            var wc = Number(entry.watchCount);
-                            if (!isNaN(wc) && wc > 0) item.watchCount = wc;
+                var rawTitle = entry.title != null ? entry.title : entry.movieTitle;
+                if (rawTitle != null) {
+                    var trimmedTitle = String(rawTitle).trim();
+                    if (trimmedTitle) {
+                        var item = { title: trimmedTitle, movieId: null };
+                        if (entry.id != null) {
+                            item.movieId = entry.id;
+                        } else if (entry.movieId != null) {
+                            item.movieId = entry.movieId;
                         }
-                        if (entry.movieId != null) item.movieId = entry.movieId;
+                        if (entry.watchCount != null) {
+                            var watchCount = Number(entry.watchCount);
+                            if (!isNaN(watchCount) && watchCount > 0) item.watchCount = watchCount;
+                        }
                         result.push(item);
                     }
                 }
@@ -144,8 +148,8 @@
             if (response.type === 'opaqueredirect' || response.status === 0) return [];
             if (response.redirected) return [];
             if (!response.ok) return [];
-            var ct = response.headers.get('content-type') || '';
-            if (ct.indexOf('text/html') !== -1) return [];
+            var contentType = response.headers.get('content-type') || '';
+            if (contentType.indexOf('text/html') !== -1) return [];
             return response.json();
         })
         .then(normalizeSuggestionsPayload)
@@ -185,10 +189,10 @@
 
     function findExactTitle(titles, value) {
         if (!titles || titles.length === 0) return null;
-        var normalized = normalizeForMatch(value);
-        if (!normalized) return null;
+        var normalizedValue = normalizeForMatch(value);
+        if (!normalizedValue) return null;
         for (var i = 0; i < titles.length; i++) {
-            if (normalizeForMatch(titles[i]) === normalized) return titles[i];
+            if (normalizeForMatch(titles[i]) === normalizedValue) return titles[i];
         }
         return null;
     }
@@ -199,8 +203,8 @@
         var wrapper = config.wrapper;
         var clear = config.clear || null;
         var suggestionsBox = config.suggestionsBox || null;
-        var typedEl = config.typedEl || null;
-        var hintEl = config.hintEl || null;
+        var typedElement = config.typedEl || null;
+        var hintElement = config.hintEl || null;
         var getSuggestionsUrl = config.getSuggestionsUrl;
         var onBeforeSubmit = config.onBeforeSubmit || null;
         var submitForm = config.submitForm || null;
@@ -210,6 +214,7 @@
         var suggestionTitleClass = config.suggestionTitleClass || 'suggestion-title';
         var queryParamName = config.queryParamName || 'title';
         var activeClass = 'is-active';
+        var isMovieSearch = config.isMovieSearch || false;
 
         if (!form || !input || !wrapper || typeof getSuggestionsUrl !== 'function') return null;
 
@@ -218,13 +223,14 @@
         var activeIndex = -1;
         var lastFetchedTitles = null;
         var lastFetchedQuery = '';
+        var lastFetchedItems = [];
 
         function syncClear() { wrapper.classList.toggle('has-value', input.value.trim().length > 0); }
         function hideAutocomplete() {
             currentTopMatch = null;
             wrapper.classList.remove('has-autocomplete');
-            if (typedEl) typedEl.textContent = '';
-            if (hintEl) hintEl.textContent = '';
+            if (typedElement) typedElement.textContent = '';
+            if (hintElement) hintElement.textContent = '';
         }
         function hideSuggestions() {
             if (!suggestionsBox) return;
@@ -238,7 +244,7 @@
         }
         function setActiveSuggestion(index) {
             var items = getSuggestionElements();
-            items.forEach(function (el) { el.classList.remove(activeClass); });
+            items.forEach(function (element) { element.classList.remove(activeClass); });
             activeIndex = index;
             if (index >= 0 && index < items.length) {
                 items[index].classList.add(activeClass);
@@ -267,7 +273,7 @@
         }
 
         function renderAutocomplete(typedValue, commonPrefix) {
-            if (!typedEl || !hintEl) { hideAutocomplete(); return; }
+            if (!typedElement || !hintElement) { hideAutocomplete(); return; }
             if (!typedValue || !commonPrefix) { hideAutocomplete(); return; }
 
             var typedLower = normalizeForMatch(typedValue);
@@ -277,8 +283,8 @@
             var remainingPart = commonPrefix.substring(typedValue.length);
             if (!remainingPart) { hideAutocomplete(); return; }
 
-            typedEl.textContent = typedValue;
-            hintEl.textContent = remainingPart;
+            typedElement.textContent = typedValue;
+            hintElement.textContent = remainingPart;
             wrapper.classList.add('has-autocomplete');
             currentTopMatch = commonPrefix;
         }
@@ -294,6 +300,9 @@
                 var row = document.createElement('div');
                 row.className = suggestionRowClass;
                 row.setAttribute('data-suggestion-title', entry.title);
+                if (entry.movieId) {
+                    row.setAttribute('data-movie-id', entry.movieId);
+                }
 
                 var titleSpan = document.createElement('span');
                 titleSpan.className = suggestionTitleClass;
@@ -323,7 +332,8 @@
 
             fetchSuggestionsPayload(url).then(function (entries) {
                 lastFetchedQuery = query;
-                lastFetchedTitles = (entries || []).map(function (e) { return e.title; });
+                lastFetchedItems = entries || [];
+                lastFetchedTitles = lastFetchedItems.map(function (entry) { return entry.title; });
                 rememberKnownTitles(lastFetchedTitles);
 
                 if (!entries || entries.length === 0) { hideSuggestions(); hideAutocomplete(); return; }
@@ -331,10 +341,10 @@
 
                 var typedValue = input.value;
                 var typedLower = normalizeForMatch(typedValue);
-                var matching = entries.filter(function (e) { return normalizeForMatch(e.title).indexOf(typedLower) === 0; });
+                var matching = entries.filter(function (entry) { return normalizeForMatch(entry.title).indexOf(typedLower) === 0; });
 
                 if (matching.length > 0) {
-                    var prefix = commonPrefixOriginal(matching.map(function (e) { return e.title; }));
+                    var prefix = commonPrefixOriginal(matching.map(function (entry) { return entry.title; }));
                     if (prefix && normalizeForMatch(prefix).length > typedLower.length) {
                         renderAutocomplete(typedValue, prefix);
                     } else {
@@ -359,8 +369,16 @@
             else form.submit();
         }
 
-        function submitFromSuggestion(title) {
+        function submitFromSuggestion(title, movieId) {
             if (!title) return;
+
+            // Если у подсказки есть ID фильма и это поиск фильма - идём сразу на страницу
+            if (isMovieSearch && movieId) {
+                if (typeof onRememberQuery === 'function') onRememberQuery(title);
+                window.location.href = '/movies/' + encodeURIComponent(movieId);
+                return;
+            }
+
             submitRaw(title, title);
         }
 
@@ -384,14 +402,14 @@
             }
 
             var visualValue;
-            var nClean = normalizeForMatch(cleanValue);
-            var nLast = normalizeForMatch(lastFetchedQuery);
+            var normalizedClean = normalizeForMatch(cleanValue);
+            var normalizedLast = normalizeForMatch(lastFetchedQuery);
             var useLastFetched = lastFetchedTitles && lastFetchedTitles.length > 0
-                && (nLast.indexOf(nClean) === 0 || nClean.indexOf(nLast) === 0);
+                && (normalizedLast.indexOf(normalizedClean) === 0 || normalizedClean.indexOf(normalizedLast) === 0);
 
             if (useLastFetched) {
                 visualValue = buildVisualQuery(cleanValue, lastFetchedTitles);
-            } else if (currentTopMatch && normalizeForMatch(currentTopMatch).length > nClean.length) {
+            } else if (currentTopMatch && normalizeForMatch(currentTopMatch).length > normalizedClean.length) {
                 visualValue = currentTopMatch + '…';
             } else if (isKnownFullTitle(cleanValue)) {
                 visualValue = cleanValue;
@@ -403,36 +421,36 @@
         }
 
         input.addEventListener('input', function () {
-            var val = input.value.trim();
+            var value = input.value.trim();
             syncClear();
             hideAutocomplete();
             clearTimeout(debounceTimer);
 
-            if (!val || !hasMeaningfulChars(val)) { hideSuggestions(); return; }
-            debounceTimer = setTimeout(function () { runFetchSuggestions(val); }, SUGGESTIONS_DEBOUNCE_MS);
+            if (!value || !hasMeaningfulChars(value)) { hideSuggestions(); return; }
+            debounceTimer = setTimeout(function () { runFetchSuggestions(value); }, SUGGESTIONS_DEBOUNCE_MS);
         });
 
-        input.addEventListener('keydown', function (e) {
+        input.addEventListener('keydown', function (event) {
             var items = getSuggestionElements();
 
-            if (e.key === 'ArrowDown') {
+            if (event.key === 'ArrowDown') {
                 if (items.length > 0) {
-                    e.preventDefault();
+                    event.preventDefault();
                     setActiveSuggestion(activeIndex < items.length - 1 ? activeIndex + 1 : 0);
                 }
                 return;
             }
-            if (e.key === 'ArrowUp') {
+            if (event.key === 'ArrowUp') {
                 if (items.length > 0) {
-                    e.preventDefault();
+                    event.preventDefault();
                     setActiveSuggestion(activeIndex > 0 ? activeIndex - 1 : items.length - 1);
                 }
                 return;
             }
-            if ((e.key === 'ArrowRight' || e.key === 'Tab') && currentTopMatch) {
+            if ((event.key === 'ArrowRight' || event.key === 'Tab') && currentTopMatch) {
                 var caretAtEnd = input.selectionStart === input.value.length && input.selectionEnd === input.value.length;
                 if (caretAtEnd) {
-                    e.preventDefault();
+                    event.preventDefault();
                     input.value = currentTopMatch;
                     hideAutocomplete();
                     hideSuggestions();
@@ -440,13 +458,14 @@
                     return;
                 }
             }
-            if (e.key === 'Enter') {
-                e.preventDefault();
+            if (event.key === 'Enter') {
+                event.preventDefault();
                 if (activeIndex >= 0 && items[activeIndex]) {
-                    var chosen = items[activeIndex].getAttribute('data-suggestion-title');
+                    var chosenTitle = items[activeIndex].getAttribute('data-suggestion-title');
+                    var chosenId = items[activeIndex].getAttribute('data-movie-id');
                     hideSuggestions();
                     hideAutocomplete();
-                    submitFromSuggestion(chosen);
+                    submitFromSuggestion(chosenTitle, chosenId);
                     return;
                 }
                 doSubmit();
@@ -458,21 +477,22 @@
         });
 
         if (suggestionsBox) {
-            suggestionsBox.addEventListener('pointerdown', function (e) {
-                var row = e.target.closest('.' + suggestionRowClass);
+            suggestionsBox.addEventListener('pointerdown', function (event) {
+                var row = event.target.closest('.' + suggestionRowClass);
                 if (!row) return;
-                e.preventDefault();
-                var chosen = row.getAttribute('data-suggestion-title');
+                event.preventDefault();
+                var chosenTitle = row.getAttribute('data-suggestion-title');
+                var chosenId = row.getAttribute('data-movie-id');
                 hideSuggestions();
                 hideAutocomplete();
-                submitFromSuggestion(chosen);
+                submitFromSuggestion(chosenTitle, chosenId);
             }, true);
         }
 
         if (clear) {
-            clear.addEventListener('click', function (e) {
-                e.preventDefault();
-                e.stopPropagation();
+            clear.addEventListener('click', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
                 input.value = '';
                 var hiddenField = form.querySelector('input[type="hidden"][name="' + queryParamName + '"]');
                 if (hiddenField) hiddenField.value = '';
@@ -483,11 +503,11 @@
             });
         }
 
-        form.addEventListener('submit', function (e) { e.preventDefault(); doSubmit(); });
+        form.addEventListener('submit', function (event) { event.preventDefault(); doSubmit(); });
 
         syncClear();
 
-        return { submit: doSubmit, setValue: function(v) { input.value = v || ''; syncClear(); } };
+        return { submit: doSubmit, setValue: function(value) { input.value = value || ''; syncClear(); } };
     }
 
     function initHeaderSearch() {
@@ -519,7 +539,8 @@
             suggestionRowClass: 'catalog-suggestion-item',
             suggestionTitleClass: 'catalog-suggestion-title',
             queryParamName: 'title',
-            getSuggestionsUrl: function (q) { return '/movies/suggestions?query=' + encodeURIComponent(q); },
+            isMovieSearch: true, // Указываем, что это поиск фильмов
+            getSuggestionsUrl: function (query) { return '/movies/suggestions?query=' + encodeURIComponent(query); },
             submitForm: function () {
                 if (typeof window.submitCombinedSearch === 'function') window.submitCombinedSearch();
                 else headerSearchForm.submit();
@@ -527,9 +548,9 @@
             onBeforeSubmit: function () {
                 if (typeof validateSearchQuery === 'function' && !validateSearchQuery()) throw new Error('validation');
             },
-            onRememberQuery: function (v) {
+            onRememberQuery: function (value) {
                 clearSearchCleared();
-                writeLastSearch(DEFAULT_STORAGE_KEY, v);
+                writeLastSearch(DEFAULT_STORAGE_KEY, value);
             },
             onEmptyAfterClear: function () {
                 setSearchCleared();
@@ -542,8 +563,8 @@
 
         var submitBtn = document.getElementById('headerSearchSubmitBtn');
         if (submitBtn) {
-            submitBtn.addEventListener('click', function (e) {
-                e.preventDefault();
+            submitBtn.addEventListener('click', function (event) {
+                event.preventDefault();
                 if (typeof validateSearchQuery === 'function' && !validateSearchQuery()) return;
                 engine.submit();
             });
@@ -576,14 +597,15 @@
             clear: document.querySelector('[data-catalog-search-clear]'),
             suggestionsBox: document.querySelector('[data-catalog-search-suggestions]'),
             queryParamName: 'query',
-            getSuggestionsUrl: function (q) {
+            isMovieSearch: false,
+            getSuggestionsUrl: function (query) {
                 var endpoint = detectCatalogSuggestionsEndpoint();
                 if (!endpoint) return null;
-                return endpoint + '?query=' + encodeURIComponent(q);
+                return endpoint + '?query=' + encodeURIComponent(query);
             },
             submitForm: function () { form.submit(); },
-            onRememberQuery: function (v) {
-                writeLastSearch(storageKey, v);
+            onRememberQuery: function (value) {
+                writeLastSearch(storageKey, value);
             },
             onEmptyAfterClear: function () {
                 writeLastSearch(storageKey, '');

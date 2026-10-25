@@ -28,8 +28,24 @@ public class SessionAuthenticator {
         }
         AppUserDetails updatedAppUserDetails = currentAppUserDetails.withSessionUser(updatedSessionUser);
         Authentication updatedAuthentication = new UsernamePasswordAuthenticationToken(
-                updatedAppUserDetails, null, updatedAppUserDetails.getAuthorities());
-        saveAuthentication(updatedAuthentication, httpServletRequest, httpServletResponse);
+                updatedAppUserDetails, null, updatedAppUserDetails.getAuthorities()
+        );
+        saveAuthentication(
+                updatedAuthentication,
+                httpServletRequest,
+                httpServletResponse
+        );
+    }
+
+    public void authenticateAndPersist(Authentication authentication,
+                                       HttpServletRequest httpServletRequest,
+                                       HttpServletResponse httpServletResponse) {
+        httpServletRequest.changeSessionId();
+        saveAuthentication(
+                authentication,
+                httpServletRequest,
+                httpServletResponse
+        );
     }
 
     private void saveAuthentication(Authentication authentication,
@@ -38,6 +54,10 @@ public class SessionAuthenticator {
         SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
         securityContext.setAuthentication(authentication);
         SecurityContextHolder.setContext(securityContext);
-        securityContextRepository.saveContext(securityContext, httpServletRequest, httpServletResponse);
+        securityContextRepository.saveContext(
+                securityContext,
+                httpServletRequest,
+                httpServletResponse
+        );
     }
 }

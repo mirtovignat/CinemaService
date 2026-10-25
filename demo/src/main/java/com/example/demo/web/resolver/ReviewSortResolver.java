@@ -7,6 +7,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.util.Objects;
+
 @Component
 public class ReviewSortResolver {
 
@@ -14,43 +16,50 @@ public class ReviewSortResolver {
 
     private final int sortCookieMaxAge;
 
-    public ReviewSortResolver(@Value("${app.reviews.sortDirection-cookie-max-age:31536000}")
+    public ReviewSortResolver(@Value("${app.reviews.sort-cookie-max-age:31536000}")
                               int sortCookieMaxAge) {
         this.sortCookieMaxAge = sortCookieMaxAge;
     }
 
     public SortDirection resolveAndPersist(ReviewsQueryDTO reviewsQueryDTO,
-                                           String cookieValue,
+                                           String sortCookie,
                                            HttpServletResponse httpServletResponse) {
-        SortDirection sortDirection = resolve(reviewsQueryDTO, cookieValue);
+        SortDirection resolvedSortDirection = resolve(reviewsQueryDTO, sortCookie);
 
-        if (isExplicit(reviewsQueryDTO.sortDirection())) {
-            writeCookie(httpServletResponse, sortDirection);
+        if (isExplicit(reviewsQueryDTO.sort()) || isExplicit(reviewsQueryDTO.sortDirection())) {
+            writeCookie(httpServletResponse, resolvedSortDirection);
         }
-        return sortDirection;
+        return resolvedSortDirection;
     }
 
-    public SortDirection resolve(ReviewsQueryDTO reviewsQueryDTO, String cookieValue) {
-        if (isExplicit(reviewsQueryDTO.sortDirection())) {
-            return SortDirection.from(reviewsQueryDTO.sortDirection());
+    public SortDirection resolve(ReviewsQueryDTO reviewsQueryDTO, String sortCookie) {
+        String rawSortDirection = pickNonBlank(
+                reviewsQueryDTO.sort(),
+                reviewsQueryDTO.sortDirection()
+        );
+        if (rawSortDirection != null) {
+            return SortDirection.from(rawSortDirection);
         }
-        SortDirection fromCookie = parseCookie(cookieValue);
-        if (fromCookie != null) {
-            return fromCookie;
-        }
-        return SortDirection.DESC;
+        SortDirection cookieSortDirection = parseCookie(sortCookie);
+        return Objects.requireNonNullElse(cookieSortDirection, SortDirection.DESC);
     }
 
-    private boolean isExplicit(String sort) {
-        return sort != null && !sort.isBlank();
+    private static String pickNonBlank(String sort, String sortDirection) {
+        if (isExplicit(sort)) return sort;
+        if (isExplicit(sortDirection)) return sortDirection;
+        return null;
     }
 
-    private SortDirection parseCookie(String raw) {
-        if (raw == null || raw.isBlank()) {
+    private static boolean isExplicit(String sortDirection) {
+        return sortDirection != null && !sortDirection.isBlank();
+    }
+
+    private SortDirection parseCookie(String sortCookie) {
+        if (sortCookie == null || sortCookie.isBlank()) {
             return null;
         }
         try {
-            return SortDirection.valueOf(raw.toUpperCase());
+            return SortDirection.valueOf(sortCookie.trim().toUpperCase());
         } catch (IllegalArgumentException illegalArgumentException) {
             return null;
         }
@@ -58,9 +67,9 @@ public class ReviewSortResolver {
 
     private void writeCookie(HttpServletResponse httpServletResponse,
                              SortDirection sortDirection) {
-        Cookie cookie = new Cookie(SORT_COOKIE_NAME, sortDirection.lowercase());
-        cookie.setPath("/rated");
-        cookie.setMaxAge(sortCookieMaxAge);
-        httpServletResponse.addCookie(cookie);
+        Cookie sortCookie = new Cookie(SORT_COOKIE_NAME, sortDirection.lowercase());
+        sortCookie.setPath("/rated");
+        sortCookie.setMaxAge(sortCookieMaxAge);
+        httpServletResponse.addCookie(sortCookie);
     }
 }

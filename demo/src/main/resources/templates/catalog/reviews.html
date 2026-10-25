@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ru">
 <head>
-    <title th:text="${'Отзывы — ' + movieTitle}">Отзывы — CinemaService</title>
+    <title th:text="${'Отзывы — ' + reviewsPageResponse.movieTitle}">Отзывы — CinemaService</title>
     <th:block th:replace="~{fragments/head :: head}"></th:block>
     <link rel="stylesheet" th:href="@{/css/pages/_reviews.css}">
 </head>
 <body>
 <div id="currentUserData"
-     th:data-username="${currentUsername != null ? currentUsername : ''}"></div>
+     th:data-username="${reviewsPageResponse.currentUsername != null ? reviewsPageResponse.currentUsername : ''}"></div>
 
 <header th:replace="~{fragments/header :: header}"></header>
 <th:block th:replace="~{fragments/flash-messages :: flashMessages}"></th:block>
@@ -17,7 +17,7 @@
      style="display:none;"></div>
 
 <main class="reviews-main">
-    <div class="reviews-container" th:data-movie-id="${movieId}">
+    <div class="reviews-container" th:data-movie-id="${reviewsPageResponse.movieId}">
 
         <div class="reviews-header">
 
@@ -28,8 +28,8 @@
             </a>
 
             <h1>
-                <a th:href="@{/movies/{id}(id=${movieId})}"
-                   th:text="${'🎬 Отзывы к «' + movieTitle + '»'}">Отзывы к фильму</a>
+                <a th:href="@{/movies/{id}(id=${reviewsPageResponse.movieId})}"
+                   th:text="${'🎬 Отзывы к «' + reviewsPageResponse.movieTitle + '»'}">Отзывы к фильму</a>
             </h1>
 
             <div class="reviews-header-right">
@@ -50,13 +50,13 @@
 
                 <div class="movie-rating-summary">
                     <span class="rating-val"
-                          th:attr="data-movie-id=${movieId}"
-                          th:text="${avgRating != null ? '★ ' + #numbers.formatDecimal(avgRating, 1, 1) : '★ —'}">
+                          th:attr="data-movie-id=${reviewsPageResponse.movieId}"
+                          th:text="${reviewsPageResponse.avgRating != null ? '★ ' + #numbers.formatDecimal(reviewsPageResponse.avgRating, 1, 1) : '★ —'}">
                         ★ 0.0
                     </span>
                     <span class="count"
                           id="reviewsCount"
-                          th:text="${totalReviews} + ' отзывов'">
+                          th:text="${reviewsPageResponse.totalReviews} + ' отзывов'">
                         0 отзывов
                     </span>
                 </div>
@@ -64,8 +64,8 @@
                 <button class="add-review-btn"
                         id="topAddReviewBtn"
                         type="button"
-                        th:attr="data-movie-id=${movieId}, data-movie-title=${movieTitle}"
-                        th:style="${(sessionUser.authenticated and ownReview == null) ? '' : 'display:none;'}">
+                        th:attr="data-movie-id=${reviewsPageResponse.movieId}, data-movie-title=${reviewsPageResponse.movieTitle}"
+                        th:style="${(sessionUser.authenticated and reviewsPageResponse.reviewViewDTO == null) ? '' : 'display:none;'}">
                     <th:block th:replace="~{fragments/icons :: icon-plus}"></th:block>
                     Написать отзыв
                 </button>
@@ -74,77 +74,87 @@
 
         <div class="reviews-body"
              id="reviewsBody"
-             th:attr="data-movie-id=${movieId}">
+             th:attr="data-movie-id=${reviewsPageResponse.movieId}">
 
             <div class="reviews-list" id="reviewsList">
 
-                <div th:if="${ownReview != null}"
+                <div th:if="${reviewsPageResponse.reviewViewDTO != null}"
                      class="review-card own-card"
                      data-own="true"
-                     th:data-movie-id="${movieId}">
+                     th:data-movie-id="${reviewsPageResponse.movieId}">
                     <div class="review-header">
                         <div class="review-user">
                             <div class="avatar"
-                                 th:with="isDeleted=${ownReview.username != null and #strings.contains(ownReview.username, 'далённый')}">
+                                 th:classappend="${reviewsPageResponse.reviewViewDTO.deleted} ? 'avatar--deleted'"
+                                 th:with="isDeleted=${reviewsPageResponse.reviewViewDTO.deleted}">
                                 <span th:if="${isDeleted}" class="avatar-svg">
                                     <th:block th:replace="~{fragments/icons :: icon-user-delete}"></th:block>
                                 </span>
                                 <span th:unless="${isDeleted}"
-                                      th:text="${#strings.substring(ownReview.username.toUpperCase(), 0, 1)}">U</span>
+                                      th:text="${#strings.substring(reviewsPageResponse.reviewViewDTO.username.toUpperCase(), 0, 1)}">U</span>
                             </div>
-                            <span class="review-username" th:text="${ownReview.username}">Пользователь</span>
+                            <span class="review-username">
+                                <span class="username-text" th:text="${reviewsPageResponse.reviewViewDTO.username}">Пользователь</span>
+                                <span th:if="${reviewsPageResponse.reviewViewDTO.deleted}"
+                                      class="deleted-badge">Удалённый аккаунт</span>
+                            </span>
                             <span class="own-badge">Ваш отзыв</span>
                         </div>
                         <div class="review-meta">
                             <span class="review-rating">
                                 <th:block th:replace="~{fragments/icons :: icon-star}"></th:block>
                                 <span class="review-rating-value"
-                                      th:text="${#numbers.formatDecimal(ownReview.ratingValue, 1, 1)}">10.0</span>
+                                      th:text="${#numbers.formatDecimal(reviewsPageResponse.reviewViewDTO.ratingValue, 1, 1)}">10.0</span>
                             </span>
                             <span class="review-date js-review-date"
-                                  th:if="${ownReview.addedAt != null}"
-                                  th:attr="data-date=${ownReview.addedAt}">—</span>
+                                  th:if="${reviewsPageResponse.reviewViewDTO.addedAt != null}"
+                                  th:attr="data-date=${reviewsPageResponse.reviewViewDTO.addedAt}">—</span>
                         </div>
                     </div>
                     <p class="review-text"
-                       th:if="${ownReview.reviewText != null and !#strings.isEmpty(ownReview.reviewText)}"
-                       th:text="${ownReview.reviewText}">Текст отзыва...</p>
+                       th:if="${reviewsPageResponse.reviewViewDTO.reviewText != null and !#strings.isEmpty(reviewsPageResponse.reviewViewDTO.reviewText)}"
+                       th:text="${reviewsPageResponse.reviewViewDTO.reviewText}">Текст отзыва...</p>
                     <p class="is-muted"
-                       th:if="${ownReview.reviewText == null or #strings.isEmpty(ownReview.reviewText)}">
+                       th:if="${reviewsPageResponse.reviewViewDTO.reviewText == null or #strings.isEmpty(reviewsPageResponse.reviewViewDTO.reviewText)}">
                         — Вы не оставили текстового отзыва —
                     </p>
                     <div class="review-actions">
                         <button class="btn-edit" type="button"
-                                th:attr="data-movie-id=${movieId},
-                                         data-movie-title=${movieTitle},
-                                         data-review-rating=${#numbers.formatDecimal(ownReview.ratingValue, 1, 1)},
-                                         data-review-text=${ownReview.reviewText}">
+                                th:attr="data-movie-id=${reviewsPageResponse.movieId},
+                                         data-movie-title=${reviewsPageResponse.movieTitle},
+                                         data-review-rating=${#numbers.formatDecimal(reviewsPageResponse.reviewViewDTO.ratingValue, 1, 1)},
+                                         data-review-text=${reviewsPageResponse.reviewViewDTO.reviewText}">
                             <th:block th:replace="~{fragments/icons :: icon-edit}"></th:block>
                             Редактировать
                         </button>
                         <button class="btn-delete" type="button"
-                                th:attr="data-movie-id=${movieId}">
+                                th:attr="data-movie-id=${reviewsPageResponse.movieId}">
                             <th:block th:replace="~{fragments/icons :: icon-trash}"></th:block>
                             Удалить
                         </button>
                     </div>
                 </div>
 
-                <div th:each="review : ${cursorPageResponse.items()}"
+                <div th:each="review : ${reviewsPageResponse.cursorPageResponse.items()}"
                      class="review-card"
-                     th:data-movie-id="${movieId}"
+                     th:data-movie-id="${reviewsPageResponse.movieId}"
                      th:attr="data-date=${review.addedAt}">
                     <div class="review-header">
                         <div class="review-user">
                             <div class="avatar"
-                                 th:with="isDeleted=${review.username != null and #strings.contains(review.username, 'далённый')}">
+                                 th:classappend="${review.deleted} ? 'avatar--deleted'"
+                                 th:with="isDeleted=${review.deleted}">
                                 <span th:if="${isDeleted}" class="avatar-svg">
                                     <th:block th:replace="~{fragments/icons :: icon-user-delete}"></th:block>
                                 </span>
                                 <span th:unless="${isDeleted}"
                                       th:text="${review.username != null ? #strings.substring(review.username.toUpperCase(), 0, 1) : '?'}">U</span>
                             </div>
-                            <span class="review-username" th:text="${review.username}">Пользователь</span>
+                            <span class="review-username">
+                                <span class="username-text" th:text="${review.username}">Пользователь</span>
+                                <span th:if="${review.deleted}"
+                                      class="deleted-badge">Удалённый аккаунт</span>
+                            </span>
                         </div>
                         <div class="review-meta">
                             <span class="review-rating">
@@ -169,7 +179,7 @@
 
             <div id="noReviewsBlock"
                  class="empty-reviews"
-                 th:style="${(totalReviews == 0 and ownReview == null) ? '' : 'display:none;'}">
+                 th:style="${(reviewsPageResponse.totalReviews == 0 and reviewsPageResponse.reviewViewDTO == null) ? '' : 'display:none;'}">
                 <div class="empty-reviews-icon">
                     <th:block th:replace="~{fragments/icons :: icon-comments}"></th:block>
                 </div>
@@ -183,11 +193,11 @@
 
             <div id="loadMoreWrapper"
                  class="reviews-load-more"
-                 th:if="${cursorPageResponse.hasMore()}"
-                 th:attr="data-movie-id=${movieId},
-                          data-sort=${cursorPageResponse.sort()},
-                          data-cursor=${cursorPageResponse.nextCursor()},
-                          data-has-more=${cursorPageResponse.hasMore()}">
+                 th:if="${reviewsPageResponse.cursorPageResponse.hasMore()}"
+                 th:attr="data-movie-id=${reviewsPageResponse.movieId},
+                          data-sort=${reviewsPageResponse.cursorPageResponse.sort()},
+                          data-cursor=${reviewsPageResponse.cursorPageResponse.nextCursor()},
+                          data-has-more=${reviewsPageResponse.cursorPageResponse.hasMore()}">
                 <div class="reviews-spinner-wrapper"
                      id="reviewsSpinnerWrapper"
                      style="display:none;">
@@ -206,7 +216,10 @@
         <div class="review-header">
             <div class="review-user">
                 <div class="avatar"></div>
-                <span class="review-username"></span>
+                <span class="review-username">
+                    <span class="username-text"></span>
+                    <span class="deleted-badge" style="display: none;">Удалённый аккаунт</span>
+                </span>
             </div>
             <div class="review-meta">
                 <span class="review-rating">
@@ -225,7 +238,10 @@
         <div class="review-header">
             <div class="review-user">
                 <div class="avatar"></div>
-                <span class="review-username"></span>
+                <span class="review-username">
+                    <span class="username-text"></span>
+                    <span class="deleted-badge" style="display: none;">Удалённый аккаунт</span>
+                </span>
                 <span class="own-badge">Ваш отзыв</span>
             </div>
             <div class="review-meta">

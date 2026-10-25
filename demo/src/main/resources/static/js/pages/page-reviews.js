@@ -1,233 +1,256 @@
 (function () {
     'use strict';
 
-    const body = document.getElementById('reviewsBody');
-    const list = document.getElementById('reviewsList');
-    const spinner = document.getElementById('reviewsSpinnerWrapper');
-    const countEl = document.getElementById('reviewsCount');
-    const wrapper = document.getElementById('loadMoreWrapper');
+    var reviewsBody = document.getElementById('reviewsBody');
+    var reviewsList = document.getElementById('reviewsList');
+    var reviewsSpinner = document.getElementById('reviewsSpinnerWrapper');
+    var reviewsCountElement = document.getElementById('reviewsCount');
+    var loadMoreWrapper = document.getElementById('loadMoreWrapper');
 
-    if (!body || !list) return;
+    if (!reviewsBody || !reviewsList) return;
 
-    const movieId = (wrapper && wrapper.dataset.movieId)
-        ? wrapper.dataset.movieId
-        : body.dataset.movieId;
+    var movieId = (loadMoreWrapper && loadMoreWrapper.dataset.movieId)
+        ? loadMoreWrapper.dataset.movieId
+        : reviewsBody.dataset.movieId;
 
-    function normalizeRating(value) {
-        if (value == null) return null;
-        var num = parseFloat(String(value).replace(',', '.'));
-        if (isNaN(num)) return null;
-        num = Math.round(num * 10) / 10;
-        if (num < 0.1) num = 0.1;
-        if (num > 10) num = 10;
-        return num;
+    function normalizeRating(ratingValue) {
+        if (ratingValue == null) return null;
+        var parsedRating = parseFloat(String(ratingValue).replace(',', '.'));
+        if (isNaN(parsedRating)) return null;
+        parsedRating = Math.round(parsedRating * 10) / 10;
+        if (parsedRating < 0.1) parsedRating = 0.1;
+        if (parsedRating > 10) parsedRating = 10;
+        return parsedRating;
     }
 
-    function formatRating(value) {
-        var num = normalizeRating(value);
-        if (num == null) return '—';
-        return num.toFixed(1);
+    function formatRating(ratingValue) {
+        var normalizedRating = normalizeRating(ratingValue);
+        if (normalizedRating == null) return '—';
+        return normalizedRating.toFixed(1);
     }
 
-    function getCount() {
-        if (!countEl) return null;
-        const m = countEl.textContent.match(/\d+/);
-        return m ? parseInt(m[0], 10) : null;
+    function getReviewsCount() {
+        if (!reviewsCountElement) return null;
+        var match = reviewsCountElement.textContent.match(/\d+/);
+        return match ? parseInt(match[0], 10) : null;
     }
 
-    function setCountText(total) {
-        if (!countEl || total == null) return;
-        const n = Math.max(0, Number(total) || 0);
-        countEl.textContent = n + ' ' + window.getDeclension(n);
+    function setReviewsCountText(totalReviews) {
+        if (!reviewsCountElement || totalReviews == null) return;
+        var safeTotalReviews = Math.max(0, Number(totalReviews) || 0);
+        reviewsCountElement.textContent = safeTotalReviews + ' ' + window.getDeclension(safeTotalReviews);
     }
 
-    function bumpCount(delta) {
-        const cur = getCount();
-        if (cur == null) return;
-        setCountText(Math.max(0, cur + delta));
+    function bumpReviewsCount(delta) {
+        var currentReviewsCount = getReviewsCount();
+        if (currentReviewsCount == null) return;
+        setReviewsCountText(Math.max(0, currentReviewsCount + delta));
     }
 
     function ensureEndMarkerRecheck() {
-        const cards = list.querySelectorAll('.review-card');
-        const end = list.parentNode && list.parentNode.querySelector('.reviews-end');
-        if (cards.length > 0 && end) end.remove();
+        var reviewCards = reviewsList.querySelectorAll('.review-card');
+        var endMarker = reviewsList.parentNode && reviewsList.parentNode.querySelector('.reviews-end');
+        if (reviewCards.length > 0 && endMarker) endMarker.remove();
     }
 
-    function bindOwnCardActions(card, movieTitle) {
-        if (!card) return;
+    function bindOwnCardActions(reviewCard, movieTitle) {
+        if (!reviewCard) return;
 
-        const editBtn = card.querySelector('.btn-edit');
-        if (editBtn) {
-            if (movieTitle != null) editBtn.dataset.movieTitle = movieTitle;
-            if (movieId != null && !editBtn.dataset.movieId) {
-                editBtn.dataset.movieId = String(movieId);
+        var editButton = reviewCard.querySelector('.btn-edit');
+        if (editButton) {
+            if (movieTitle != null) editButton.dataset.movieTitle = movieTitle;
+            if (movieId != null && !editButton.dataset.movieId) {
+                editButton.dataset.movieId = String(movieId);
             }
-            editBtn.onclick = function () {
+            editButton.onclick = function () {
                 if (typeof window.showRatingModal !== 'function') return;
-                var raw = (this.dataset.reviewRating || '').replace(',', '.');
-                var parsed = parseFloat(raw);
-                if (isNaN(parsed)) parsed = 5.0;
-                parsed = Math.round(parsed * 10) / 10;
-                if (parsed < 0.1) parsed = 0.1;
-                if (parsed > 10) parsed = 10;
+                var rawRating = (this.dataset.reviewRating || '').replace(',', '.');
+                var parsedRating = parseFloat(rawRating);
+                if (isNaN(parsedRating)) parsedRating = 5.0;
+                parsedRating = Math.round(parsedRating * 10) / 10;
+                if (parsedRating < 0.1) parsedRating = 0.1;
+                if (parsedRating > 10) parsedRating = 10;
                 window.showRatingModal(
                     this.dataset.movieId,
                     this.dataset.movieTitle || '',
                     'edit',
-                    parsed.toFixed(1),
+                    parsedRating.toFixed(1),
                     this.dataset.reviewText || ''
                 );
             };
         }
 
-        const deleteBtn = card.querySelector('.btn-delete');
-        if (deleteBtn) {
-            if (movieId != null && !deleteBtn.dataset.movieId) {
-                deleteBtn.dataset.movieId = String(movieId);
+        var deleteButton = reviewCard.querySelector('.btn-delete');
+        if (deleteButton) {
+            if (movieId != null && !deleteButton.dataset.movieId) {
+                deleteButton.dataset.movieId = String(movieId);
             }
-            deleteBtn.onclick = function () {
+            deleteButton.onclick = function () {
                 if (typeof window.deleteRating !== 'function') return;
                 window.deleteRating(this.dataset.movieId);
             };
         }
     }
 
-    function fillCardFromReview(card, review, isNew, isOwn) {
-        const username = review.username || 'Пользователь';
-        const letter = username.trim().charAt(0).toUpperCase() || 'U';
-        const ratingText = formatRating(review.ratingValue);
-        const dateText = isNew
+    function fillCardFromReview(reviewCard, review, isNew, isOwn) {
+        var username = review.username || 'Пользователь';
+        var isDeleted = review.deleted === true;
+        var avatarLetter = username.trim().charAt(0).toUpperCase() || 'U';
+        var ratingText = formatRating(review.ratingValue);
+        var dateText = isNew
             ? 'Только что'
             : (review.addedAt ? window.formatDateTime(review.addedAt) : '');
 
-        const avatarEl = card.querySelector('.avatar');
-        if (avatarEl) avatarEl.textContent = letter;
-
-        const usernameEl = card.querySelector('.review-username');
-        if (usernameEl) usernameEl.textContent = username;
-
-        const ratingEl = card.querySelector('.review-rating-value');
-        if (ratingEl) ratingEl.textContent = ratingText;
-
-        const dateEl = card.querySelector('.review-date');
-        if (dateEl) {
-            dateEl.textContent = dateText;
-            dateEl.style.display = dateText ? '' : 'none';
+        var avatarElement = reviewCard.querySelector('.avatar');
+        if (avatarElement) {
+            if (isDeleted) {
+                avatarElement.classList.add('avatar--deleted');
+                // Иконка удаленного пользователя (аналог svg из Thymeleaf)
+                avatarElement.innerHTML = '<span class="avatar-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="17" y1="11" x2="23" y2="11"></line></svg></span>';
+            } else {
+                avatarElement.classList.remove('avatar--deleted');
+                avatarElement.textContent = avatarLetter;
+            }
         }
 
-        const textEl = card.querySelector('.review-text, .is-muted');
-        if (textEl) {
-            if (review.reviewText && review.reviewText.trim() !== '') {
-                textEl.textContent = review.reviewText;
-                textEl.style.display = '';
-                textEl.className = 'review-text';
+        var usernameElement = reviewCard.querySelector('.review-username');
+        if (usernameElement) {
+            var usernameText = usernameElement.querySelector('.username-text');
+            var deletedBadge = usernameElement.querySelector('.deleted-badge');
+
+            if (usernameText) {
+                usernameText.textContent = username;
             } else {
-                textEl.textContent = isOwn
+                usernameElement.textContent = username;
+            }
+
+            if (deletedBadge) {
+                deletedBadge.style.display = isDeleted ? '' : 'none';
+            }
+        }
+
+        var ratingElement = reviewCard.querySelector('.review-rating-value');
+        if (ratingElement) ratingElement.textContent = ratingText;
+
+        var dateElement = reviewCard.querySelector('.review-date');
+        if (dateElement) {
+            dateElement.textContent = dateText;
+            dateElement.style.display = dateText ? '' : 'none';
+        }
+
+        var textElement = reviewCard.querySelector('.review-text, .is-muted');
+        if (textElement) {
+            if (review.reviewText && review.reviewText.trim() !== '') {
+                textElement.textContent = review.reviewText;
+                textElement.style.display = '';
+                textElement.className = 'review-text';
+            } else {
+                textElement.textContent = isOwn
                     ? '— Вы не оставили текстового отзыва —'
                     : '— Пользователь не оставил текстового отзыва —';
-                textEl.style.display = '';
-                textEl.className = 'is-muted';
+                textElement.style.display = '';
+                textElement.className = 'is-muted';
             }
         }
 
         if (isOwn) {
-            const editBtn = card.querySelector('.btn-edit');
-            if (editBtn) {
-                editBtn.dataset.movieId = String(movieId);
-                editBtn.dataset.reviewRating = ratingText;
-                editBtn.dataset.reviewText = review.reviewText || '';
+            var editButton = reviewCard.querySelector('.btn-edit');
+            if (editButton) {
+                editButton.dataset.movieId = String(movieId);
+                editButton.dataset.reviewRating = ratingText;
+                editButton.dataset.reviewText = review.reviewText || '';
             }
-            const deleteBtn = card.querySelector('.btn-delete');
-            if (deleteBtn) {
-                deleteBtn.dataset.movieId = String(movieId);
+            var deleteButton = reviewCard.querySelector('.btn-delete');
+            if (deleteButton) {
+                deleteButton.dataset.movieId = String(movieId);
             }
         }
     }
 
     function cloneTemplate(templateId) {
-        const tpl = document.getElementById(templateId);
-        if (!tpl) return null;
-        return tpl.content.firstElementChild.cloneNode(true);
+        var template = document.getElementById(templateId);
+        if (!template) return null;
+        return template.content.firstElementChild.cloneNode(true);
     }
 
     function buildCard(review, isOwn, isNew) {
-        const templateId = isOwn ? 'ownReviewCardTemplate' : 'reviewCardTemplate';
-        const card = cloneTemplate(templateId);
-        if (!card) return null;
+        var templateId = isOwn ? 'ownReviewCardTemplate' : 'reviewCardTemplate';
+        var reviewCard = cloneTemplate(templateId);
+        if (!reviewCard) return null;
 
-        card.dataset.movieId = movieId;
-        if (isNew) card.dataset.justAdded = 'true';
+        reviewCard.dataset.movieId = movieId;
+        if (isNew) reviewCard.dataset.justAdded = 'true';
 
-        fillCardFromReview(card, review, isNew, isOwn);
+        fillCardFromReview(reviewCard, review, isNew, isOwn);
 
         if (isOwn) {
-            bindOwnCardActions(card, review.movieTitle || '');
+            bindOwnCardActions(reviewCard, review.movieTitle || '');
         }
 
-        return card;
+        return reviewCard;
     }
 
-    function updateCardFields(card, review) {
-        if (!card || !review) return;
+    function updateCardFields(reviewCard, review) {
+        if (!reviewCard || !review) return;
 
-        const ratingEl = card.querySelector('.review-rating-value');
-        if (ratingEl && review.ratingValue != null) {
-            ratingEl.textContent = formatRating(review.ratingValue);
+        var ratingElement = reviewCard.querySelector('.review-rating-value');
+        if (ratingElement && review.ratingValue != null) {
+            ratingElement.textContent = formatRating(review.ratingValue);
         }
 
-        const textEl = card.querySelector('.review-text, .is-muted');
-        if (textEl && review.reviewText != null) {
+        var textElement = reviewCard.querySelector('.review-text, .is-muted');
+        if (textElement && review.reviewText != null) {
             if (review.reviewText === '') {
-                textEl.textContent = '— Вы не оставили текстового отзыва —';
-                textEl.style.display = '';
-                textEl.className = 'is-muted';
+                textElement.textContent = '— Вы не оставили текстового отзыва —';
+                textElement.style.display = '';
+                textElement.className = 'is-muted';
             } else {
-                textEl.textContent = review.reviewText;
-                textEl.style.display = '';
-                textEl.className = 'review-text';
+                textElement.textContent = review.reviewText;
+                textElement.style.display = '';
+                textElement.className = 'review-text';
             }
         }
 
-        const editBtn = card.querySelector('.btn-edit');
-        if (editBtn) {
+        var editButton = reviewCard.querySelector('.btn-edit');
+        if (editButton) {
             if (review.ratingValue != null) {
-                editBtn.dataset.reviewRating = formatRating(review.ratingValue);
+                editButton.dataset.reviewRating = formatRating(review.ratingValue);
             }
             if (review.reviewText != null) {
-                editBtn.dataset.reviewText = review.reviewText;
+                editButton.dataset.reviewText = review.reviewText;
             }
         }
 
-        const dateEl = card.querySelector('.review-date');
-        if (dateEl) {
-            dateEl.textContent = 'Только что';
-            dateEl.style.display = '';
+        var dateElement = reviewCard.querySelector('.review-date');
+        if (dateElement) {
+            dateElement.textContent = 'Только что';
+            dateElement.style.display = '';
         }
     }
 
-    function setTopAddBtnVisible(visible) {
-        const btn = document.getElementById('topAddReviewBtn');
-        if (btn) btn.style.display = visible ? '' : 'none';
+    function setTopAddReviewButtonVisible(isVisible) {
+        var topAddReviewButton = document.getElementById('topAddReviewBtn');
+        if (topAddReviewButton) topAddReviewButton.style.display = isVisible ? '' : 'none';
     }
 
-    function setNoReviewsBlockVisible(visible) {
-        const block = document.getElementById('noReviewsBlock');
-        if (block) block.style.display = visible ? '' : 'none';
+    function setNoReviewsBlockVisible(isVisible) {
+        var noReviewsBlock = document.getElementById('noReviewsBlock');
+        if (noReviewsBlock) noReviewsBlock.style.display = isVisible ? '' : 'none';
     }
 
     function refreshEmptyState() {
-        const own = list.querySelector('.review-card[data-own="true"]');
-        const others = list.querySelectorAll('.review-card:not([data-own="true"])');
-        const hasAny = !!own || others.length > 0;
-        setNoReviewsBlockVisible(!hasAny);
+        var ownReviewCard = reviewsList.querySelector('.review-card[data-own="true"]');
+        var otherReviewCards = reviewsList.querySelectorAll('.review-card:not([data-own="true"])');
+        var hasAnyReview = !!ownReviewCard || otherReviewCards.length > 0;
+        setNoReviewsBlockVisible(!hasAnyReview);
     }
 
-    function initTopAddBtn() {
-        const btn = document.getElementById('topAddReviewBtn');
-        if (!btn) return;
-        if (btn.dataset.bound === '1') return;
-        btn.dataset.bound = '1';
-        btn.addEventListener('click', function () {
+    function initTopAddReviewButton() {
+        var topAddReviewButton = document.getElementById('topAddReviewBtn');
+        if (!topAddReviewButton) return;
+        if (topAddReviewButton.dataset.bound === '1') return;
+        topAddReviewButton.dataset.bound = '1';
+        topAddReviewButton.addEventListener('click', function () {
             if (typeof window.showRatingModal !== 'function') {
                 console.warn('[reviews] showRatingModal не готов');
                 return;
@@ -243,10 +266,10 @@
     }
 
     function formatReviewDates() {
-        document.querySelectorAll('.js-review-date[data-date]').forEach(function (el) {
-            var raw = el.getAttribute('data-date');
-            if (raw && window.formatDateTime) {
-                el.textContent = window.formatDateTime(raw);
+        document.querySelectorAll('.js-review-date[data-date]').forEach(function (dateElement) {
+            var rawDate = dateElement.getAttribute('data-date');
+            if (rawDate && window.formatDateTime) {
+                dateElement.textContent = window.formatDateTime(rawDate);
             }
         });
     }
@@ -256,47 +279,47 @@
             if (String(targetMovieId) !== String(movieId)) return;
             if (!review) return;
 
-            const existing = this.findOwnCard(targetMovieId);
+            var existingOwnCard = this.findOwnCard(targetMovieId);
 
-            if (existing) {
-                updateCardFields(existing, review);
+            if (existingOwnCard) {
+                updateCardFields(existingOwnCard, review);
                 if (movieTitle) {
-                    const editBtn = existing.querySelector('.btn-edit');
-                    if (editBtn) editBtn.dataset.movieTitle = movieTitle;
+                    var editButton = existingOwnCard.querySelector('.btn-edit');
+                    if (editButton) editButton.dataset.movieTitle = movieTitle;
                 }
             } else {
-                const card = buildCard(
+                var ownReviewCard = buildCard(
                     Object.assign({}, review, {
                         movieTitle: movieTitle || window._ratingModalMovieTitle || ''
                     }),
                     true,
                     !!isNew
                 );
-                if (!card) return;
+                if (!ownReviewCard) return;
 
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(-12px) scale(0.98)';
-                card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                ownReviewCard.style.opacity = '0';
+                ownReviewCard.style.transform = 'translateY(-12px) scale(0.98)';
+                ownReviewCard.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
 
-                list.insertBefore(card, list.firstChild);
+                reviewsList.insertBefore(ownReviewCard, reviewsList.firstChild);
 
                 requestAnimationFrame(function () {
                     requestAnimationFrame(function () {
-                        card.style.opacity = '1';
-                        card.style.transform = 'translateY(0) scale(1)';
+                        ownReviewCard.style.opacity = '1';
+                        ownReviewCard.style.transform = 'translateY(0) scale(1)';
                     });
                 });
 
                 setTimeout(function () {
-                    card.style.transition = '';
-                    card.style.opacity = '';
-                    card.style.transform = '';
+                    ownReviewCard.style.transition = '';
+                    ownReviewCard.style.opacity = '';
+                    ownReviewCard.style.transform = '';
                 }, 350);
 
-                bumpCount(1);
+                bumpReviewsCount(1);
             }
 
-            setTopAddBtnVisible(false);
+            setTopAddReviewButtonVisible(false);
             setNoReviewsBlockVisible(false);
             ensureEndMarkerRecheck();
             formatReviewDates();
@@ -304,41 +327,41 @@
 
         removeOwn(targetMovieId) {
             if (String(targetMovieId) !== String(movieId)) return;
-            const card = this.findOwnCard(targetMovieId);
-            if (card) {
-                card.style.transition = 'opacity 0.28s ease, transform 0.28s ease';
-                card.style.opacity = '0';
-                card.style.transform = 'scale(0.94)';
+            var ownReviewCard = this.findOwnCard(targetMovieId);
+            if (ownReviewCard) {
+                ownReviewCard.style.transition = 'opacity 0.28s ease, transform 0.28s ease';
+                ownReviewCard.style.opacity = '0';
+                ownReviewCard.style.transform = 'scale(0.94)';
                 setTimeout(function () {
-                    card.remove();
+                    ownReviewCard.remove();
                     refreshEmptyState();
                     ensureEndMarkerRecheck();
                 }, 300);
-                bumpCount(-1);
+                bumpReviewsCount(-1);
             } else {
                 refreshEmptyState();
                 ensureEndMarkerRecheck();
             }
 
-            setTopAddBtnVisible(true);
+            setTopAddReviewButtonVisible(true);
         },
 
-        setCount(targetMovieId, total) {
+        setCount(targetMovieId, totalReviews) {
             if (String(targetMovieId) !== String(movieId)) return;
-            setCountText(total);
+            setReviewsCountText(totalReviews);
         },
 
         findOwnCard(targetMovieId) {
             if (String(targetMovieId) !== String(movieId)) return null;
-            return list.querySelector('.review-card[data-own="true"]');
+            return reviewsList.querySelector('.review-card[data-own="true"]');
         },
 
         getCount() {
-            return getCount();
+            return getReviewsCount();
         },
 
-        bindOwnCardActions(card, movieTitle) {
-            bindOwnCardActions(card, movieTitle);
+        bindOwnCardActions(reviewCard, movieTitle) {
+            bindOwnCardActions(reviewCard, movieTitle);
         },
 
         formatDates() {
@@ -347,21 +370,23 @@
     };
 
     (function installReviewsRatingContext() {
-        var base = window.ratingContext || {};
-        base.__owned = true;
-        base.__fromReviews = true;
+        var ratingContext = window.ratingContext || {};
+        ratingContext.__owned = true;
+        ratingContext.__fromReviews = true;
 
-        base.getCurrent = function (targetMovieId) {
-            var own = null;
+        ratingContext.getCurrent = function (targetMovieId) {
+            var ownReview = null;
             if (String(targetMovieId) === String(movieId)) {
-                var ownCard = window.reviewsUI.findOwnCard(targetMovieId);
-                if (ownCard) {
-                    var ratingEl = ownCard.querySelector('.review-rating-value');
-                    var textEl = ownCard.querySelector('.review-text');
-                    var parsed = ratingEl ? parseFloat((ratingEl.textContent || '').replace(',', '.')) : NaN;
-                    own = {
-                        rating: isNaN(parsed) ? null : parsed,
-                        review: textEl ? textEl.textContent.trim() : ''
+                var ownReviewCard = window.reviewsUI.findOwnCard(targetMovieId);
+                if (ownReviewCard) {
+                    var ratingElement = ownReviewCard.querySelector('.review-rating-value');
+                    var textElement = ownReviewCard.querySelector('.review-text');
+                    var parsedRating = ratingElement
+                        ? parseFloat((ratingElement.textContent || '').replace(',', '.'))
+                        : NaN;
+                    ownReview = {
+                        rating: isNaN(parsedRating) ? null : parsedRating,
+                        review: textElement ? textElement.textContent.trim() : ''
                     };
                 }
             }
@@ -372,10 +397,10 @@
                     redirect: 'manual',
                     credentials: 'same-origin'
                 })
-                .then(function (r) {
-                    if (r.type === 'opaqueredirect' || r.status === 0) return null;
-                    if (r.redirected) return null;
-                    return r.ok ? r.json() : null;
+                .then(function (response) {
+                    if (response.type === 'opaqueredirect' || response.status === 0) return null;
+                    if (response.redirected) return null;
+                    return response.ok ? response.json() : null;
                 })
                 .catch(function () { return null; }),
 
@@ -384,178 +409,178 @@
                     redirect: 'manual',
                     credentials: 'same-origin'
                 })
-                .then(function (r) {
-                    if (r.type === 'opaqueredirect' || r.status === 0) return null;
-                    if (r.redirected) return null;
-                    return r.ok ? r.text() : null;
+                .then(function (response) {
+                    if (response.type === 'opaqueredirect' || response.status === 0) return null;
+                    if (response.redirected) return null;
+                    return response.ok ? response.text() : null;
                 })
                 .catch(function () { return null; })
-            ]).then(function (res) {
-                var avgDto = res[0];
-                var avgRating = null;
-                if (avgDto && avgDto.rating != null && avgDto.rating !== '-' && avgDto.rating !== '—') {
-                    var n = parseFloat(avgDto.rating);
-                    if (!isNaN(n)) avgRating = Math.round(n * 10) / 10;
+            ]).then(function (results) {
+                var averageRatingDto = results[0];
+                var averageRating = null;
+                if (averageRatingDto && averageRatingDto.rating != null && averageRatingDto.rating !== '-' && averageRatingDto.rating !== '—') {
+                    var parsedAverageRating = parseFloat(averageRatingDto.rating);
+                    if (!isNaN(parsedAverageRating)) averageRating = Math.round(parsedAverageRating * 10) / 10;
                 }
 
                 var totalReviews = null;
-                if (res[1] != null) {
-                    var c = parseInt(res[1], 10);
-                    if (!isNaN(c)) totalReviews = c;
+                if (results[1] != null) {
+                    var parsedTotalReviews = parseInt(results[1], 10);
+                    if (!isNaN(parsedTotalReviews)) totalReviews = parsedTotalReviews;
                 }
 
                 if (!window.__ratingPredictState) window.__ratingPredictState = {};
                 window.__ratingPredictState[String(targetMovieId)] = {
-                    own: own ? { rating: Number(own.rating) } : null,
-                    avgRating: avgRating,
+                    own: ownReview ? { rating: Number(ownReview.rating) } : null,
+                    avgRating: averageRating,
                     totalReviews: totalReviews
                 };
 
-                return { own: own, avgRating: avgRating, totalReviews: totalReviews };
+                return { own: ownReview, avgRating: averageRating, totalReviews: totalReviews };
             });
         };
 
-        base.onOptimistic = function (targetMovieId, review, isNew) {
+        ratingContext.onOptimistic = function (targetMovieId, review, isNew) {
             if (String(targetMovieId) !== String(movieId)) return;
 
             window.reviewsUI.upsertOwn(targetMovieId, review, isNew, review.movieTitle || '');
 
             if (!review || review.ratingValue == null) return;
-            var state = (window.__ratingPredictState || {})[String(targetMovieId)];
-            if (!state || state.avgRating == null || state.totalReviews == null) return;
+            var predictState = (window.__ratingPredictState || {})[String(targetMovieId)];
+            if (!predictState || predictState.avgRating == null || predictState.totalReviews == null) return;
 
-            var mine = Number(review.ratingValue);
-            var oldAvg = state.avgRating;
-            var oldCount = state.totalReviews;
-            var myOld = state.own ? Number(state.own.rating) : null;
+            var newRating = Number(review.ratingValue);
+            var oldAverageRating = predictState.avgRating;
+            var oldTotalReviews = predictState.totalReviews;
+            var oldOwnRating = predictState.own ? Number(predictState.own.rating) : null;
 
-            var predictedAvg;
-            var predictedCount;
+            var predictedAverageRating;
+            var predictedTotalReviews;
 
-            if (myOld == null) {
-                predictedCount = oldCount + 1;
-                predictedAvg = ((oldAvg * oldCount) + mine) / predictedCount;
+            if (oldOwnRating == null) {
+                predictedTotalReviews = oldTotalReviews + 1;
+                predictedAverageRating = ((oldAverageRating * oldTotalReviews) + newRating) / predictedTotalReviews;
             } else {
-                predictedCount = oldCount;
-                predictedAvg = ((oldAvg * oldCount) - myOld + mine) / predictedCount;
+                predictedTotalReviews = oldTotalReviews;
+                predictedAverageRating = ((oldAverageRating * oldTotalReviews) - oldOwnRating + newRating) / predictedTotalReviews;
             }
 
-            state.avgRating = predictedAvg;
-            state.totalReviews = predictedCount;
-            state.own = { rating: mine };
+            predictState.avgRating = predictedAverageRating;
+            predictState.totalReviews = predictedTotalReviews;
+            predictState.own = { rating: newRating };
 
             if (typeof window.updateRatingBadge === 'function') {
-                window.updateRatingBadge(targetMovieId, predictedAvg.toFixed(1));
+                window.updateRatingBadge(targetMovieId, predictedAverageRating.toFixed(1));
             }
             if (typeof window.applyReviewsCount === 'function') {
-                window.applyReviewsCount(targetMovieId, predictedCount);
+                window.applyReviewsCount(targetMovieId, predictedTotalReviews);
             }
         };
 
-        base.onRollback = function (targetMovieId) {
+        ratingContext.onRollback = function (targetMovieId) {
             if (String(targetMovieId) !== String(movieId)) return;
             delete (window.__ratingPredictState || {})[String(targetMovieId)];
             if (typeof window.updateMovieRating === 'function') window.updateMovieRating(targetMovieId);
             if (typeof window.updateReviewsCount === 'function') window.updateReviewsCount(targetMovieId);
         };
 
-        base.onOptimisticDelete = function (targetMovieId) {
+        ratingContext.onOptimisticDelete = function (targetMovieId) {
             if (String(targetMovieId) !== String(movieId)) return;
 
             window.reviewsUI.removeOwn(targetMovieId);
 
-            var state = (window.__ratingPredictState || {})[String(targetMovieId)];
-            if (!state || state.avgRating == null || state.totalReviews == null || !state.own) {
+            var predictState = (window.__ratingPredictState || {})[String(targetMovieId)];
+            if (!predictState || predictState.avgRating == null || predictState.totalReviews == null || !predictState.own) {
                 if (typeof window.updateRatingBadge === 'function') {
                     window.updateRatingBadge(targetMovieId, null);
                 }
                 return;
             }
 
-            var myOld = Number(state.own.rating);
-            var newCount = state.totalReviews - 1;
-            var predictedAvg = newCount > 0
-                ? ((state.avgRating * state.totalReviews) - myOld) / newCount
+            var oldOwnRating = Number(predictState.own.rating);
+            var newTotalReviews = predictState.totalReviews - 1;
+            var predictedAverageRating = newTotalReviews > 0
+                ? ((predictState.avgRating * predictState.totalReviews) - oldOwnRating) / newTotalReviews
                 : null;
 
-            state.avgRating = predictedAvg;
-            state.totalReviews = newCount;
-            state.own = null;
+            predictState.avgRating = predictedAverageRating;
+            predictState.totalReviews = newTotalReviews;
+            predictState.own = null;
 
             if (typeof window.updateRatingBadge === 'function') {
                 window.updateRatingBadge(
                     targetMovieId,
-                    predictedAvg != null ? predictedAvg.toFixed(1) : null
+                    predictedAverageRating != null ? predictedAverageRating.toFixed(1) : null
                 );
             }
             if (typeof window.applyReviewsCount === 'function') {
-                window.applyReviewsCount(targetMovieId, newCount);
+                window.applyReviewsCount(targetMovieId, newTotalReviews);
             }
         };
 
-        base.onRollbackDelete = function (targetMovieId) {
+        ratingContext.onRollbackDelete = function (targetMovieId) {
             if (String(targetMovieId) !== String(movieId)) return;
             delete (window.__ratingPredictState || {})[String(targetMovieId)];
             if (typeof window.updateMovieRating === 'function') window.updateMovieRating(targetMovieId);
             if (typeof window.updateReviewsCount === 'function') window.updateReviewsCount(targetMovieId);
         };
 
-        base.onCountUpdate = function (targetMovieId, total) {
+        ratingContext.onCountUpdate = function (targetMovieId, totalReviews) {
             if (String(targetMovieId) !== String(movieId)) return;
-            window.reviewsUI.setCount(targetMovieId, total);
+            window.reviewsUI.setCount(targetMovieId, totalReviews);
         };
 
-        window.ratingContext = base;
+        window.ratingContext = ratingContext;
     })();
 
     function bindExistingCards() {
-        const own = list.querySelector('.review-card[data-own="true"]');
-        if (own) bindOwnCardActions(own);
+        var ownReviewCard = reviewsList.querySelector('.review-card[data-own="true"]');
+        if (ownReviewCard) bindOwnCardActions(ownReviewCard);
     }
 
     bindExistingCards();
-    initTopAddBtn();
+    initTopAddReviewButton();
     formatReviewDates();
 
     function appendEndMarker() {
-        if (list.parentNode && list.parentNode.querySelector('.reviews-end')) return;
-        const marker = document.createElement('div');
-        marker.className = 'reviews-end';
-        marker.textContent = '— Это все отзывы —';
-        list.insertAdjacentElement('afterend', marker);
+        if (reviewsList.parentNode && reviewsList.parentNode.querySelector('.reviews-end')) return;
+        var endMarker = document.createElement('div');
+        endMarker.className = 'reviews-end';
+        endMarker.textContent = '— Это все отзывы —';
+        reviewsList.insertAdjacentElement('afterend', endMarker);
     }
 
-    if (!wrapper || wrapper.dataset.hasMore !== 'true') {
-        if (wrapper) wrapper.remove();
+    if (!loadMoreWrapper || loadMoreWrapper.dataset.hasMore !== 'true') {
+        if (loadMoreWrapper) loadMoreWrapper.remove();
         appendEndMarker();
         return;
     }
 
-    const sort = wrapper.dataset.sort || 'DESC';
-    let cursor = wrapper.dataset.cursor || null;
-    let hasMore = true;
-    let isLoading = false;
+    var currentSort = loadMoreWrapper.dataset.sort || 'DESC';
+    var currentCursor = loadMoreWrapper.dataset.cursor || null;
+    var hasMore = true;
+    var isLoading = false;
 
-    const MAX_RETRIES = 3;
-    const RETRY_BASE_DELAY_MS = 1000;
-    const MAX_BACKOFF_MS = 30000;
-    const FETCH_TIMEOUT_MS = 10000;
-    const OBSERVER_DEBOUNCE_MS = 150;
+    var MAX_RETRIES = 3;
+    var RETRY_BASE_DELAY_MS = 1000;
+    var MAX_BACKOFF_MS = 30000;
+    var FETCH_TIMEOUT_MS = 10000;
+    var OBSERVER_DEBOUNCE_MS = 150;
 
-    let retryCount = 0;
-    let disabledUntil = 0;
-    let observerTimer = null;
-    let retryTimer = null;
+    var retryCount = 0;
+    var disabledUntil = 0;
+    var observerTimer = null;
+    var retryTimer = null;
 
-    const sentinel = document.createElement('div');
+    var sentinel = document.createElement('div');
     sentinel.setAttribute('aria-hidden', 'true');
     sentinel.style.height = '1px';
     sentinel.style.width = '100%';
     sentinel.style.pointerEvents = 'none';
-    wrapper.appendChild(sentinel);
+    loadMoreWrapper.appendChild(sentinel);
 
-    const observer = new IntersectionObserver(onIntersect, {
-        root: body,
+    var observer = new IntersectionObserver(onIntersect, {
+        root: reviewsBody,
         rootMargin: '0px 0px 200px 0px',
         threshold: 0
     });
@@ -574,7 +599,7 @@
 
     function maybeFillOnce() {
         if (!hasMore) return;
-        if (body.scrollHeight > body.clientHeight + 20) return;
+        if (reviewsBody.scrollHeight > reviewsBody.clientHeight + 20) return;
         requestLoad();
     }
 
@@ -608,86 +633,86 @@
         if (isLoading || !hasMore) return;
 
         isLoading = true;
-        wrapper.classList.add('is-loading');
-        if (spinner) spinner.style.display = 'flex';
+        loadMoreWrapper.classList.add('is-loading');
+        if (reviewsSpinner) reviewsSpinner.style.display = 'flex';
 
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+        var abortController = new AbortController();
+        var timeoutId = setTimeout(() => abortController.abort(), FETCH_TIMEOUT_MS);
 
         try {
-            const params = new URLSearchParams();
-            if (cursor) params.set('cursor', cursor);
-            params.set('sortDirection', sort);
+            var params = new URLSearchParams();
+            if (currentCursor) params.set('cursor', currentCursor);
+            params.set('sortDirection', currentSort);
 
-            const resp = await fetch(`/rated/${movieId}/reviews/more?${params}`, {
+            var response = await fetch(`/rated/${movieId}/reviews/more?${params}`, {
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json'
                 },
                 redirect: 'manual',
                 credentials: 'same-origin',
-                signal: controller.signal
+                signal: abortController.signal
             });
 
-            if (resp.type === 'opaqueredirect' || resp.status === 0) {
+            if (response.type === 'opaqueredirect' || response.status === 0) {
                 window.location.href = '/login';
                 return;
             }
-            if (resp.redirected) {
-                window.location.href = resp.url;
+            if (response.redirected) {
+                window.location.href = response.url;
                 return;
             }
-            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            if (!response.ok) throw new Error('HTTP ' + response.status);
 
-            const data = await resp.json();
+            var responseData = await response.json();
 
             retryCount = 0;
             disabledUntil = 0;
 
-            const items = Array.isArray(data.items) ? data.items : [];
+            var reviews = Array.isArray(responseData.items) ? responseData.items : [];
 
-            if (items.length > 0) {
-                const fragment = document.createDocumentFragment();
-                items.forEach(review => {
-                    const el = buildCard(review, false, false);
-                    if (el) fragment.appendChild(el);
+            if (reviews.length > 0) {
+                var fragment = document.createDocumentFragment();
+                reviews.forEach(review => {
+                    var reviewCard = buildCard(review, false, false);
+                    if (reviewCard) fragment.appendChild(reviewCard);
                 });
-                list.appendChild(fragment);
+                reviewsList.appendChild(fragment);
                 formatReviewDates();
             } else {
                 hasMore = false;
             }
 
-            cursor = data.nextCursor || null;
-            if (data.hasMore === false) hasMore = false;
+            currentCursor = responseData.nextCursor || null;
+            if (responseData.hasMore === false) hasMore = false;
 
             if (!hasMore) {
                 disconnectObserver();
-                wrapper.remove();
+                loadMoreWrapper.remove();
                 appendEndMarker();
             }
         } catch (error) {
-            const isAbort = error && error.name === 'AbortError';
+            var isAbort = error && error.name === 'AbortError';
             console.warn('[reviews] Ошибка загрузки:', isAbort ? 'timeout' : error);
 
             retryCount++;
 
             if (retryCount >= MAX_RETRIES) {
-                const delay = Math.min(
+                var delay = Math.min(
                     RETRY_BASE_DELAY_MS * Math.pow(2, retryCount),
                     MAX_BACKOFF_MS
                 );
                 disabledUntil = Date.now() + delay;
                 retryCount = 0;
             } else {
-                const delay = RETRY_BASE_DELAY_MS * Math.pow(2, retryCount - 1);
-                disabledUntil = Date.now() + delay;
+                var retryDelay = RETRY_BASE_DELAY_MS * Math.pow(2, retryCount - 1);
+                disabledUntil = Date.now() + retryDelay;
             }
         } finally {
             clearTimeout(timeoutId);
             isLoading = false;
-            wrapper.classList.remove('is-loading');
-            if (spinner) spinner.style.display = 'none';
+            loadMoreWrapper.classList.remove('is-loading');
+            if (reviewsSpinner) reviewsSpinner.style.display = 'none';
         }
     }
 

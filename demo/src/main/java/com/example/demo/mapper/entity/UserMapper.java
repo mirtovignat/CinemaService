@@ -7,7 +7,7 @@ import com.example.demo.dto.wallet.WalletForOwnerViewDTO;
 import com.example.demo.mapper.util.AgeMapper;
 import com.example.demo.mapper.util.NameMapper;
 import com.example.demo.model.entity.User;
-import com.example.demo.util.normalizer.PhoneNormalizer;
+import com.example.demo.util.PhoneNormalizer;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.beans.factory.annotation.Autowired;

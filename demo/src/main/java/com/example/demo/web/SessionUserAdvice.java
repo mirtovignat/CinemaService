@@ -19,9 +19,14 @@ public class SessionUserAdvice {
     @ModelAttribute
     public void addCommonAttributes(Model model) {
         SessionUser sessionUser = currentUserProvider.getSessionUser();
+        if (sessionUser == null) {
+            sessionUser = SessionUser.ANONYMOUS;
+        }
         model.addAttribute("sessionUser", sessionUser);
+
         if (!sessionUser.isAuthenticated()) {
-            model.addAttribute("badges", BadgeCountsDTO.builder().build());
+            model.addAttribute("badges", BadgeCountsDTO.builder()
+                    .build());
             return;
         }
         model.addAttribute("badges", badgeService.getBadgeCounts(sessionUser.id()));

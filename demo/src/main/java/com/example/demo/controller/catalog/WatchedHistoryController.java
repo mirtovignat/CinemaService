@@ -6,8 +6,8 @@ import com.example.demo.dto.catalog.LibrarianMovieViewDTO;
 import com.example.demo.dto.catalog.WatchedSuggestionDTO;
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.dto.response.CursorPageResponse;
-import com.example.demo.dto.response.UserCursorPageResponse;
-import com.example.demo.dto.user.UserSidebarViewDTO;
+import com.example.demo.dto.response.WatchedMovieResponse;
+import com.example.demo.dto.response.WatchedPageResponse;
 import com.example.demo.exception.SuccessCode;
 import com.example.demo.mapper.entity.UserMapper;
 import com.example.demo.service.catalog.WatchedHistoryService;
@@ -26,7 +26,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @AllArgsConstructor
 @Controller
@@ -47,94 +46,102 @@ public class WatchedHistoryController {
                           @RequestParam(value = "highlight", required = false) Long highlightHistoryId,
                           @CurrentUserId Long userId,
                           Model model) {
-        model.addAttribute("query", cursorPageRequest.query());
-        model.addAttribute("highlightHistoryId", highlightHistoryId);
-        model.addAttribute("response",
-                watchedHistoryCursorService.page(
-                        cursorPageRequest.cursor(),
-                        cursorPageRequest.direction(),
-                        cursorPageRequest.query(),
-                        UserCursorContext.builder()
-                                .userId(userId)
-                                .build()));
-        model.addAttribute("userSidebarViewDTO", userMapper.toSidebarView(userQueryService.getUser(userId)));
-        model.addAttribute("genres", movieFilterMetaService.getAllGenres());
-        model.addAttribute("saveHistory", watchedHistoryService.isHistorySaved(userId));
-        return "account/watched";
-    }
-
-    @GetMapping("/more")
-    @ResponseBody
-    public UserCursorPageResponse<LibrarianMovieViewDTO> more(@ModelAttribute CursorPageRequest cursorPageRequest,
-                                                              @CurrentUserId Long userId) {
         CursorPageResponse<LibrarianMovieViewDTO> cursorPageResponse = watchedHistoryCursorService.page(
                 cursorPageRequest.cursor(),
                 cursorPageRequest.direction(),
                 cursorPageRequest.query(),
                 UserCursorContext.builder()
                         .userId(userId)
-                        .build());
-        UserSidebarViewDTO userSidebarViewDTO = userMapper.toSidebarView(userQueryService.getUser(userId));
-        return UserCursorPageResponse.<LibrarianMovieViewDTO>builder()
+                        .build()
+        );
+
+        WatchedPageResponse<LibrarianMovieViewDTO> watchedPageResponse = WatchedPageResponse.<LibrarianMovieViewDTO>builder()
                 .cursorPageResponse(cursorPageResponse)
-                .userSidebarViewDTO(userSidebarViewDTO)
+                .userSidebarViewDTO(userMapper.toSidebarView(userQueryService.getUser(userId)))
+                .genres(movieFilterMetaService.getAllGenres())
+                .query(cursorPageRequest.query())
+                .highlightHistoryId(highlightHistoryId)
+                .saveHistory(watchedHistoryService.isHistorySaved(userId))
                 .build();
+
+        model.addAttribute("watchedPageResponse", watchedPageResponse);
+        return "account/watched";
+    }
+
+    @GetMapping("/more")
+    @ResponseBody
+    public CursorPageResponse<LibrarianMovieViewDTO> more(@ModelAttribute CursorPageRequest cursorPageRequest,
+                                                          @CurrentUserId Long userId) {
+        return watchedHistoryCursorService.page(
+                cursorPageRequest.cursor(),
+                cursorPageRequest.direction(),
+                cursorPageRequest.query(),
+                UserCursorContext.builder()
+                        .userId(userId)
+                        .build()
+        );
     }
 
     @GetMapping("/suggestions")
     @ResponseBody
-    public List<WatchedSuggestionDTO> suggestions(@RequestParam(value = "query", required = false, defaultValue = "") String query,
+    public List<WatchedSuggestionDTO> suggestions(@ModelAttribute CursorPageRequest cursorPageRequest,
                                                   @CurrentUserId(required = false) Long userId) {
-        return suggestionService.suggest(userId, query,
+        return suggestionService.suggest(
+                userId,
+                cursorPageRequest.query(),
                 (uId, normalizedQuery) -> watchedHistoryCursorService
-                        .findGroupedWatchedSuggestionsStartingWith(uId, normalizedQuery, PageRequest.of(0, 10))
+                        .findGroupedWatchedSuggestionsStartingWith(
+                                uId,
+                                normalizedQuery,
+                                PageRequest.of(0, 10)
+                        )
                         .stream()
-                        .map(projection -> new WatchedSuggestionDTO(
-                                projection.getMovieId(),
-                                projection.getTitle(),
-                                projection.getWatchCount(),
-                                projection.getLastWatchedAt()
-                        ))
+                        .map(projection -> WatchedSuggestionDTO.builder()
+                                .movieId(projection.getMovieId())
+                                .title(projection.getTitle())
+                                .watchCount(projection.getWatchCount())
+                                .lastWatchedAt(projection.getLastWatchedAt())
+                                .build())
                         .toList());
     }
 
     @PostMapping("/add/{id}")
     @ResponseBody
-    public ResponseEntity<Map<String, Object>> watch(@PathVariable Long id,
-                                                     @CurrentUserId Long userId) {
+    public ResponseEntity<WatchedMovieResponse> watch(@PathVariable Long id,
+                                                      @CurrentUserId Long userId) {
         boolean saveHistory = watchedHistoryService.isHistorySaved(userId);
-        if (saveHistory) {
-            watchedHistoryService.watch(id, userId);
-        }
+        Long historyItemId = saveHistory ? watchedHistoryService.watch(id, userId) : null;
+
         String message = saveHistory
                 ? messageUtils.getSuccess(SuccessCode.WATCHED)
-                : "История просмотров отключена";
-        return ResponseEntity.ok(Map.of(
-                "saved", saveHistory,
-                "message", message,
-                "success", true
-        ));
+                : messageUtils.getSuccess(SuccessCode.HISTORY_DISABLED_WARNING);
+
+        return ResponseEntity.ok(WatchedMovieResponse.builder()
+                .saved(saveHistory)
+                .message(message)
+                .historyItemId(historyItemId)
+                .build());
     }
 
     @PostMapping("/clear")
     @ResponseBody
-    public ResponseEntity<ApiResponse> clear(@CurrentUserId Long userId) {
+    public ResponseEntity<ApiResponse<Void>> clear(@CurrentUserId Long userId) {
         watchedHistoryService.clear(userId);
         return apiResponseFactory.ok(SuccessCode.CLEARED);
     }
 
     @PostMapping("/remove/{id}")
     @ResponseBody
-    public ResponseEntity<ApiResponse> remove(@PathVariable Long id,
-                                              @CurrentUserId Long userId) {
+    public ResponseEntity<ApiResponse<Void>> remove(@PathVariable Long id,
+                                                    @CurrentUserId Long userId) {
         watchedHistoryService.removeHistoryItem(userId, id);
         return apiResponseFactory.ok(SuccessCode.REMOVED);
     }
 
     @PostMapping
     @ResponseBody
-    public ResponseEntity<ApiResponse> setWatchedHistory(@RequestParam boolean save,
-                                                         @CurrentUserId Long userId) {
+    public ResponseEntity<ApiResponse<Void>> setWatchedHistory(@RequestParam boolean save,
+                                                               @CurrentUserId Long userId) {
         watchedHistoryService.setWatchedHistory(userId, save);
         SuccessCode successCode = save ? SuccessCode.HISTORY_ENABLED : SuccessCode.HISTORY_DISABLED;
         return apiResponseFactory.ok(successCode);

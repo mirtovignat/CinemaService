@@ -25,16 +25,16 @@
 
         if (rest.length > 10) rest = rest.substring(0, 10);
 
-        var out = '+' + country;
-        if (rest.length === 0) return out;
+        var result = '+' + country;
+        if (rest.length === 0) return result;
 
-        out += ' (' + rest.substring(0, 3);
-        if (rest.length >= 3) out += ')';
-        if (rest.length > 3) out += ' ' + rest.substring(3, 6);
-        if (rest.length > 6) out += '-' + rest.substring(6, 8);
-        if (rest.length > 8) out += '-' + rest.substring(8, 10);
+        result += ' (' + rest.substring(0, 3);
+        if (rest.length >= 3) result += ')';
+        if (rest.length > 3) result += ' ' + rest.substring(3, 6);
+        if (rest.length > 6) result += '-' + rest.substring(6, 8);
+        if (rest.length > 8) result += '-' + rest.substring(8, 10);
 
-        return out;
+        return result;
     }
 
     function formatPhoneRaw(raw) {
@@ -69,6 +69,12 @@
         result += ' ***-**-' + tail2;
 
         return result.replace(/\s+/g, ' ').trim();
+    }
+
+    function isValidPhone(raw) {
+        if (raw == null || raw === '') return true;
+        var digits = digitsOnly(raw);
+        return digits.length >= 11 && digits.length <= MAX_DIGITS;
     }
 
     function countDigitsBefore(text, pos) {
@@ -110,12 +116,12 @@
 
         var skipFormat = false;
 
-        input.addEventListener('beforeinput', function (e) {
-            if (!e.inputType) return;
+        input.addEventListener('beforeinput', function (event) {
+            if (!event.inputType) return;
 
-            if (e.inputType === 'deleteContentBackward') {
+            if (event.inputType === 'deleteContentBackward') {
                 if (this.value === '') {
-                    e.preventDefault();
+                    event.preventDefault();
                     return;
                 }
 
@@ -127,7 +133,7 @@
                 var countryLen = digits.length > 10 ? digits.length - 10 : digits.length;
 
                 if (countryLen > 1) {
-                    e.preventDefault();
+                    event.preventDefault();
 
                     var nextDigits = digits.substring(0, countryLen - 1) + digits.substring(countryLen);
                     var formatted = formatPhoneRaw(nextDigits);
@@ -144,35 +150,35 @@
                 return;
             }
 
-            if (e.inputType === 'deleteContentForward' ||
-                e.inputType === 'deleteByCut') {
+            if (event.inputType === 'deleteContentForward' ||
+                event.inputType === 'deleteByCut') {
                 return;
             }
 
-            if (e.inputType === 'insertText' && e.data) {
-                if (!/^[0-9]+$/.test(e.data)) {
-                    e.preventDefault();
+            if (event.inputType === 'insertText' && event.data) {
+                if (!/^[0-9]+$/.test(event.data)) {
+                    event.preventDefault();
                     return;
                 }
                 var currentDigits = digitsOnly(this.value);
-                if (currentDigits.length + e.data.length > MAX_DIGITS) {
-                    e.preventDefault();
+                if (currentDigits.length + event.data.length > MAX_DIGITS) {
+                    event.preventDefault();
                 }
             }
         });
 
-        input.addEventListener('keydown', function (e) {
-            if (e.ctrlKey || e.metaKey || e.altKey) return;
-            if (e.key.length !== 1) return;
-            if (!/[0-9]/.test(e.key)) {
-                e.preventDefault();
+        input.addEventListener('keydown', function (event) {
+            if (event.ctrlKey || event.metaKey || event.altKey) return;
+            if (event.key.length !== 1) return;
+            if (!/[0-9]/.test(event.key)) {
+                event.preventDefault();
             }
         });
 
-        input.addEventListener('input', function (e) {
+        input.addEventListener('input', function (event) {
             if (skipFormat) return;
 
-            if (isDeletion(e.inputType)) {
+            if (isDeletion(event.inputType)) {
                 return;
             }
 
@@ -222,12 +228,14 @@
     window.PhoneMask = {
         format: formatPhoneRaw,
         mask: maskPhone,
+        isValid: isValidPhone,
         init: initPhoneField,
         autoInit: autoInitPhoneMasks
     };
 
     window.formatPhoneRaw = formatPhoneRaw;
     window.maskPhone = maskPhone;
+    window.isValidPhone = isValidPhone;
     window.initPhoneField = initPhoneField;
     window.autoInitPhoneMasks = autoInitPhoneMasks;
 

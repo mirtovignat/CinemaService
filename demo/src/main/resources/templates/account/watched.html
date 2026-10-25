@@ -18,7 +18,7 @@
     <div class="profile-grid">
 
         <th:block
-                th:replace="~{fragments/sidebar :: sidebar(currentPage='watched', genres=${genres}, userSidebar=${userSidebarViewDTO})}">
+                th:replace="~{fragments/sidebar :: sidebar(currentPage='watched', genres=${watchedPageResponse.genres()}, userSidebar=${watchedPageResponse.userSidebarViewDTO()})}">
         </th:block>
 
         <div class="profile-right">
@@ -40,14 +40,14 @@
                  data-cursor-template="historyItemTemplate"
                  data-watched-container
                  data-group-history
-                 th:attr="data-cursor-next=${response != null ? response.nextCursor() : null},
-                          data-cursor-has-more=${response != null ? response.hasMore() : false},
-                          data-cursor-sort=${response != null ? response.sort() : 'desc'},
-                          data-cursor-query=${query},
-                          data-highlight-history-id=${highlightHistoryId}">
+                 th:attr="data-cursor-next=${watchedPageResponse.cursorPageResponse() != null ? watchedPageResponse.cursorPageResponse().nextCursor() : null},
+                          data-cursor-has-more=${watchedPageResponse.cursorPageResponse() != null ? watchedPageResponse.cursorPageResponse().hasMore() : false},
+                          data-cursor-sort=${watchedPageResponse.cursorPageResponse() != null ? watchedPageResponse.cursorPageResponse().sort() : 'desc'},
+                          data-cursor-query=${watchedPageResponse.query()},
+                          data-highlight-history-id=${watchedPageResponse.highlightHistoryId()}">
 
-                <th:block th:if="${response != null and response.items() != null}">
-                    <div th:each="item : ${response.items()}"
+                <th:block th:if="${watchedPageResponse != null and watchedPageResponse.cursorPageResponse() != null and watchedPageResponse.cursorPageResponse().items() != null}">
+                    <div th:each="item : ${watchedPageResponse.cursorPageResponse().items()}"
                          class="history-item watched"
                          th:data-history-id="${item.historyItemId()}"
                          th:data-movie-id="${item.id()}"
@@ -189,7 +189,7 @@
 
             <div class="empty-message"
                  data-watched-empty
-                 th:style="${response != null and response.items() != null and !response.items().isEmpty()} ? 'display:none;' : ''">
+                 th:style="${watchedPageResponse != null and watchedPageResponse.cursorPageResponse() != null and watchedPageResponse.cursorPageResponse().items() != null and !watchedPageResponse.cursorPageResponse().items().isEmpty()} ? 'display:none;' : ''">
                 <div class="empty-icon">
                     <th:block th:replace="~{fragments/icons :: icon-watch-history}"></th:block>
                 </div>
@@ -199,7 +199,7 @@
             </div>
 
             <th:block
-                    th:if="${response == null or response.items() == null or response.items().isEmpty()}">
+                    th:if="${watchedPageResponse == null or watchedPageResponse.cursorPageResponse() == null or watchedPageResponse.cursorPageResponse().items() == null or watchedPageResponse.cursorPageResponse().items().isEmpty()}">
                 <th:block th:insert="~{fragments/recommendations :: recommendations}"></th:block>
             </th:block>
 
@@ -220,7 +220,7 @@
                     <label class="toggle-switch">
                         <input type="checkbox"
                                id="saveHistoryToggle"
-                               th:checked="${saveHistory}">
+                               th:checked="${watchedPageResponse != null ? watchedPageResponse.saveHistory() : true}">
                         <span class="toggle-slider"></span>
                     </label>
                 </div>
@@ -228,7 +228,7 @@
                 <button class="setting-action danger"
                         type="button"
                         data-action="open-clear-history-modal"
-                        th:attr="data-has-history=${response != null and response.items() != null and !response.items().isEmpty()}">
+                        th:attr="data-has-history=${watchedPageResponse != null and watchedPageResponse.cursorPageResponse() != null and watchedPageResponse.cursorPageResponse().items() != null and !watchedPageResponse.cursorPageResponse().items().isEmpty()}">
                     <th:block th:replace="~{fragments/icons :: icon-trash}"></th:block>
                     Удалить всю историю
                 </button>
@@ -375,7 +375,7 @@
 <script th:src="@{/js/modules/watched-local-time.js}" defer></script>
 <script th:src="@{/js/modules/sort-toggle.js}" defer></script>
 <script th:src="@{/js/modules/cursor-pagination.js}" defer></script>
-<script th:src="@{/js/modules/history-highlight.js}" defer></script>
+<script th:src="@{/js/modules/highlight.js}" defer></script>
 <script th:src="@{/js/main.js}" defer></script>
 
 <th:block th:replace="~{fragments/footer :: footer}"></th:block>

@@ -4,27 +4,25 @@ import com.example.demo.exception.ErrorCode;
 import com.example.demo.exception.SuccessCode;
 import lombok.Builder;
 
-import java.util.Map;
-
 @Builder
-public record ApiResponse(
+public record ApiResponse<DTO>(
         String message,
         String code,
-        Map<String, Object> data
+        DTO data
 ) {
-    public static ApiResponse success(SuccessCode code, String message) {
-        return ApiResponse.builder()
-                .code(code.name())
+    public static <DTO> ApiResponse<DTO> success(SuccessCode successCode, String message, DTO data) {
+        return ApiResponse.<DTO>builder()
+                .code(successCode.name())
                 .message(message)
-                .data(Map.of())
+                .data(data)
                 .build();
     }
 
-    public static ApiResponse error(ErrorCode code, String message) {
-        return ApiResponse.builder()
-                .code(code.name())
+    public static <DTO> ApiResponse<DTO> error(ErrorCode errorCode, String message) {
+        return ApiResponse.<DTO>builder()
+                .code(errorCode.name())
                 .message(message)
-                .data(Map.of())
+                .data(null)
                 .build();
     }
 }

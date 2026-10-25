@@ -5,9 +5,9 @@
 
     function isLoginUrl(url) {
         try {
-            var parsed = new URL(url, window.location.origin);
-            return parsed.pathname === LOGIN_PATH;
-        } catch (e) {
+            var parsedUrl = new URL(url, window.location.origin);
+            return parsedUrl.pathname === LOGIN_PATH;
+        } catch (error) {
             return false;
         }
     }
@@ -34,7 +34,7 @@
                 message: 'Авторизуйтесь!'
             });
         }
-        return response.text().then(function (text) {
+        return response.text().then(function (responseText) {
             var contentType = response.headers.get('content-type') || '';
             if (contentType.indexOf('text/html') !== -1) {
                 if (isLoginUrl(response.url)) {
@@ -50,11 +50,11 @@
                     message: 'Ошибка сервера'
                 });
             }
-            var data = {};
-            if (text) {
+            var responseData = {};
+            if (responseText) {
                 try {
-                    data = JSON.parse(text);
-                } catch (e) {
+                    responseData = JSON.parse(responseText);
+                } catch (error) {
                     if (!response.ok) {
                         return Promise.reject({
                             status: response.status,
@@ -72,18 +72,18 @@
             if (!response.ok) {
                 return Promise.reject({
                     status: response.status,
-                    code: data.code || null,
-                    message: data.message || 'Произошла ошибка'
+                    code: responseData.code || null,
+                    message: responseData.message || 'Произошла ошибка'
                 });
             }
-            if (data && data.success === false) {
+            if (responseData && responseData.success === false) {
                 return Promise.reject({
                     status: response.status,
-                    code: data.code || null,
-                    message: data.message || 'Произошла ошибка'
+                    code: responseData.code || null,
+                    message: responseData.message || 'Произошла ошибка'
                 });
             }
-            return data;
+            return responseData;
         });
     }
 

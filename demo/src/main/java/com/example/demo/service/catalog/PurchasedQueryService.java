@@ -13,13 +13,6 @@ public class PurchasedQueryService {
 
     private final PurchasedMovieRepository purchasedMovieRepository;
 
-    public boolean isMoviePurchasedByUser(Long movieId, Long userId) {
-        if (movieId == null || userId == null) {
-            return false;
-        }
-        return purchasedMovieRepository.existsByMovieIdAndUserId(movieId, userId);
-    }
-
     public Set<Long> getPurchasedMovieIds(Long userId) {
         return new LinkedHashSet<>(purchasedMovieRepository.findMovieIdsByUserId(userId));
     }

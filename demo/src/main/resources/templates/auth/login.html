@@ -25,7 +25,49 @@
         <div th:if="${infoMessage}" class="flash-message info" th:text="${infoMessage}"></div>
     </div>
 
-    z
+    <form th:action="@{/login}" method="post" id="loginForm" autocomplete="on">
+
+        <label for="username">Username, email или телефон</label>
+        <div class="input-container">
+            <input id="username"
+                   name="username"
+                   type="text"
+                   placeholder="Введите username, email или телефон"
+                   autocomplete="username"
+                   th:value="${loginForm != null and loginForm.username != null ? loginForm.username : ''}"
+                   required/>
+            <button type="button" class="clear-input-btn" aria-label="Очистить поле" title="Очистить">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                    <path d="M7 7l10 10M17 7L7 17"/>
+                </svg>
+            </button>
+        </div>
+
+        <label for="password">Пароль</label>
+        <div class="input-container">
+            <input id="password"
+                   name="password"
+                   type="password"
+                   placeholder="••••••••"
+                   autocomplete="current-password"
+                   required
+                   minlength="8"/>
+            <button type="button" class="clear-input-btn" aria-label="Очистить пароль" title="Очистить">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                    <path d="M7 7l10 10M17 7L7 17"/>
+                </svg>
+            </button>
+            <button type="button"
+                    id="loginTogglePasswordBtn"
+                    data-action="toggle-login-password"
+                    class="toggle-password-btn"
+                    aria-label="Показать пароль">
+                <i id="loginPasswordToggleIcon" class="fas fa-eye-slash"></i>
+            </button>
+        </div>
+
+        <button type="submit">Войти</button>
+    </form>
 
     <div class="login-footer">
         <a th:href="@{/register}">Создать аккаунт</a>

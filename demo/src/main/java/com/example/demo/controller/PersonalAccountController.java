@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.dto.authorize.Identifier;
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.dto.response.PersonalAccountResponse;
+import com.example.demo.dto.response.UpdateFieldResponse;
 import com.example.demo.dto.user.PasswordChangingDTO;
 import com.example.demo.dto.user.ProfileFieldUpdateDTO;
 import com.example.demo.dto.user.SessionUser;
@@ -13,10 +14,10 @@ import com.example.demo.service.movie.MovieFilterMetaService;
 import com.example.demo.service.user.UserCommandService;
 import com.example.demo.service.user.UserQueryService;
 import com.example.demo.util.MessageUtils;
-import com.example.demo.web.interceptor.NavigationHistoryInterceptor;
 import com.example.demo.web.resolver.CurrentUserId;
 import com.example.demo.web.security.SessionAuthenticator;
 import com.example.demo.web.util.ApiResponseFactory;
+import com.example.demo.web.util.NavigationUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -28,8 +29,6 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import java.util.Map;
 
 @Controller
 @AllArgsConstructor
@@ -67,7 +66,7 @@ public class PersonalAccountController {
 
     @PatchMapping("/settings/change/field")
     @ResponseBody
-    public ResponseEntity<ApiResponse> updateField(
+    public ResponseEntity<ApiResponse<UpdateFieldResponse>> updateField(
             @Valid @RequestBody ProfileFieldUpdateDTO profileFieldUpdateDTO,
             SessionUser sessionUser,
             HttpServletRequest httpServletRequest,
@@ -83,26 +82,25 @@ public class PersonalAccountController {
             updatedSessionUser = sessionUser.withUsername(validatedProfileFieldUpdateDTO.field());
             sessionAuthenticator.updateSessionUser(updatedSessionUser, httpServletRequest, httpServletResponse);
         }
-        UserForOwnerViewDTO updatedUser = userQueryService.getUserForOwner(userId);
-        return apiResponseFactory.ok(SuccessCode.UPDATED, Map.of(
-                "user", updatedUser,
-                "sessionUser", updatedSessionUser
-        ));
+        UserForOwnerViewDTO userForOwnerViewDTO = userQueryService.getUserForOwner(userId);
+        UpdateFieldResponse updateFieldResponse = UpdateFieldResponse.builder()
+                .userForOwnerViewDTO(userForOwnerViewDTO)
+                .sessionUser(updatedSessionUser)
+                .build();
+        return apiResponseFactory.ok(SuccessCode.UPDATED, updateFieldResponse);
     }
 
     @DeleteMapping("/settings/delete/phone")
     @ResponseBody
-    public ResponseEntity<ApiResponse> deletePhone(@CurrentUserId Long userId) {
+    public ResponseEntity<ApiResponse<Void>> deletePhone(@CurrentUserId Long userId) {
         userCommandService.deletePhone(userId);
-        return apiResponseFactory.ok(SuccessCode.PHONE_HAS_BEEN_REMOVED, Map.of());
+        return apiResponseFactory.ok(SuccessCode.PHONE_HAS_BEEN_REMOVED);
     }
 
     @GetMapping("/settings/change/pwd")
     public String getChangePasswordForm(Model model) {
         if (!model.containsAttribute("passwordChangingDTO")) {
-            model.addAttribute("passwordChangingDTO",
-                    PasswordChangingDTO.builder()
-                            .build());
+            model.addAttribute("passwordChangingDTO", PasswordChangingDTO.builder().build());
         }
         return "account/change-password";
     }
@@ -120,11 +118,11 @@ public class PersonalAccountController {
         }
         String newPasswordHash = userCommandService.prepareAndValidatePassword(passwordChangingDTO, userId);
         userCommandService.updatePassword(newPasswordHash, userId);
-        String message = messageUtils.getSuccess(SuccessCode.PASSWORD_HAS_BEEN_CHANGED);
-        redirectAttributes.addFlashAttribute("successMessage", message);
+        String successMessage = messageUtils.getSuccess(SuccessCode.PASSWORD_HAS_BEEN_CHANGED);
+        redirectAttributes.addFlashAttribute("successMessage", successMessage);
 
-        String target = resolveReturnPath(httpSession);
-        return "redirect:" + target;
+        String targetPath = NavigationUtils.resolvePreviousPage(httpSession, "/personal-account");
+        return "redirect:" + targetPath;
     }
 
     @PostMapping("/profile/delete")
@@ -136,35 +134,8 @@ public class PersonalAccountController {
         String suffix = userCommandService.prepareDeleteAccount(userId);
         userCommandService.deleteAccount(userId, suffix);
         httpSession.invalidate();
-        String message = messageUtils.getSuccess(SuccessCode.ACCOUNT_HAS_BEEN_REMOVED);
-        redirectAttributes.addFlashAttribute("successMessage", message);
+        String successMessage = messageUtils.getSuccess(SuccessCode.ACCOUNT_HAS_BEEN_REMOVED);
+        redirectAttributes.addFlashAttribute("successMessage", successMessage);
         return "redirect:/login";
-    }
-
-    private String resolveReturnPath(HttpSession httpSession) {
-        if (httpSession == null) {
-            return "/personal-account";
-        }
-
-        Object stored = httpSession.getAttribute(NavigationHistoryInterceptor.PREVIOUS_PAGE_ATTR);
-        httpSession.removeAttribute(NavigationHistoryInterceptor.PREVIOUS_PAGE_ATTR);
-
-        if (stored instanceof String storedPath && isSafeLocalPath(storedPath)) {
-            return storedPath;
-        }
-        return "/personal-account";
-    }
-
-    private boolean isSafeLocalPath(String path) {
-        if (path == null || path.isBlank()) {
-            return false;
-        }
-        if (!path.startsWith("/")) {
-            return false;
-        }
-        if (path.startsWith("//")) {
-            return false;
-        }
-        return !path.startsWith("/\\");
     }
 }

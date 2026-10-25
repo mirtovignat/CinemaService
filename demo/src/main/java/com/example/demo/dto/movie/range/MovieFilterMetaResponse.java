@@ -8,6 +8,6 @@ import java.util.List;
 public record MovieFilterMetaResponse(
         List<String> genres,
         List<String> directors,
-        MovieRangesSnapshot ranges
+        MovieRangesSnapshot movieRangesSnapshot
 ) {
 }

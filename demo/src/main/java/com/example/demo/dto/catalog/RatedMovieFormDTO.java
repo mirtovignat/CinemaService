@@ -10,6 +10,7 @@ public record RatedMovieFormDTO(
         @NotNull(message = "ID фильма не может быть пустым")
         Long id,
 
+        @NotNull(message = "Оценка обязательна")
         @DecimalMin(value = "0.1", message = "Оценка не может быть меньше 0.1")
         @DecimalMax(value = "10.0", message = "Оценка не может быть больше 10")
         @Digits(integer = 2, fraction = 1, message = "Оценка должна быть от 0.0 до 10.0 с шагом 0.1")

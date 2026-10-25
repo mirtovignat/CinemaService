@@ -2,21 +2,21 @@
     'use strict';
 
     function getCsrfToken() {
-        var meta = document.querySelector('meta[name="_csrf"]');
-        if (meta && meta.content) return meta.content;
+        var csrfMeta = document.querySelector('meta[name="_csrf"]');
+        if (csrfMeta && csrfMeta.content) return csrfMeta.content;
 
-        var input = document.querySelector('input[name="_csrf"]');
-        if (input && input.value) return input.value;
+        var csrfInput = document.querySelector('input[name="_csrf"]');
+        if (csrfInput && csrfInput.value) return csrfInput.value;
 
-        var match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
-        if (match) return decodeURIComponent(match[1]);
+        var cookieMatch = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
+        if (cookieMatch) return decodeURIComponent(cookieMatch[1]);
 
         return null;
     }
 
     function getCsrfHeaderName() {
-        var meta = document.querySelector('meta[name="_csrf_header"]');
-        if (meta && meta.content) return meta.content;
+        var csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
+        if (csrfHeaderMeta && csrfHeaderMeta.content) return csrfHeaderMeta.content;
         return 'X-CSRF-TOKEN';
     }
 
@@ -87,18 +87,18 @@
 
     var Rated = {
         add: function (payload) {
-            var params = new URLSearchParams();
-            params.append('id', payload.movieId);
-            params.append('rating', payload.rating);
-            params.append('review', payload.review || '');
-            return post('/rated/add', params);
+            var urlParams = new URLSearchParams();
+            urlParams.append('id', payload.movieId);
+            urlParams.append('rating', payload.rating);
+            urlParams.append('review', payload.review || '');
+            return post('/rated/add', urlParams);
         },
         edit: function (payload) {
-            var params = new URLSearchParams();
-            params.append('id', payload.movieId);
-            params.append('rating', payload.rating);
-            params.append('review', payload.review || '');
-            return post('/rated/edit', params);
+            var urlParams = new URLSearchParams();
+            urlParams.append('id', payload.movieId);
+            urlParams.append('rating', payload.rating);
+            urlParams.append('review', payload.review || '');
+            return post('/rated/edit', urlParams);
         },
         remove: function (movieId) {
             return post('/rated/remove/' + encode(movieId));

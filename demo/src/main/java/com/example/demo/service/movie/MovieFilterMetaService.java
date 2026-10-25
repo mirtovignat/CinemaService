@@ -1,13 +1,13 @@
 package com.example.demo.service.movie;
 
 import com.example.demo.cursor.CursorPageRequest;
+import com.example.demo.cursor.CursorUtils;
 import com.example.demo.dto.movie.range.MovieRangesSnapshot;
 import com.example.demo.mapper.entity.MovieRangesSnapshotMapper;
 import com.example.demo.repository.entity.MovieRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,51 +35,30 @@ public class MovieFilterMetaService {
 
     @Transactional(readOnly = true)
     public Slice<String> searchDirectors(CursorPageRequest cursorPageRequest) {
-        String cursor = cursorPageRequest.cursor();
-        boolean hasCursor = cursor != null && !cursor.isBlank();
-        String cursorDirector = hasCursor ? cursor : "";
-        String cursorSurname = hasCursor ? surnameOf(cursor) : "";
-
         List<String> rows = movieRepository.fetchDirectorsKeyset(
-                cursorPageRequest.query() != null ? cursorPageRequest.query() : "",
-                hasCursor,
-                cursorSurname,
-                cursorDirector,
+                CursorUtils.safeQuery(cursorPageRequest),
+                CursorUtils.hasCursor(cursorPageRequest),
+                CursorUtils.safeCursor(cursorPageRequest),
                 pageSize + 1
         );
 
-        boolean hasMore = rows.size() > pageSize;
-        List<String> content = hasMore ? rows.subList(0, pageSize) : rows;
-        return new SliceImpl<>(
-                content,
-                PageRequest.of(0, pageSize),
-                hasMore
-        );
+        return CursorUtils.buildLimitedSlice(rows, pageSize);
     }
 
     @Transactional(readOnly = true)
     public Slice<String> searchGenres(CursorPageRequest cursorPageRequest) {
-        String cursor = cursorPageRequest.cursor();
-        boolean hasCursor = cursor != null && !cursor.isBlank();
-        return movieRepository.fetchGenresKeyset(
-                cursorPageRequest.query() != null ? cursorPageRequest.query() : "",
-                hasCursor,
-                hasCursor ? cursor : "",
-                PageRequest.of(0, pageSize)
+        Slice<String> genresSlice = movieRepository.fetchGenresKeyset(
+                CursorUtils.safeQuery(cursorPageRequest),
+                CursorUtils.hasCursor(cursorPageRequest),
+                CursorUtils.safeCursor(cursorPageRequest),
+                PageRequest.of(0, pageSize + 1)
         );
+
+        return CursorUtils.buildLimitedSlice(genresSlice.getContent(), pageSize);
     }
 
     @Transactional(readOnly = true)
     public MovieRangesSnapshot getRanges() {
         return movieRangesSnapshotMapper.toSnapshot(movieRepository.findRanges());
-    }
-
-    private String surnameOf(String directorFullName) {
-        if (directorFullName == null || directorFullName.isBlank()) {
-            return "";
-        }
-        String trimmed = directorFullName.trim();
-        int index = trimmed.indexOf(' ');
-        return index < 0 ? trimmed : trimmed.substring(index + 1).trim();
     }
 }

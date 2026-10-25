@@ -2,7 +2,7 @@ package com.example.demo.validation.validator;
 
 import com.example.demo.dto.authorize.Identifier;
 import com.example.demo.dto.user.ProfileFieldUpdateDTO;
-import com.example.demo.util.normalizer.PhoneNormalizer;
+import com.example.demo.util.PhoneNormalizer;
 import com.example.demo.validation.annotation.ValidProfileField;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;

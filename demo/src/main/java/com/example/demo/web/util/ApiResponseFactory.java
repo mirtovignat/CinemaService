@@ -7,22 +7,24 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
-import java.util.Map;
-
 @Component
 @AllArgsConstructor
 public class ApiResponseFactory {
 
     private final MessageUtils messageUtils;
 
-    public ResponseEntity<ApiResponse> ok(SuccessCode code) {
-        return ok(code, Map.of());
+    public ResponseEntity<ApiResponse<Void>> ok(SuccessCode successCode) {
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .code(successCode.name())
+                .message(messageUtils.getSuccess(successCode))
+                .data(null)
+                .build());
     }
 
-    public ResponseEntity<ApiResponse> ok(SuccessCode code, Map<String, Object> data) {
-        return ResponseEntity.ok(ApiResponse.builder()
-                .code(code.name())
-                .message(messageUtils.getSuccess(code))
+    public <DTO> ResponseEntity<ApiResponse<DTO>> ok(SuccessCode successCode, DTO data) {
+        return ResponseEntity.ok(ApiResponse.<DTO>builder()
+                .code(successCode.name())
+                .message(messageUtils.getSuccess(successCode))
                 .data(data)
                 .build());
     }

@@ -1,11 +1,10 @@
-package com.example.demo.util.normalizer;
+package com.example.demo.util;
 
 import org.springframework.stereotype.Component;
 
 @Component
-public class PhoneNormalizer implements Normalizer {
+public class PhoneNormalizer {
 
-    @Override
     public String normalize(String phone) {
         if (phone == null || phone.isBlank()) {
             return null;
@@ -24,7 +23,6 @@ public class PhoneNormalizer implements Normalizer {
         return cleaned;
     }
 
-    @Override
     public boolean isValid(String phone) {
         return normalize(phone) != null;
     }

@@ -23,7 +23,7 @@ spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/postgres}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -56,14 +56,14 @@ server:
 minio:
   endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
   external-endpoint: ${MINIO_EXTERNAL_ENDPOINT:${minio.endpoint}}
-  access-key: ${MINIO_ACCESS_KEY}
-  secret-key: ${MINIO_SECRET_KEY}
+  access-key: ${MINIO_ACCESS_KEY:minioadmin}
+  secret-key: ${MINIO_SECRET_KEY:minioadmin}
   bucket-name: ${MINIO_BUCKET_NAME:posters}
 
 tmdb:
   api-url: https://api.themoviedb.org/3
   image-url: https://image.tmdb.org/t/p
-  access-token: ${TMDB_ACCESS_TOKEN}
+  access-token: ${TMDB_ACCESS_TOKEN:}
   poster-size: w500
 
 app:
@@ -74,14 +74,13 @@ app:
     genre-default-size: 15
     max-size: 100
   rating:
-    top-movies-limit: 3
+    top-limit: 4
   reviews:
     sort-cookie-max-age: 31536000
-    page-size: 10
+    cursorPageResponse-size: 10
   recommendations:
-    page-size: 8
+    cursorPageResponse-size: 8
   catalog:
-    page-size: 35
-    recommendation-page-size: 20
+    cursorPageResponse-size: 20
   filters:
     page-size: 50

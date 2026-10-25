@@ -6,12 +6,9 @@ import com.example.demo.dto.user.ProfileFieldUpdateDTO;
 import com.example.demo.exception.BusinessException;
 import com.example.demo.exception.ErrorCode;
 import com.example.demo.model.entity.User;
-import com.example.demo.repository.entity.CartItemRepository;
-import com.example.demo.repository.entity.FavouriteMovieRepository;
-import com.example.demo.repository.entity.RatedMovieRepository;
-import com.example.demo.repository.entity.UserRepository;
+import com.example.demo.repository.entity.*;
+import com.example.demo.util.PhoneNormalizer;
 import com.example.demo.util.UserSuffixGenerator;
-import com.example.demo.util.normalizer.PhoneNormalizer;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,11 +20,14 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class UserCommandService {
 
+    private static final BigDecimal MAX_BALANCE = new BigDecimal("100000.00");
+
     private final UserQueryService userQueryService;
     private final UserRepository userRepository;
     private final CartItemRepository cartItemRepository;
     private final FavouriteMovieRepository favouriteMovieRepository;
     private final RatedMovieRepository ratedMovieRepository;
+    private final PurchasedMovieRepository purchasedMovieRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserSuffixGenerator userSuffixGenerator;
     private final PhoneNormalizer phoneNormalizer;
@@ -89,6 +89,7 @@ public class UserCommandService {
         }
     }
 
+    @Transactional
     public void updateField(Long userId, ProfileFieldUpdateDTO profileFieldUpdateDTO) {
         switch (profileFieldUpdateDTO.identifier()) {
             case USERNAME -> userRepository.updateUsername(userId, profileFieldUpdateDTO.field());
@@ -127,7 +128,15 @@ public class UserCommandService {
         userRepository.save(user);
     }
 
+    @Transactional
     public void saveTopUp(BigDecimal amount, User user) {
+        if (amount == null || amount.signum() <= 0) {
+            throw BusinessException.of(ErrorCode.VALIDATION_ERROR);
+        }
+        BigDecimal newBalance = user.getBalance().add(amount);
+        if (newBalance.compareTo(MAX_BALANCE) > 0) {
+            throw BusinessException.of(ErrorCode.VALIDATION_ERROR);
+        }
         user.addMoney(amount);
         userRepository.save(user);
     }
@@ -141,10 +150,12 @@ public class UserCommandService {
     public void deleteAccount(Long userId, String suffix) {
         favouriteMovieRepository.deleteAllByUserId(userId);
         cartItemRepository.deleteAllByUserId(userId);
+        purchasedMovieRepository.deleteAllByUserId(userId);
         ratedMovieRepository.softDeleteAllByUserId(userId);
         userRepository.softDeleteById(userId, suffix);
     }
 
+    @Transactional
     public void deletePhone(Long userId) {
         userRepository.deletePhone(userId);
     }

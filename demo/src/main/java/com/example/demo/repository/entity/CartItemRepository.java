@@ -21,6 +21,8 @@ public interface CartItemRepository extends AbstractCatalogItemRepository<CartIt
                 AND purchasedMovie.abstractCatalogItemId.movieId = cartItem.abstractCatalogItemId.movieId
             )
             """)
-    CartSummaryProjection findPurchasableSummaryByUserId(@Param("userId")
-                                                         Long userId);
+    CartSummaryProjection findPurchasableSummaryByUserId(
+            @Param("userId")
+            Long userId
+    );
 }

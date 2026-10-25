@@ -25,12 +25,21 @@ public class WatchedHistoryService {
     private final UserRepository userRepository;
 
     @Transactional
-    public void watch(Long movieId, Long userId) {
+    public Long watch(Long movieId, Long userId) {
         PurchasedMovie purchasedMovie = purchasedMovieRepository
                 .findByMovieIdAndUserId(movieId, userId)
                 .orElseThrow(() -> BusinessException.of(ErrorCode.MOVIE_NOT_PURCHASED));
+
+        int previousSize = purchasedMovie.getWatchedHistory().size();
         purchasedMovie.addWatchHistory(LocalDateTime.now(ZoneOffset.UTC));
         purchasedMovieRepository.saveAndFlush(purchasedMovie);
+
+        if (purchasedMovie.getWatchedHistory().size() > previousSize) {
+            return purchasedMovie.getWatchedHistory()
+                    .get(purchasedMovie.getWatchedHistory().size() - 1)
+                    .getId();
+        }
+        return null;
     }
 
     @Transactional

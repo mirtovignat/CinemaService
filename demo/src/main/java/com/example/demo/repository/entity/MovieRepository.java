@@ -24,14 +24,6 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
     }
 
     @Query("""
-            SELECT DISTINCT movie.director
-            FROM Movie movie
-            WHERE movie.director IS NOT NULL
-            ORDER BY movie.director
-            """)
-    List<String> findAllDistinctDirectors();
-
-    @Query("""
             SELECT DISTINCT movie.genre
             FROM Movie movie
             WHERE movie.genre IS NOT NULL
@@ -46,21 +38,16 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
               AND LOWER(director) LIKE LOWER(CONCAT(:prefix, '%'))
               AND (
                   :hasCursor = false
-                  OR split_part(director, ' ', 2) > :cursorSurname
-                  OR (
-                      split_part(director, ' ', 2) = :cursorSurname
-                      AND director > :cursorDirector
-                  )
+                  OR LOWER(director) > LOWER(:cursor)
               )
             GROUP BY director
-            ORDER BY MIN(split_part(director, ' ', 2)) ASC, director ASC
+            ORDER BY LOWER(director) ASC
             LIMIT :limit
             """, nativeQuery = true)
     List<String> fetchDirectorsKeyset(
             @Param("prefix") String prefix,
             @Param("hasCursor") boolean hasCursor,
-            @Param("cursorSurname") String cursorSurname,
-            @Param("cursorDirector") String cursorDirector,
+            @Param("cursor") String cursor,
             @Param("limit") int limit
     );
 

@@ -17,16 +17,16 @@
 
     function getUrlSort() {
         var params = new URLSearchParams(window.location.search);
-        var s = (params.get('sort') || '').toUpperCase();
-        return (s === 'ASC' || s === 'DESC') ? s : null;
+        var sortParam = (params.get('sort') || '').toUpperCase();
+        return (sortParam === 'ASC' || sortParam === 'DESC') ? sortParam : null;
     }
 
     function getStoredSort() {
         try {
             var saved = localStorage.getItem(getStorageKey());
             if (saved) {
-                var s = saved.toUpperCase();
-                if (s === 'ASC' || s === 'DESC') return s;
+                var sortParam = saved.toUpperCase();
+                if (sortParam === 'ASC' || sortParam === 'DESC') return sortParam;
             }
         } catch (e) {}
         return null;
@@ -40,22 +40,30 @@
         return !!document.querySelector('[data-cursor-container]');
     }
 
-    function applyActive(sort) {
+    function applyActive(sortParam) {
         document.querySelectorAll('#sortToggleGroup .sort-option').forEach(function (btn) {
-            btn.classList.toggle('active', btn.getAttribute('data-order').toUpperCase() === sort.toUpperCase());
+            btn.classList.toggle('active', btn.getAttribute('data-order').toUpperCase() === sortParam.toUpperCase());
         });
     }
 
     function getCurrentContainerSort() {
         var container = document.querySelector('[data-cursor-container]');
         if (!container) return null;
-        var s = (container.getAttribute('data-cursor-sort') || '').toUpperCase();
-        return (s === 'ASC' || s === 'DESC') ? s : null;
+        var sortParam = (container.getAttribute('data-cursor-sort') || '').toUpperCase();
+        return (sortParam === 'ASC' || sortParam === 'DESC') ? sortParam : null;
     }
 
     function buildUrl(order) {
         var url = new URL(window.location.href);
-        url.searchParams.set('sort', order.toUpperCase());
+        var path = window.location.pathname;
+
+        if (path.indexOf('/rated/') === 0 && path.indexOf('/reviews') !== -1) {
+            url.searchParams.set('sortDirection', order.toUpperCase());
+            url.searchParams.delete('sort');
+        } else {
+            url.searchParams.set('sort', order.toUpperCase());
+        }
+
         url.searchParams.delete('cursor');
         return url.toString();
     }
@@ -120,8 +128,8 @@
         group.querySelectorAll('.sort-option').forEach(function (btn) {
             if (btn.dataset.sortBound === '1') return;
             btn.dataset.sortBound = '1';
-            btn.addEventListener('click', function (e) {
-                e.preventDefault();
+            btn.addEventListener('click', function (event) {
+                event.preventDefault();
                 setSort(btn.getAttribute('data-order'));
             });
         });
@@ -135,7 +143,7 @@
         init();
     }
 
-    window.addEventListener('pageshow', function (e) {
-        if (e.persisted) init();
+    window.addEventListener('pageshow', function (event) {
+        if (event.persisted) init();
     });
 })();

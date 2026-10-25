@@ -3,8 +3,8 @@
 
     function refreshCatalogBadges() {
         document.querySelectorAll('.reviews-badge[data-movie-id]').forEach(function (el) {
-            var id = el.getAttribute('data-movie-id');
-            if (id) updateReviewsCount(id);
+            var movieId = el.getAttribute('data-movie-id');
+            if (movieId) updateReviewsCount(movieId);
         });
     }
 
@@ -35,6 +35,7 @@
             var targetUrl = new URL(href, window.location.origin);
             [
                 'title',
+                'genre',
                 'priceFrom',
                 'priceTo',
                 'ratingFrom',
@@ -50,8 +51,8 @@
             ].forEach(function (key) {
                 if (targetUrl.searchParams.has(key)) return;
                 if (!currentUrl.searchParams.has(key)) return;
-                currentUrl.searchParams.getAll(key).forEach(function (v) {
-                    targetUrl.searchParams.append(key, v);
+                currentUrl.searchParams.getAll(key).forEach(function (value) {
+                    targetUrl.searchParams.append(key, value);
                 });
             });
             return targetUrl.toString();
@@ -73,22 +74,22 @@
         refreshCatalogBadges();
         refreshCatalogStatuses();
 
-        document.addEventListener('click', function (e) {
-            var link = e.target.closest('.page-nav');
+        document.addEventListener('click', function (event) {
+            var link = event.target.closest('.page-nav');
             if (!link) return;
 
-            if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
-            if (e.button !== 0) return;
+            if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+            if (event.button !== 0) return;
 
             if (link.classList.contains('active')) {
-                e.preventDefault();
+                event.preventDefault();
                 return;
             }
 
             var href = link.getAttribute('href');
             if (!href || href === '#') return;
 
-            e.preventDefault();
+            event.preventDefault();
 
             var targetHref = mergeCurrentQueryIntoUrl(href);
 
@@ -140,8 +141,8 @@
                 reinitFiltersAfterContentSwap();
 
                 document.querySelectorAll('.js-rating-badge[data-movie-id]').forEach(function (el) {
-                    var id = el.getAttribute('data-movie-id');
-                    if (id) updateMovieRating(id);
+                    var movieId = el.getAttribute('data-movie-id');
+                    if (movieId) updateMovieRating(movieId);
                 });
 
                 if (pagination) pagination.classList.remove('pagination-loading');

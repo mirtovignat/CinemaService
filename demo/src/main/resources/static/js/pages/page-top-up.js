@@ -3,152 +3,114 @@
 
     var TOP_UP_AMOUNT_KEY = 'topUpAmount';
 
-    function formatAmount(value) {
-        if (value === '' || value === null || value === undefined) return '';
-        var num = parseFloat(value.toString().replace(',', '.'));
-        if (isNaN(num)) return value;
-        var rounded = Math.round(num * 100) / 100;
-        var parts = rounded.toFixed(2).split('.');
-        var intPart = parts[0];
-        var decPart = parts[1] || '00';
-        var formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-        return formattedInt + ',' + decPart + ' ₽';
+    function formatAmount(amountValue) {
+        if (amountValue === '' || amountValue === null || amountValue === undefined) return '';
+        var numericAmount = parseFloat(amountValue.toString().replace(',', '.'));
+        if (isNaN(numericAmount)) return amountValue;
+        var roundedAmount = Math.round(numericAmount * 100) / 100;
+        var amountParts = roundedAmount.toFixed(2).split('.');
+        var integerPart = amountParts[0];
+        var fractionalPart = amountParts[1] || '00';
+        var formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+        return formattedInteger + ',' + fractionalPart + ' ₽';
     }
 
     function readTopUpAmount() {
-        try { return sessionStorage.getItem(TOP_UP_AMOUNT_KEY); } catch (e) { return null; }
+        try { return sessionStorage.getItem(TOP_UP_AMOUNT_KEY); } catch (error) { return null; }
     }
 
     function clearTopUpAmount() {
-        try { sessionStorage.removeItem(TOP_UP_AMOUNT_KEY); } catch (e) {}
+        try { sessionStorage.removeItem(TOP_UP_AMOUNT_KEY); } catch (error) {}
     }
 
     function applyAmountFromStorage() {
-        var input = document.getElementById('amount');
-        if (!input) return;
-        if (input.value && input.value.trim() !== '') return;
+        var amountInput = document.getElementById('amount');
+        if (!amountInput) return;
+        if (amountInput.value && amountInput.value.trim() !== '') return;
 
-        var raw = readTopUpAmount();
-        if (!raw) return;
+        var storedAmount = readTopUpAmount();
+        if (!storedAmount) return;
 
-        var num = parseFloat(String(raw).replace(',', '.'));
-        if (isNaN(num) || num < 0.01) {
+        var numericAmount = parseFloat(String(storedAmount).replace(',', '.'));
+        if (isNaN(numericAmount) || numericAmount < 0.01) {
             clearTopUpAmount();
             return;
         }
 
-        var userData = document.getElementById('userData');
-        if (userData) {
-            var currentBalance = parseFloat(userData.getAttribute('data-balance')) || 0;
-            var maxBalance = parseFloat(userData.getAttribute('data-maxbalance')) || 100000;
-            var maxAllowed = Math.min(100000, maxBalance - currentBalance);
-            if (num > maxAllowed) num = maxAllowed;
+        var userDataElement = document.getElementById('userData');
+        if (userDataElement) {
+            var currentBalance = parseFloat(userDataElement.getAttribute('data-balance')) || 0;
+            var maxBalance = parseFloat(userDataElement.getAttribute('data-maxbalance')) || 100000;
+            var maxAllowedAmount = Math.min(100000, maxBalance - currentBalance);
+            if (numericAmount > maxAllowedAmount) numericAmount = maxAllowedAmount;
         }
 
-        if (num >= 0.01) {
-            input.value = num.toFixed(2).replace('.', ',');
-            input._lastValidValue = num.toFixed(2);
+        if (numericAmount >= 0.01) {
+            amountInput.value = numericAmount.toFixed(2).replace('.', ',');
+            amountInput._lastValidValue = numericAmount.toFixed(2);
         }
 
         setTimeout(clearTopUpAmount, 600);
     }
 
-    function setAmount(val) {
-        var input = document.getElementById('amount');
-        if (!input) return;
-        var userData = document.getElementById('userData');
-        if (!userData) return;
+    function setAmount(amountValue) {
+        var amountInput = document.getElementById('amount');
+        if (!amountInput) return;
+        var userDataElement = document.getElementById('userData');
+        if (!userDataElement) return;
 
-        var currentBalance = parseFloat(userData.getAttribute('data-balance'));
-        var maxBalance = parseFloat(userData.getAttribute('data-maxbalance'));
-        var maxAllowed = Math.min(100000, maxBalance - currentBalance);
+        var currentBalance = parseFloat(userDataElement.getAttribute('data-balance'));
+        var maxBalance = parseFloat(userDataElement.getAttribute('data-maxbalance'));
+        var maxAllowedAmount = Math.min(100000, maxBalance - currentBalance);
 
-        if (maxAllowed < 0.01) {
+        if (maxAllowedAmount < 0.01) {
             if (typeof showFlashMessage === 'function') {
                 showFlashMessage('Достигнут максимальный баланс', 'error');
             }
             return;
         }
 
-        var num = Math.min(Math.max(val, 0.01), maxAllowed);
-        input.value = num.toFixed(2).replace('.', ',');
-        input.dispatchEvent(new Event('input', { bubbles: true }));
+        var numericAmount = Math.min(Math.max(amountValue, 0.01), maxAllowedAmount);
+        amountInput.value = numericAmount.toFixed(2).replace('.', ',');
+        amountInput.dispatchEvent(new Event('input', { bubbles: true }));
     }
 
     var amountStepper = null;
 
     function stepAmount(delta) {
-        var input = document.getElementById('amount');
-        if (!input) return;
-        var current = parseFloat(input.value.replace(',', '.'));
-        if (isNaN(current)) current = 0;
-        var newValue = current + delta;
-        newValue = Math.round(newValue * 100) / 100;
-        if (newValue < 0) newValue = 0;
-        if (newValue > 1000000) newValue = 1000000;
-        input.value = newValue.toFixed(2);
-        input.dispatchEvent(new Event('input', { bubbles: true }));
+        var amountInput = document.getElementById('amount');
+        if (!amountInput) return;
+        var currentAmount = parseFloat(amountInput.value.replace(',', '.'));
+        if (isNaN(currentAmount)) currentAmount = 0;
+        var newAmount = currentAmount + delta;
+        newAmount = Math.round(newAmount * 100) / 100;
+        if (newAmount < 0) newAmount = 0;
+        if (newAmount > 1000000) newAmount = 1000000;
+        amountInput.value = newAmount.toFixed(2);
+        amountInput.dispatchEvent(new Event('input', { bubbles: true }));
     }
 
-    function startSteppingAmount(delta, button) {
+    function startSteppingAmount(delta, buttonElement) {
         if (!amountStepper) {
             amountStepper = createStepper({
-                onStep: function (d) { stepAmount(d); },
+                onStep: function (stepDelta) { stepAmount(stepDelta); },
                 startDelay: 250,
                 repeatDelay: 80
             });
         }
-        amountStepper.start(delta, button);
+        amountStepper.start(delta, buttonElement);
     }
 
-    function stopSteppingAmount(button) {
-        if (amountStepper) amountStepper.stop(button);
+    function stopSteppingAmount(buttonElement) {
+        if (amountStepper) amountStepper.stop(buttonElement);
     }
 
-    function clearTopUpForm() {
-        var input = document.getElementById('amount');
-        if (input) {
-            try { input.form && input.form.reset(); } catch (e) {}
-            input.value = '';
-            input.removeAttribute('value');
-            input._lastValidValue = '';
-            input.disabled = false;
-            input.dispatchEvent(new Event('input', { bubbles: true }));
-            input.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-
-        document.querySelectorAll('.preset-btn').forEach(function (b) {
-            b.classList.remove('active');
-        });
-
-        var clientErrorEl = document.getElementById('clientError');
-        if (clientErrorEl) {
-            clientErrorEl.textContent = '';
-            clientErrorEl.style.display = 'none';
-        }
-
-        var amountErrorEl = document.getElementById('amountError');
-        if (amountErrorEl) {
-            amountErrorEl.textContent = '';
-            amountErrorEl.style.display = 'none';
-        }
-
-        var hidden = document.querySelectorAll('#topUpForm input[type="hidden"][name="amount"]');
-        hidden.forEach(function (h) { h.remove(); });
-
-        var flashSuccess = document.querySelector('.flash-success');
-        if (flashSuccess) flashSuccess.remove();
-
-        var flashError = document.querySelector('.flash-error:not(#clientError)');
-        if (flashError) flashError.remove();
-    }
-
-    function maskPhoneElement(el) {
-        if (!el) return;
-        var raw = (el.getAttribute('data-raw-phone') || el.textContent || '').trim();
-        if (!raw) return;
+    function maskPhoneElement(phoneElement) {
+        if (!phoneElement) return;
+        var rawPhone = (phoneElement.getAttribute('data-raw-phone') || phoneElement.textContent || '').trim();
+        if (!rawPhone) return;
         if (typeof window.maskPhone !== 'function') return;
-        el.textContent = window.maskPhone(raw);
+        phoneElement.textContent = window.maskPhone(rawPhone);
     }
 
     function refreshBalanceFromServer() {
@@ -159,137 +121,137 @@
             credentials: 'same-origin',
             cache: 'no-store'
         })
-        .then(function (r) {
-            if (r.type === 'opaqueredirect' || r.status === 0) {
+        .then(function (response) {
+            if (response.type === 'opaqueredirect' || response.status === 0) {
                 window.location.href = '/login';
                 return null;
             }
-            if (r.redirected) {
-                window.location.href = r.url;
+            if (response.redirected) {
+                window.location.href = response.url;
                 return null;
             }
-            if (r.status !== 200) return null;
-            return r.json();
+            if (response.status !== 200) return null;
+            return response.json();
         })
-        .then(function (dto) {
-            if (!dto) return;
+        .then(function (walletDto) {
+            if (!walletDto) return;
 
-            var userData = document.getElementById('userData');
-            if (userData) {
-                if (dto.balance != null) userData.setAttribute('data-balance', dto.balance);
-                if (dto.phone != null) userData.setAttribute('data-phone', dto.phone);
-                if (dto.fullName != null) userData.setAttribute('data-fullname', dto.fullName);
+            var userDataElement = document.getElementById('userData');
+            if (userDataElement) {
+                if (walletDto.balance != null) userDataElement.setAttribute('data-balance', walletDto.balance);
+                if (walletDto.phone != null) userDataElement.setAttribute('data-phone', walletDto.phone);
+                if (walletDto.fullName != null) userDataElement.setAttribute('data-fullname', walletDto.fullName);
             }
 
-            var balanceEl = document.getElementById('balanceValue');
-            if (balanceEl && dto.balance != null) {
-                var num = parseFloat(String(dto.balance).replace(',', '.'));
-                if (!isNaN(num)) balanceEl.textContent = formatAmount(num.toFixed(2));
+            var balanceValueElement = document.getElementById('balanceValue');
+            if (balanceValueElement && walletDto.balance != null) {
+                var numericBalance = parseFloat(String(walletDto.balance).replace(',', '.'));
+                if (!isNaN(numericBalance)) balanceValueElement.textContent = formatAmount(numericBalance.toFixed(2));
             }
 
-            var phoneEl = document.getElementById('userPhone');
-            if (phoneEl && dto.phone != null) {
-                phoneEl.setAttribute('data-raw-phone', dto.phone);
-                phoneEl.textContent = (typeof window.maskPhone === 'function')
-                    ? window.maskPhone(dto.phone)
-                    : dto.phone;
+            var userPhoneElement = document.getElementById('userPhone');
+            if (userPhoneElement && walletDto.phone != null) {
+                userPhoneElement.setAttribute('data-raw-phone', walletDto.phone);
+                userPhoneElement.textContent = (typeof window.maskPhone === 'function')
+                    ? window.maskPhone(walletDto.phone)
+                    : walletDto.phone;
             }
 
-            var nameEl = document.getElementById('userFullname');
-            if (nameEl && dto.fullName != null) {
-                nameEl.textContent = dto.fullName;
+            var userFullnameElement = document.getElementById('userFullname');
+            if (userFullnameElement && walletDto.fullName != null) {
+                userFullnameElement.textContent = walletDto.fullName;
             }
         })
         .catch(function () {});
     }
 
     function installBalanceRefreshOnBfcache() {
-        window.addEventListener('pageshow', function (e) {
-            if (e.persisted) refreshBalanceFromServer();
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) refreshBalanceFromServer();
         });
     }
 
-    function bindWheel(amountInput, maxAllowed) {
+    function bindWheel(amountInput, maxAllowedAmount) {
         var lastWheelTime = 0;
 
-        amountInput.addEventListener('wheel', function (e) {
-            e.preventDefault();
+        amountInput.addEventListener('wheel', function (event) {
+            event.preventDefault();
             var now = Date.now();
-            var dt = lastWheelTime > 0 ? (now - lastWheelTime) / 1000 : 0.01;
+            var timeDelta = lastWheelTime > 0 ? (now - lastWheelTime) / 1000 : 0.01;
             lastWheelTime = now;
-            var direction = e.deltaY < 0 ? 1 : -1;
-            var delta = Math.min(Math.max(dt * 1.0, 0.01), 1.0);
+            var direction = event.deltaY < 0 ? 1 : -1;
+            var delta = Math.min(Math.max(timeDelta * 1.0, 0.01), 1.0);
             delta = direction * Math.round(delta * 100) / 100;
-            var current = parseFloat(amountInput.value.replace(',', '.'));
-            if (isNaN(current)) current = 0;
-            var newValue = Math.round((current + delta) * 100) / 100;
-            if (newValue < 0) newValue = 0;
-            if (newValue > maxAllowed) newValue = maxAllowed;
-            if (newValue > 100000) newValue = 100000;
-            amountInput.value = newValue.toFixed(2).replace('.', ',');
+            var currentAmount = parseFloat(amountInput.value.replace(',', '.'));
+            if (isNaN(currentAmount)) currentAmount = 0;
+            var newAmount = Math.round((currentAmount + delta) * 100) / 100;
+            if (newAmount < 0) newAmount = 0;
+            if (newAmount > maxAllowedAmount) newAmount = maxAllowedAmount;
+            if (newAmount > 100000) newAmount = 100000;
+            amountInput.value = newAmount.toFixed(2).replace('.', ',');
             amountInput.dispatchEvent(new Event('input', { bubbles: true }));
-            document.querySelectorAll('.preset-btn').forEach(function (b) {
-                b.classList.remove('active');
+            document.querySelectorAll('.preset-btn').forEach(function (presetButton) {
+                presetButton.classList.remove('active');
             });
         });
     }
 
     function bindBeforeInput(amountInput) {
-        amountInput.addEventListener('beforeinput', function (e) {
-            var val = this.value.replace(',', '.');
-            if (e.inputType === 'insertText' && e.data) {
-                var newNum = parseFloat(val + e.data);
-                if (newNum > 100000) e.preventDefault();
+        amountInput.addEventListener('beforeinput', function (event) {
+            var currentValue = this.value.replace(',', '.');
+            if (event.inputType === 'insertText' && event.data) {
+                var potentialValue = parseFloat(currentValue + event.data);
+                if (potentialValue > 100000) event.preventDefault();
             }
         });
     }
 
-    function bindInputMask(amountInput, errorEl, clientErrorEl) {
+    function bindInputMask(amountInput, amountErrorElement, clientErrorElement) {
         amountInput.addEventListener('input', function () {
-            var val = this.value;
-            if (val === '') return;
-            val = val.replace(',', '.');
-            var parts = val.split('.');
-            var intPart = parts[0].replace(/[^0-9]/g, '');
-            var decPart = parts.length > 1 ? parts[1].replace(/[^0-9]/g, '') : '';
-            if (intPart.length > 1 && intPart.startsWith('0')) {
-                intPart = intPart.replace(/^0+/, '');
-                if (intPart === '') intPart = '0';
+            var inputValue = this.value;
+            if (inputValue === '') return;
+            inputValue = inputValue.replace(',', '.');
+            var valueParts = inputValue.split('.');
+            var integerPart = valueParts[0].replace(/[^0-9]/g, '');
+            var fractionalPart = valueParts.length > 1 ? valueParts[1].replace(/[^0-9]/g, '') : '';
+            if (integerPart.length > 1 && integerPart.startsWith('0')) {
+                integerPart = integerPart.replace(/^0+/, '');
+                if (integerPart === '') integerPart = '0';
             }
-            if (decPart.length > 2) decPart = decPart.slice(0, 2);
-            var newValue = intPart;
-            if (decPart.length > 0 || (val.includes('.') && intPart !== '')) {
-                newValue = intPart + '.' + decPart;
+            if (fractionalPart.length > 2) fractionalPart = fractionalPart.slice(0, 2);
+            var newValue = integerPart;
+            if (fractionalPart.length > 0 || (inputValue.includes('.') && integerPart !== '')) {
+                newValue = integerPart + '.' + fractionalPart;
             }
-            if (val === '.' || val === ',') newValue = '0.';
-            if (val === '0.') newValue = '0.';
-            var num = parseFloat(newValue);
-            if (!isNaN(num) && num > 100000) {
+            if (inputValue === '.' || inputValue === ',') newValue = '0.';
+            if (inputValue === '0.') newValue = '0.';
+            var numericValue = parseFloat(newValue);
+            if (!isNaN(numericValue) && numericValue > 100000) {
                 this.value = this._lastValidValue || '0.00';
                 return;
             }
             this._lastValidValue = newValue;
             if (this.value !== newValue) this.value = newValue;
-            if (errorEl) { errorEl.textContent = ''; errorEl.style.display = 'none'; }
-            if (clientErrorEl) clientErrorEl.style.display = 'none';
+            if (amountErrorElement) { amountErrorElement.textContent = ''; amountErrorElement.style.display = 'none'; }
+            if (clientErrorElement) clientErrorElement.style.display = 'none';
         });
     }
 
     function bindBlur(amountInput) {
         amountInput.addEventListener('blur', function () {
-            var val = this.value.trim();
-            if (val === '' || val === '.' || val === '0.') {
+            var currentValue = this.value.trim();
+            if (currentValue === '' || currentValue === '.' || currentValue === '0.') {
                 this.value = '0,01';
                 this._lastValidValue = '0.01';
                 return;
             }
-            var num = parseFloat(val.replace(',', '.'));
-            if (isNaN(num) || num < 0.01) {
+            var numericValue = parseFloat(currentValue.replace(',', '.'));
+            if (isNaN(numericValue) || numericValue < 0.01) {
                 this.value = '0,01';
-            } else if (num > 100000) {
+            } else if (numericValue > 100000) {
                 this.value = '100000,00';
             } else {
-                this.value = num.toFixed(2).replace('.', ',');
+                this.value = numericValue.toFixed(2).replace('.', ',');
             }
             this._lastValidValue = this.value.replace(',', '.');
         });
@@ -298,167 +260,167 @@
     function initAmountPersistence(amountInput) {
         if (!amountInput) return;
 
-        var KEY = 'topUpAmountDraft';
+        var DRAFT_KEY = 'topUpAmountDraft';
 
-        function save() {
-            try { sessionStorage.setItem(KEY, amountInput.value || ''); } catch (e) {}
+        function saveDraft() {
+            try { sessionStorage.setItem(DRAFT_KEY, amountInput.value || ''); } catch (error) {}
         }
 
-        function clear() {
-            try { sessionStorage.removeItem(KEY); } catch (e) {}
+        function clearDraft() {
+            try { sessionStorage.removeItem(DRAFT_KEY); } catch (error) {}
         }
 
-        function restore() {
+        function restoreDraft() {
             try {
-                var v = sessionStorage.getItem(KEY);
-                if (v != null && v !== '' && amountInput.value === '') {
-                    amountInput.value = v;
-                    amountInput._lastValidValue = v.replace(',', '.');
+                var savedValue = sessionStorage.getItem(DRAFT_KEY);
+                if (savedValue != null && savedValue !== '' && amountInput.value === '') {
+                    amountInput.value = savedValue;
+                    amountInput._lastValidValue = savedValue.replace(',', '.');
                     amountInput.dispatchEvent(new Event('input', { bubbles: true }));
                 }
-            } catch (e) {}
+            } catch (error) {}
         }
 
-        var navType = 'navigate';
+        var navigationType = 'navigate';
         try {
             if (performance && performance.getEntriesByType) {
-                var nav = performance.getEntriesByType('navigation')[0];
-                if (nav && nav.type) navType = nav.type;
+                var navigationEntry = performance.getEntriesByType('navigation')[0];
+                if (navigationEntry && navigationEntry.type) navigationType = navigationEntry.type;
             }
-        } catch (e) {}
+        } catch (error) {}
 
-        if (navType === 'reload') {
-            restore();
+        if (navigationType === 'reload') {
+            restoreDraft();
         } else {
-            clear();
+            clearDraft();
         }
 
-        amountInput.addEventListener('input', save);
-        amountInput.addEventListener('change', save);
-        window.addEventListener('beforeunload', save);
+        amountInput.addEventListener('input', saveDraft);
+        amountInput.addEventListener('change', saveDraft);
+        window.addEventListener('beforeunload', saveDraft);
     }
 
-    function bindSubmit(form, userData, clientErrorEl) {
-        form.addEventListener('submit', function (e) {
-            var input = document.getElementById('amount');
-            if (!input) return;
-            var rawVal = input.value.replace(/[^0-9,.]/g, '').replace(',', '.');
-            var num = parseFloat(rawVal);
+    function bindSubmit(topUpForm, userDataElement, clientErrorElement) {
+        topUpForm.addEventListener('submit', function (event) {
+            var amountInput = document.getElementById('amount');
+            if (!amountInput) return;
+            var rawValue = amountInput.value.replace(/[^0-9,.]/g, '').replace(',', '.');
+            var numericAmount = parseFloat(rawValue);
 
-            if (input.value.trim() === '' || isNaN(num)) {
-                e.preventDefault();
-                if (clientErrorEl) {
-                    clientErrorEl.textContent = 'Сумма не может быть пустой';
-                    clientErrorEl.style.display = 'block';
+            if (amountInput.value.trim() === '' || isNaN(numericAmount)) {
+                event.preventDefault();
+                if (clientErrorElement) {
+                    clientErrorElement.textContent = 'Сумма не может быть пустой';
+                    clientErrorElement.style.display = 'block';
                 }
-                input.focus();
+                amountInput.focus();
                 return false;
             }
 
-            if (num < 0.01) {
-                e.preventDefault();
-                if (clientErrorEl) {
-                    clientErrorEl.textContent = 'Сумма должна быть не меньше 0,01 ₽';
-                    clientErrorEl.style.display = 'block';
+            if (numericAmount < 0.01) {
+                event.preventDefault();
+                if (clientErrorElement) {
+                    clientErrorElement.textContent = 'Сумма должна быть не меньше 0,01 ₽';
+                    clientErrorElement.style.display = 'block';
                 }
-                input.focus();
+                amountInput.focus();
                 return false;
             }
 
-            if (num > 100000) {
-                e.preventDefault();
-                if (clientErrorEl) {
-                    clientErrorEl.textContent = 'Сумма не может превышать 100 000,00 ₽';
-                    clientErrorEl.style.display = 'block';
+            if (numericAmount > 100000) {
+                event.preventDefault();
+                if (clientErrorElement) {
+                    clientErrorElement.textContent = 'Сумма не может превышать 100 000,00 ₽';
+                    clientErrorElement.style.display = 'block';
                 }
-                input.focus();
+                amountInput.focus();
                 return false;
             }
 
-            var currentBal = parseFloat(userData.getAttribute('data-balance'));
-            var maxBal = parseFloat(userData.getAttribute('data-maxbalance'));
-            if (currentBal + num > maxBal) {
-                e.preventDefault();
-                var available = maxBal - currentBal;
-                if (clientErrorEl) {
-                    clientErrorEl.textContent = 'Сумма пополнения не может превышать ' + available.toFixed(2) + ' ₽ (максимальный баланс 100 000 ₽)';
-                    clientErrorEl.style.display = 'block';
+            var currentBalance = parseFloat(userDataElement.getAttribute('data-balance'));
+            var maxBalance = parseFloat(userDataElement.getAttribute('data-maxbalance'));
+            if (currentBalance + numericAmount > maxBalance) {
+                event.preventDefault();
+                var availableAmount = maxBalance - currentBalance;
+                if (clientErrorElement) {
+                    clientErrorElement.textContent = 'Сумма пополнения не может превышать ' + availableAmount.toFixed(2) + ' ₽ (максимальный баланс 100 000 ₽)';
+                    clientErrorElement.style.display = 'block';
                 }
-                input.focus();
+                amountInput.focus();
                 return false;
             }
 
-            try { sessionStorage.removeItem('topUpAmountDraft'); } catch (err) {}
+            try { sessionStorage.removeItem('topUpAmountDraft'); } catch (error) {}
 
-            input.disabled = true;
-            var hiddenInput = document.createElement('input');
-            hiddenInput.type = 'hidden';
-            hiddenInput.name = 'amount';
-            hiddenInput.value = num.toFixed(2);
-            form.appendChild(hiddenInput);
+            amountInput.disabled = true;
+            var hiddenAmountInput = document.createElement('input');
+            hiddenAmountInput.type = 'hidden';
+            hiddenAmountInput.name = 'amount';
+            hiddenAmountInput.value = numericAmount.toFixed(2);
+            topUpForm.appendChild(hiddenAmountInput);
         });
     }
 
     function initTopUp() {
         var amountInput = document.getElementById('amount');
-        var userData = document.getElementById('userData');
-        if (!userData) return;
+        var userDataElement = document.getElementById('userData');
+        if (!userDataElement) return;
 
-        var errorEl = document.getElementById('amountError');
-        var clientErrorEl = document.getElementById('clientError');
+        var amountErrorElement = document.getElementById('amountError');
+        var clientErrorElement = document.getElementById('clientError');
 
-        var currentBalance = parseFloat(userData.getAttribute('data-balance'));
-        var maxBalance = parseFloat(userData.getAttribute('data-maxbalance'));
-        var maxAllowed = Math.min(100000, maxBalance - currentBalance);
+        var currentBalance = parseFloat(userDataElement.getAttribute('data-balance'));
+        var maxBalance = parseFloat(userDataElement.getAttribute('data-maxbalance'));
+        var maxAllowedAmount = Math.min(100000, maxBalance - currentBalance);
 
-        var form = document.getElementById('topUpForm');
+        var topUpForm = document.getElementById('topUpForm');
 
         applyAmountFromStorage();
 
-        if (form && window.FormGuard) {
-            window.FormGuard.register('topUp', function () { return form; });
+        if (topUpForm && window.FormGuard) {
+            window.FormGuard.register('topUp', function () { return topUpForm; });
         }
 
         installBalanceRefreshOnBfcache();
 
         if (amountInput) {
-            bindWheel(amountInput, maxAllowed);
+            bindWheel(amountInput, maxAllowedAmount);
             bindBeforeInput(amountInput);
-            bindInputMask(amountInput, errorEl, clientErrorEl);
+            bindInputMask(amountInput, amountErrorElement, clientErrorElement);
             bindBlur(amountInput);
 
             if (amountInput.value) {
-                var num = parseFloat(amountInput.value.replace(',', '.'));
-                if (!isNaN(num)) {
-                    amountInput.value = num.toFixed(2).replace('.', ',');
-                    amountInput._lastValidValue = num.toFixed(2);
+                var numericValue = parseFloat(amountInput.value.replace(',', '.'));
+                if (!isNaN(numericValue)) {
+                    amountInput.value = numericValue.toFixed(2).replace('.', ',');
+                    amountInput._lastValidValue = numericValue.toFixed(2);
                 }
             }
         }
 
-        var phoneEl = document.getElementById('userPhone');
-        if (phoneEl) {
-            var rawPhone = userData.getAttribute('data-phone') || '';
-            if (rawPhone) phoneEl.setAttribute('data-raw-phone', rawPhone);
-            maskPhoneElement(phoneEl);
+        var userPhoneElement = document.getElementById('userPhone');
+        if (userPhoneElement) {
+            var rawPhone = userDataElement.getAttribute('data-phone') || '';
+            if (rawPhone) userPhoneElement.setAttribute('data-raw-phone', rawPhone);
+            maskPhoneElement(userPhoneElement);
         }
 
-        var balanceEl = document.getElementById('balanceValue');
-        if (balanceEl && balanceEl.textContent) {
-            var num2 = parseFloat(balanceEl.textContent.replace(/\s/g, '').replace(',', '.'));
-            if (!isNaN(num2)) balanceEl.textContent = formatAmount(num2.toFixed(2));
+        var balanceValueElement = document.getElementById('balanceValue');
+        if (balanceValueElement && balanceValueElement.textContent) {
+            var numericBalance = parseFloat(balanceValueElement.textContent.replace(/\s/g, '').replace(',', '.'));
+            if (!isNaN(numericBalance)) balanceValueElement.textContent = formatAmount(numericBalance.toFixed(2));
         }
 
-        var currEl = document.getElementById('currencySymbol');
-        if (currEl) currEl.style.display = 'none';
+        var currencySymbolElement = document.getElementById('currencySymbol');
+        if (currencySymbolElement) currencySymbolElement.style.display = 'none';
 
-        if (form) {
-            bindSubmit(form, userData, clientErrorEl);
+        if (topUpForm) {
+            bindSubmit(topUpForm, userDataElement, clientErrorElement);
         }
 
-        if (amountInput && clientErrorEl) {
+        if (amountInput && clientErrorElement) {
             amountInput.addEventListener('input', function () {
-                clientErrorEl.style.display = 'none';
+                clientErrorElement.style.display = 'none';
             });
         }
 
@@ -470,24 +432,24 @@
         if (window.__topUpActionsBound) return;
         window.__topUpActionsBound = true;
 
-        window.Actions.register('set-amount', function (el) {
-            var val = parseFloat(el.getAttribute('data-amount'));
-            if (isNaN(val)) return false;
-            setAmount(val);
-            document.querySelectorAll('.preset-btn').forEach(function (b) {
-                b.classList.toggle('active', b === el);
+        window.Actions.register('set-amount', function (element) {
+            var amountValue = parseFloat(element.getAttribute('data-amount'));
+            if (isNaN(amountValue)) return false;
+            setAmount(amountValue);
+            document.querySelectorAll('.preset-btn').forEach(function (presetButton) {
+                presetButton.classList.toggle('active', presetButton === element);
             });
             return true;
         });
 
-        window.Actions.register('start-stepping-amount', function (el) {
-            var delta = parseFloat(el.getAttribute('data-stepper-delta')) || 0;
-            startSteppingAmount(delta, el);
+        window.Actions.register('start-stepping-amount', function (element) {
+            var delta = parseFloat(element.getAttribute('data-stepper-delta')) || 0;
+            startSteppingAmount(delta, element);
             return true;
         });
 
-        window.Actions.register('stop-stepping-amount', function (el) {
-            stopSteppingAmount(el);
+        window.Actions.register('stop-stepping-amount', function (element) {
+            stopSteppingAmount(element);
             return true;
         });
     }

@@ -1,11 +1,9 @@
 package com.example.demo.service.linked_collection;
 
 import com.example.demo.dto.base.UserStatus;
-import com.example.demo.dto.base.UserStatuses;
 import com.example.demo.repository.entity.CartItemRepository;
 import com.example.demo.repository.entity.FavouriteMovieRepository;
 import com.example.demo.repository.entity.PurchasedMovieRepository;
-import com.example.demo.service.catalog.RatedQueryService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,17 +17,13 @@ public class UserStatusResolver {
     private final CartItemRepository cartItemRepository;
     private final FavouriteMovieRepository favouriteMovieRepository;
     private final PurchasedMovieRepository purchasedMovieRepository;
-    private final RatedQueryService ratedQueryService;
-
-    public Map<Long, UserStatus> resolveAll(Long userId, Collection<Long> movieIds) {
-        if (userId == null || movieIds == null || movieIds.isEmpty()) {
-            return Map.of();
-        }
-        return loadAllUserStatuses(userId, movieIds);
-    }
 
     @Transactional(readOnly = true)
     public Map<Long, UserStatus> loadAllUserStatuses(Long userId, Collection<Long> movieIds) {
+        if (userId == null || movieIds == null || movieIds.isEmpty()) {
+            return Map.of();
+        }
+
         Set<Long> cartMovieIds = new LinkedHashSet<>(
                 cartItemRepository.findMovieIdsByUserIdAndMovieIdIn(userId, movieIds));
         Set<Long> favouriteMovieIds = new LinkedHashSet<>(
@@ -46,22 +40,5 @@ public class UserStatusResolver {
                     .build());
         }
         return userStatuses;
-    }
-
-    public UserStatuses resolveUserStatuses(Long userId) {
-        if (userId == null) {
-            return UserStatuses.empty();
-        }
-        return loadUserStatuses(userId);
-    }
-
-    @Transactional(readOnly = true)
-    public UserStatuses loadUserStatuses(Long userId) {
-        return UserStatuses.builder()
-                .cart(new LinkedHashSet<>(cartItemRepository.findMovieIdsByUserId(userId)))
-                .favourites(new LinkedHashSet<>(favouriteMovieRepository.findMovieIdsByUserId(userId)))
-                .bought(new LinkedHashSet<>(purchasedMovieRepository.findMovieIdsByUserId(userId)))
-                .rated(new LinkedHashMap<>(ratedQueryService.getOwnRatings(userId)))
-                .build();
     }
 }

@@ -21,28 +21,18 @@
               th:object="${registerForm}"
               method="post"
               id="registerForm"
-              autocomplete="off"
-              data-persist>
+              autocomplete="off">
 
             <div class="form-grid">
 
                 <div class="flash-container"
-                     th:if="${successMessage} or ${errorMessage} or ${passwordsMismatchExceptionMessage} or ${alreadyRegisteredExceptionMessage} or ${tooYoungExceptionMessage}">
+                     th:if="${successMessage} or ${errorMessage}">
                     <div th:if="${successMessage}"
                          class="flash-message success"
                          th:text="${successMessage}"></div>
                     <div th:if="${errorMessage}"
                          class="flash-message error"
                          th:text="${errorMessage}"></div>
-                    <div th:if="${passwordsMismatchExceptionMessage}"
-                         class="flash-message error"
-                         th:text="${passwordsMismatchExceptionMessage}"></div>
-                    <div th:if="${alreadyRegisteredExceptionMessage}"
-                         class="flash-message error"
-                         th:text="${alreadyRegisteredExceptionMessage}"></div>
-                    <div th:if="${tooYoungExceptionMessage}"
-                         class="flash-message error"
-                         th:text="${tooYoungExceptionMessage}"></div>
                 </div>
 
                 <div class="form-group">

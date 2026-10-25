@@ -71,23 +71,26 @@ public class MovieService {
         if (moviePage.isEmpty()) {
             return Page.empty(moviePage.getPageable());
         }
+
         if (userId != null) {
             List<Long> movieIds = moviePage.getContent().stream()
                     .map(Movie::getId)
                     .toList();
             Map<Long, MovieUserStatus> statuses = movieUserStatusBatchLoader.loadForMovies(movieIds, userId);
-            return moviePage.map(movie -> MovieForUser.<MovieCardViewDTO>builder()
-                    .movie(movieMapper.toCard(movie))
-                    .status(statuses.getOrDefault(movie.getId(), MovieUserStatus.builder().build()))
-                    .build());
+            return moviePage.map(movie -> buildMovieForUser(movie, statuses.getOrDefault(movie.getId(), MovieUserStatus.builder().build())));
         }
-        return moviePage.map(movie -> MovieForUser.<MovieCardViewDTO>builder()
-                .movie(movieMapper.toCard(movie))
-                .status(MovieUserStatus.builder().build())
-                .build());
+
+        return moviePage.map(movie -> buildMovieForUser(movie, MovieUserStatus.builder().build()));
     }
 
     public Movie getMovie(Long movieId) {
         return movieRepository.findByIdOrThrow(movieId);
+    }
+
+    private MovieForUser<MovieCardViewDTO> buildMovieForUser(Movie movie, MovieUserStatus movieUserStatus) {
+        return MovieForUser.<MovieCardViewDTO>builder()
+                .movie(movieMapper.toCard(movie))
+                .status(movieUserStatus)
+                .build();
     }
 }

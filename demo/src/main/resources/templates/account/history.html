@@ -15,8 +15,8 @@
     <div class="profile-grid">
         <th:block th:replace="~{fragments/sidebar :: sidebar(
             currentPage='history',
-            userSidebar=${userSidebarViewDTO},
-            genres=${genres}
+            userSidebar=${historyPageResponse != null ? historyPageResponse.userSidebarViewDTO() : null},
+            genres=${historyPageResponse != null ? historyPageResponse.genres() : null}
         )}"></th:block>
 
         <div class="profile-right">
@@ -31,18 +31,18 @@
                 <th:block th:replace="~{fragments/catalog-search :: catalogSearch}"></th:block>
             </div>
 
-            <div th:if="${response != null and response.items() != null and !response.items().isEmpty()}"
+            <div th:if="${historyPageResponse != null and historyPageResponse.cursorPageResponse() != null and historyPageResponse.cursorPageResponse().items() != null and !historyPageResponse.cursorPageResponse().items().isEmpty()}"
                  class="history-container"
                  data-cursor-container
                  data-group-history
                  data-cursor-endpoint="/history/more"
                  data-cursor-template="historyItemTemplate"
-                 th:attr="data-cursor-next=${response.nextCursor()},
-                          data-cursor-has-more=${response.hasMore()},
-                          data-cursor-sort=${response.sort()},
-                          data-cursor-query=${query}">
+                 th:attr="data-cursor-next=${historyPageResponse.cursorPageResponse().nextCursor()},
+                          data-cursor-has-more=${historyPageResponse.cursorPageResponse().hasMore()},
+                          data-cursor-sort=${historyPageResponse.cursorPageResponse().sort()},
+                          data-cursor-query=${historyPageResponse.query()}">
 
-                <div th:each="item : ${response.items()}"
+                <div th:each="item : ${historyPageResponse.cursorPageResponse().items()}"
                      class="history-item"
                      th:data-movie-id="${item.id()}"
                      th:data-added-at="${item.addedAt()}"
@@ -70,7 +70,7 @@
                 <div class="cursor-loader" data-cursor-loader></div>
             </div>
 
-            <div th:if="${response == null or response.items() == null or response.items().isEmpty()}"
+            <div th:if="${historyPageResponse == null or historyPageResponse.cursorPageResponse() == null or historyPageResponse.cursorPageResponse().items() == null or historyPageResponse.cursorPageResponse().items().isEmpty()}"
                  class="empty-message">
                 <div class="empty-icon"><th:block th:replace="~{fragments/icons :: icon-clock}"></th:block></div>
                 <h2>Покупок пока нет</h2>
@@ -78,7 +78,7 @@
                 <a th:href="@{/}" class="browse-movies-btn">Перейти в главное меню</a>
             </div>
 
-            <th:block th:if="${response == null or response.items() == null or response.items().isEmpty()}">
+            <th:block th:if="${historyPageResponse == null or historyPageResponse.cursorPageResponse() == null or historyPageResponse.cursorPageResponse().items() == null or historyPageResponse.cursorPageResponse().items().isEmpty()}">
                 <th:block th:insert="~{fragments/recommendations :: recommendations}"></th:block>
             </th:block>
         </div>

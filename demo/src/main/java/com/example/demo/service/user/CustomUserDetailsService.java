@@ -4,7 +4,7 @@ import com.example.demo.dto.user.AppUserDetails;
 import com.example.demo.dto.user.SessionUser;
 import com.example.demo.model.entity.User;
 import com.example.demo.repository.entity.UserRepository;
-import com.example.demo.util.normalizer.PhoneNormalizer;
+import com.example.demo.util.PhoneNormalizer;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

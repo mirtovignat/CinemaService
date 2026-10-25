@@ -6,30 +6,30 @@
     function getNavType() {
         try {
             if (performance && performance.getEntriesByType) {
-                var nav = performance.getEntriesByType('navigation')[0];
-                if (nav && nav.type) return nav.type;
+                var navigationEntry = performance.getEntriesByType('navigation')[0];
+                if (navigationEntry && navigationEntry.type) return navigationEntry.type;
             }
-        } catch (e) {}
+        } catch (error) {}
         return 'navigate';
     }
 
-    function showError(inputId, errorId, message) {
-        var input = document.getElementById(inputId);
-        var error = document.getElementById(errorId);
-        if (input) input.classList.add('has-error');
-        if (error) {
-            error.textContent = message;
-            error.classList.add('show');
+    function showError(inputId, errorId, errorMessage) {
+        var inputElement = document.getElementById(inputId);
+        var errorElement = document.getElementById(errorId);
+        if (inputElement) inputElement.classList.add('has-error');
+        if (errorElement) {
+            errorElement.textContent = errorMessage;
+            errorElement.classList.add('show');
         }
     }
 
     function clearError(inputId, errorId) {
-        var input = document.getElementById(inputId);
-        var error = document.getElementById(errorId);
-        if (input) input.classList.remove('has-error');
-        if (error) {
-            error.textContent = '';
-            error.classList.remove('show');
+        var inputElement = document.getElementById(inputId);
+        var errorElement = document.getElementById(errorId);
+        if (inputElement) inputElement.classList.remove('has-error');
+        if (errorElement) {
+            errorElement.textContent = '';
+            errorElement.classList.remove('show');
         }
     }
 
@@ -45,8 +45,8 @@
             ['phone', 'phoneError'],
             ['rawPassword', 'rawPasswordError'],
             ['repeatRawPassword', 'repeatRawPasswordError']
-        ].forEach(function (pair) {
-            clearError(pair[0], pair[1]);
+        ].forEach(function (fieldPair) {
+            clearError(fieldPair[0], fieldPair[1]);
         });
     }
 
@@ -54,61 +54,61 @@
         clearAllErrors();
         var hasErrors = false;
 
-        var surnameEl = document.getElementById('surname');
-        var surname = surnameEl ? surnameEl.value.trim() : '';
-        var rSurname = Validators.name(surname, 'фамилию');
-        if (!rSurname.ok) { showError('surname', 'surnameError', rSurname.error); hasErrors = true; }
+        var surnameElement = document.getElementById('surname');
+        var surname = surnameElement ? surnameElement.value.trim() : '';
+        var surnameValidation = Validators.name(surname, 'фамилию');
+        if (!surnameValidation.ok) { showError('surname', 'surnameError', surnameValidation.error); hasErrors = true; }
 
-        var nameEl = document.getElementById('name');
-        var name = nameEl ? nameEl.value.trim() : '';
-        var rName = Validators.name(name, 'имя');
-        if (!rName.ok) { showError('name', 'nameError', rName.error); hasErrors = true; }
+        var nameElement = document.getElementById('name');
+        var name = nameElement ? nameElement.value.trim() : '';
+        var nameValidation = Validators.name(name, 'имя');
+        if (!nameValidation.ok) { showError('name', 'nameError', nameValidation.error); hasErrors = true; }
 
-        var patronymicEl = document.getElementById('patronymic');
-        var patronymic = patronymicEl ? patronymicEl.value.trim() : '';
+        var patronymicElement = document.getElementById('patronymic');
+        var patronymic = patronymicElement ? patronymicElement.value.trim() : '';
         if (patronymic && !/^[А-Яа-яЁёA-Za-z\-]+$/.test(patronymic)) {
             showError('patronymic', 'patronymicError', 'Только буквы и дефис');
             hasErrors = true;
         }
 
-        var sexEl = document.getElementById('sex');
-        var sex = sexEl ? sexEl.value : '';
+        var sexElement = document.getElementById('sex');
+        var sex = sexElement ? sexElement.value : '';
         if (sex !== 'true' && sex !== 'false') {
             showError('sex', 'sexError', 'Выберите пол');
             hasErrors = true;
         }
 
-        var birthEl = document.getElementById('birthDate');
-        var birthDate = birthEl ? birthEl.value : '';
-        var rBirth = Validators.birthDate(birthDate, 14, 120);
-        if (!rBirth.ok) { showError('birthDate', 'birthDateError', rBirth.error); hasErrors = true; }
+        var birthDateElement = document.getElementById('birthDate');
+        var birthDate = birthDateElement ? birthDateElement.value : '';
+        var birthDateValidation = Validators.birthDate(birthDate, 14, 120);
+        if (!birthDateValidation.ok) { showError('birthDate', 'birthDateError', birthDateValidation.error); hasErrors = true; }
 
-        var usernameEl = document.getElementById('username');
-        var username = usernameEl ? usernameEl.value.trim() : '';
-        var rUsername = Validators.username(username);
-        if (!rUsername.ok) { showError('username', 'usernameError', rUsername.error); hasErrors = true; }
+        var usernameElement = document.getElementById('username');
+        var username = usernameElement ? usernameElement.value.trim() : '';
+        var usernameValidation = Validators.username(username);
+        if (!usernameValidation.ok) { showError('username', 'usernameError', usernameValidation.error); hasErrors = true; }
 
-        var emailEl = document.getElementById('email');
-        var email = emailEl ? emailEl.value.trim() : '';
-        var rEmail = Validators.email(email);
-        if (!rEmail.ok) { showError('email', 'emailError', rEmail.error); hasErrors = true; }
+        var emailElement = document.getElementById('email');
+        var email = emailElement ? emailElement.value.trim() : '';
+        var emailValidation = Validators.email(email);
+        if (!emailValidation.ok) { showError('email', 'emailError', emailValidation.error); hasErrors = true; }
 
-        var phoneEl = document.getElementById('phone');
-        var phone = phoneEl ? phoneEl.value.trim() : '';
-        var rPhone = Validators.phone(phone);
-        if (!rPhone.ok) { showError('phone', 'phoneError', rPhone.error); hasErrors = true; }
+        var phoneElement = document.getElementById('phone');
+        var phone = phoneElement ? phoneElement.value.trim() : '';
+        var phoneValidation = Validators.phone(phone);
+        if (!phoneValidation.ok) { showError('phone', 'phoneError', phoneValidation.error); hasErrors = true; }
 
-        var rawPwdEl = document.getElementById('rawPassword');
-        var rawPassword = rawPwdEl ? rawPwdEl.value : '';
-        var rPwd = Validators.password(rawPassword, 8);
-        if (!rPwd.ok) { showError('rawPassword', 'rawPasswordError', rPwd.error); hasErrors = true; }
+        var rawPasswordElement = document.getElementById('rawPassword');
+        var rawPassword = rawPasswordElement ? rawPasswordElement.value : '';
+        var rawPasswordValidation = Validators.password(rawPassword, 8);
+        if (!rawPasswordValidation.ok) { showError('rawPassword', 'rawPasswordError', rawPasswordValidation.error); hasErrors = true; }
 
-        var repeatEl = document.getElementById('repeatRawPassword');
-        var repeat = repeatEl ? repeatEl.value : '';
-        if (!repeat) {
+        var repeatPasswordElement = document.getElementById('repeatRawPassword');
+        var repeatPassword = repeatPasswordElement ? repeatPasswordElement.value : '';
+        if (!repeatPassword) {
             showError('repeatRawPassword', 'repeatRawPasswordError', 'Повторите пароль');
             hasErrors = true;
-        } else if (repeat !== rawPassword) {
+        } else if (repeatPassword !== rawPassword) {
             showError('repeatRawPassword', 'repeatRawPasswordError', 'Пароли не совпадают');
             hasErrors = true;
         }
@@ -130,31 +130,31 @@
             { id: 'repeatRawPassword', errorId: 'repeatRawPasswordError' }
         ];
 
-        fields.forEach(function (f) {
-            var el = document.getElementById(f.id);
-            if (!el) return;
-            el.addEventListener('input', function () {
-                clearError(f.id, f.errorId);
+        fields.forEach(function (field) {
+            var element = document.getElementById(field.id);
+            if (!element) return;
+            element.addEventListener('input', function () {
+                clearError(field.id, field.errorId);
             });
         });
 
-        var repeat = document.getElementById('repeatRawPassword');
-        var raw = document.getElementById('rawPassword');
-        if (repeat && raw) {
-            repeat.addEventListener('input', function () {
+        var repeatPasswordElement = document.getElementById('repeatRawPassword');
+        var rawPasswordElement = document.getElementById('rawPassword');
+        if (repeatPasswordElement && rawPasswordElement) {
+            repeatPasswordElement.addEventListener('input', function () {
                 clearError('repeatRawPassword', 'repeatRawPasswordError');
             });
-            repeat.addEventListener('blur', function () {
-                if (this.value && this.value !== raw.value) {
+            repeatPasswordElement.addEventListener('blur', function () {
+                if (this.value && this.value !== rawPasswordElement.value) {
                     showError('repeatRawPassword', 'repeatRawPasswordError', 'Пароли не совпадают');
                 } else {
                     clearError('repeatRawPassword', 'repeatRawPasswordError');
                 }
             });
-            raw.addEventListener('input', function () {
-                if (repeat.value && repeat.value !== raw.value) {
+            rawPasswordElement.addEventListener('input', function () {
+                if (repeatPasswordElement.value && repeatPasswordElement.value !== rawPasswordElement.value) {
                     showError('repeatRawPassword', 'repeatRawPasswordError', 'Пароли не совпадают');
-                } else if (repeat.value === raw.value && repeat.value) {
+                } else if (repeatPasswordElement.value === rawPasswordElement.value && repeatPasswordElement.value) {
                     clearError('repeatRawPassword', 'repeatRawPasswordError');
                 }
             });
@@ -162,157 +162,76 @@
     }
 
     function initClearButtons() {
-        document.querySelectorAll('.input-wrapper').forEach(function (wrapper) {
-            var input = wrapper.querySelector('input');
-            var clearBtn = wrapper.querySelector('.clear-input-btn');
-            if (!input || !clearBtn) return;
-            var sync = function () {
-                wrapper.classList.toggle('has-value', input.value.length > 0);
+        document.querySelectorAll('.input-wrapper').forEach(function (inputWrapper) {
+            var inputElement = inputWrapper.querySelector('input');
+            var clearButton = inputWrapper.querySelector('.clear-input-btn');
+            if (!inputElement || !clearButton) return;
+            var syncHasValue = function () {
+                inputWrapper.classList.toggle('has-value', inputElement.value.length > 0);
             };
-            clearBtn.addEventListener('click', function () {
-                input.value = '';
-                input.dispatchEvent(new Event('input', { bubbles: true }));
-                input.dispatchEvent(new Event('change', { bubbles: true }));
-                input.focus();
-                sync();
-                saveRegisterDraft();
+            clearButton.addEventListener('click', function () {
+                inputElement.value = '';
+                inputElement.dispatchEvent(new Event('input', { bubbles: true }));
+                inputElement.dispatchEvent(new Event('change', { bubbles: true }));
+                inputElement.focus();
+                syncHasValue();
             });
-            input.addEventListener('input', sync);
-            input.addEventListener('change', sync);
-            sync();
+            inputElement.addEventListener('input', syncHasValue);
+            inputElement.addEventListener('change', syncHasValue);
+            syncHasValue();
         });
     }
 
     function clearRegisterFields() {
-        var form = document.getElementById('registerForm');
-        if (!form) return;
+        var registerForm = document.getElementById('registerForm');
+        if (!registerForm) return;
 
-        try { form.reset(); } catch (e) {}
+        try { registerForm.reset(); } catch (error) {}
 
-        form.querySelectorAll('.form-control').forEach(function (field) {
-            if (field.type === 'hidden') return;
-            if (field.tagName === 'SELECT') {
-                field.selectedIndex = 0;
-                field.dispatchEvent(new Event('change', { bubbles: true }));
+        registerForm.querySelectorAll('.form-control').forEach(function (formField) {
+            if (formField.type === 'hidden') return;
+            if (formField.tagName === 'SELECT') {
+                formField.selectedIndex = 0;
+                formField.dispatchEvent(new Event('change', { bubbles: true }));
                 return;
             }
-            field.value = '';
-            field.removeAttribute('value');
-            field.dispatchEvent(new Event('input', { bubbles: true }));
-            field.dispatchEvent(new Event('change', { bubbles: true }));
-            field.classList.remove('has-error');
+            formField.value = '';
+            formField.removeAttribute('value');
+            formField.dispatchEvent(new Event('input', { bubbles: true }));
+            formField.dispatchEvent(new Event('change', { bubbles: true }));
+            formField.classList.remove('has-error');
         });
 
-        form.querySelectorAll('.input-wrapper').forEach(function (wrapper) {
-            wrapper.classList.remove('has-value');
+        registerForm.querySelectorAll('.input-wrapper').forEach(function (inputWrapper) {
+            inputWrapper.classList.remove('has-value');
         });
 
         clearAllErrors();
 
-        form.querySelectorAll('input[type="password"]').forEach(function (p) {
-            p.type = 'password';
+        registerForm.querySelectorAll('input[type="password"]').forEach(function (passwordInput) {
+            passwordInput.type = 'password';
         });
 
-        form.querySelectorAll('.toggle-password i').forEach(function (icon) {
-            icon.classList.remove('fa-eye');
-            icon.classList.add('fa-eye-slash');
-        });
-    }
-
-    function saveRegisterDraft() {
-        var form = document.getElementById('registerForm');
-        if (!form) return;
-        try {
-            var data = {};
-            form.querySelectorAll('input[name]:not([type="hidden"]):not([type="submit"])').forEach(function (el) {
-                if (el.type === 'password') return;
-                if (el.name === '_csrf') return;
-                if (el.type === 'checkbox' || el.type === 'radio') {
-                    data[el.name + '::' + el.value] = el.checked;
-                } else {
-                    data[el.name] = el.value;
-                }
-            });
-            form.querySelectorAll('select[name]').forEach(function (el) {
-                data[el.name] = el.value;
-            });
-            sessionStorage.setItem(REGISTER_DRAFT_KEY, JSON.stringify(data));
-        } catch (e) {}
-    }
-
-    function restoreRegisterDraft() {
-        var form = document.getElementById('registerForm');
-        if (!form) return;
-        try {
-            var raw = sessionStorage.getItem(REGISTER_DRAFT_KEY);
-            if (!raw) return;
-            var data = JSON.parse(raw);
-            if (!data || typeof data !== 'object') return;
-
-            form.querySelectorAll('input[name]:not([type="hidden"]):not([type="submit"])').forEach(function (el) {
-                if (el.type === 'password') return;
-                if (el.type === 'checkbox' || el.type === 'radio') {
-                    var key = el.name + '::' + el.value;
-                    if (key in data) el.checked = !!data[key];
-                } else if (el.name in data) {
-                    el.value = data[el.name];
-                }
-                el.dispatchEvent(new Event('input', { bubbles: true }));
-                el.dispatchEvent(new Event('change', { bubbles: true }));
-                var wrapper = el.closest('.input-wrapper');
-                if (wrapper) wrapper.classList.toggle('has-value', el.value.length > 0);
-            });
-
-            form.querySelectorAll('select[name]').forEach(function (el) {
-                if (el.name in data) {
-                    el.value = data[el.name];
-                    el.dispatchEvent(new Event('change', { bubbles: true }));
-                }
-            });
-        } catch (e) {}
-    }
-
-    function clearRegisterDraft() {
-        try { sessionStorage.removeItem(REGISTER_DRAFT_KEY); } catch (e) {}
-    }
-
-    function installClearOnEveryEntry() {
-        var navType = getNavType();
-
-        if (navType === 'reload') {
-            restoreRegisterDraft();
-        } else {
-            clearRegisterDraft();
-            clearRegisterFields();
-        }
-
-        var form = document.getElementById('registerForm');
-        if (form) {
-            form.addEventListener('input', saveRegisterDraft);
-            form.addEventListener('change', saveRegisterDraft);
-            form.addEventListener('submit', clearRegisterDraft);
-        }
-
-        window.addEventListener('pageshow', function (e) {
-            if (!e.persisted) return;
-            restoreRegisterDraft();
+        registerForm.querySelectorAll('.toggle-password i').forEach(function (iconElement) {
+            iconElement.classList.remove('fa-eye');
+            iconElement.classList.add('fa-eye-slash');
         });
     }
 
     function autoHideFlash() {
         setTimeout(function () {
-            document.querySelectorAll('.flash-message').forEach(function (msg) {
-                msg.style.animation = 'fadeOut 0.3s ease forwards';
-                setTimeout(function () { msg.remove(); }, 300);
+            document.querySelectorAll('.flash-message').forEach(function (flashMessageElement) {
+                flashMessageElement.style.animation = 'fadeOut 0.3s ease forwards';
+                setTimeout(function () { flashMessageElement.remove(); }, 300);
             });
         }, 4000);
     }
 
     function initRegisterPage() {
-        var form = document.getElementById('registerForm');
-        if (!form) return;
+        var registerForm = document.getElementById('registerForm');
+        if (!registerForm) return;
 
-        installClearOnEveryEntry();
+        clearRegisterFields();
         initClearButtons();
         if (typeof window.autoInitPhoneMasks === 'function') {
             window.autoInitPhoneMasks(document);
@@ -323,21 +242,21 @@
     }
 
     function bindSubmit() {
-        var form = document.getElementById('registerForm');
-        if (!form) return;
-        if (form.dataset.validateBound === '1') return;
-        form.dataset.validateBound = '1';
+        var registerForm = document.getElementById('registerForm');
+        if (!registerForm) return;
+        if (registerForm.dataset.validateBound === '1') return;
+        registerForm.dataset.validateBound = '1';
 
-        form.addEventListener('submit', function (e) {
+        registerForm.addEventListener('submit', function (event) {
             if (typeof window.Validators === 'undefined') return;
             if (!validateForm()) {
-                e.preventDefault();
-                var firstError = form.querySelector('.has-error');
-                if (firstError) {
-                    try { firstError.focus(); } catch (err) {}
+                event.preventDefault();
+                var firstErrorElement = registerForm.querySelector('.has-error');
+                if (firstErrorElement) {
+                    try { firstErrorElement.focus(); } catch (error) {}
                     try {
-                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    } catch (err) {}
+                        firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    } catch (error) {}
                 }
             }
         });

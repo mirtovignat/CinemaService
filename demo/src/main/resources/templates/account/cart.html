@@ -11,7 +11,7 @@
 <div id="authStatus" th:data-authenticated="${sessionUser.authenticated}" style="display:none;"></div>
 
 <main class="catalog-wrapper"
-      th:classappend="${response == null or response.items() == null or #lists.size(response.items()) <= 4} ? 'no-scroll' : ''">
+      th:classappend="${cartPageResponse == null or cartPageResponse.cursorPageResponse().items() == null or #lists.size(cartPageResponse.cursorPageResponse().items()) <= 4} ? 'no-scroll' : ''">
 
     <div class="page-header-row">
         <a th:href="@{/back(fallback='/')}" class="back-btn-header">
@@ -23,8 +23,8 @@
                 <th:block th:replace="~{fragments/icons :: icon-cart}"></th:block>
                 Ваша корзина
             </h1>
-            <div class="greeting-sub" th:if="${catalogCount != null and catalogCount > 0}">
-                Количество фильмов: <strong th:text="${catalogCount}">0</strong>
+            <div class="greeting-sub" th:if="${cartPageResponse != null and cartPageResponse.catalogCount() > 0}">
+                Количество фильмов: <strong th:text="${cartPageResponse.catalogCount()}">0</strong>
             </div>
         </div>
         <div class="page-header-actions">
@@ -32,18 +32,18 @@
             <button type="button"
                     class="checkout-btn"
                     data-action="bulk-buy"
-                    th:if="${summary != null and summary.count() > 0}">
+                    th:if="${cartPageResponse != null and cartPageResponse.cartSummaryDTO() != null and cartPageResponse.cartSummaryDTO().count() > 0}">
                 <span class="btn-text">
                     <th:block th:replace="~{fragments/icons :: icon-cart}"></th:block>
                     Купить всё
                 </span>
                 <span class="btn-price" id="bulkTotalPrice"
-                      th:text="${summary.count() + ' шт. · ' + summary.total() + ' ₽'}">0 ₽</span>
+                      th:text="${cartPageResponse.cartSummaryDTO().count() + ' шт. · ' + cartPageResponse.cartSummaryDTO().total() + ' ₽'}">0 ₽</span>
             </button>
             <button type="button"
                     class="clear-cart-btn"
                     data-action="clear-cart"
-                    th:if="${summary != null and summary.count() > 0}">
+                    th:if="${cartPageResponse != null and cartPageResponse.cartSummaryDTO() != null and cartPageResponse.cartSummaryDTO().count() > 0}">
                 <th:block th:replace="~{fragments/icons :: icon-trash}"></th:block>
                 Очистить всю корзину
             </button>
@@ -53,17 +53,17 @@
 
     <div class="catalog-content">
         <div class="cart-container"
-             th:if="${response != null and response.items() != null and !response.items().isEmpty()}"
+             th:if="${cartPageResponse != null and cartPageResponse.cursorPageResponse() != null and cartPageResponse.cursorPageResponse().items() != null and !cartPageResponse.cursorPageResponse().items().isEmpty()}"
              data-cursor-container
              data-cursor-endpoint="/cart/more"
              data-cursor-template="cartCardTemplate"
-             th:attr="data-cursor-next=${response.nextCursor()},
-                      data-cursor-has-more=${response.hasMore()},
-                      data-cursor-sort=${response.sort()},
-                      data-cursor-query=${query}">
+             th:attr="data-cursor-next=${cartPageResponse.cursorPageResponse().nextCursor()},
+                      data-cursor-has-more=${cartPageResponse.cursorPageResponse().hasMore()},
+                      data-cursor-sort=${cartPageResponse.cursorPageResponse().sort()},
+                      data-cursor-query=${cartPageResponse.query()}">
 
             <div class="media-card cart-card"
-                 th:each="cartMovie : ${response.items()}"
+                 th:each="cartMovie : ${cartPageResponse.cursorPageResponse().items()}"
                  th:data-movie-id="${cartMovie.id()}"
                  th:data-movie-price="${cartMovie.price()}"
                  th:data-movie-title="${cartMovie.title()}"
@@ -160,7 +160,7 @@
             <div class="cursor-loader" data-cursor-loader></div>
         </div>
 
-        <div th:if="${response == null or response.items() == null or response.items().isEmpty()}"
+        <div th:if="${cartPageResponse == null or cartPageResponse.cursorPageResponse() == null or cartPageResponse.cursorPageResponse().items() == null or cartPageResponse.cursorPageResponse().items().isEmpty()}"
              class="empty-message">
             <div class="empty-icon">
                 <th:block th:replace="~{fragments/icons :: icon-cart}"></th:block>
@@ -170,7 +170,7 @@
             <a th:href="@{/}" class="browse-movies-btn">Перейти в главное меню</a>
         </div>
 
-        <th:block th:if="${response == null or response.items() == null or response.items().isEmpty()}">
+        <th:block th:if="${cartPageResponse == null or cartPageResponse.cursorPageResponse() == null or cartPageResponse.cursorPageResponse().items() == null or cartPageResponse.cursorPageResponse().items().isEmpty()}">
             <th:block th:with="visible=9">
                 <th:block th:insert="~{fragments/recommendations :: recommendations}"></th:block>
             </th:block>

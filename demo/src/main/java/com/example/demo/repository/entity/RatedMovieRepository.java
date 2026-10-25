@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -127,6 +128,17 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
             AND ratedMovie.deletableState.deleted = false
             """)
     List<RatedMovie> findAllByUserId(@Param("userId") Long userId);
+
+    @Query("""
+            SELECT DISTINCT ratedMovie FROM RatedMovie ratedMovie
+            JOIN FETCH ratedMovie.movie
+            JOIN FETCH ratedMovie.user
+            WHERE ratedMovie.id.userId = :userId
+            AND ratedMovie.id.movieId IN :movieIds
+            AND ratedMovie.deletableState.deleted = false
+            """)
+    List<RatedMovie> findAllByUserIdAndMovieIdIn(@Param("userId") Long userId,
+                                                 @Param("movieIds") Collection<Long> movieIds);
 
     @Override
     @Query("""

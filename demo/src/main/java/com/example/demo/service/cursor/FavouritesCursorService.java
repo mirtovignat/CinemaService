@@ -7,7 +7,6 @@ import com.example.demo.dto.catalog.FavouriteMovieViewDTO;
 import com.example.demo.mapper.entity.FavouritesMapper;
 import com.example.demo.model.entity.FavouriteMovie;
 import com.example.demo.repository.entity.FavouriteMovieRepository;
-import com.example.demo.util.normalizer.TitleNormalizer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -15,20 +14,18 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class FavouritesCursorService extends AbstractUserCursorService<FavouriteMovie, FavouriteMovieViewDTO> {
+public class FavouritesCursorService extends AbstractUserCursorService<FavouriteMovie, FavouriteMovieViewDTO> implements SuggestableCursorService {
 
     private final FavouriteMovieRepository favouriteMovieRepository;
 
     public FavouritesCursorService(CursorCodec cursorCodec,
                                    KeyCodec keyCodec,
-                                   TitleNormalizer titleNormalizer,
                                    FavouriteMovieRepository favouriteMovieRepository,
                                    UserStatusMapperHelper userStatusMapperHelper,
                                    FavouritesMapper favouritesMapper,
                                    @Value("${app.catalog.cursorPageResponse-size:20}") int defaultPageSize) {
         super(cursorCodec,
                 keyCodec,
-                titleNormalizer,
                 defaultPageSize,
                 favouriteMovie -> keyCodec.encode(
                         favouriteMovie.getAddedAt(),
@@ -42,6 +39,7 @@ public class FavouritesCursorService extends AbstractUserCursorService<Favourite
         this.favouriteMovieRepository = favouriteMovieRepository;
     }
 
+    @Override
     public List<String> findTitlesStartingWith(Long userId, String query, Pageable pageable) {
         return favouriteMovieRepository.findTitlesStartingWith(userId, query, pageable);
     }

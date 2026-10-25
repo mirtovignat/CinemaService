@@ -24,9 +24,11 @@ public class MovieFilterController {
 
     @GetMapping("/meta")
     public ResponseEntity<MovieFilterMetaResponse> meta() {
-        MovieRangesSnapshot ranges = movieFilterMetaService.getRanges();
+        MovieRangesSnapshot movieRangesSnapshot = movieFilterMetaService.getRanges();
         return ResponseEntity.ok(MovieFilterMetaResponse.builder()
-                .ranges(ranges)
+                .genres(movieFilterMetaService.getAllGenres())
+                .directors(List.of())
+                .movieRangesSnapshot(movieRangesSnapshot)
                 .build());
     }
 

@@ -16,29 +16,29 @@ public class UserStatusMapperHelper {
 
     private final UserStatusResolver userStatusResolver;
 
-    public <EntityType, DataType> List<DataType> mapWithStatuses(List<EntityType> items,
-                                                                 BiFunction<EntityType, UserStatus, DataType> mapper) {
+    public <EntityType extends AbstractCatalogItem, DataType> List<DataType> mapWithStatuses(
+            List<EntityType> items,
+            BiFunction<EntityType, UserStatus, DataType> mapper) {
+
         if (items.isEmpty()) {
             return List.of();
         }
 
-        AbstractCatalogItem firstItem = (AbstractCatalogItem) items.get(0);
+        EntityType firstItem = items.get(0);
         Long userId = firstItem.getAbstractCatalogItemId().getUserId();
 
         List<Long> movieIds = items.stream()
-                .map(item -> ((AbstractCatalogItem) item).getAbstractCatalogItemId()
-                        .getMovieId())
+                .map(item -> item.getAbstractCatalogItemId().getMovieId())
                 .toList();
 
-        Map<Long, UserStatus> userStatuses = userStatusResolver.resolveAll(userId, movieIds);
+        Map<Long, UserStatus> userStatuses = userStatusResolver.loadAllUserStatuses(userId, movieIds);
 
         return items.stream()
                 .map(item -> {
-                    Long movieId = ((AbstractCatalogItem) item).getAbstractCatalogItemId().getMovieId();
+                    Long movieId = item.getAbstractCatalogItemId().getMovieId();
                     UserStatus userStatus = userStatuses.getOrDefault(
                             movieId,
-                            UserStatus.builder()
-                                    .build()
+                            UserStatus.builder().build()
                     );
                     return mapper.apply(item, userStatus);
                 })

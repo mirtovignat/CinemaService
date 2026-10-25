@@ -11,6 +11,7 @@ public record ReviewViewDTO(
         BigDecimal ratingValue,
         String reviewText,
         String addedAt,
-        boolean own
+        boolean own,
+        boolean deleted
 ) {
 }

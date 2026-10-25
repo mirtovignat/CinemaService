@@ -9,7 +9,6 @@ import com.example.demo.dto.movie.MovieCardViewDTO;
 import com.example.demo.mapper.entity.MovieMapper;
 import com.example.demo.model.entity.Movie;
 import com.example.demo.repository.entity.MovieRepository;
-import com.example.demo.util.normalizer.TitleNormalizer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
@@ -25,14 +24,12 @@ public class RecommendationCursorService
     private final RecommendationKeyCodec recommendationKeyCodec;
 
     public RecommendationCursorService(CursorCodec cursorCodec,
-                                       TitleNormalizer titleNormalizer,
                                        RecommendationKeyCodec recommendationKeyCodec,
                                        MovieRepository movieRepository,
                                        MovieMapper movieMapper,
                                        @Value("${app.recommendations.cursorPageResponse-size:8}") int pageSize) {
         super(
                 cursorCodec,
-                titleNormalizer,
                 pageSize,
                 movie -> recommendationKeyCodec.encode(movie.getRating(), movie.getId()),
                 movies -> movies.stream()

@@ -86,11 +86,11 @@ public class RatedQueryService {
             return Map.of();
         }
         Set<Long> requestedIds = new LinkedHashSet<>(movieIds);
-        return getOwnRatings(userId).entrySet().stream()
-                .filter(entry -> requestedIds.contains(entry.getKey()))
+        return ratedMovieRepository.findAllByUserIdAndMovieIdIn(userId, requestedIds).stream()
+                .map(ratedMovie -> ratedMapper.toReviewViewWithOwn(ratedMovie, userId))
                 .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        Map.Entry::getValue,
+                        ReviewViewDTO::movieId,
+                        Function.identity(),
                         (existing, replacement) -> existing,
                         LinkedHashMap::new
                 ));

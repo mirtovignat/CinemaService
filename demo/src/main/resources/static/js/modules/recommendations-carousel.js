@@ -11,10 +11,10 @@
         if (typeof window.buildPosterPlaceholder === 'function') {
             return window.buildPosterPlaceholder();
         }
-        var wrap = document.createElement('div');
-        wrap.className = 'movie-poster-placeholder';
-        wrap.setAttribute('data-poster-placeholder', '');
-        wrap.innerHTML =
+        var wrapper = document.createElement('div');
+        wrapper.className = 'movie-poster-placeholder';
+        wrapper.setAttribute('data-poster-placeholder', '');
+        wrapper.innerHTML =
             '<div class="poster-placeholder-icon">' +
                 '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" ' +
                      'fill="none" stroke="currentColor" stroke-width="1.6" ' +
@@ -26,7 +26,7 @@
             '</div>' +
             '<div class="poster-placeholder-text">Нет постера</div>' +
             '<div class="poster-placeholder-sub">Изображение недоступно</div>';
-        return wrap;
+        return wrapper;
     }
 
     function createCard(movie, currentUri) {
@@ -72,7 +72,10 @@
         title.textContent = movie.title || 'Без названия';
         var year = document.createElement('div');
         year.className = 'rec-year';
-        year.textContent = movie.releaseYear || movie.release_year || '';
+
+        var releaseDate = movie.releaseDate || movie.releaseYear || movie.release_year || '';
+        year.textContent = releaseDate ? String(releaseDate).substring(0, 4) : '';
+
         info.appendChild(title);
         info.appendChild(year);
 
@@ -254,7 +257,7 @@
 
     window.RecommendationsCarousel = { mount: mount, mountAll: mountAll };
 
-    window.removeRecommendationOptimistic = function (movieId) {
+    window.callRemoveRecommendation = function (movieId) {
         var rollbacks = instances.map(function (state) {
             return state.removeOptimistic(movieId);
         });

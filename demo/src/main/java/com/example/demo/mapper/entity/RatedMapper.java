@@ -6,7 +6,6 @@ import com.example.demo.dto.catalog.ReviewViewDTO;
 import com.example.demo.mapper.util.DateTimeMapperUtil;
 import com.example.demo.mapper.util.RatingMapper;
 import com.example.demo.model.entity.RatedMovie;
-import com.example.demo.model.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -17,28 +16,27 @@ public abstract class RatedMapper {
         if (ratedMovie == null) {
             return null;
         }
-        String reviewAuthorUsername = resolveReviewAuthorUsername(ratedMovie);
-        boolean isOwnReview = ratedMovie.getUser() != null
-                && ratedMovie.getUser().getId().equals(currentUserId);
+        boolean isDeleted = isAuthorDeleted(ratedMovie);
+
         return ReviewViewDTO.builder()
                 .movieId(ratedMovie.getMovie() != null ? ratedMovie.getMovie().getId() : null)
-                .username(reviewAuthorUsername)
+                .username(ratedMovie.getUser() != null ? ratedMovie.getUser().getUsername() : null)
                 .ratingValue(RatingMapper.normalizeRating(ratedMovie.getRatingValue()))
                 .reviewText(ratedMovie.getReview())
                 .addedAt(DateTimeMapperUtil.toUtcIso(ratedMovie.getAddedAt()))
-                .own(isOwnReview)
+                .own(ratedMovie.getUser() != null
+                        && ratedMovie.getUser().getId().equals(currentUserId))
+                .deleted(isDeleted)
                 .build();
     }
 
-    public String resolveReviewAuthorUsername(RatedMovie ratedMovie) {
-        if (ratedMovie == null) {
-            return "Удалённый аккаунт";
+    public boolean isAuthorDeleted(RatedMovie ratedMovie) {
+        if (ratedMovie == null || ratedMovie.getUser() == null) {
+            return true;
         }
-        User reviewAuthor = ratedMovie.getUser();
-        if (reviewAuthor == null || reviewAuthor.getDeletableState().isDeleted()) {
-            return "Удалённый аккаунт";
-        }
-        return reviewAuthor.getUsername();
+        String username = ratedMovie.getUser().getUsername();
+        return ratedMovie.getUser().getDeletableState().isDeleted()
+                || (username != null && username.startsWith("deleted_"));
     }
 
     public RatedMovieViewDTO toOwnerView(RatedMovie ratedMovie) {
