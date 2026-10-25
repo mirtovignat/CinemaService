@@ -5,6 +5,7 @@ import com.example.demo.cursor.SortDirection;
 import com.example.demo.cursor.codec.CursorCodec;
 import com.example.demo.cursor.codec.KeyCodec;
 import com.example.demo.cursor.context.UserCursorContext;
+import com.example.demo.util.normalizer.TitleNormalizer;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 
@@ -21,12 +22,13 @@ public abstract class AbstractUserCursorService<EntityType, DataType>
 
     protected AbstractUserCursorService(CursorCodec cursorCodec,
                                         KeyCodec keyCodec,
+                                        TitleNormalizer titleNormalizer,
                                         int defaultPageSize,
                                         Function<EntityType, String> cursorValueExtractor,
                                         Function<List<EntityType>, List<DataType>> contentMapper,
                                         SliceFetcher<EntityType> ascFetcher,
                                         SliceFetcher<EntityType> descFetcher) {
-        super(cursorCodec, defaultPageSize, cursorValueExtractor, contentMapper);
+        super(cursorCodec, titleNormalizer, defaultPageSize, cursorValueExtractor, contentMapper);
         this.keyCodec = keyCodec;
         this.ascFetcher = ascFetcher;
         this.descFetcher = descFetcher;

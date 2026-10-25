@@ -28,7 +28,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update # В продакшене заменить на validate и использовать Flyway/Liquibase
+      ddl-auto: update
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     show-sql: false
     open-in-view: false
@@ -67,6 +67,8 @@ tmdb:
   poster-size: w500
 
 app:
+  suggestions:
+    limit: 10
   pagination:
     default-size: 35
     genre-default-size: 15

@@ -1,7 +1,5 @@
 package com.example.demo.filter;
 
-import com.example.demo.util.normalizer.TitleNormalizer;
-import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import org.springframework.data.jpa.domain.Specification;
@@ -68,27 +66,20 @@ public final class SpecificationUtils {
             String fieldName,
             String sanitizedSearchQuery
     ) {
-        String escapedQuery = escapeLike(sanitizedSearchQuery);
-        return (root, criteriaQuery, criteriaBuilder) -> {
-            Expression<String> titleExpression = criteriaBuilder.lower(root.get(fieldName));
-            for (String charToRemove : TitleNormalizer.CHARS_TO_REMOVE) {
-                titleExpression = criteriaBuilder.function(
-                        "replace",
-                        String.class,
-                        titleExpression,
-                        criteriaBuilder.literal(charToRemove),
-                        criteriaBuilder.literal("")
-                );
-            }
-            titleExpression = criteriaBuilder.function(
-                    "replace",
-                    String.class,
-                    titleExpression,
-                    criteriaBuilder.literal("ё"),
-                    criteriaBuilder.literal("е")
-            );
-            return criteriaBuilder.like(titleExpression, escapedQuery + "%", '\\');
-        };
+        String escapedQuery = escapeLike(sanitizedSearchQuery.toLowerCase().replace('ё', 'е'));
+        return (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.like(
+                criteriaBuilder.lower(
+                        criteriaBuilder.function(
+                                "translate",
+                                String.class,
+                                root.get(fieldName),
+                                criteriaBuilder.literal("ёЁ"),
+                                criteriaBuilder.literal("еЕ")
+                        )
+                ),
+                escapedQuery + "%",
+                '\\'
+        );
     }
 
     private static String escapeLike(String value) {

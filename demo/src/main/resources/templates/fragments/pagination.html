@@ -18,6 +18,8 @@
         qDurationTo=${param.durationTo != null and param.durationTo.length > 0 and param.durationTo[0] != null ? param.durationTo[0] : ''},
         qReleaseDateFrom=${param.releaseDateFrom != null and param.releaseDateFrom.length > 0 and param.releaseDateFrom[0] != null ? param.releaseDateFrom[0] : ''},
         qReleaseDateTo=${param.releaseDateTo != null and param.releaseDateTo.length > 0 and param.releaseDateTo[0] != null ? param.releaseDateTo[0] : ''},
+        qGenres=${param.genres != null and param.genres.length > 0 ? #strings.listJoin(param.genres, ',') : ''},
+        qDirectors=${param.directors != null and param.directors.length > 0 ? #strings.listJoin(param.directors, ',') : ''},
         qSortBy=${param.sortBy != null and param.sortBy.length > 0 and param.sortBy[0] != null ? param.sortBy[0] : ''},
         qSortDirection=${param.sortDirection != null and param.sortDirection.length > 0 and param.sortDirection[0] != null ? param.sortDirection[0] : ''}
     ">
@@ -33,6 +35,8 @@
                 + (qDurationTo != '' ? '&durationTo=' + qDurationTo : '')
                 + (qReleaseDateFrom != '' ? '&releaseDateFrom=' + qReleaseDateFrom : '')
                 + (qReleaseDateTo != '' ? '&releaseDateTo=' + qReleaseDateTo : '')
+                + (qGenres != '' ? '&genres=' + qGenres : '')
+                + (qDirectors != '' ? '&directors=' + qDirectors : '')
                 + (qSortBy != '' ? '&sortBy=' + qSortBy : '')
                 + (qSortDirection != '' ? '&sortDirection=' + qSortDirection : '')
             }
@@ -105,4 +109,4 @@
 </div>
 
 </body>
-</html>
+</html>on refreshCatalogBadges() {

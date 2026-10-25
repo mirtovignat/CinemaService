@@ -3,14 +3,15 @@ package com.example.demo.controller.catalog;
 import com.example.demo.cursor.CursorPageRequest;
 import com.example.demo.cursor.context.UserCursorContext;
 import com.example.demo.dto.catalog.LibrarianMovieViewDTO;
-import com.example.demo.dto.catalog.WatchedSuggestionDTO;
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.dto.response.CursorPageResponse;
 import com.example.demo.dto.response.UserCursorPageResponse;
 import com.example.demo.dto.user.UserSidebarViewDTO;
 import com.example.demo.exception.SuccessCode;
 import com.example.demo.mapper.entity.UserMapper;
+import com.example.demo.repository.projection.WatchedSuggestionProjection;
 import com.example.demo.service.catalog.WatchedHistoryService;
+import com.example.demo.service.cursor.SuggestionService;
 import com.example.demo.service.cursor.WatchedHistoryCursorService;
 import com.example.demo.service.movie.MovieFilterMetaService;
 import com.example.demo.service.user.UserQueryService;
@@ -32,8 +33,6 @@ import java.util.Map;
 @RequestMapping("/watched")
 public class WatchedHistoryController {
 
-    private static final int SUGGESTIONS_LIMIT = 10;
-
     private final WatchedHistoryCursorService watchedHistoryCursorService;
     private final WatchedHistoryService watchedHistoryService;
     private final UserQueryService userQueryService;
@@ -41,6 +40,7 @@ public class WatchedHistoryController {
     private final MovieFilterMetaService movieFilterMetaService;
     private final MessageUtils messageUtils;
     private final ApiResponseFactory apiResponseFactory;
+    private final SuggestionService suggestionService;
 
     @GetMapping
     public String getPage(@ModelAttribute CursorPageRequest cursorPageRequest,
@@ -83,14 +83,12 @@ public class WatchedHistoryController {
 
     @GetMapping("/suggestions")
     @ResponseBody
-    public List<WatchedSuggestionDTO> suggestions(@RequestParam(value = "query", required = false, defaultValue = "") String query,
-                                                  @CurrentUserId(required = false) Long userId) {
-        if (userId == null) return List.of();
-        String trimmed = query == null ? "" : query.trim();
-        if (trimmed.isEmpty()) return List.of();
-        return watchedHistoryCursorService.findGroupedWatchedSuggestionsStartingWith(
-                userId, trimmed, PageRequest.of(0, SUGGESTIONS_LIMIT));
+    public List<WatchedSuggestionProjection> suggestions(@RequestParam(value = "query", required = false, defaultValue = "") String query,
+                                                         @CurrentUserId(required = false) Long userId) {
+        return suggestionService.suggest(userId, query,
+                (uId, normalizedQuery) -> watchedHistoryCursorService.findGroupedWatchedSuggestionsStartingWith(uId, normalizedQuery, PageRequest.of(0, 10)));
     }
+
     @PostMapping("/add/{id}")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> watch(@PathVariable Long id,

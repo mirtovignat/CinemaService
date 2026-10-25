@@ -7,6 +7,7 @@ import com.example.demo.dto.catalog.CartItemViewDTO;
 import com.example.demo.mapper.entity.CartItemMapper;
 import com.example.demo.model.entity.CartItem;
 import com.example.demo.repository.entity.CartItemRepository;
+import com.example.demo.util.normalizer.TitleNormalizer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,12 +21,14 @@ public class CartCursorService extends AbstractUserCursorService<CartItem, CartI
 
     public CartCursorService(CursorCodec cursorCodec,
                              KeyCodec keyCodec,
+                             TitleNormalizer titleNormalizer,
                              CartItemRepository cartItemRepository,
                              UserStatusMapperHelper userStatusMapperHelper,
                              CartItemMapper cartItemMapper,
                              @Value("${app.catalog.cursorPageResponse-size:20}") int defaultPageSize) {
         super(cursorCodec,
                 keyCodec,
+                titleNormalizer,
                 defaultPageSize,
                 cartItem -> keyCodec.encode(
                         cartItem.getAddedAt(),
@@ -40,7 +43,7 @@ public class CartCursorService extends AbstractUserCursorService<CartItem, CartI
         this.cartItemRepository = cartItemRepository;
     }
 
-    public List<String> findTitlesStartingWith(Long userId, String prefix, Pageable pageable) {
-        return cartItemRepository.findTitlesStartingWith(userId, prefix, pageable);
+    public List<String> findTitlesStartingWith(Long userId, String query, Pageable pageable) {
+        return cartItemRepository.findTitlesStartingWith(userId, query, pageable);
     }
 }

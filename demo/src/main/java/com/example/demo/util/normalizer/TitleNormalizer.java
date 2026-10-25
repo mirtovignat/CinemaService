@@ -35,10 +35,6 @@ public class TitleNormalizer implements Normalizer {
         return Optional.of(normalized);
     }
 
-    public String normalizeOrEmpty(String input) {
-        return normalizeOptional(input).orElse("");
-    }
-
     @Override
     public boolean isValid(String input) {
         return normalizeOptional(input).isPresent();

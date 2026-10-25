@@ -26,8 +26,7 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
             AND ratedMovie.deletableState.deleted = false
             AND (
                 :query IS NULL
-                OR LOWER(CAST(ratedMovie.movie.title AS STRING))
-                   LIKE CONCAT(LOWER(CAST(:query AS STRING)), '%')
+                OR TRANSLATE(LOWER(ratedMovie.movie.title), 'ё', 'е') LIKE CONCAT(CAST(:query AS string), '%')
             )
             AND (
                 :hasCursor = false
@@ -51,8 +50,7 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
             AND ratedMovie.deletableState.deleted = false
             AND (
                 :query IS NULL
-                OR LOWER(CAST(ratedMovie.movie.title AS STRING))
-                   LIKE CONCAT(LOWER(CAST(:query AS STRING)), '%')
+                OR TRANSLATE(LOWER(ratedMovie.movie.title), 'ё', 'е') LIKE CONCAT(CAST(:query AS string), '%')
             )
             AND (
                 :hasCursor = false
@@ -73,8 +71,7 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
             SELECT DISTINCT ratedMovie.movie.title FROM RatedMovie ratedMovie
             WHERE ratedMovie.id.userId = :userId
             AND ratedMovie.deletableState.deleted = false
-            AND LOWER(CAST(ratedMovie.movie.title AS STRING))
-                LIKE CONCAT(LOWER(CAST(:prefix AS STRING)), '%')
+            AND TRANSLATE(LOWER(ratedMovie.movie.title), 'ё', 'е') LIKE CONCAT(CAST(:prefix AS string), '%')
             ORDER BY ratedMovie.movie.title ASC
             """)
     List<String> findTitlesStartingWith(@Param("userId") Long userId,

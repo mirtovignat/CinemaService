@@ -4,6 +4,7 @@ import com.example.demo.cursor.CursorPageRequest;
 import com.example.demo.dto.catalog.CartItemViewDTO;
 import com.example.demo.dto.catalog.CartSummaryDTO;
 import com.example.demo.service.cursor.CartCursorService;
+import com.example.demo.service.cursor.SuggestionService;
 import com.example.demo.service.linked_collection.CartService;
 import com.example.demo.web.resolver.CurrentUserId;
 import com.example.demo.web.util.ApiResponseFactory;
@@ -18,17 +19,18 @@ import java.util.List;
 @RequestMapping("/cart")
 public class CartController extends AbstractLinkedCollectionController<CartItemViewDTO> {
 
-    private static final int SUGGESTIONS_LIMIT = 10;
-
     private final CartService cartService;
     private final CartCursorService cartCursorService;
+    private final SuggestionService suggestionService;
 
     public CartController(CartService cartService,
                           CartCursorService cartCursorService,
+                          SuggestionService suggestionService,
                           ApiResponseFactory apiResponseFactory) {
         super(cartService, cartCursorService, apiResponseFactory, "account/cart");
         this.cartService = cartService;
         this.cartCursorService = cartCursorService;
+        this.suggestionService = suggestionService;
     }
 
     @Override
@@ -46,13 +48,12 @@ public class CartController extends AbstractLinkedCollectionController<CartItemV
         return cartService.getPurchasableSummary(userId);
     }
 
+    @Override
     @GetMapping("/suggestions")
     @ResponseBody
     public List<String> suggestions(@RequestParam(value = "query", required = false, defaultValue = "") String query,
                                     @CurrentUserId(required = false) Long userId) {
-        if (userId == null) return List.of();
-        String trimmed = query == null ? "" : query.trim();
-        if (trimmed.isEmpty()) return List.of();
-        return cartCursorService.findTitlesStartingWith(userId, trimmed, PageRequest.of(0, SUGGESTIONS_LIMIT));
+        return suggestionService.suggest(userId, query,
+                (uId, normalizedQuery) -> cartCursorService.findTitlesStartingWith(uId, normalizedQuery, PageRequest.of(0, 10)));
     }
 }

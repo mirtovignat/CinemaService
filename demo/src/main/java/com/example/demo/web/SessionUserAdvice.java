@@ -1,4 +1,4 @@
-package com.example.demo.web.advice;
+package com.example.demo.web;
 
 import com.example.demo.dto.badges.BadgeCountsDTO;
 import com.example.demo.dto.user.SessionUser;

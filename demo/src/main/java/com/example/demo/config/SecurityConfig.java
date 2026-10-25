@@ -1,6 +1,6 @@
 package com.example.demo.config;
 
-import com.example.demo.web.entry_point.AjaxAwareEntryPoint;
+import com.example.demo.web.AjaxAwareEntryPoint;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

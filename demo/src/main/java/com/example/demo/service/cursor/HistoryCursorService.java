@@ -6,6 +6,7 @@ import com.example.demo.dto.catalog.HistoricalMovieViewDTO;
 import com.example.demo.mapper.entity.PurchasedMapper;
 import com.example.demo.model.entity.PurchasedMovie;
 import com.example.demo.repository.entity.PurchasedMovieRepository;
+import com.example.demo.util.normalizer.TitleNormalizer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,11 +20,13 @@ public class HistoryCursorService extends AbstractUserCursorService<PurchasedMov
 
     public HistoryCursorService(CursorCodec cursorCodec,
                                 KeyCodec keyCodec,
+                                TitleNormalizer titleNormalizer,
                                 PurchasedMovieRepository purchasedMovieRepository,
                                 PurchasedMapper purchasedMapper,
                                 @Value("${app.catalog.cursorPageResponse-size:20}") int defaultPageSize) {
         super(cursorCodec,
                 keyCodec,
+                titleNormalizer,
                 defaultPageSize,
                 purchasedMovie -> keyCodec.encode(
                         purchasedMovie.getAddedAt(),
@@ -36,7 +39,7 @@ public class HistoryCursorService extends AbstractUserCursorService<PurchasedMov
         this.purchasedMovieRepository = purchasedMovieRepository;
     }
 
-    public List<String> findTitlesStartingWith(Long userId, String prefix, Pageable pageable) {
-        return purchasedMovieRepository.findTitlesStartingWith(userId, prefix, pageable);
+    public List<String> findTitlesStartingWith(Long userId, String query, Pageable pageable) {
+        return purchasedMovieRepository.findTitlesStartingWith(userId, query, pageable);
     }
 }

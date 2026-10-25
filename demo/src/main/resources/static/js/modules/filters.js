@@ -331,7 +331,6 @@
                     hasMore = !!data.hasMore;
                     nextCursor = data.nextCursor || null;
 
-                    // Сортируем только для отображения
                     var displayData = checkboxName === 'directors'
                         ? sortDirectorsBySurname(items)
                         : sortGenresAlphabetically(items);
@@ -982,7 +981,9 @@
 
         var headerInput = document.getElementById('headerSearchInput');
         var trimmedTitle = headerInput ? headerInput.value.trim() : '';
-        var hasTitle = trimmedTitle !== '';
+        var cleanTitle = trimmedTitle.replace(/…+$/, '').trim();
+
+        var hasTitle = cleanTitle !== '';
         var hasMeaningfulFilters = isFilterMeaningful();
 
         if (!hasTitle && !hasMeaningfulFilters) {
@@ -993,11 +994,19 @@
         }
 
         if (headerInput) {
+            headerInput.removeAttribute('name');
+            var hiddenTitle = headerForm.querySelector('input[type="hidden"][name="title"]');
+
             if (hasTitle) {
-                headerInput.setAttribute('name', 'title');
-                headerInput.value = trimmedTitle;
-            } else {
-                headerInput.removeAttribute('name');
+                if (!hiddenTitle) {
+                    hiddenTitle = document.createElement('input');
+                    hiddenTitle.type = 'hidden';
+                    hiddenTitle.name = 'title';
+                    headerForm.appendChild(hiddenTitle);
+                }
+                hiddenTitle.value = cleanTitle;
+            } else if (hiddenTitle) {
+                hiddenTitle.remove();
             }
         }
 
@@ -1019,8 +1028,42 @@
         }
 
         toggleFiltersModal(false);
-        if (typeof showFlashMessage === 'function') {
-            showFlashMessage('Фильтры подготовлены. Нажмите «Найти», чтобы применить.', 'info');
+
+        var headerForm = document.getElementById('headerSearchForm');
+        if (headerForm) {
+            var headerInput = document.getElementById('headerSearchInput');
+            if (headerInput) {
+                var trimmedTitle = headerInput.value.trim();
+                var cleanTitle = trimmedTitle.replace(/…+$/, '').trim();
+
+                headerInput.removeAttribute('name');
+
+                var hiddenTitle = headerForm.querySelector('input[type="hidden"][name="title"]');
+
+                if (cleanTitle !== '') {
+                    if (!hiddenTitle) {
+                        hiddenTitle = document.createElement('input');
+                        hiddenTitle.type = 'hidden';
+                        hiddenTitle.name = 'title';
+                        headerForm.appendChild(hiddenTitle);
+                    }
+                    hiddenTitle.value = cleanTitle;
+                } else if (hiddenTitle) {
+                    hiddenTitle.remove();
+                }
+            }
+
+            attachFiltersAsHiddenInputsTo(headerForm);
+            removeEmptyFormFields(headerForm);
+            headerForm.removeAttribute('onsubmit');
+            headerForm.submit();
+            return;
+        }
+
+        var filterForm = document.getElementById('filterForm');
+        if (filterForm) {
+            filterForm.removeAttribute('onsubmit');
+            filterForm.submit();
         }
     }
 
@@ -1303,4 +1346,5 @@
     window.isFilterMeaningful = isFilterMeaningful;
     window.submitCombinedSearch = submitCombinedSearch;
     window.focusNextFilterField = focusNextFilterField;
+    window.initFilterMasks = initFilterMasks;
 })();

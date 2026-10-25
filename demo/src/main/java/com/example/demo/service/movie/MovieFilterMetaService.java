@@ -1,5 +1,6 @@
 package com.example.demo.service.movie;
 
+import com.example.demo.cursor.CursorPageRequest;
 import com.example.demo.dto.movie.range.MovieRangesSnapshot;
 import com.example.demo.mapper.entity.MovieRangesSnapshotMapper;
 import com.example.demo.repository.entity.MovieRepository;
@@ -32,10 +33,11 @@ public class MovieFilterMetaService {
     }
 
     @Transactional(readOnly = true)
-    public Slice<String> searchDirectors(String query, String cursor) {
+    public Slice<String> searchDirectors(CursorPageRequest cursorPageRequest) {
+        String cursor = cursorPageRequest.cursor();
         boolean hasCursor = cursor != null && !cursor.isBlank();
         return movieRepository.fetchDirectorsKeyset(
-                query != null ? query : "",
+                cursorPageRequest.query() != null ? cursorPageRequest.query() : "",
                 hasCursor,
                 hasCursor ? cursor : "",
                 PageRequest.of(0, pageSize)
@@ -43,10 +45,11 @@ public class MovieFilterMetaService {
     }
 
     @Transactional(readOnly = true)
-    public Slice<String> searchGenres(String query, String cursor) {
+    public Slice<String> searchGenres(CursorPageRequest cursorPageRequest) {
+        String cursor = cursorPageRequest.cursor();
         boolean hasCursor = cursor != null && !cursor.isBlank();
         return movieRepository.fetchGenresKeyset(
-                query != null ? query : "",
+                cursorPageRequest.query() != null ? cursorPageRequest.query() : "",
                 hasCursor,
                 hasCursor ? cursor : "",
                 PageRequest.of(0, pageSize)

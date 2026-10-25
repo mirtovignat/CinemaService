@@ -37,10 +37,12 @@ public abstract class AbstractLinkedCollectionService<Entity extends AbstractCat
         return abstractCatalogItemRepository.findAllByUserId(userId);
     }
 
+    @Transactional
     public void remove(Long movieId, Long userId) {
         abstractCatalogItemRepository.deleteByMovieIdAndUserId(movieId, userId);
     }
 
+    @Transactional
     public void deleteAll(Long userId) {
         abstractCatalogItemRepository.deleteAllByUserId(userId);
     }

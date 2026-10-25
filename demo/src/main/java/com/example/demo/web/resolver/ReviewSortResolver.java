@@ -31,8 +31,8 @@ public class ReviewSortResolver {
     }
 
     public SortDirection resolve(ReviewsQueryDTO reviewsQueryDTO, String cookieValue) {
-        if (reviewsQueryDTO.sortDirection() != null) {
-            return reviewsQueryDTO.sortDirection();
+        if (isExplicit(reviewsQueryDTO.sortDirection())) {
+            return SortDirection.from(reviewsQueryDTO.sortDirection());
         }
         SortDirection fromCookie = parseCookie(cookieValue);
         if (fromCookie != null) {
@@ -41,8 +41,8 @@ public class ReviewSortResolver {
         return SortDirection.DESC;
     }
 
-    private boolean isExplicit(SortDirection sort) {
-        return sort != null;
+    private boolean isExplicit(String sort) {
+        return sort != null && !sort.isBlank();
     }
 
     private SortDirection parseCookie(String raw) {
@@ -51,7 +51,7 @@ public class ReviewSortResolver {
         }
         try {
             return SortDirection.valueOf(raw.toUpperCase());
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException illegalArgumentException) {
             return null;
         }
     }

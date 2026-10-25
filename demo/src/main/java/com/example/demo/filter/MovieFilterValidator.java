@@ -2,17 +2,12 @@ package com.example.demo.filter;
 
 import com.example.demo.exception.BusinessException;
 import com.example.demo.exception.ErrorCode;
-import com.example.demo.util.normalizer.TitleNormalizer;
-import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
 @Component
-@AllArgsConstructor
 public class MovieFilterValidator {
-
-    private final TitleNormalizer titleNormalizer;
 
     public void validate(MovieFilter movieFilter) {
         validateRanges(movieFilter);
@@ -32,11 +27,15 @@ public class MovieFilterValidator {
     }
 
     public Optional<String> normalizeSearchQueryOptional(String rawSearchQuery) {
-        return titleNormalizer.normalizeOptional(rawSearchQuery);
+        if (rawSearchQuery == null || rawSearchQuery.isBlank()) {
+            return Optional.empty();
+        }
+        String trimmed = rawSearchQuery.trim().toLowerCase().replace('ё', 'е');
+        return trimmed.isBlank() ? Optional.empty() : Optional.of(trimmed);
     }
 
     public boolean hasAnySearchCriteria(MovieFilter movieFilter, String title) {
-        return titleNormalizer.isValid(title) || orEmpty(movieFilter).hasAnyCriteria();
+        return normalizeSearchQueryOptional(title).isPresent() || orEmpty(movieFilter).hasAnyCriteria();
     }
 
     public MovieFilter orEmpty(MovieFilter movieFilter) {

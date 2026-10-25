@@ -3,6 +3,7 @@ package com.example.demo.controller.catalog;
 import com.example.demo.dto.catalog.RatedMovieViewDTO;
 import com.example.demo.mapper.entity.UserMapper;
 import com.example.demo.service.cursor.RatedCursorService;
+import com.example.demo.service.cursor.SuggestionService;
 import com.example.demo.service.movie.MovieFilterMetaService;
 import com.example.demo.service.user.UserQueryService;
 import com.example.demo.web.resolver.CurrentUserId;
@@ -19,11 +20,11 @@ import java.util.List;
 @RequestMapping("/rated/history")
 public class RatedCatalogController extends AbstractCatalogPageController<RatedMovieViewDTO> {
 
-    private static final int SUGGESTIONS_LIMIT = 10;
-
     private final RatedCursorService ratedCursorService;
+    private final SuggestionService suggestionService;
 
     public RatedCatalogController(RatedCursorService ratedCursorService,
+                                  SuggestionService suggestionService,
                                   MovieFilterMetaService movieFilterMetaService,
                                   UserQueryService userQueryService,
                                   UserMapper userMapper) {
@@ -34,15 +35,14 @@ public class RatedCatalogController extends AbstractCatalogPageController<RatedM
                 "account/rated"
         );
         this.ratedCursorService = ratedCursorService;
+        this.suggestionService = suggestionService;
     }
 
     @GetMapping("/suggestions")
     @ResponseBody
     public List<String> suggestions(@RequestParam(value = "query", required = false, defaultValue = "") String query,
                                     @CurrentUserId(required = false) Long userId) {
-        if (userId == null) return List.of();
-        String trimmed = query == null ? "" : query.trim();
-        if (trimmed.isEmpty()) return List.of();
-        return ratedCursorService.findTitlesStartingWith(userId, trimmed, PageRequest.of(0, SUGGESTIONS_LIMIT));
+        return suggestionService.suggest(userId, query,
+                (uId, normalizedQuery) -> ratedCursorService.findTitlesStartingWith(uId, normalizedQuery, PageRequest.of(0, 10)));
     }
 }

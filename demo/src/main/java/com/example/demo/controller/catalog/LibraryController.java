@@ -3,6 +3,7 @@ package com.example.demo.controller.catalog;
 import com.example.demo.dto.catalog.LibrarianMovieViewDTO;
 import com.example.demo.mapper.entity.UserMapper;
 import com.example.demo.service.cursor.LibraryCursorService;
+import com.example.demo.service.cursor.SuggestionService;
 import com.example.demo.service.movie.MovieFilterMetaService;
 import com.example.demo.service.user.UserQueryService;
 import com.example.demo.web.resolver.CurrentUserId;
@@ -19,11 +20,11 @@ import java.util.List;
 @RequestMapping("/library")
 public class LibraryController extends AbstractCatalogPageController<LibrarianMovieViewDTO> {
 
-    private static final int SUGGESTIONS_LIMIT = 10;
-
     private final LibraryCursorService libraryCursorService;
+    private final SuggestionService suggestionService;
 
     public LibraryController(LibraryCursorService libraryCursorService,
+                             SuggestionService suggestionService,
                              MovieFilterMetaService movieFilterMetaService,
                              UserQueryService userQueryService,
                              UserMapper userMapper) {
@@ -34,15 +35,14 @@ public class LibraryController extends AbstractCatalogPageController<LibrarianMo
                 "account/library"
         );
         this.libraryCursorService = libraryCursorService;
+        this.suggestionService = suggestionService;
     }
 
     @GetMapping("/suggestions")
     @ResponseBody
     public List<String> suggestions(@RequestParam(value = "query", required = false, defaultValue = "") String query,
                                     @CurrentUserId(required = false) Long userId) {
-        if (userId == null) return List.of();
-        String trimmed = query == null ? "" : query.trim();
-        if (trimmed.isEmpty()) return List.of();
-        return libraryCursorService.findTitlesStartingWith(userId, trimmed, PageRequest.of(0, SUGGESTIONS_LIMIT));
+        return suggestionService.suggest(userId, query,
+                (uId, normalizedQuery) -> libraryCursorService.findTitlesStartingWith(uId, normalizedQuery, PageRequest.of(0, 10)));
     }
 }

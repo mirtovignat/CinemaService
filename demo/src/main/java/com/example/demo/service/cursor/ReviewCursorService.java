@@ -9,6 +9,7 @@ import com.example.demo.dto.catalog.ReviewViewDTO;
 import com.example.demo.mapper.entity.RatedMapper;
 import com.example.demo.model.entity.RatedMovie;
 import com.example.demo.repository.entity.RatedMovieRepository;
+import com.example.demo.util.normalizer.TitleNormalizer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
@@ -25,10 +26,12 @@ public class ReviewCursorService
 
     public ReviewCursorService(CursorCodec cursorCodec,
                                KeyCodec keyCodec,
+                               TitleNormalizer titleNormalizer,
                                RatedMovieRepository ratedMovieRepository,
                                RatedMapper ratedMapper,
                                @Value("${app.reviews.cursorPageResponse-size:10}") int defaultPageSize) {
         super(cursorCodec,
+                titleNormalizer,
                 defaultPageSize,
                 ratedMovie -> keyCodec.encode(
                         ratedMovie.getAddedAt(),

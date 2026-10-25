@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @AllArgsConstructor
@@ -88,5 +89,12 @@ public abstract class AbstractLinkedCollectionController<DTO> {
     public ResponseEntity<ApiResponse> clear(@CurrentUserId Long userId) {
         collectionService.removeAll(userId);
         return apiResponseFactory.ok(SuccessCode.CLEARED, Map.of("count", 0L));
+    }
+
+    @GetMapping("/suggestions")
+    @ResponseBody
+    public List<String> suggestions(@RequestParam(value = "query", required = false, defaultValue = "") String query,
+                                    @CurrentUserId(required = false) Long userId) {
+        return List.of();
     }
 }

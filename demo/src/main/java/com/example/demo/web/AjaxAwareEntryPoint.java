@@ -1,4 +1,4 @@
-package com.example.demo.web.entry_point;
+package com.example.demo.web;
 
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.exception.ErrorCode;

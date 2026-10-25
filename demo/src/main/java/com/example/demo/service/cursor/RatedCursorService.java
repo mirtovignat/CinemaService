@@ -6,6 +6,7 @@ import com.example.demo.dto.catalog.RatedMovieViewDTO;
 import com.example.demo.mapper.entity.RatedMapper;
 import com.example.demo.model.entity.RatedMovie;
 import com.example.demo.repository.entity.RatedMovieRepository;
+import com.example.demo.util.normalizer.TitleNormalizer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,11 +20,13 @@ public class RatedCursorService extends AbstractUserCursorService<RatedMovie, Ra
 
     public RatedCursorService(CursorCodec cursorCodec,
                               KeyCodec keyCodec,
+                              TitleNormalizer titleNormalizer,
                               RatedMovieRepository ratedMovieRepository,
                               RatedMapper ratedMapper,
                               @Value("${app.catalog.cursorPageResponse-size:20}") int defaultPageSize) {
         super(cursorCodec,
                 keyCodec,
+                titleNormalizer,
                 defaultPageSize,
                 ratedMovie -> keyCodec.encode(
                         ratedMovie.getAddedAt(),
@@ -38,7 +41,7 @@ public class RatedCursorService extends AbstractUserCursorService<RatedMovie, Ra
         this.ratedMovieRepository = ratedMovieRepository;
     }
 
-    public List<String> findTitlesStartingWith(Long userId, String prefix, Pageable pageable) {
-        return ratedMovieRepository.findTitlesStartingWith(userId, prefix, pageable);
+    public List<String> findTitlesStartingWith(Long userId, String query, Pageable pageable) {
+        return ratedMovieRepository.findTitlesStartingWith(userId, query, pageable);
     }
 }

@@ -7,7 +7,6 @@ import com.example.demo.dto.catalog.ReviewViewDTO;
 import com.example.demo.dto.catalog.ReviewsQueryDTO;
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.dto.response.CursorPageResponse;
-import com.example.demo.dto.user.SessionUser;
 import com.example.demo.exception.SuccessCode;
 import com.example.demo.service.catalog.RatedCommandService;
 import com.example.demo.service.catalog.RatedQueryService;
@@ -47,12 +46,14 @@ public class RatedController {
     @GetMapping("/{id}/reviews")
     public String getReviews(@PathVariable Long id,
                              @ModelAttribute ReviewsQueryDTO reviewsQueryDTO,
-                             SessionUser sessionUser,
-                             @CookieValue(value = ReviewSortResolver.SORT_COOKIE_NAME, required = false) String sortCookie,
+                             @CurrentUserId(required = false) Long userId,
+                             @CookieValue(
+                                     value = ReviewSortResolver.SORT_COOKIE_NAME,
+                                     required = false
+                             )
+                             String sortCookie,
                              HttpServletResponse httpServletResponse,
                              Model model) {
-        Long userId = sessionUser.idOrNull();
-
         SortDirection sortDirection =
                 reviewSortResolver.resolveAndPersist(reviewsQueryDTO, sortCookie, httpServletResponse);
 
@@ -85,10 +86,8 @@ public class RatedController {
     @ResponseBody
     public CursorPageResponse<ReviewViewDTO> getReviewsMore(@PathVariable Long id,
                                                             @ModelAttribute ReviewsQueryDTO reviewsQueryDTO,
-                                                            SessionUser sessionUser,
+                                                            @CurrentUserId(required = false) Long userId,
                                                             @CookieValue(value = ReviewSortResolver.SORT_COOKIE_NAME, required = false) String sortCookie) {
-        Long userId = sessionUser.idOrNull();
-
         SortDirection sortDirection =
                 reviewSortResolver.resolve(reviewsQueryDTO, sortCookie);
 

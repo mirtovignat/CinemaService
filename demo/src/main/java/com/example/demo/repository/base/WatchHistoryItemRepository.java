@@ -1,7 +1,7 @@
 package com.example.demo.repository.base;
 
-import com.example.demo.dto.catalog.WatchedSuggestionDTO;
 import com.example.demo.model.base.WatchHistoryItem;
+import com.example.demo.repository.projection.WatchedSuggestionProjection;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -33,8 +33,7 @@ public interface WatchHistoryItemRepository extends JpaRepository<WatchHistoryIt
             WHERE purchasedMovie.user.id = :userId
             AND (
                 :query IS NULL
-                OR LOWER(CAST(purchasedMovie.movie.title AS STRING))
-                   LIKE CONCAT(LOWER(CAST(:query AS STRING)), '%')
+                OR TRANSLATE(LOWER(purchasedMovie.movie.title), 'ё', 'е') LIKE CONCAT(CAST(:query AS string), '%')
             )
             AND (
                 :hasCursor = false
@@ -58,8 +57,7 @@ public interface WatchHistoryItemRepository extends JpaRepository<WatchHistoryIt
             WHERE purchasedMovie.user.id = :userId
             AND (
                 :query IS NULL
-                OR LOWER(CAST(purchasedMovie.movie.title AS STRING))
-                   LIKE CONCAT(LOWER(CAST(:query AS STRING)), '%')
+                OR TRANSLATE(LOWER(purchasedMovie.movie.title), 'ё', 'е') LIKE CONCAT(CAST(:query AS string), '%')
             )
             AND (
                 :hasCursor = false
@@ -76,21 +74,18 @@ public interface WatchHistoryItemRepository extends JpaRepository<WatchHistoryIt
                                             Pageable pageable);
 
     @Query("""
-            SELECT new com.example.demo.dto.catalog.WatchedSuggestionDTO(
-                purchasedMovie.movie.id,
-                purchasedMovie.movie.title,
-                COUNT(watchHistoryItem.id),
-                MAX(watchHistoryItem.watchedAt)
-            )
+            SELECT purchasedMovie.movie.id AS movieId,
+                   purchasedMovie.movie.title AS title,
+                   COUNT(watchHistoryItem.id) AS watchCount,
+                   MAX(watchHistoryItem.watchedAt) AS lastWatchedAt
             FROM WatchHistoryItem watchHistoryItem
             JOIN watchHistoryItem.purchasedMovie purchasedMovie
             WHERE purchasedMovie.user.id = :userId
-            AND LOWER(CAST(purchasedMovie.movie.title AS STRING))
-                LIKE CONCAT(LOWER(CAST(:prefix AS STRING)), '%')
+            AND TRANSLATE(LOWER(purchasedMovie.movie.title), 'ё', 'е') LIKE CONCAT(CAST(:prefix AS string), '%')
             GROUP BY purchasedMovie.movie.id, purchasedMovie.movie.title
             ORDER BY MAX(watchHistoryItem.watchedAt) DESC, purchasedMovie.movie.id ASC
             """)
-    List<WatchedSuggestionDTO> findGroupedWatchedSuggestionsStartingWith(
+    List<WatchedSuggestionProjection> findGroupedWatchedSuggestionsStartingWith(
             @Param("userId") Long userId,
             @Param("prefix") String prefix,
             Pageable pageable);

@@ -10,13 +10,13 @@ import com.example.demo.dto.movie.MovieSearchDTO;
 import com.example.demo.dto.response.CursorPageResponse;
 import com.example.demo.dto.response.GenreMoviesPageResponse;
 import com.example.demo.dto.response.MoviesPageResponse;
-import com.example.demo.dto.user.SessionUser;
 import com.example.demo.filter.MovieFilter;
 import com.example.demo.filter.MovieFilterFacade;
 import com.example.demo.filter.PageRequestContext;
 import com.example.demo.service.cursor.RecommendationCursorService;
 import com.example.demo.service.movie.MovieRecommendationService;
 import com.example.demo.service.movie.MovieService;
+import com.example.demo.web.resolver.CurrentUserId;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -46,11 +46,9 @@ public class MovieController {
             @Valid @ModelAttribute("movieFilter") MovieFilter movieFilter,
             BindingResult bindingResult,
             @ModelAttribute PageRequestContext pageRequestContext,
-            SessionUser sessionUser,
+            @CurrentUserId(required = false) Long userId,
             Model model
     ) {
-        Long userId = sessionUser.idOrNull();
-
         if (bindingResult.hasErrors()) {
             Page<MovieForUser<MovieCardViewDTO>> emptyPage = Page.empty();
             MoviesPageResponse moviesPageResponse = MoviesPageResponse.builder()
@@ -88,11 +86,9 @@ public class MovieController {
     public String showMoviesByGenre(
             @RequestParam String genre,
             @ModelAttribute PageRequestContext pageRequestContext,
-            SessionUser sessionUser,
+            @CurrentUserId(required = false) Long userId,
             Model model
     ) {
-        Long userId = sessionUser.idOrNull();
-
         Page<MovieForUser<MovieCardViewDTO>> result = movieFilterFacade.filterByGenre(
                 genre, pageRequestContext, userId
         );
@@ -116,9 +112,8 @@ public class MovieController {
     @ResponseBody
     public CursorPageResponse<MovieCardViewDTO> getRecommendationsAjax(
             @ModelAttribute CursorPageRequest cursorPageRequest,
-            SessionUser sessionUser
+            @CurrentUserId(required = false) Long userId
     ) {
-        Long userId = sessionUser.idOrNull();
         Set<Long> excludedMovieIds = movieRecommendationService.collectExcludedMovieIds(userId);
 
         return recommendationCursorService.page(
@@ -135,11 +130,10 @@ public class MovieController {
     @GetMapping("/movies/{id}")
     public String showMovie(
             @PathVariable Long id,
-            SessionUser sessionUser,
+            @CurrentUserId(required = false) Long userId,
             Model model
     ) {
-        MovieForUser<MovieDetailsViewDTO> card =
-                movieService.getCard(id, sessionUser.idOrNull());
+        MovieForUser<MovieDetailsViewDTO> card = movieService.getCard(id, userId);
         model.addAttribute("card", card);
         return "catalog/show";
     }

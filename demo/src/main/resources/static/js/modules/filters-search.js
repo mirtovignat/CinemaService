@@ -28,6 +28,12 @@
         return isTruncated(value) ? value.substring(0, value.length - 1) : value;
     }
 
+    function capitalizeFirst(value) {
+        if (!value) return '';
+        if (value.length === 1) return value.toLocaleUpperCase('ru-RU');
+        return value.charAt(0).toLocaleUpperCase('ru-RU') + value.slice(1).toLocaleLowerCase('ru-RU');
+    }
+
     function longestCommonPrefix(titles) {
         if (!titles || titles.length === 0) return '';
         if (titles.length === 1) return titles[0];
@@ -264,7 +270,7 @@
         if (!dropdown) return;
 
         if (dropdown.querySelector('.infinite-scroll-sentinel')) {
-            return; // <--- ВОТ ТУТ МЫ ОТКЛЮЧАЕМ ЛОКАЛЬНЫЙ ПОИСК ДЛЯ БЕСКОНЕЧНЫХ СПИСКОВ
+            return;
         }
 
         var wrapper = dropdown.querySelector('[data-accordion-search-wrapper]');
@@ -362,10 +368,13 @@
                 }
 
                 var clean = stripEllipsis(raw);
-                var matches = matchesForQuery(clean);
+                var normalizedInput = capitalizeFirst(clean);
+                input.value = normalizedInput;
+
+                var matches = matchesForQuery(normalizedInput);
 
                 if (matches.length === 1) {
-                    var best = bestMatch(clean);
+                    var best = bestMatch(normalizedInput);
                     if (best) {
                         selectItem(getItemCheckbox(best));
                         input.value = '';
@@ -377,13 +386,13 @@
                 }
 
                 if (matches.length > 1) {
-                    var truncated = buildTruncatedQuery(accordion, clean);
+                    var truncated = buildTruncatedQuery(accordion, normalizedInput);
                     input.value = truncated;
                     input.setSelectionRange(truncated.length, truncated.length);
-                    applyFilter(accordion, clean);
+                    applyFilter(accordion, normalizedInput);
                 } else {
-                    input.value = clean;
-                    applyFilter(accordion, clean);
+                    input.value = normalizedInput + ELLIPSIS;
+                    applyFilter(accordion, normalizedInput);
                 }
 
                 hideAutocomplete(ui);
@@ -416,12 +425,17 @@
                 if (!input.value) return;
                 if (!hasMeaningfulChars(input.value)) return;
                 var clean = stripEllipsis(input.value.trim());
-                var matches = matchesForQuery(clean);
+                var normalizedInput = capitalizeFirst(clean);
+                var matches = matchesForQuery(normalizedInput);
+
                 if (matches.length === 1) {
-                    input.value = getItemDisplay(matches[0]);
+                    input.value = getItemDisplay(matches[0]) + ELLIPSIS;
                 } else if (matches.length > 1) {
-                    input.value = buildTruncatedQuery(accordion, clean);
+                    input.value = buildTruncatedQuery(accordion, normalizedInput);
+                } else {
+                    input.value = normalizedInput + ELLIPSIS;
                 }
+
                 updateClear(ui);
                 hideAutocomplete(ui);
             }, 120);

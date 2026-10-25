@@ -1,5 +1,6 @@
 package com.example.demo.controller.movie;
 
+import com.example.demo.cursor.CursorPageRequest;
 import com.example.demo.dto.movie.range.MovieFilterMetaResponse;
 import com.example.demo.dto.movie.range.MovieRangesSnapshot;
 import com.example.demo.dto.response.CursorPageResponse;
@@ -8,8 +9,8 @@ import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Slice;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -31,19 +32,17 @@ public class MovieFilterController {
 
     @GetMapping("/directors/search")
     public ResponseEntity<CursorPageResponse<String>> searchDirectors(
-            @RequestParam(required = false, defaultValue = "") String query,
-            @RequestParam(required = false) String cursor) {
+            @ModelAttribute CursorPageRequest cursorPageRequest) {
 
-        Slice<String> slice = movieFilterMetaService.searchDirectors(query, cursor);
+        Slice<String> slice = movieFilterMetaService.searchDirectors(cursorPageRequest);
         return ResponseEntity.ok(toResponse(slice));
     }
 
     @GetMapping("/genres/search")
     public ResponseEntity<CursorPageResponse<String>> searchGenres(
-            @RequestParam(required = false, defaultValue = "") String query,
-            @RequestParam(required = false) String cursor) {
+            @ModelAttribute CursorPageRequest cursorPageRequest) {
 
-        Slice<String> slice = movieFilterMetaService.searchGenres(query, cursor);
+        Slice<String> slice = movieFilterMetaService.searchGenres(cursorPageRequest);
         return ResponseEntity.ok(toResponse(slice));
     }
 

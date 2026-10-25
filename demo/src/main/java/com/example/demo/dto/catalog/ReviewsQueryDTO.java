@@ -6,10 +6,10 @@ import lombok.Builder;
 @Builder
 public record ReviewsQueryDTO(
         String cursor,
-        SortDirection sortDirection,
+        String sortDirection,
         Integer size
 ) {
     public SortDirection direction() {
-        return sortDirection != null ? sortDirection : SortDirection.DESC;
+        return SortDirection.from(sortDirection);
     }
 }

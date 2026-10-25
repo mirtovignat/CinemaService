@@ -1,12 +1,11 @@
 (function () {
     'use strict';
 
-    var SUGGESTIONS_DEBOUNCE_MS = 250;
+    var SUGGESTIONS_DEBOUNCE_MS = 200;
     var SUGGESTIONS_LIMIT = 10;
 
-    var LAST_SEARCH_KEY = 'lastSearchQuery';
-    var LAST_SEARCH_AT_KEY = 'lastSearchAt';
-    var PENDING_KEY = 'pendingSearchRedirect';
+    var DEFAULT_STORAGE_KEY = 'lastSearchQuery';
+    var SEARCH_CLEARED_KEY = 'searchClearedFlag';
 
     function hasMeaningfulChars(value) {
         return /[a-zа-я0-9ё]/i.test(String(value || ''));
@@ -15,8 +14,7 @@
     function capitalizeFirst(value) {
         if (!value) return '';
         if (value.length === 1) return value.toLocaleUpperCase('ru-RU');
-        return value.charAt(0).toLocaleUpperCase('ru-RU') +
-               value.slice(1).toLocaleLowerCase('ru-RU');
+        return value.charAt(0).toLocaleUpperCase('ru-RU') + value.slice(1).toLocaleLowerCase('ru-RU');
     }
 
     function normalizeForMatch(value) {
@@ -25,104 +23,75 @@
             .replace(/ё/g, 'е');
     }
 
-    function pad2(n) { return String(n).padStart(2, '0'); }
-
-    function formatSuggestionDate(raw) {
-        if (raw == null || raw === '') return '';
-
-        var d = null;
-
-        if (Array.isArray(raw) && raw.length >= 3) {
-            d = new Date(raw[0], raw[1] - 1, raw[2],
-                         raw[3] || 0, raw[4] || 0, raw[5] || 0);
-        } else if (typeof raw === 'string') {
-            var m = raw.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?/);
-            if (m) {
-                d = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], m[6] ? +m[6] : 0);
-            } else {
-                d = new Date(raw);
-            }
-        } else if (typeof raw === 'number') {
-            d = new Date(raw);
-        }
-
-        if (!d || isNaN(d.getTime())) return '';
-
-        var now = new Date();
-        var isToday = d.getFullYear() === now.getFullYear()
-                   && d.getMonth() === now.getMonth()
-                   && d.getDate() === now.getDate();
-
-        var datePart = pad2(d.getDate()) + '.' + pad2(d.getMonth() + 1) + '.' + d.getFullYear();
-        var timePart = pad2(d.getHours()) + ':' + pad2(d.getMinutes());
-
-        return isToday ? timePart : datePart + ', ' + timePart;
+    function isMovieDetailsPage() {
+        return /^\/movies\/\d+\/?$/.test(window.location.pathname || '');
     }
 
-    function formatSuggestionMeta(entry) {
-        var parts = [];
+    function isCatalogPage() {
+        var path = (window.location.pathname || '').replace(/\/$/, '');
+        return path === '' || path === '/movies';
+    }
 
-        if (entry.watchCount != null && Number(entry.watchCount) > 1) {
-            parts.push('(' + Number(entry.watchCount) + ')');
-        }
+    function readLastSearch(key) {
+        try { return sessionStorage.getItem(key || DEFAULT_STORAGE_KEY) || ''; } catch (e) { return ''; }
+    }
 
-        var dateText = formatSuggestionDate(entry.lastWatchedAt);
-        if (dateText) parts.push(dateText);
+    function writeLastSearch(key, value) {
+        try {
+            var storageKey = key || DEFAULT_STORAGE_KEY;
+            var trimmed = String(value || '').trim();
+            if (trimmed) sessionStorage.setItem(storageKey, trimmed);
+            else sessionStorage.removeItem(storageKey);
+        } catch (e) {}
+    }
 
-        return parts.join(' · ');
+    function setSearchCleared() {
+        try { sessionStorage.setItem(SEARCH_CLEARED_KEY, '1'); } catch (e) {}
+    }
+
+    function clearSearchCleared() {
+        try { sessionStorage.removeItem(SEARCH_CLEARED_KEY); } catch (e) {}
+    }
+
+    function isSearchCleared() {
+        try { return sessionStorage.getItem(SEARCH_CLEARED_KEY) === '1'; } catch (e) { return false; }
+    }
+
+    function hasAnyFilterParam() {
+        try {
+            var params = new URLSearchParams(window.location.search);
+            var keys = ['priceFrom', 'priceTo', 'ratingFrom', 'ratingTo', 'durationFrom', 'durationTo', 'releaseDateFrom', 'releaseDateTo', 'genres', 'directors', 'sortBy', 'sortDirection', 'page'];
+            for (var i = 0; i < keys.length; i++) {
+                if (params.has(keys[i])) return true;
+            }
+            return false;
+        } catch (e) { return false; }
     }
 
     function normalizeSuggestionsPayload(payload) {
-        var items = [];
-
-        if (Array.isArray(payload)) {
-            items = payload;
-        } else if (payload && typeof payload === 'object' && Array.isArray(payload.items)) {
-            items = payload.items;
-        }
-
+        var items = Array.isArray(payload) ? payload : (payload && Array.isArray(payload.items) ? payload.items : []);
         var result = [];
-
         for (var i = 0; i < items.length; i++) {
             var entry = items[i];
             if (entry == null) continue;
-
             if (typeof entry === 'string') {
                 var s = entry.trim();
-                if (s) {
-                    result.push({
-                        title: s,
-                        meta: '',
-                        movieId: null,
-                        historyId: null,
-                        addedAt: null
-                    });
+                if (s) result.push({ title: s });
+            } else if (typeof entry === 'object') {
+                var raw = entry.title != null ? entry.title : entry.movieTitle;
+                if (raw != null) {
+                    var t = String(raw).trim();
+                    if (t) result.push({ title: t });
                 }
-                continue;
-            }
-
-            if (typeof entry === 'object' && entry.title) {
-                var t = String(entry.title).trim();
-                if (!t) continue;
-
-                result.push({
-                    title: t,
-                    meta: formatSuggestionMeta(entry),
-                    movieId: entry.movieId != null ? String(entry.movieId) : null,
-                    historyId: entry.historyId != null ? String(entry.historyId) : null,
-                    addedAt: entry.lastWatchedAt || entry.addedAt || entry.watchedAt || null
-                });
             }
         }
-
         return result;
     }
 
     function fetchSuggestionsPayload(url) {
         return fetch(url, {
             headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            credentials: 'same-origin',
-            cache: 'no-store'
+            credentials: 'same-origin', cache: 'no-store'
         })
         .then(function (response) {
             if (response.type === 'opaqueredirect' || response.status === 0) return [];
@@ -137,21 +106,7 @@
     }
 
     function detectCatalogSuggestionsEndpoint() {
-        if (window.__collectionSuggestionsEndpoint) {
-            return window.__collectionSuggestionsEndpoint;
-        }
-
-        var container = document.querySelector('[data-cursor-container]');
-        if (container) {
-            var endpoint = container.getAttribute('data-cursor-endpoint');
-            if (endpoint === '/cart/more') return '/cart/suggestions';
-            if (endpoint === '/favourites/more') return '/favourites/suggestions';
-            if (endpoint === '/library/more') return '/library/suggestions';
-            if (endpoint === '/history/more') return '/history/suggestions';
-            if (endpoint === '/rated/history/more') return '/rated/history/suggestions';
-            if (endpoint === '/watched/more') return '/watched/suggestions';
-        }
-
+        if (window.__collectionSuggestionsEndpoint) return window.__collectionSuggestionsEndpoint;
         var path = (window.location.pathname || '').replace(/\/$/, '');
         if (path === '/cart') return '/cart/suggestions';
         if (path === '/favourites') return '/favourites/suggestions';
@@ -160,6 +115,25 @@
         if (path === '/rated/history') return '/rated/history/suggestions';
         if (path === '/watched') return '/watched/suggestions';
         return null;
+    }
+
+    function commonPrefixOriginal(titles) {
+        if (!titles || titles.length === 0) return '';
+        if (titles.length === 1) return titles[0];
+        var first = titles[0];
+        var max = first.length;
+        for (var i = 1; i < titles.length; i++) {
+            var other = titles[i];
+            var limit = Math.min(max, other.length);
+            var j = 0;
+            while (j < limit) {
+                if (normalizeForMatch(first.charAt(j)) !== normalizeForMatch(other.charAt(j))) break;
+                j++;
+            }
+            max = j;
+            if (max === 0) return '';
+        }
+        return first.substring(0, max);
     }
 
     function createSearchEngine(config) {
@@ -173,269 +147,192 @@
         var getSuggestionsUrl = config.getSuggestionsUrl;
         var onBeforeSubmit = config.onBeforeSubmit || null;
         var submitForm = config.submitForm || null;
+        var onEmptyAfterClear = config.onEmptyAfterClear || null;
+        var onRememberQuery = config.onRememberQuery || null;
         var suggestionRowClass = config.suggestionRowClass || 'suggestion-item';
         var suggestionTitleClass = config.suggestionTitleClass || 'suggestion-title';
-        var suggestionMetaClass = config.suggestionMetaClass || 'suggestion-meta';
+        var queryParamName = config.queryParamName || 'title';
         var activeClass = 'is-active';
 
         if (!form || !input || !wrapper || typeof getSuggestionsUrl !== 'function') return null;
 
         var debounceTimer = null;
         var currentTopMatch = null;
-        var pointerDownInsideBox = false;
         var activeIndex = -1;
-        var pendingMoveToList = false;
-        var pendingSubmitTarget = null;
+        var lastFetchedTitles = null;
+        var lastFetchedQuery = '';
 
-        function syncClear() {
-            wrapper.classList.toggle('has-value', input.value.trim().length > 0);
-        }
-
+        function syncClear() { wrapper.classList.toggle('has-value', input.value.trim().length > 0); }
         function hideAutocomplete() {
             currentTopMatch = null;
             wrapper.classList.remove('has-autocomplete');
             if (typedEl) typedEl.textContent = '';
             if (hintEl) hintEl.textContent = '';
         }
-
         function hideSuggestions() {
             if (!suggestionsBox) return;
-            suggestionsBox.textContent = '';
+            suggestionsBox.innerHTML = '';
             suggestionsBox.classList.remove('show');
-            if (suggestionsBox.style && suggestionsBox.style.display === 'flex') {
-                suggestionsBox.style.display = 'none';
-            }
             activeIndex = -1;
         }
-
         function getSuggestionElements() {
             if (!suggestionsBox) return [];
-            return Array.prototype.slice.call(
-                suggestionsBox.querySelectorAll('.' + suggestionRowClass)
-            );
+            return Array.prototype.slice.call(suggestionsBox.querySelectorAll('.' + suggestionRowClass));
         }
-
         function setActiveSuggestion(index) {
             var items = getSuggestionElements();
             items.forEach(function (el) { el.classList.remove(activeClass); });
             activeIndex = index;
             if (index >= 0 && index < items.length) {
                 items[index].classList.add(activeClass);
-                try { items[index].scrollIntoView({ block: 'nearest' }); } catch (e) {}
+                items[index].scrollIntoView({ block: 'nearest' });
             }
         }
 
-        function resetActiveSuggestion() {
-            activeIndex = -1;
-            getSuggestionElements().forEach(function (el) { el.classList.remove(activeClass); });
+        function buildVisualQuery(typedValue, allTitles) {
+            if (!typedValue) return '';
+            if (!allTitles || allTitles.length === 0) return typedValue;
+            var prefix = commonPrefixOriginal(allTitles);
+            var visual = prefix.length >= typedValue.length ? prefix : typedValue;
+            return visual + '…';
         }
 
-        function renderAutocomplete(typedValue, entries) {
+        function ensureHiddenField(name, value) {
+            var existing = form.querySelector('input[type="hidden"][name="' + name + '"]');
+            if (!existing) {
+                existing = document.createElement('input');
+                existing.type = 'hidden';
+                existing.name = name;
+                form.appendChild(existing);
+            }
+            existing.value = value;
+        }
+
+        function renderAutocomplete(typedValue, commonPrefix) {
             if (!typedEl || !hintEl) { hideAutocomplete(); return; }
-            if (!typedValue || !entries || entries.length !== 1) { hideAutocomplete(); return; }
-            var fullTitle = entries[0].title;
+            if (!typedValue || !commonPrefix) { hideAutocomplete(); return; }
+
             var typedLower = normalizeForMatch(typedValue);
-            var fullLower = normalizeForMatch(fullTitle);
-            if (fullLower.indexOf(typedLower) !== 0) { hideAutocomplete(); return; }
-            var remainingPart = fullTitle.substring(typedValue.length);
+            var prefixLower = normalizeForMatch(commonPrefix);
+            if (prefixLower.indexOf(typedLower) !== 0) { hideAutocomplete(); return; }
+
+            var remainingPart = commonPrefix.substring(typedValue.length);
             if (!remainingPart) { hideAutocomplete(); return; }
+
             typedEl.textContent = typedValue;
             hintEl.textContent = remainingPart;
             wrapper.classList.add('has-autocomplete');
-        }
-
-        function acceptAutocomplete() {
-            if (!currentTopMatch) return false;
-            input.value = currentTopMatch;
-            try { input.setSelectionRange(input.value.length, input.value.length); } catch (e) {}
-            hideAutocomplete();
-            hideSuggestions();
-            syncClear();
-            return true;
-        }
-
-        function applySuggestion(title) {
-            if (!title) return;
-            input.value = title;
-            try { input.setSelectionRange(title.length, title.length); } catch (e) {}
-            syncClear();
-            hideSuggestions();
-            hideAutocomplete();
+            currentTopMatch = commonPrefix;
         }
 
         function renderSuggestions(entries) {
             if (!suggestionsBox) return;
-            suggestionsBox.textContent = '';
-
+            suggestionsBox.innerHTML = '';
             if (!entries || entries.length === 0) {
                 suggestionsBox.classList.remove('show');
-                if (suggestionsBox.style) suggestionsBox.style.display = 'none';
-                activeIndex = -1;
                 return;
             }
-
             entries.slice(0, SUGGESTIONS_LIMIT).forEach(function (entry) {
                 var row = document.createElement('div');
                 row.className = suggestionRowClass;
-                row.setAttribute('role', 'option');
-                row.setAttribute('tabindex', '-1');
                 row.setAttribute('data-suggestion-title', entry.title);
-                if (entry.movieId) row.setAttribute('data-suggestion-movie-id', entry.movieId);
-                if (entry.historyId) row.setAttribute('data-suggestion-history-id', entry.historyId);
-                if (entry.addedAt) row.setAttribute('data-suggestion-added-at', entry.addedAt);
 
                 var titleSpan = document.createElement('span');
                 titleSpan.className = suggestionTitleClass;
                 titleSpan.textContent = entry.title;
                 row.appendChild(titleSpan);
 
-                if (entry.meta) {
-                    var metaSpan = document.createElement('span');
-                    metaSpan.className = suggestionMetaClass;
-                    metaSpan.textContent = entry.meta;
-                    row.appendChild(metaSpan);
-                }
-
                 row.addEventListener('mouseenter', function () {
                     var idx = getSuggestionElements().indexOf(row);
                     if (idx >= 0) setActiveSuggestion(idx);
                 });
-
                 suggestionsBox.appendChild(row);
             });
-
             suggestionsBox.classList.add('show');
-            if (suggestionsBox.style) suggestionsBox.style.display = 'flex';
-            activeIndex = -1;
         }
 
         function runFetchSuggestions(query) {
             var url = getSuggestionsUrl(query);
-            if (!url) { hideSuggestions(); hideAutocomplete(); pendingMoveToList = false; return; }
+            if (!url) return;
 
             fetchSuggestionsPayload(url).then(function (entries) {
-                if (!entries || entries.length === 0) {
-                    hideSuggestions();
-                    hideAutocomplete();
-                    pendingMoveToList = false;
-                    return;
-                }
+                lastFetchedQuery = query;
+                lastFetchedTitles = (entries || []).map(function (e) { return e.title; });
 
+                if (!entries || entries.length === 0) { hideSuggestions(); hideAutocomplete(); return; }
                 renderSuggestions(entries);
 
                 var typedValue = input.value;
-                var normalizedTyped = normalizeForMatch(typedValue);
-                var matching = entries.filter(function (e) {
-                    return normalizeForMatch(e.title).indexOf(normalizedTyped) === 0;
-                });
+                var typedLower = normalizeForMatch(typedValue);
+                var matching = entries.filter(function (e) { return normalizeForMatch(e.title).indexOf(typedLower) === 0; });
 
-                if (matching.length === 1) {
-                    currentTopMatch = matching[0].title;
-                    renderAutocomplete(typedValue, [matching[0]]);
+                if (matching.length > 0) {
+                    var prefix = commonPrefixOriginal(matching.map(function (e) { return e.title; }));
+                    if (prefix && normalizeForMatch(prefix).length > typedLower.length) {
+                        renderAutocomplete(typedValue, prefix);
+                    } else {
+                        hideAutocomplete();
+                    }
                 } else {
                     hideAutocomplete();
-                }
-
-                if (pendingMoveToList) {
-                    pendingMoveToList = false;
-                    if (getSuggestionElements().length > 0) setActiveSuggestion(0);
                 }
             });
         }
 
-        function removePendingHighlightField() {
-            var existing = form.querySelector('input[data-catalog-search-highlight]');
-            if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
-        }
-
-        function attachPendingHighlightField(row) {
-            removePendingHighlightField();
-            if (!row) return;
-
-            var historyId = row.getAttribute('data-suggestion-history-id') || '';
-            var addedAt = row.getAttribute('data-suggestion-added-at') || '';
-
-            if (!historyId && !addedAt) return;
-
-            if (historyId) {
-                var hiddenId = document.createElement('input');
-                hiddenId.type = 'hidden';
-                hiddenId.name = 'highlight';
-                hiddenId.value = historyId;
-                hiddenId.setAttribute('data-catalog-search-highlight', '1');
-                form.appendChild(hiddenId);
-            }
-
-            if (addedAt) {
-                var hiddenAt = document.createElement('input');
-                hiddenAt.type = 'hidden';
-                hiddenAt.name = 'watchedAt';
-                hiddenAt.value = addedAt;
-                hiddenAt.setAttribute('data-catalog-search-highlight', '1');
-                form.appendChild(hiddenAt);
-            }
-        }
-
-        function doSubmit(activeRowEl) {
-            var raw = String(input.value || '').trim();
-
-            if (hasMeaningfulChars(raw)) {
-                var cleanValue = raw;
-                if (currentTopMatch && normalizeForMatch(currentTopMatch).indexOf(normalizeForMatch(cleanValue)) === 0) {
-                    cleanValue = currentTopMatch;
-                } else {
-                    cleanValue = capitalizeFirst(cleanValue);
-                }
-                input.value = cleanValue;
-                try { input.setSelectionRange(cleanValue.length, cleanValue.length); } catch (e) {}
-            } else {
-                input.value = '';
-            }
-
-            syncClear();
+        function submitRaw(value, visualValue) {
+            if (!value) return;
+            ensureHiddenField(queryParamName, value);
+            input.removeAttribute('name');
+            if (visualValue != null) input.value = visualValue;
+            if (typeof onRememberQuery === 'function' && visualValue != null) onRememberQuery(visualValue);
+            if (typeof onBeforeSubmit === 'function') onBeforeSubmit();
             hideSuggestions();
             hideAutocomplete();
-            resetActiveSuggestion();
-
-            attachPendingHighlightField(activeRowEl || pendingSubmitTarget);
-            pendingSubmitTarget = null;
-
-            if (typeof onBeforeSubmit === 'function') onBeforeSubmit();
-
-            if (typeof submitForm === 'function') {
-                submitForm();
-            } else {
-                form.removeAttribute('onsubmit');
-                form.submit();
-            }
+            if (typeof submitForm === 'function') submitForm();
+            else form.submit();
         }
 
-        input.addEventListener('beforeinput', function (e) {
-            if (!currentTopMatch) return;
-            if (e.inputType !== 'insertText' || !e.data) return;
-            var typedLength = input.value.length;
-            var expectedChar = currentTopMatch.charAt(typedLength);
-            if (e.data.toLowerCase() !== expectedChar.toLowerCase()) {
-                hideAutocomplete();
+        function submitFromSuggestion(title) {
+            if (!title) return;
+            var typed = String(input.value || '').trim();
+            var query = lastFetchedQuery && hasMeaningfulChars(lastFetchedQuery)
+                ? lastFetchedQuery
+                : capitalizeFirst(typed.replace(/…+$/, '').trim());
+            if (!query) return;
+            submitRaw(query, title + '…');
+        }
+
+        function doSubmit() {
+            var raw = String(input.value || '').trim();
+            if (!hasMeaningfulChars(raw)) return;
+
+            var cleanValue = capitalizeFirst(raw.replace(/…+$/, '').trim());
+
+            var visualValue;
+            var nClean = normalizeForMatch(cleanValue);
+            var nLast = normalizeForMatch(lastFetchedQuery);
+            var useLastFetched = lastFetchedTitles && lastFetchedTitles.length > 0
+                && (nLast.indexOf(nClean) === 0 || nClean.indexOf(nLast) === 0);
+
+            if (useLastFetched) {
+                visualValue = buildVisualQuery(cleanValue, lastFetchedTitles);
+            } else if (currentTopMatch && normalizeForMatch(currentTopMatch).length > nClean.length) {
+                visualValue = currentTopMatch + '…';
+            } else {
+                visualValue = cleanValue + '…';
             }
-        });
+
+            submitRaw(cleanValue, visualValue);
+        }
 
         input.addEventListener('input', function () {
+            var val = input.value.trim();
             syncClear();
-            resetActiveSuggestion();
             hideAutocomplete();
-            pendingMoveToList = false;
             clearTimeout(debounceTimer);
 
-            var value = input.value.trim();
-            if (!value || !hasMeaningfulChars(value)) {
-                hideSuggestions();
-                return;
-            }
-
-            debounceTimer = setTimeout(function () {
-                runFetchSuggestions(value);
-            }, SUGGESTIONS_DEBOUNCE_MS);
+            if (!val || !hasMeaningfulChars(val)) { hideSuggestions(); return; }
+            debounceTimer = setTimeout(function () { runFetchSuggestions(val); }, SUGGESTIONS_DEBOUNCE_MS);
         });
 
         input.addEventListener('keydown', function (e) {
@@ -445,63 +342,42 @@
                 if (items.length > 0) {
                     e.preventDefault();
                     setActiveSuggestion(activeIndex < items.length - 1 ? activeIndex + 1 : 0);
-                    return;
                 }
-                if (hasMeaningfulChars(input.value)) {
-                    e.preventDefault();
-                    pendingMoveToList = true;
-                    clearTimeout(debounceTimer);
-                    runFetchSuggestions(input.value.trim());
-                    return;
-                }
+                return;
             }
-
             if (e.key === 'ArrowUp') {
                 if (items.length > 0) {
                     e.preventDefault();
                     setActiveSuggestion(activeIndex > 0 ? activeIndex - 1 : items.length - 1);
-                    return;
                 }
-            }
-
-            if (e.key === 'Escape') {
-                hideSuggestions();
-                hideAutocomplete();
-                pendingMoveToList = false;
                 return;
             }
-
             if ((e.key === 'ArrowRight' || e.key === 'Tab') && currentTopMatch) {
-                var caretAtEnd = input.selectionStart === input.value.length
-                    && input.selectionEnd === input.value.length;
+                var caretAtEnd = input.selectionStart === input.value.length && input.selectionEnd === input.value.length;
                 if (caretAtEnd) {
                     e.preventDefault();
-                    acceptAutocomplete();
+                    input.value = currentTopMatch;
+                    hideAutocomplete();
+                    hideSuggestions();
+                    syncClear();
                     return;
                 }
             }
-
             if (e.key === 'Enter') {
+                e.preventDefault();
                 if (activeIndex >= 0 && items[activeIndex]) {
-                    e.preventDefault();
-                    var activeRow = items[activeIndex];
-                    applySuggestion(activeRow.getAttribute('data-suggestion-title') || '');
-                    doSubmit(activeRow);
+                    var chosen = items[activeIndex].getAttribute('data-suggestion-title');
+                    hideSuggestions();
+                    hideAutocomplete();
+                    submitFromSuggestion(chosen);
                     return;
                 }
-                e.preventDefault();
-                doSubmit(null);
+                doSubmit();
             }
         });
 
         input.addEventListener('blur', function () {
-            setTimeout(function () {
-                if (pointerDownInsideBox) { pointerDownInsideBox = false; return; }
-                hideSuggestions();
-                hideAutocomplete();
-                resetActiveSuggestion();
-                pendingMoveToList = false;
-            }, 150);
+            setTimeout(function () { hideSuggestions(); hideAutocomplete(); }, 150);
         });
 
         if (suggestionsBox) {
@@ -509,186 +385,147 @@
                 var row = e.target.closest('.' + suggestionRowClass);
                 if (!row) return;
                 e.preventDefault();
-                e.stopPropagation();
-                pointerDownInsideBox = true;
-                pendingSubmitTarget = row;
-                var title = row.getAttribute('data-suggestion-title') || '';
-                if (title) {
-                    applySuggestion(title);
-                    doSubmit(row);
-                }
+                var chosen = row.getAttribute('data-suggestion-title');
+                hideSuggestions();
+                hideAutocomplete();
+                submitFromSuggestion(chosen);
             }, true);
         }
 
         if (clear) {
             clear.addEventListener('click', function (e) {
                 e.preventDefault();
-                e.stopPropagation();
                 input.value = '';
+                var hiddenField = form.querySelector('input[type="hidden"][name="' + queryParamName + '"]');
+                if (hiddenField) hiddenField.value = '';
                 syncClear();
                 hideSuggestions();
                 hideAutocomplete();
-                resetActiveSuggestion();
-                pendingSubmitTarget = null;
-                removePendingHighlightField();
-                clearTimeout(debounceTimer);
-                if (typeof submitForm === 'function') submitForm();
-                else { form.removeAttribute('onsubmit'); form.submit(); }
+                if (typeof onEmptyAfterClear === 'function') onEmptyAfterClear();
             });
         }
 
-        form.addEventListener('submit', function (e) { e.preventDefault(); doSubmit(null); });
-
-        syncClear();
-        hideSuggestions();
-        hideAutocomplete();
-
-        return {
-            submit: function () { doSubmit(null); },
-            setValue: function (v) { input.value = v || ''; syncClear(); },
-            focus: function () { try { input.focus(); } catch (e) {} }
-        };
-    }
-
-    function initCatalogSearch() {
-        var form = document.querySelector('[data-catalog-search-form]');
-        var input = document.querySelector('[data-catalog-search-input]');
-        var clear = document.querySelector('[data-catalog-search-clear]');
-        var wrapper = document.querySelector('[data-catalog-search-wrapper]');
-        var suggestionsBox = document.querySelector('[data-catalog-search-suggestions]');
-        var typedEl = document.querySelector('[data-catalog-search-typed]');
-        var hintEl = document.querySelector('[data-catalog-search-hint]');
-
-        if (!form || !input || !wrapper) return;
-
-        var endpoint = detectCatalogSuggestionsEndpoint();
-
-        createSearchEngine({
-            form: form,
-            input: input,
-            wrapper: wrapper,
-            clear: clear,
-            suggestionsBox: suggestionsBox,
-            typedEl: typedEl,
-            hintEl: hintEl,
-            suggestionRowClass: 'catalog-search-suggestion',
-            suggestionTitleClass: 'catalog-search-suggestion-title',
-            suggestionMetaClass: 'catalog-search-suggestion-meta',
-            getSuggestionsUrl: function (query) {
-                if (!endpoint) return null;
-                return endpoint + '?query=' + encodeURIComponent(query);
-            },
-            submitForm: function () { form.submit(); }
-        });
+        form.addEventListener('submit', function (e) { e.preventDefault(); doSubmit(); });
+        return { submit: doSubmit, setValue: function(v) { input.value = v || ''; syncClear(); } };
     }
 
     function initHeaderSearch() {
         var headerSearchInput = document.getElementById('headerSearchInput');
-        var headerSuggestionsBox = document.getElementById('headerSuggestions');
         var headerSearchForm = document.getElementById('headerSearchForm');
         var headerSearchWrapper = document.getElementById('headerSearchWrapper');
-        var headerAutocompleteTypedElement = document.getElementById('headerAutocompleteTyped');
-        var headerAutocompleteHintElement = document.getElementById('headerAutocompleteHint');
-        var headerFiltersButton = document.getElementById('headerFiltersBtn');
-        var headerSearchSubmitButton = document.getElementById('headerSearchSubmitBtn');
-        var headerSearchClearButton = document.getElementById('headerSearchClear');
+        if (!headerSearchInput || !headerSearchForm) return;
 
-        if (!headerSearchInput || !headerSuggestionsBox || !headerSearchForm || !headerSearchWrapper
-                || !headerAutocompleteTypedElement || !headerAutocompleteHintElement) return;
-
-        function getUrlTitle() {
-            try {
-                var params = new URLSearchParams(window.location.search);
-                return params.get('title') || '';
-            } catch (e) { return ''; }
+        function redirectToCleanCatalogIfNeeded() {
+            if (!isCatalogPage()) return false;
+            if (hasAnyFilterParam()) return false;
+            if (!window.location.search.includes('title=')) return false;
+            if (!isSearchCleared()) return false;
+            clearSearchCleared();
+            window.location.replace('/');
+            return true;
         }
 
-        function restoreQuery(engine) {
-            var urlTitle = getUrlTitle();
-            if (urlTitle) { engine.setValue(urlTitle); return; }
-            if (isMovieDetailsPage()) {
-                var saved = readLastSearch();
-                engine.setValue(saved || '');
-                return;
-            }
-            engine.setValue('');
-        }
+        if (redirectToCleanCatalogIfNeeded()) return;
 
         var engine = createSearchEngine({
             form: headerSearchForm,
             input: headerSearchInput,
             wrapper: headerSearchWrapper,
-            clear: headerSearchClearButton,
-            suggestionsBox: headerSuggestionsBox,
-            typedEl: headerAutocompleteTypedElement,
-            hintEl: headerAutocompleteHintElement,
+            clear: document.getElementById('headerSearchClear'),
+            suggestionsBox: document.getElementById('headerSuggestions'),
+            typedEl: document.getElementById('headerAutocompleteTyped'),
+            hintEl: document.getElementById('headerAutocompleteHint'),
             suggestionRowClass: 'suggestion-item',
             suggestionTitleClass: 'suggestion-title',
-            suggestionMetaClass: 'suggestion-meta',
-            getSuggestionsUrl: function (query) {
-                return '/movies/suggestions?query=' + encodeURIComponent(query);
-            },
+            queryParamName: 'title',
+            getSuggestionsUrl: function (q) { return '/movies/suggestions?query=' + encodeURIComponent(q); },
             submitForm: function () {
-                if (typeof window.submitCombinedSearch === 'function') {
-                    window.submitCombinedSearch();
-                } else {
-                    headerSearchForm.removeAttribute('onsubmit');
-                    headerSearchForm.submit();
-                }
+                if (typeof window.submitCombinedSearch === 'function') window.submitCombinedSearch();
+                else headerSearchForm.submit();
             },
             onBeforeSubmit: function () {
-                if (typeof validateSearchQuery === 'function' && !validateSearchQuery()) {
-                    throw new Error('validateSearchQuery rejected');
-                }
+                if (typeof validateSearchQuery === 'function' && !validateSearchQuery()) throw new Error('validation');
+            },
+            onRememberQuery: function (v) {
+                clearSearchCleared();
+                writeLastSearch(DEFAULT_STORAGE_KEY, v);
+            },
+            onEmptyAfterClear: function () {
+                setSearchCleared();
+                writeLastSearch(DEFAULT_STORAGE_KEY, '');
+                window.location.replace('/');
             }
         });
 
         if (!engine) return;
-        restoreQuery(engine);
 
-        if (headerFiltersButton && !headerFiltersButton.dataset.bound) {
-            headerFiltersButton.dataset.bound = '1';
-            headerFiltersButton.addEventListener('click', function (clickEvent) {
-                clickEvent.preventDefault();
-                if (typeof toggleFiltersModal === 'function') toggleFiltersModal(true);
-            });
-        }
-
-        if (headerSearchSubmitButton && !headerSearchSubmitButton.dataset.bound) {
-            headerSearchSubmitButton.dataset.bound = '1';
-            headerSearchSubmitButton.addEventListener('click', function (clickEvent) {
-                clickEvent.preventDefault();
+        var submitBtn = document.getElementById('headerSearchSubmitBtn');
+        if (submitBtn) {
+            submitBtn.addEventListener('click', function (e) {
+                e.preventDefault();
                 if (typeof validateSearchQuery === 'function' && !validateSearchQuery()) return;
                 engine.submit();
             });
         }
 
-        if (headerSearchClearButton && !headerSearchClearButton.dataset.bound) {
-            headerSearchClearButton.dataset.bound = '1';
-            headerSearchClearButton.addEventListener('click', function (clickEvent) {
-                clickEvent.preventDefault();
-                headerSearchInput.value = '';
-                if (typeof clearPending === 'function') clearPending();
-                engine.setValue('');
-                headerSearchInput.focus();
-            });
-        }
+        var urlParams = new URLSearchParams(window.location.search);
+        var urlTitle = urlParams.get('title');
+        var savedTitle = readLastSearch(DEFAULT_STORAGE_KEY);
 
-        window.addEventListener('pageshow', function (pageShowEvent) {
-            if (pageShowEvent.persisted) restoreQuery(engine);
-        });
+        if (urlTitle) {
+            engine.setValue(savedTitle || urlTitle);
+        } else if (isMovieDetailsPage() && savedTitle) {
+            engine.setValue(savedTitle);
+        }
     }
 
-    window.initCatalogSearch = initCatalogSearch;
-    window.initHeaderSearch = initHeaderSearch;
+    function initCatalogSearch() {
+        var form = document.querySelector('[data-catalog-search-form]');
+        var input = document.querySelector('[data-catalog-search-input]');
+        var wrapper = document.querySelector('[data-catalog-search-wrapper]');
+        if (!form || !input || !wrapper) return;
+
+        var path = (window.location.pathname || '').replace(/\/$/, '');
+        var storageKey = 'lastSearchQuery:' + path;
+
+        var engine = createSearchEngine({
+            form: form,
+            input: input,
+            wrapper: wrapper,
+            suggestionsBox: document.querySelector('[data-catalog-search-suggestions]'),
+            queryParamName: 'query',
+            getSuggestionsUrl: function (q) {
+                var endpoint = detectCatalogSuggestionsEndpoint();
+                if (!endpoint) return null;
+                return endpoint + '?query=' + encodeURIComponent(q);
+            },
+            submitForm: function () { form.submit(); },
+            onRememberQuery: function (v) {
+                writeLastSearch(storageKey, v);
+            },
+            onEmptyAfterClear: function () {
+                writeLastSearch(storageKey, '');
+            }
+        });
+
+        if (!engine) return;
+
+        var urlParams = new URLSearchParams(window.location.search);
+        var urlQuery = urlParams.get('query');
+        var savedQuery = readLastSearch(storageKey);
+
+        if (urlQuery) {
+            engine.setValue(savedQuery || urlQuery);
+        }
+    }
 
     function initAll() {
-        initCatalogSearch();
         initHeaderSearch();
+        initCatalogSearch();
     }
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initAll, { once: true });
+        document.addEventListener('DOMContentLoaded', initAll);
     } else {
         initAll();
     }

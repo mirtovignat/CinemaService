@@ -29,6 +29,46 @@
         }
     }
 
+    function mergeCurrentQueryIntoUrl(href) {
+        try {
+            var currentUrl = new URL(window.location.href);
+            var targetUrl = new URL(href, window.location.origin);
+            [
+                'title',
+                'priceFrom',
+                'priceTo',
+                'ratingFrom',
+                'ratingTo',
+                'durationFrom',
+                'durationTo',
+                'releaseDateFrom',
+                'releaseDateTo',
+                'sortBy',
+                'sortDirection',
+                'genres',
+                'directors'
+            ].forEach(function (key) {
+                if (targetUrl.searchParams.has(key)) return;
+                if (!currentUrl.searchParams.has(key)) return;
+                currentUrl.searchParams.getAll(key).forEach(function (v) {
+                    targetUrl.searchParams.append(key, v);
+                });
+            });
+            return targetUrl.toString();
+        } catch (e) {
+            return href;
+        }
+    }
+
+    function reinitFiltersAfterContentSwap() {
+        if (window.FiltersSearch && typeof window.FiltersSearch.init === 'function') {
+            window.FiltersSearch.init(document);
+        }
+        if (window.initFilterMasks) {
+            try { window.initFilterMasks(); } catch (e) {}
+        }
+    }
+
     function initCatalogPage() {
         refreshCatalogBadges();
         refreshCatalogStatuses();
@@ -50,10 +90,12 @@
 
             e.preventDefault();
 
+            var targetHref = mergeCurrentQueryIntoUrl(href);
+
             var pagination = document.querySelector('.pagination');
             if (pagination) pagination.classList.add('pagination-loading');
 
-            fetch(href, {
+            fetch(targetHref, {
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'text/html'
@@ -92,9 +134,10 @@
 
                 syncRecommendationsVisibility(doc);
 
-                history.pushState({}, '', href);
+                history.pushState({}, '', targetHref);
                 refreshCatalogBadges();
                 refreshCatalogStatuses();
+                reinitFiltersAfterContentSwap();
 
                 document.querySelectorAll('.js-rating-badge[data-movie-id]').forEach(function (el) {
                     var id = el.getAttribute('data-movie-id');
@@ -106,7 +149,7 @@
             .catch(function (error) {
                 console.error('Error loading page:', error);
                 if (pagination) pagination.classList.remove('pagination-loading');
-                window.location.href = href;
+                window.location.href = targetHref;
             });
         });
 
@@ -114,6 +157,7 @@
             if (event.persisted) {
                 refreshCatalogBadges();
                 refreshCatalogStatuses();
+                reinitFiltersAfterContentSwap();
             }
         });
     }

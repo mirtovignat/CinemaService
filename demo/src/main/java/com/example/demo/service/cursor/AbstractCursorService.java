@@ -4,6 +4,7 @@ import com.example.demo.cursor.Cursor;
 import com.example.demo.cursor.SortDirection;
 import com.example.demo.cursor.codec.CursorCodec;
 import com.example.demo.dto.response.CursorPageResponse;
+import com.example.demo.util.normalizer.TitleNormalizer;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
@@ -18,6 +19,7 @@ public abstract class AbstractCursorService<EntityType, DataType, ContextType>
         implements CursorPageService<ContextType, DataType> {
 
     private final CursorCodec cursorCodec;
+    private final TitleNormalizer titleNormalizer;
     private final int defaultPageSize;
     private final Function<EntityType, String> cursorValueExtractor;
     private final Function<List<EntityType>, List<DataType>> contentMapper;
@@ -33,10 +35,12 @@ public abstract class AbstractCursorService<EntityType, DataType, ContextType>
             cursorValue = cursorCodec.decode(rawCursor).value();
         }
 
+        String normalizedQuery = titleNormalizer.normalizeOptional(query).orElse(null);
+
         Slice<EntityType> slice = fetchSlice(
                 cursorValue,
                 sortDirection,
-                query,
+                normalizedQuery,
                 PageRequest.of(0, defaultPageSize + 1),
                 contextType
         );

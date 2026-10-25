@@ -3,10 +3,11 @@ package com.example.demo.service.cursor;
 import com.example.demo.cursor.codec.CursorCodec;
 import com.example.demo.cursor.codec.KeyCodec;
 import com.example.demo.dto.catalog.LibrarianMovieViewDTO;
-import com.example.demo.dto.catalog.WatchedSuggestionDTO;
 import com.example.demo.mapper.entity.PurchasedMapper;
 import com.example.demo.model.base.WatchHistoryItem;
 import com.example.demo.repository.base.WatchHistoryItemRepository;
+import com.example.demo.repository.projection.WatchedSuggestionProjection;
+import com.example.demo.util.normalizer.TitleNormalizer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,11 +21,13 @@ public class WatchedHistoryCursorService extends AbstractUserCursorService<Watch
 
     public WatchedHistoryCursorService(CursorCodec cursorCodec,
                                        KeyCodec keyCodec,
+                                       TitleNormalizer titleNormalizer,
                                        WatchHistoryItemRepository watchHistoryItemRepository,
                                        PurchasedMapper purchasedMapper,
                                        @Value("${app.catalog.cursorPageResponse-size:20}") int defaultPageSize) {
         super(cursorCodec,
                 keyCodec,
+                titleNormalizer,
                 defaultPageSize,
                 watchHistoryItem -> keyCodec.encode(
                         watchHistoryItem.getWatchedAt(),
@@ -37,10 +40,7 @@ public class WatchedHistoryCursorService extends AbstractUserCursorService<Watch
         this.watchHistoryItemRepository = watchHistoryItemRepository;
     }
 
-    public List<WatchedSuggestionDTO> findGroupedWatchedSuggestionsStartingWith(Long userId,
-                                                                                String prefix,
-                                                                                Pageable pageable) {
-        return watchHistoryItemRepository.findGroupedWatchedSuggestionsStartingWith(userId, prefix, pageable);
+    public List<WatchedSuggestionProjection> findGroupedWatchedSuggestionsStartingWith(Long userId, String query, Pageable pageable) {
+        return watchHistoryItemRepository.findGroupedWatchedSuggestionsStartingWith(userId, query, pageable);
     }
-
 }
