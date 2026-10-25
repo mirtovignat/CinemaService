@@ -10,9 +10,9 @@ import com.example.demo.repository.entity.CartItemRepository;
 import com.example.demo.repository.entity.FavouriteMovieRepository;
 import com.example.demo.repository.entity.RatedMovieRepository;
 import com.example.demo.repository.entity.UserRepository;
-import com.example.demo.util.PhoneNormalizer;
 import com.example.demo.util.UserSuffixGenerator;
-import lombok.RequiredArgsConstructor;
+import com.example.demo.util.normalizer.PhoneNormalizer;
+import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,16 +20,17 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 
 @Service
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class UserCommandService {
 
-    private final UserRepository userRepository;
     private final UserQueryService userQueryService;
-    private final PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
     private final CartItemRepository cartItemRepository;
     private final FavouriteMovieRepository favouriteMovieRepository;
     private final RatedMovieRepository ratedMovieRepository;
+    private final PasswordEncoder passwordEncoder;
     private final UserSuffixGenerator userSuffixGenerator;
+    private final PhoneNormalizer phoneNormalizer;
 
     public ProfileFieldUpdateDTO prepareAndValidateField(ProfileFieldUpdateDTO profileFieldUpdateDTO,
                                                          Long userId) {
@@ -69,36 +70,35 @@ public class UserCommandService {
                             .build();
                 }
 
-                String normalized = PhoneNormalizer.normalizePhone(trimmedField);
-                if (normalized == null) {
+                String normalizedPhone = phoneNormalizer.normalize(trimmedField);
+                if (normalizedPhone == null) {
                     throw BusinessException.of(ErrorCode.PHONE_INVALID);
                 }
-                if (normalized.equals(currentPhone)) {
+                if (normalizedPhone.equals(currentPhone)) {
                     throw BusinessException.of(ErrorCode.DATA_COINCIDENCE);
                 }
-                if (userRepository.existsByPhone(normalized)) {
+                if (userRepository.existsByPhone(normalizedPhone)) {
                     throw BusinessException.of(ErrorCode.ALREADY_TAKEN);
                 }
                 return ProfileFieldUpdateDTO.builder()
                         .identifier(identifier)
-                        .field(normalized)
+                        .field(normalizedPhone)
                         .build();
             }
             default -> throw BusinessException.of(ErrorCode.VALIDATION_ERROR);
         }
     }
 
-    @Transactional
     public void updateField(Long userId, ProfileFieldUpdateDTO profileFieldUpdateDTO) {
         switch (profileFieldUpdateDTO.identifier()) {
             case USERNAME -> userRepository.updateUsername(userId, profileFieldUpdateDTO.field());
             case EMAIL -> userRepository.updateEmail(userId, profileFieldUpdateDTO.field());
             case PHONE -> {
-                String value = profileFieldUpdateDTO.field();
-                if (value == null || value.isBlank()) {
+                String fieldValue = profileFieldUpdateDTO.field();
+                if (fieldValue == null || fieldValue.isBlank()) {
                     userRepository.deletePhone(userId);
                 } else {
-                    userRepository.updatePhone(userId, value);
+                    userRepository.updatePhone(userId, fieldValue);
                 }
             }
             default -> throw BusinessException.of(ErrorCode.VALIDATION_ERROR);
@@ -106,40 +106,45 @@ public class UserCommandService {
     }
 
     public String prepareAndValidatePassword(PasswordChangingDTO passwordChangingDTO, Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> BusinessException.of(ErrorCode.USER_NOT_FOUND, userId));
-        if (!passwordEncoder.matches(passwordChangingDTO.currentPassword(), user.getPasswordHash())) {
+        User user = userQueryService.getUser(userId);
+        String currentPasswordHash = user.getPasswordHash();
+        validatePasswordChange(passwordChangingDTO, currentPasswordHash);
+        return passwordEncoder.encode(passwordChangingDTO.rawPassword());
+    }
+
+    private void validatePasswordChange(PasswordChangingDTO passwordChangingDTO, String currentPasswordHash) {
+        if (!passwordEncoder.matches(passwordChangingDTO.currentPassword(), currentPasswordHash)) {
             throw BusinessException.of(ErrorCode.PASSWORD_INVALID);
         }
         passwordChangingDTO.isMismatch();
         passwordChangingDTO.isCoincidence();
-        return passwordEncoder.encode(passwordChangingDTO.rawPassword());
     }
 
     @Transactional
     public void updatePassword(String encodedPassword, Long userId) {
-        User user = userQueryService.getUser(userId);
+        User user = userRepository.findByIdOrThrow(userId);
         user.setPasswordHash(encodedPassword);
         userRepository.save(user);
     }
 
-    @Transactional
     public void saveTopUp(BigDecimal amount, User user) {
         user.addMoney(amount);
         userRepository.save(user);
     }
 
-    @Transactional
-    public void deleteAccount(Long userId) {
+    public String prepareDeleteAccount(Long userId) {
         User user = userQueryService.getUser(userId);
-        favouriteMovieRepository.deleteAllByUserId(userId);
-        cartItemRepository.deleteAllByUserId(userId);
-        ratedMovieRepository.softDeleteAllByUserId(userId);
-        String suffix = userSuffixGenerator.generate(user);
-        userRepository.softDeleteById(userId, suffix);
+        return userSuffixGenerator.generate(user);
     }
 
     @Transactional
+    public void deleteAccount(Long userId, String suffix) {
+        favouriteMovieRepository.deleteAllByUserId(userId);
+        cartItemRepository.deleteAllByUserId(userId);
+        ratedMovieRepository.softDeleteAllByUserId(userId);
+        userRepository.softDeleteById(userId, suffix);
+    }
+
     public void deletePhone(Long userId) {
         userRepository.deletePhone(userId);
     }

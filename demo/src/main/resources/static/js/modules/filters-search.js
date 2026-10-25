@@ -263,6 +263,10 @@
         var dropdown = accordion.querySelector('[data-accordion-dropdown]');
         if (!dropdown) return;
 
+        if (dropdown.querySelector('.infinite-scroll-sentinel')) {
+            return; // <--- ВОТ ТУТ МЫ ОТКЛЮЧАЕМ ЛОКАЛЬНЫЙ ПОИСК ДЛЯ БЕСКОНЕЧНЫХ СПИСКОВ
+        }
+
         var wrapper = dropdown.querySelector('[data-accordion-search-wrapper]');
         var input = dropdown.querySelector('[data-accordion-search-input]');
         var clear = dropdown.querySelector('[data-accordion-search-clear]');

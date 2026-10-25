@@ -8,10 +8,15 @@ import com.example.demo.mapper.entity.CartItemMapper;
 import com.example.demo.model.entity.CartItem;
 import com.example.demo.repository.entity.CartItemRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class CartCursorService extends AbstractUserCursorService<CartItem, CartItemViewDTO> {
+
+    private final CartItemRepository cartItemRepository;
 
     public CartCursorService(CursorCodec cursorCodec,
                              KeyCodec keyCodec,
@@ -32,5 +37,10 @@ public class CartCursorService extends AbstractUserCursorService<CartItem, CartI
                 ),
                 cartItemRepository::fetchAscending,
                 cartItemRepository::fetchDescending);
+        this.cartItemRepository = cartItemRepository;
+    }
+
+    public List<String> findTitlesStartingWith(Long userId, String prefix, Pageable pageable) {
+        return cartItemRepository.findTitlesStartingWith(userId, prefix, pageable);
     }
 }

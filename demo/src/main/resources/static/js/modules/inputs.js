@@ -49,9 +49,7 @@
             var num = parseFloat(cleaned);
             if (!isNaN(num)) {
                 var val = Math.min(Math.max(num, 0.1), 10);
-                this.value = Math.round(val * 10) / 10 === val
-                    ? val.toFixed(1)
-                    : val.toFixed(1);
+                this.value = val.toFixed(1);
             } else if (cleaned === '.') {
                 this.value = '0.';
             } else {
@@ -61,15 +59,32 @@
 
         input.addEventListener('blur', function () {
             if (this.value.trim() === '') {
+                if (input.dataset.allowEmptyOnBlur === '1') return;
                 this.value = '5.0';
                 return;
             }
             if (this.value === '.' || this.value === '0.') {
+                if (input.dataset.allowEmptyOnBlur === '1') {
+                    this.value = '';
+                    return;
+                }
                 this.value = '0.1';
                 return;
             }
             var num = parseFloat(this.value.replace(',', '.'));
-            if (isNaN(num) || num < 0.1) {
+            if (isNaN(num)) {
+                if (input.dataset.allowEmptyOnBlur === '1') {
+                    this.value = '';
+                    return;
+                }
+                this.value = '0.1';
+                return;
+            }
+            if (num < 0.1) {
+                if (input.dataset.allowEmptyOnBlur === '1') {
+                    this.value = '';
+                    return;
+                }
                 this.value = '0.1';
                 return;
             }
@@ -189,10 +204,14 @@
     }
 
     function setupRatingInput() {
+        var input = document.getElementById('ratingValue');
+        if (input) input.dataset.allowEmptyOnBlur = '0';
         setupNumericRatingInput('ratingValue');
     }
 
     function setupFilterRatingInput(inputId) {
+        var input = document.getElementById(inputId);
+        if (input) input.dataset.allowEmptyOnBlur = '1';
         setupNumericRatingInput(inputId);
     }
 

@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDate;
 
-public interface RangeProjection {
+public interface MovieRangeProjection {
     BigDecimal getMinPrice();
 
     BigDecimal getMaxPrice();

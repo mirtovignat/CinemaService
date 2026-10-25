@@ -74,13 +74,17 @@ public class NavigationHistoryInterceptor implements HandlerInterceptor {
 
     private boolean isExcluded(String uri) {
         for (String prefix : EXCLUDED_PREFIXES) {
-            if (uri.startsWith(prefix)) return true;
+            if (uri.startsWith(prefix)) {
+                return true;
+            }
         }
         return EXCLUDED_EXACT.contains(uri);
     }
 
     private String buildPathWithQuery(String path, String query) {
-        if (query == null || query.isBlank()) return path;
+        if (query == null || query.isBlank()) {
+            return path;
+        }
         return path + "?" + query;
     }
 
@@ -88,16 +92,24 @@ public class NavigationHistoryInterceptor implements HandlerInterceptor {
         try {
             URI refererUri = URI.create(referer);
             String refererHost = refererUri.getHost();
-            if (refererHost == null) return null;
+            if (refererHost == null) {
+                return null;
+            }
 
-            if (!refererHost.equalsIgnoreCase(httpServletRequest.getServerName())) return null;
+            if (!refererHost.equalsIgnoreCase(httpServletRequest.getServerName())) {
+                return null;
+            }
 
             int refererPort = refererUri.getPort();
             int serverPort = httpServletRequest.getServerPort();
-            if (refererPort != -1 && refererPort != serverPort) return null;
+            if (refererPort != -1 && refererPort != serverPort) {
+                return null;
+            }
 
             String refererPath = refererUri.getRawPath();
-            if (refererPath == null || refererPath.isBlank()) return null;
+            if (refererPath == null || refererPath.isBlank()) {
+                return null;
+            }
 
             return buildPathWithQuery(refererPath, refererUri.getRawQuery());
         } catch (IllegalArgumentException illegalArgumentException) {

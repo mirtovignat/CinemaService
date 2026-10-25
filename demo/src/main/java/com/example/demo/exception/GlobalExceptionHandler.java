@@ -7,7 +7,7 @@ import com.example.demo.dto.user.PasswordChangingDTO;
 import com.example.demo.util.MessageUtils;
 import com.example.demo.web.util.RequestUtils;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.http.HttpStatus;
@@ -28,7 +28,7 @@ import java.util.Map;
 
 @Slf4j
 @ControllerAdvice
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class GlobalExceptionHandler {
 
     private static final Map<String, String> FORM_VIEW_BY_REQUEST_URI = Map.of(

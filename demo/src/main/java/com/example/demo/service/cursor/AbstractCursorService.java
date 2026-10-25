@@ -25,6 +25,7 @@ public abstract class AbstractCursorService<EntityType, DataType, ContextType>
     @Transactional(readOnly = true)
     public CursorPageResponse<DataType> page(String rawCursor,
                                              SortDirection sortDirection,
+                                             String query,
                                              ContextType contextType) {
 
         String cursorValue = null;
@@ -35,6 +36,7 @@ public abstract class AbstractCursorService<EntityType, DataType, ContextType>
         Slice<EntityType> slice = fetchSlice(
                 cursorValue,
                 sortDirection,
+                query,
                 PageRequest.of(0, defaultPageSize + 1),
                 contextType
         );
@@ -63,6 +65,7 @@ public abstract class AbstractCursorService<EntityType, DataType, ContextType>
 
     protected abstract Slice<EntityType> fetchSlice(String cursorValue,
                                                     SortDirection sortDirection,
+                                                    String query,
                                                     PageRequest pageRequest,
                                                     ContextType contextType);
 }

@@ -26,10 +26,10 @@ public record MovieFilter(
         LocalDate releaseDateTo,
 
         @Min(value = 1, message = "Длительность от должна быть не менее 1 секунды")
-        Integer durationFrom,
+        Long durationFrom,
 
         @Min(value = 1, message = "Длительность до должна быть не менее 1 секунды")
-        Integer durationTo,
+        Long durationTo,
 
         @DecimalMin(value = "0.1", message = "Рейтинг от должен быть не менее 0.1")
         @DecimalMax(value = "10.0", message = "Рейтинг от должен быть не более 10.0")

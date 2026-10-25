@@ -4,7 +4,7 @@ import com.example.demo.dto.user.AppUserDetails;
 import com.example.demo.dto.user.SessionUser;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -13,7 +13,7 @@ import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Component;
 
 @Component
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class SessionAuthenticator {
 
     private final SecurityContextRepository securityContextRepository;

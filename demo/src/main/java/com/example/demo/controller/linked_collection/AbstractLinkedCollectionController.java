@@ -19,7 +19,7 @@ import java.util.Map;
 @AllArgsConstructor
 public abstract class AbstractLinkedCollectionController<DTO> {
 
-    protected final AbstractLinkedCollectionService<?, DTO> collectionService;
+    protected final AbstractLinkedCollectionService<?> collectionService;
     protected final CursorPageService<UserCursorContext, DTO> cursorService;
     protected final ApiResponseFactory apiResponseFactory;
     protected final String viewName;
@@ -32,10 +32,12 @@ public abstract class AbstractLinkedCollectionController<DTO> {
     protected void populateCollectionModel(Long userId,
                                            CursorPageRequest cursorPageRequest,
                                            Model model) {
+        model.addAttribute("query", cursorPageRequest.query());
         model.addAttribute("response",
                 cursorService.page(
                         cursorPageRequest.cursor(),
                         cursorPageRequest.direction(),
+                        cursorPageRequest.query(),
                         UserCursorContext.builder()
                                 .userId(userId)
                                 .build()
@@ -51,6 +53,7 @@ public abstract class AbstractLinkedCollectionController<DTO> {
         return cursorService.page(
                 cursorPageRequest.cursor(),
                 cursorPageRequest.direction(),
+                cursorPageRequest.query(),
                 UserCursorContext.builder()
                         .userId(userId)
                         .build()
@@ -60,7 +63,10 @@ public abstract class AbstractLinkedCollectionController<DTO> {
     @GetMapping("/count")
     @ResponseBody
     public Long count(@CurrentUserId(required = false) Long userId) {
-        return collectionService.getNormalizedCount(userId);
+        if (userId == null) {
+            return 0L;
+        }
+        return collectionService.getCount(userId);
     }
 
     @PostMapping("/add/{id}")

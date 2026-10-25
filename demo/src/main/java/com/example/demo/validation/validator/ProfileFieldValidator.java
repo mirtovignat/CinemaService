@@ -2,17 +2,17 @@ package com.example.demo.validation.validator;
 
 import com.example.demo.dto.authorize.Identifier;
 import com.example.demo.dto.user.ProfileFieldUpdateDTO;
-import com.example.demo.util.PhoneNormalizer;
+import com.example.demo.util.normalizer.PhoneNormalizer;
 import com.example.demo.validation.annotation.ValidProfileField;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.regex.Pattern;
 
 @Component
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class ProfileFieldValidator
         implements ConstraintValidator<ValidProfileField, ProfileFieldUpdateDTO> {
 
@@ -28,6 +28,7 @@ public class ProfileFieldValidator
     private static final int USERNAME_MAX_LENGTH = 30;
 
     private final ValidEmailDomainValidator emailDomainValidator;
+    private final PhoneNormalizer phoneNormalizer;
 
     @Override
     public boolean isValid(ProfileFieldUpdateDTO profileFieldUpdateDTO,
@@ -71,7 +72,7 @@ public class ProfileFieldValidator
         if (phone.isEmpty()) {
             return true;
         }
-        if (!PhoneNormalizer.isValid(phone)) {
+        if (!phoneNormalizer.isValid(phone)) {
             return fail(constraintValidatorContext,
                     "Некорректный номер телефона. Формат: +код (XXX) XXX-XX-XX");
         }

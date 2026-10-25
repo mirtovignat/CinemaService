@@ -10,4 +10,5 @@ public record UserSidebarViewDTO(
         String patronymic,
         String email,
         String phone
-) {}
+) {
+}

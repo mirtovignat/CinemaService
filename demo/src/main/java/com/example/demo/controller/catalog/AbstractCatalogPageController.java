@@ -7,7 +7,7 @@ import com.example.demo.dto.response.UserCursorPageResponse;
 import com.example.demo.dto.user.UserSidebarViewDTO;
 import com.example.demo.mapper.entity.UserMapper;
 import com.example.demo.service.cursor.CursorPageService;
-import com.example.demo.service.movie.FilterMetaService;
+import com.example.demo.service.movie.MovieFilterMetaService;
 import com.example.demo.service.user.UserQueryService;
 import com.example.demo.web.resolver.CurrentUserId;
 import lombok.AllArgsConstructor;
@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 public abstract class AbstractCatalogPageController<DTO> {
 
     protected final CursorPageService<UserCursorContext, DTO> cursorService;
-    protected final FilterMetaService filterMetaService;
+    protected final MovieFilterMetaService movieFilterMetaService;
     protected final UserQueryService userQueryService;
     protected final UserMapper userMapper;
     protected final String viewName;
@@ -29,17 +29,21 @@ public abstract class AbstractCatalogPageController<DTO> {
     public String getPage(@ModelAttribute CursorPageRequest cursorPageRequest,
                           @CurrentUserId Long userId,
                           Model model) {
+        model.addAttribute("query", cursorPageRequest.query());
         model.addAttribute("response",
                 cursorService.page(
                         cursorPageRequest.cursor(),
                         cursorPageRequest.direction(),
+                        cursorPageRequest.query(),
                         UserCursorContext.builder()
                                 .userId(userId)
-                                .build()));
+                                .build()
+                )
+        );
         model.addAttribute("userSidebarViewDTO",
                 userMapper.toSidebarView(userQueryService.getUser(userId)));
         model.addAttribute("genres",
-                filterMetaService.getAllGenres());
+                movieFilterMetaService.getAllGenres());
         return viewName;
     }
 
@@ -50,9 +54,11 @@ public abstract class AbstractCatalogPageController<DTO> {
         CursorPageResponse<DTO> cursorPageResponse = cursorService.page(
                 cursorPageRequest.cursor(),
                 cursorPageRequest.direction(),
+                cursorPageRequest.query(),
                 UserCursorContext.builder()
                         .userId(userId)
-                        .build());
+                        .build()
+        );
         UserSidebarViewDTO userSidebarViewDTO = userMapper.toSidebarView(userQueryService.getUser(userId));
         return UserCursorPageResponse.<DTO>builder()
                 .cursorPageResponse(cursorPageResponse)

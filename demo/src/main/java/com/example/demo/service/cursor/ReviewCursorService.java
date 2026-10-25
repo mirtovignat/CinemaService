@@ -47,6 +47,7 @@ public class ReviewCursorService
     @Override
     protected Slice<RatedMovie> fetchSlice(String cursorValue,
                                            SortDirection sortDirection,
+                                           String query,
                                            PageRequest pageRequest,
                                            ReviewCursorContext reviewCursorContext) {
         Long movieId = reviewCursorContext.movieId();

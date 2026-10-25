@@ -8,51 +8,61 @@ import com.example.demo.mapper.entity.UserMapper;
 import com.example.demo.model.base.DeletableState;
 import com.example.demo.model.entity.User;
 import com.example.demo.repository.entity.UserRepository;
-import com.example.demo.util.PhoneNormalizer;
-import lombok.RequiredArgsConstructor;
+import com.example.demo.util.normalizer.PhoneNormalizer;
+import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
 @Service
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class AuthorizeService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final PhoneNormalizer phoneNormalizer;
 
     public void validateRegister(RegisterFormDTO registerFormDTO) {
         registerFormDTO.ifMismatch();
         registerFormDTO.validateAge();
-        if (userRepository.existsByUsername(registerFormDTO.username())) {
-            throw BusinessException.of(ErrorCode.ALREADY_REGISTERED);
-        }
-        if (userRepository.existsByEmail(registerFormDTO.email())) {
-            throw BusinessException.of(ErrorCode.ALREADY_REGISTERED);
-        }
+
         String phone = registerFormDTO.phone();
+        String normalizedPhone = null;
         if (phone != null && !phone.trim().isEmpty()) {
-            String normalizedPhone = PhoneNormalizer.normalizePhone(phone);
+            normalizedPhone = phoneNormalizer.normalize(phone);
             if (normalizedPhone == null) {
                 throw BusinessException.of(ErrorCode.PHONE_INVALID);
             }
-            if (userRepository.existsByPhone(normalizedPhone)) {
-                throw BusinessException.of(ErrorCode.ALREADY_REGISTERED);
-            }
+        }
+        validateUniqueness(registerFormDTO.username(), registerFormDTO.email(), normalizedPhone);
+    }
+
+    public void validateUniqueness(String username, String email, String normalizedPhone) {
+        if (userRepository.existsByUsername(username)) {
+            throw BusinessException.of(ErrorCode.ALREADY_REGISTERED);
+        }
+        if (userRepository.existsByEmail(email)) {
+            throw BusinessException.of(ErrorCode.ALREADY_REGISTERED);
+        }
+        if (normalizedPhone != null && userRepository.existsByPhone(normalizedPhone)) {
+            throw BusinessException.of(ErrorCode.ALREADY_REGISTERED);
         }
     }
 
-    @Transactional
     public SessionUser register(RegisterFormDTO registerFormDTO) {
-        User user = userMapper.fromRegisterForm(registerFormDTO);
-        user.setPasswordHash(passwordEncoder.encode(registerFormDTO.rawPassword()));
-        user.setPhone(PhoneNormalizer.normalizePhone(registerFormDTO.phone()));
-        user.setBalance(BigDecimal.ZERO);
-        user.setDeletableState(DeletableState.builder().build());
-        user = userRepository.saveAndFlush(user);
-        return SessionUser.from(user);
+        User preparedUser = prepareUser(registerFormDTO);
+        User savedUser = userRepository.saveAndFlush(preparedUser);
+        return SessionUser.from(savedUser);
+    }
+
+    private User prepareUser(RegisterFormDTO registerFormDTO) {
+        User preparedUser = userMapper.fromRegisterForm(registerFormDTO);
+        preparedUser.setPasswordHash(passwordEncoder.encode(registerFormDTO.rawPassword()));
+        preparedUser.setPhone(phoneNormalizer.normalize(registerFormDTO.phone()));
+        preparedUser.setBalance(BigDecimal.ZERO);
+        preparedUser.setDeletableState(DeletableState.builder().build());
+        return preparedUser;
     }
 }

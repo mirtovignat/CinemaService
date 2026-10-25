@@ -625,3 +625,9 @@
     .history-item-time { font-size: 0.62rem; }
     .history-item-actions .more-btn { width: 24px; height: 24px; }
 }
+.history-item.highlight {
+    border-color: #818cf8 !important;
+    box-shadow: 0 0 0 3px #818cf8, 0 0 20px rgba(129, 140, 248, 0.6);
+    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+    scroll-margin-top: 100px;
+}

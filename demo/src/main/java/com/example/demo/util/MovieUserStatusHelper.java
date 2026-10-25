@@ -7,14 +7,14 @@ import com.example.demo.dto.movie.MovieForUser;
 import com.example.demo.dto.movie.MovieUserStatus;
 import com.example.demo.model.entity.Movie;
 import com.example.demo.service.linked_collection.UserStatusResolver;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 import java.util.function.Function;
 
 @Component
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class MovieUserStatusHelper {
 
     private final UserStatusResolver userStatusResolver;

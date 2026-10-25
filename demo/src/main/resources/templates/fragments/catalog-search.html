@@ -3,22 +3,37 @@
 <body>
 
 <div th:fragment="catalogSearch" class="catalog-search">
-    <form class="catalog-search-form" onsubmit="return false;">
+    <form class="catalog-search-form" method="get" action="" data-catalog-search-form>
         <div class="catalog-search-input-wrapper" data-catalog-search-wrapper>
             <span class="catalog-search-icon">
                 <th:block th:replace="~{fragments/icons :: icon-search}"></th:block>
             </span>
-            <label for="catalogSearchInput" class="visually-hidden">Поиск по каталогу</label>
-            <input type="text" id="catalogSearchInput" name="q" autocomplete="off" placeholder="Поиск по началу названия..." maxlength="100" data-catalog-search-input>
-            <span class="catalog-search-autocomplete-overlay" data-catalog-search-overlay aria-hidden="true">
-                <span class="typed" data-catalog-search-typed></span>
-                <span class="hint"  data-catalog-search-hint></span>
-            </span>
-            <button type="button" class="catalog-search-clear" data-catalog-search-clear aria-label="Очистить поиск" title="Очистить">
+            <label for="catalogSearchInput" class="visually-hidden">Поиск по началу названия</label>
+            <input type="text"
+                   id="catalogSearchInput"
+                   name="query"
+                   autocomplete="off"
+                   placeholder="Поиск по началу названия..."
+                   maxlength="100"
+                   th:value="${query != null ? query : ''}"
+                   data-catalog-search-input>
+
+            <button type="button"
+                    class="catalog-search-clear"
+                    data-catalog-search-clear
+                    aria-label="Очистить поиск"
+                    title="Очистить">
                 <th:block th:replace="~{fragments/icons :: icon-x}"></th:block>
             </button>
+
+            <span class="catalog-search-autocomplete-overlay" data-catalog-search-overlay aria-hidden="true">
+                <span class="typed" data-catalog-search-typed></span>
+                <span class="hint" data-catalog-search-hint></span>
+            </span>
+
             <div class="catalog-search-suggestions" data-catalog-search-suggestions></div>
         </div>
+        <button type="submit" class="catalog-search-submit-btn">Найти</button>
     </form>
     <div class="catalog-search-empty" data-catalog-search-empty>Ничего не найдено</div>
 </div>

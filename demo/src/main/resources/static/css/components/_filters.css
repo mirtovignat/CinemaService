@@ -90,16 +90,35 @@
 #filterForm {
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
-    padding-right: 0;
+    overflow-y: scroll;
+    padding-right: 0.5rem;
     max-height: calc(90vh - 150px);
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.5) rgba(255, 255, 255, 0.05);
 }
 
 #filterForm::-webkit-scrollbar {
-    display: none;
-    width: 0;
+    display: block;
+    width: 8px;
+}
+
+#filterForm::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    margin: 4px 0;
+}
+
+#filterForm::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.45);
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+#filterForm::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.75);
+    background-clip: padding-box;
 }
 
 .filter-group {
@@ -236,6 +255,7 @@
     z-index: 1;
     max-height: 260px;
     overflow-y: auto;
+    overscroll-behavior: contain;
     background: #131730;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
@@ -766,6 +786,35 @@ input[type="date"]:focus {
     background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(139, 92, 246, 0.22));
     border-color: rgba(139, 92, 246, 0.35);
     box-shadow: 0 2px 10px rgba(99, 102, 241, 0.2);
+}
+
+.filter-field-error {
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    bottom: -14px;
+    font-size: 0.72rem;
+    line-height: 1.15;
+    color: #f87171;
+    pointer-events: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin: 0;
+    padding: 0;
+    z-index: 5;
+}
+
+.filter-group.has-error .filter-input,
+.filter-group.has-error .accordion-trigger {
+    border-color: #f87171;
+    box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.25);
+}
+
+.filter-input-with-clear.has-error .filter-input,
+.amount-input-with-stepper.has-error .filter-input {
+    border-color: #f87171;
+    box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.25);
 }
 
 @media (max-width: 520px) {

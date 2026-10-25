@@ -2,7 +2,7 @@ package com.example.demo.web.resolver;
 
 import com.example.demo.dto.user.SessionUser;
 import com.example.demo.web.security.CurrentUserProvider;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.core.MethodParameter;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
@@ -13,7 +13,7 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
 @Component
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class CurrentUserIdArgumentResolver implements HandlerMethodArgumentResolver {
 
     private final CurrentUserProvider currentUserProvider;

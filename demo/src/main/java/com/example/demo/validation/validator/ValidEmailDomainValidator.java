@@ -11,8 +11,7 @@ import java.time.Duration;
 import java.util.Locale;
 
 @Component
-public class ValidEmailDomainValidator
-        implements ConstraintValidator<ValidEmailDomain, String> {
+public class ValidEmailDomainValidator implements ConstraintValidator<ValidEmailDomain, String> {
 
     @Override
     public boolean isValid(

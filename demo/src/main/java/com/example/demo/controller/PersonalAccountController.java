@@ -9,7 +9,7 @@ import com.example.demo.dto.user.SessionUser;
 import com.example.demo.dto.user.UserForOwnerViewDTO;
 import com.example.demo.exception.SuccessCode;
 import com.example.demo.model.entity.User;
-import com.example.demo.service.movie.FilterMetaService;
+import com.example.demo.service.movie.MovieFilterMetaService;
 import com.example.demo.service.user.UserCommandService;
 import com.example.demo.service.user.UserQueryService;
 import com.example.demo.util.MessageUtils;
@@ -21,7 +21,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -32,13 +32,13 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.Map;
 
 @Controller
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class PersonalAccountController {
 
     private final UserCommandService userCommandService;
     private final UserQueryService userQueryService;
     private final MessageUtils messageUtils;
-    private final FilterMetaService filterMetaService;
+    private final MovieFilterMetaService movieFilterMetaService;
     private final SessionAuthenticator sessionAuthenticator;
     private final ApiResponseFactory apiResponseFactory;
 
@@ -47,7 +47,7 @@ public class PersonalAccountController {
         User user = userQueryService.getUser(userId);
         PersonalAccountResponse personalAccountResponse = userQueryService.buildUserPage(user);
         model.addAttribute("personalAccountResponse", personalAccountResponse);
-        model.addAttribute("genres", filterMetaService.getAllGenres());
+        model.addAttribute("genres", movieFilterMetaService.getAllGenres());
         return "account/personal-account";
     }
 
@@ -56,7 +56,7 @@ public class PersonalAccountController {
         User user = userQueryService.getUser(userId);
         PersonalAccountResponse personalAccountResponse = userQueryService.buildUserPage(user);
         model.addAttribute("personalAccountResponse", personalAccountResponse);
-        model.addAttribute("genres", filterMetaService.getAllGenres());
+        model.addAttribute("genres", movieFilterMetaService.getAllGenres());
         return "account/profile";
     }
 
@@ -74,7 +74,8 @@ public class PersonalAccountController {
             HttpServletResponse httpServletResponse
     ) {
         Long userId = sessionUser.id();
-        ProfileFieldUpdateDTO validatedProfileFieldUpdateDTO = userCommandService.prepareAndValidateField(profileFieldUpdateDTO, userId);
+        ProfileFieldUpdateDTO validatedProfileFieldUpdateDTO =
+                userCommandService.prepareAndValidateField(profileFieldUpdateDTO, userId);
         userCommandService.updateField(userId, validatedProfileFieldUpdateDTO);
 
         SessionUser updatedSessionUser = sessionUser;
@@ -132,7 +133,8 @@ public class PersonalAccountController {
             HttpSession httpSession,
             RedirectAttributes redirectAttributes
     ) {
-        userCommandService.deleteAccount(userId);
+        String suffix = userCommandService.prepareDeleteAccount(userId);
+        userCommandService.deleteAccount(userId, suffix);
         httpSession.invalidate();
         String message = messageUtils.getSuccess(SuccessCode.ACCOUNT_HAS_BEEN_REMOVED);
         redirectAttributes.addFlashAttribute("successMessage", message);

@@ -32,6 +32,11 @@
         };
     }
 
+    function formatDurationHuman(totalSecondsValue) {
+        var parts = splitDuration(totalSecondsValue);
+        return parts.h + ' ч. ' + parts.m + ' мин. ' + parts.s + ' сек.';
+    }
+
     function applyPriceLimitsToUi() {
         var priceFromInput = document.getElementById('priceFrom');
         var priceToInput = document.getElementById('priceTo');
@@ -81,58 +86,6 @@
         }
     }
 
-    function stripEmptyFields(formElement) {
-        formElement.querySelectorAll('input, select, textarea').forEach(function (fieldElement) {
-            if (fieldElement.type === 'checkbox' || fieldElement.type === 'radio') {
-                fieldElement.disabled = false;
-                return;
-            }
-            var trimmedValue = (fieldElement.value || '').trim();
-            fieldElement.disabled = trimmedValue === '';
-        });
-
-        disableFullyCheckedCheckboxGroups(formElement);
-    }
-
-    function disableFullyCheckedCheckboxGroups(formElement) {
-        var checkboxGroups = {};
-
-        formElement.querySelectorAll('input[type="checkbox"][name]').forEach(function (checkboxElement) {
-            var checkboxName = checkboxElement.name;
-            if (!checkboxGroups[checkboxName]) {
-                checkboxGroups[checkboxName] = [];
-            }
-            checkboxGroups[checkboxName].push(checkboxElement);
-        });
-
-        Object.keys(checkboxGroups).forEach(function (checkboxName) {
-            var groupCheckboxes = checkboxGroups[checkboxName];
-            var checkedCount = groupCheckboxes.filter(function (checkboxElement) {
-                return checkboxElement.checked;
-            }).length;
-
-            var allChecked = groupCheckboxes.length > 0 && checkedCount === groupCheckboxes.length;
-            var noneChecked = checkedCount === 0;
-
-            if (allChecked || noneChecked) {
-                groupCheckboxes.forEach(function (checkboxElement) {
-                    checkboxElement.disabled = true;
-                });
-                return;
-            }
-
-            groupCheckboxes.forEach(function (checkboxElement) {
-                checkboxElement.disabled = !checkboxElement.checked;
-            });
-        });
-    }
-
-    function restoreFields(formElement) {
-        formElement.querySelectorAll('input, select, textarea').forEach(function (fieldElement) {
-            fieldElement.disabled = false;
-        });
-    }
-
     function enforceCheckboxLimit(dropdownElementId, maxSelectedCount, labelText) {
         var dropdownElement = document.getElementById(dropdownElementId);
         if (!dropdownElement) return;
@@ -142,25 +95,16 @@
             if (!targetElement || targetElement.type !== 'checkbox') return;
             if (targetElement.name !== 'directors' && targetElement.name !== 'genres') return;
 
-            var allCheckboxes = dropdownElement.querySelectorAll(
-                'input[name="' + targetElement.name + '"]'
-            );
-            var checkedCheckboxes = dropdownElement.querySelectorAll(
-                'input[name="' + targetElement.name + '"]:checked'
-            );
+            var allCheckboxes = dropdownElement.querySelectorAll('input[name="' + targetElement.name + '"]');
+            var checkedCheckboxes = dropdownElement.querySelectorAll('input[name="' + targetElement.name + '"]:checked');
 
             var allChecked = allCheckboxes.length > 0 && checkedCheckboxes.length === allCheckboxes.length;
-            if (allChecked) {
-                return;
-            }
+            if (allChecked) return;
 
             if (checkedCheckboxes.length > maxSelectedCount) {
                 targetElement.checked = false;
                 if (typeof showFlashMessage === 'function') {
-                    showFlashMessage(
-                        'Можно выбрать не более ' + maxSelectedCount + ' значений в «' + labelText + '»',
-                        'warning'
-                    );
+                    showFlashMessage('Можно выбрать не более ' + maxSelectedCount + ' значений в «' + labelText + '»', 'warning');
                 }
             }
         });
@@ -170,10 +114,6 @@
         var headerSearchInput = document.getElementById('headerSearchInput');
         if (!headerSearchInput) return true;
         var trimmedQuery = headerSearchInput.value.trim();
-        if (trimmedQuery.length === 0) {
-            headerSearchInput.focus();
-            return false;
-        }
         if (trimmedQuery.length > 100) {
             if (typeof showFlashMessage === 'function') {
                 showFlashMessage('Слишком длинный запрос (максимум 100 символов)', 'warning');
@@ -225,6 +165,8 @@
 
     function initFilterAccordions() {
         document.querySelectorAll('.accordion-trigger').forEach(function (accordionTriggerElement) {
+            if (accordionTriggerElement.dataset.accordionBound === '1') return;
+            accordionTriggerElement.dataset.accordionBound = '1';
             accordionTriggerElement.addEventListener('click', function (clickEvent) {
                 clickEvent.preventDefault();
                 clickEvent.stopPropagation();
@@ -243,6 +185,8 @@
 
     function initFilterClearButtons() {
         document.querySelectorAll('.filter-clear-btn').forEach(function (clearButtonElement) {
+            if (clearButtonElement.dataset.clearBound === '1') return;
+            clearButtonElement.dataset.clearBound = '1';
             var targetElementId = clearButtonElement.getAttribute('data-clear-target');
             if (!targetElementId) return;
             var targetInputElement = document.getElementById(targetElementId);
@@ -326,111 +270,137 @@
         return labelElement;
     }
 
-    function fillAccordionList(dropdownElement, checkboxName, itemsList, displayFunction) {
-        if (!dropdownElement) return;
+    function appendCheckboxesToAccordion(dropdownElement, checkboxName, itemsList, displayFunction) {
         var accordionListElement = dropdownElement.querySelector('[data-accordion-list]');
-        var accordionEmptyElement = dropdownElement.querySelector('[data-accordion-empty]');
         if (!accordionListElement) return;
 
-        accordionListElement.innerHTML = '';
         (itemsList || []).forEach(function (itemValue) {
             var displayValue = displayFunction ? displayFunction(itemValue) : itemValue;
             accordionListElement.appendChild(buildAccordionCheckbox(checkboxName, itemValue, displayValue));
         });
 
-        if (accordionEmptyElement) accordionEmptyElement.classList.remove('show');
-
         var selectedAttributeValue = dropdownElement.getAttribute('data-selected');
         if (selectedAttributeValue && selectedAttributeValue.trim() !== '') {
-            var selectedValues = selectedAttributeValue.split(',').map(function (selectedValue) {
-                return selectedValue.trim();
+            var selectedValues = selectedAttributeValue.split(',').map(function (s) { return s.trim(); });
+            accordionListElement.querySelectorAll('input[name="' + checkboxName + '"]').forEach(function (chk) {
+                if (selectedValues.indexOf(chk.value) !== -1) chk.checked = true;
             });
-            accordionListElement.querySelectorAll('input[name="' + checkboxName + '"]').forEach(function (checkboxElement) {
-                checkboxElement.checked = selectedValues.indexOf(checkboxElement.value) !== -1;
-            });
-        }
-
-        if (window.FiltersSearch) {
-            window.FiltersSearch.init(dropdownElement.closest('[data-accordion]') || dropdownElement);
         }
     }
 
-    function loadFilterOptions() {
-        var directorsDropdownElement = document.getElementById('directorsDropdown');
-        var genresDropdownElement = document.getElementById('genresDropdown');
+    function setupInfiniteList(dropdownId, checkboxName, endpoint, displayFunction) {
+        var dropdownElement = document.getElementById(dropdownId);
+        if (!dropdownElement) return;
 
-        var requestsList = [];
+        var accordionListElement = dropdownElement.querySelector('[data-accordion-list]');
+        var emptyElement = dropdownElement.querySelector('[data-accordion-empty]');
+        if (!accordionListElement) return;
 
-        if (directorsDropdownElement) {
-            requestsList.push(
-                fetch('/filters/directors', { headers: AJAX_HEADERS })
-                    .then(function (response) { return response.ok ? response.json() : []; })
-                    .then(function (directorsList) {
-                        fillAccordionList(
-                            directorsDropdownElement,
-                            'directors',
-                            sortDirectorsBySurname(directorsList || []),
-                            displayDirectorName
-                        );
-                    })
-                    .catch(function () {
-                        fillAccordionList(directorsDropdownElement, 'directors', [], displayDirectorName);
-                    })
-            );
+        var isLoading = false;
+        var hasMore = true;
+        var nextCursor = null;
+        var currentQuery = '';
+
+        var sentinel = document.createElement('div');
+        sentinel.style.height = '20px';
+        sentinel.style.width = '100%';
+        sentinel.style.pointerEvents = 'none';
+        sentinel.className = 'infinite-scroll-sentinel';
+        accordionListElement.after(sentinel);
+
+        var observer = new IntersectionObserver(function (entries) {
+            if (entries[0].isIntersecting) loadData();
+        }, { root: dropdownElement, rootMargin: '50px' });
+        observer.observe(sentinel);
+
+        function loadData() {
+            if (isLoading || !hasMore) return;
+            isLoading = true;
+            sentinel.textContent = 'Загрузка...';
+            sentinel.style.color = '#a78bfa';
+            sentinel.style.fontSize = '0.8rem';
+            sentinel.style.textAlign = 'center';
+
+            var url = endpoint + '?query=' + encodeURIComponent(currentQuery);
+            if (nextCursor) url += '&cursor=' + encodeURIComponent(nextCursor);
+
+            fetch(url, { headers: AJAX_HEADERS })
+                .then(function (r) { return r.ok ? r.json() : { items: [], hasMore: false }; })
+                .then(function (data) {
+                    var items = data.items || [];
+                    hasMore = !!data.hasMore;
+                    nextCursor = data.nextCursor || null;
+
+                    // Сортируем только для отображения
+                    var displayData = checkboxName === 'directors'
+                        ? sortDirectorsBySurname(items)
+                        : sortGenresAlphabetically(items);
+
+                    appendCheckboxesToAccordion(dropdownElement, checkboxName, displayData, displayFunction);
+                    sentinel.textContent = '';
+
+                    if (!hasMore) observer.unobserve(sentinel);
+
+                    if (emptyElement) {
+                        var hasVisibleItems = accordionListElement.querySelectorAll('.accordion-item').length > 0;
+                        emptyElement.classList.toggle('show', !hasVisibleItems && currentQuery.trim() !== '');
+                    }
+                })
+                .catch(function () {
+                    sentinel.textContent = 'Ошибка загрузки';
+                })
+                .finally(function () {
+                    isLoading = false;
+                });
         }
 
-        if (genresDropdownElement) {
-            requestsList.push(
-                fetch('/filters/genres', { headers: AJAX_HEADERS })
-                    .then(function (response) { return response.ok ? response.json() : []; })
-                    .then(function (genresList) {
-                        fillAccordionList(
-                            genresDropdownElement,
-                            'genres',
-                            sortGenresAlphabetically(genresList || [])
-                        );
-                    })
-                    .catch(function () { fillAccordionList(genresDropdownElement, 'genres', []); })
-            );
+        var searchInput = dropdownElement.querySelector('[data-accordion-search-input]');
+        if (searchInput) {
+            var debounceTimer = null;
+            searchInput.addEventListener('input', function () {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(function () {
+                    currentQuery = searchInput.value;
+                    nextCursor = null;
+                    hasMore = true;
+                    accordionListElement.innerHTML = '';
+                    observer.observe(sentinel);
+
+                    if (window.__selectAllState && window.__selectAllState[dropdownId]) {
+                        window.__selectAllState[dropdownId]();
+                    }
+                    loadData();
+                }, 300);
+            });
         }
 
-        requestsList.push(
-            fetch('/filters/min-max/price', { headers: AJAX_HEADERS })
-                .then(function (response) { return response.ok ? response.json() : null; })
-                .then(function (rangeDto) {
-                    if (!rangeDto) return;
-                    if (rangeDto.min != null) FILTER_LIMITS.priceMin = Number(rangeDto.min);
-                    if (rangeDto.max != null) FILTER_LIMITS.priceMax = Number(rangeDto.max);
-                    applyPriceLimitsToUi();
-                })
-                .catch(function () {})
-        );
+        loadData();
+    }
 
-        requestsList.push(
-            fetch('/filters/min-max/duration', { headers: AJAX_HEADERS })
-                .then(function (response) { return response.ok ? response.json() : null; })
-                .then(function (rangeDto) {
-                    if (!rangeDto) return;
-                    if (rangeDto.min != null) FILTER_LIMITS.durationMin = Number(rangeDto.min);
-                    if (rangeDto.max != null) FILTER_LIMITS.durationMax = Number(rangeDto.max);
-                    applyDurationLimitsToUi();
-                })
-                .catch(function () {})
-        );
-
-        requestsList.push(
-            fetch('/filters/min-max/release-date', { headers: AJAX_HEADERS })
-                .then(function (response) { return response.ok ? response.json() : null; })
-                .then(function (rangeDto) {
-                    if (!rangeDto) return;
-                    if (rangeDto.min != null) FILTER_LIMITS.releaseDateMin = String(rangeDto.min);
-                    if (rangeDto.max != null) FILTER_LIMITS.releaseDateMax = String(rangeDto.max);
-                    applyReleaseDateLimitsToUi();
-                })
-                .catch(function () {})
-        );
-
-        return Promise.all(requestsList);
+    function loadFilterMeta() {
+        return fetch('/filters/meta', { headers: AJAX_HEADERS })
+            .then(function (response) { return response.ok ? response.json() : null; })
+            .then(function (meta) {
+                if (!meta) return;
+                if (meta.ranges) {
+                    if (meta.ranges.price) {
+                        if (meta.ranges.price.min != null) FILTER_LIMITS.priceMin = Number(meta.ranges.price.min);
+                        if (meta.ranges.price.max != null) FILTER_LIMITS.priceMax = Number(meta.ranges.price.max);
+                    }
+                    if (meta.ranges.duration) {
+                        if (meta.ranges.duration.min != null) FILTER_LIMITS.durationMin = Number(meta.ranges.duration.min);
+                        if (meta.ranges.duration.max != null) FILTER_LIMITS.durationMax = Number(meta.ranges.duration.max);
+                    }
+                    if (meta.ranges.releaseDate) {
+                        if (meta.ranges.releaseDate.min != null) FILTER_LIMITS.releaseDateMin = String(meta.ranges.releaseDate.min);
+                        if (meta.ranges.releaseDate.max != null) FILTER_LIMITS.releaseDateMax = String(meta.ranges.releaseDate.max);
+                    }
+                }
+                applyPriceLimitsToUi();
+                applyDurationLimitsToUi();
+                applyReleaseDateLimitsToUi();
+            })
+            .catch(function () {});
     }
 
     function calculateRangeMinutes() {
@@ -461,12 +431,19 @@
     }
 
     function clearFilterFieldErrors() {
-        document.querySelectorAll('.filter-field-error').forEach(function (errorElement) {
-            errorElement.remove();
+        document.querySelectorAll('.filter-group.has-error').forEach(function (groupEl) {
+            groupEl.classList.remove('has-error');
+        });
+        document.querySelectorAll('.filter-field-error').forEach(function (errEl) {
+            errEl.textContent = '';
+            errEl.style.display = 'none';
         });
         document.querySelectorAll('.filter-input, .accordion-trigger').forEach(function (inputElement) {
             inputElement.style.borderColor = '';
             inputElement.style.boxShadow = '';
+        });
+        document.querySelectorAll('.filter-input-with-clear.has-error, .amount-input-with-stepper.has-error').forEach(function (el) {
+            el.classList.remove('has-error');
         });
         var ratingFilterErrorElement = document.getElementById('ratingFilterError');
         if (ratingFilterErrorElement) {
@@ -477,19 +454,26 @@
 
     function showFilterFieldError(inputElement, errorMessage) {
         if (!inputElement) return;
+
         var groupElement = inputElement.closest('.filter-group') || inputElement.parentNode;
-        if (groupElement) {
-            var errorElement = document.createElement('div');
+        if (!groupElement) return;
+
+        groupElement.classList.add('has-error');
+
+        var errorElement = groupElement.querySelector('.filter-field-error');
+        if (!errorElement) {
+            errorElement = document.createElement('div');
             errorElement.className = 'filter-field-error';
-            errorElement.textContent = errorMessage;
-            errorElement.style.color = '#f87171';
-            errorElement.style.fontSize = '0.78rem';
-            errorElement.style.marginTop = '4px';
-            errorElement.style.lineHeight = '1.3';
             groupElement.appendChild(errorElement);
         }
-        inputElement.style.borderColor = '#f87171';
-        inputElement.style.boxShadow = '0 0 0 3px rgba(248, 113, 113, 0.3)';
+
+        errorElement.textContent = errorMessage;
+        errorElement.title = errorMessage;
+        errorElement.style.display = '';
+
+        var wrapper = inputElement.closest('.filter-input-with-clear, .amount-input-with-stepper');
+        if (wrapper) wrapper.classList.add('has-error');
+
         try { inputElement.focus(); } catch (focusError) {}
     }
 
@@ -497,6 +481,14 @@
         var allCheckboxes = document.querySelectorAll('input[name="' + checkboxName + '"]');
         var checkedCheckboxes = document.querySelectorAll('input[name="' + checkboxName + '"]:checked');
         return { total: allCheckboxes.length, checked: checkedCheckboxes.length };
+    }
+
+    function validateDateRange(fromValue, toValue) {
+        if (!fromValue || !toValue) return { ok: true };
+        if (fromValue > toValue) {
+            return { ok: false, field: 'to', error: 'Дата «до» не может быть раньше даты «от»' };
+        }
+        return { ok: true };
     }
 
     function validateFilter() {
@@ -511,7 +503,6 @@
         var ratingToInput = document.getElementById('ratingTo');
         var releaseDateFromInput = document.getElementById('releaseDateFrom');
         var releaseDateToInput = document.getElementById('releaseDateTo');
-        var headerSearchInput = document.getElementById('headerSearchInput');
 
         var fromHoursValue = parseInt((document.getElementById('durationFromHours') || {}).value || '0', 10);
         var fromMinutesValue = parseInt((document.getElementById('durationFromMinutes') || {}).value || '0', 10);
@@ -585,7 +576,7 @@
         var releaseDateFromValue = releaseDateFromInput ? releaseDateFromInput.value : '';
         var releaseDateToValue = releaseDateToInput ? releaseDateToInput.value : '';
 
-        var dateRangeValidationResult = Validators.dateRange(releaseDateFromValue, releaseDateToValue);
+        var dateRangeValidationResult = validateDateRange(releaseDateFromValue, releaseDateToValue);
         if (!dateRangeValidationResult.ok) {
             var targetDateInput = dateRangeValidationResult.field === 'to' ? releaseDateToInput : releaseDateFromInput;
             showFilterFieldError(targetDateInput, dateRangeValidationResult.error);
@@ -618,8 +609,8 @@
 
         var maxDurationValues = splitDuration(FILTER_LIMITS.durationMax);
         var durationErrorText =
-            'Минимальная длительность — ' + FILTER_LIMITS.durationMin + ' сек., ' +
-            'максимальная — ' + maxDurationValues.h + ' ч. ' + maxDurationValues.m + ' мин. ' + maxDurationValues.s + ' сек.';
+            'Минимальная длительность — ' + formatDurationHuman(FILTER_LIMITS.durationMin) + ', ' +
+            'максимальная — ' + formatDurationHuman(FILTER_LIMITS.durationMax) + '.';
 
         var fromAllZero = fromHoursValue === 0 && fromMinutesValue === 0 && fromSecondsValue === 0 &&
             (durationFromHoursElement.value !== '' || durationFromMinutesElement.value !== '' || durationFromSecondsElement.value !== '');
@@ -638,7 +629,10 @@
         }
 
         if (!hasError && totalToSeconds > 0 && totalToSeconds < FILTER_LIMITS.durationMin) {
-            showFilterFieldError(durationToHoursElement, 'Длительность «до» должна быть не менее ' + FILTER_LIMITS.durationMin + ' сек.');
+            showFilterFieldError(
+                durationToHoursElement,
+                'Длительность «до» должна быть не менее ' + formatDurationHuman(FILTER_LIMITS.durationMin)
+            );
             hasError = true;
         }
 
@@ -651,38 +645,6 @@
         }
 
         if (hasError) return false;
-
-        var genresState = getCheckboxState('genres');
-        var directorsState = getCheckboxState('directors');
-
-        var genresMeaningful = genresState.checked > 0 && genresState.checked < genresState.total;
-        var directorsMeaningful = directorsState.checked > 0 && directorsState.checked < directorsState.total;
-
-        var isWideFilter = true;
-
-        if (parsedPriceFrom !== null && parsedPriceFrom > FILTER_LIMITS.priceMin) isWideFilter = false;
-        if (parsedPriceTo !== null && parsedPriceTo < FILTER_LIMITS.priceMax) isWideFilter = false;
-        if (parsedRatingFrom !== null && parsedRatingFrom > 0.1) isWideFilter = false;
-        if (parsedRatingTo !== null && parsedRatingTo < 10) isWideFilter = false;
-
-        if (totalFromSeconds >= FILTER_LIMITS.durationMin) isWideFilter = false;
-        if (totalToSeconds > 0) isWideFilter = false;
-        if (genresMeaningful) isWideFilter = false;
-        if (directorsMeaningful) isWideFilter = false;
-        if (headerSearchInput && headerSearchInput.value.trim() !== '') isWideFilter = false;
-        if (releaseDateFromValue) isWideFilter = false;
-        if (releaseDateToValue) isWideFilter = false;
-
-        var sortByHiddenField = getHiddenSortField('sortBy');
-        if (sortByHiddenField && sortByHiddenField.value.trim() !== '') isWideFilter = false;
-
-        if (isWideFilter) {
-            toggleFiltersModal(false);
-            if (typeof showFlashMessage === 'function') {
-                showFlashMessage('Укажите хотя бы один фильтр', 'warning');
-            }
-            return false;
-        }
 
         return true;
     }
@@ -886,7 +848,9 @@
             window.setupDurationStrictFilter('durationToSeconds');
         }
 
-        loadFilterOptions().then(function () {
+        loadFilterMeta().then(function () {
+            setupInfiniteList('directorsDropdown', 'directors', '/filters/directors/search', displayDirectorName);
+            setupInfiniteList('genresDropdown', 'genres', '/filters/genres/search', null);
             setupSelectAllCheckbox('directorsDropdown', 'directors');
             setupSelectAllCheckbox('genresDropdown', 'genres');
             enforceCheckboxLimit('directorsDropdown', MAX_SELECTED_PER_DROPDOWN, 'Режиссёры');
@@ -894,20 +858,250 @@
         });
     }
 
-    function initFormSubmit() {
+    function attachFiltersAsHiddenInputsTo(targetForm) {
+        if (!targetForm) return;
+        targetForm.querySelectorAll('[data-from-filters="1"]').forEach(function (el) { el.remove(); });
+
         var filterFormElement = document.getElementById('filterForm');
         if (!filterFormElement) return;
 
-        filterFormElement.addEventListener('submit', function (submitEvent) {
-            if (typeof validateFilter === 'function' && !validateFilter()) {
-                submitEvent.preventDefault();
+        filterFormElement.querySelectorAll('input, select, textarea').forEach(function (sourceEl) {
+            if (!sourceEl.name) return;
+
+            if (sourceEl.type === 'checkbox' || sourceEl.type === 'radio') {
+                if (!sourceEl.checked) return;
+                var hiddenCheckbox = document.createElement('input');
+                hiddenCheckbox.type = 'hidden';
+                hiddenCheckbox.name = sourceEl.name;
+                hiddenCheckbox.value = sourceEl.value;
+                hiddenCheckbox.setAttribute('data-from-filters', '1');
+                targetForm.appendChild(hiddenCheckbox);
                 return;
             }
-            stripEmptyFields(filterFormElement);
-        });
 
-        window.addEventListener('pageshow', function (pageShowEvent) {
-            if (pageShowEvent.persisted) restoreFields(filterFormElement);
+            var value = (sourceEl.value || '').trim();
+            if (value === '') return;
+
+            var hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = sourceEl.name;
+            hiddenInput.value = value;
+            hiddenInput.setAttribute('data-from-filters', '1');
+            targetForm.appendChild(hiddenInput);
+        });
+    }
+
+    function removeEmptyFormFields(targetForm) {
+        if (!targetForm) return;
+        targetForm.querySelectorAll('input, select, textarea').forEach(function (field) {
+            if (!field.name) return;
+            if (field.type === 'submit' || field.type === 'button' || field.type === 'reset') return;
+            if (field.type === 'checkbox' || field.type === 'radio') {
+                if (!field.checked) field.remove();
+                return;
+            }
+            if ((field.value || '').trim() === '') {
+                field.remove();
+            }
+        });
+    }
+
+    function isFilterMeaningful() {
+        var filterFormElement = document.getElementById('filterForm');
+        if (!filterFormElement) return false;
+
+        var currentSortSelection = getCurrentSortSelection();
+        if (currentSortSelection) return true;
+
+        var priceFromInput = document.getElementById('priceFrom');
+        var priceToInput = document.getElementById('priceTo');
+        var ratingFromInput = document.getElementById('ratingFrom');
+        var ratingToInput = document.getElementById('ratingTo');
+        var releaseDateFromInput = document.getElementById('releaseDateFrom');
+        var releaseDateToInput = document.getElementById('releaseDateTo');
+
+        function parseNum(el) {
+            if (!el) return null;
+            var raw = (el.value || '').trim();
+            if (raw === '') return null;
+            var n = parseFloat(raw.replace(',', '.'));
+            return isNaN(n) ? null : n;
+        }
+
+        function parseDate(el) {
+            if (!el) return null;
+            var raw = (el.value || '').trim();
+            return raw === '' ? null : raw;
+        }
+
+        var priceFrom = parseNum(priceFromInput);
+        var priceTo = parseNum(priceToInput);
+        var ratingFrom = parseNum(ratingFromInput);
+        var ratingTo = parseNum(ratingToInput);
+        var releaseDateFrom = parseDate(releaseDateFromInput);
+        var releaseDateTo = parseDate(releaseDateToInput);
+
+        if (priceFrom !== null && priceFrom > FILTER_LIMITS.priceMin) return true;
+        if (priceTo !== null && priceTo < FILTER_LIMITS.priceMax) return true;
+
+        if (ratingFrom !== null && ratingFrom > 0.1) return true;
+        if (ratingTo !== null && ratingTo < 10) return true;
+
+        var fromHours = parseInt((document.getElementById('durationFromHours') || {}).value || '0', 10) || 0;
+        var fromMinutes = parseInt((document.getElementById('durationFromMinutes') || {}).value || '0', 10) || 0;
+        var fromSeconds = parseInt((document.getElementById('durationFromSeconds') || {}).value || '0', 10) || 0;
+        var toHours = parseInt((document.getElementById('durationToHours') || {}).value || '0', 10) || 0;
+        var toMinutes = parseInt((document.getElementById('durationToMinutes') || {}).value || '0', 10) || 0;
+        var toSeconds = parseInt((document.getElementById('durationToSeconds') || {}).value || '0', 10) || 0;
+
+        var fromTotalSeconds = fromHours * 3600 + fromMinutes * 60 + fromSeconds;
+        var toTotalSeconds = toHours * 3600 + toMinutes * 60 + toSeconds;
+
+        if (fromTotalSeconds > FILTER_LIMITS.durationMin) return true;
+        if (toTotalSeconds > 0 && toTotalSeconds < FILTER_LIMITS.durationMax) return true;
+
+        if (releaseDateFrom !== null && !FILTER_LIMITS.releaseDateMin) return true;
+        if (releaseDateFrom !== null && FILTER_LIMITS.releaseDateMin && releaseDateFrom > FILTER_LIMITS.releaseDateMin) return true;
+        if (releaseDateTo !== null && !FILTER_LIMITS.releaseDateMax) return true;
+        if (releaseDateTo !== null && FILTER_LIMITS.releaseDateMax && releaseDateTo < FILTER_LIMITS.releaseDateMax) return true;
+
+        var genresState = getCheckboxState('genres');
+        if (genresState.checked > 0) return true;
+
+        var directorsState = getCheckboxState('directors');
+        if (directorsState.checked > 0) return true;
+
+        return false;
+    }
+
+    function submitCombinedSearch() {
+        var headerForm = document.getElementById('headerSearchForm');
+        if (!headerForm) return;
+
+        if (typeof validateFilter === 'function' && !validateFilter()) return;
+
+        var headerInput = document.getElementById('headerSearchInput');
+        var trimmedTitle = headerInput ? headerInput.value.trim() : '';
+        var hasTitle = trimmedTitle !== '';
+        var hasMeaningfulFilters = isFilterMeaningful();
+
+        if (!hasTitle && !hasMeaningfulFilters) {
+            if (typeof showFlashMessage === 'function') {
+                showFlashMessage('Введите запрос или задайте значимые фильтры', 'warning');
+            }
+            return;
+        }
+
+        if (headerInput) {
+            if (hasTitle) {
+                headerInput.setAttribute('name', 'title');
+                headerInput.value = trimmedTitle;
+            } else {
+                headerInput.removeAttribute('name');
+            }
+        }
+
+        attachFiltersAsHiddenInputsTo(headerForm);
+        removeEmptyFormFields(headerForm);
+
+        headerForm.removeAttribute('onsubmit');
+        headerForm.submit();
+    }
+
+    function applyFiltersFromModal() {
+        if (typeof validateFilter === 'function' && !validateFilter()) return;
+
+        if (!isFilterMeaningful()) {
+            if (typeof showFlashMessage === 'function') {
+                showFlashMessage('Выбранные фильтры не сужают выборку. Задайте значимые параметры.', 'warning');
+            }
+            return;
+        }
+
+        toggleFiltersModal(false);
+        if (typeof showFlashMessage === 'function') {
+            showFlashMessage('Фильтры подготовлены. Нажмите «Найти», чтобы применить.', 'info');
+        }
+    }
+
+    function getFocusableFilterFields() {
+        var filterFormElement = document.getElementById('filterForm');
+        if (!filterFormElement) return [];
+        return Array.prototype.slice.call(
+            filterFormElement.querySelectorAll(
+                'input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled]), .accordion-trigger, .sort-filter-btn'
+            )
+        ).filter(function (el) {
+            if (el.offsetParent === null) return false;
+            if (el.classList && el.classList.contains('accordion-item')) return false;
+            return true;
+        });
+    }
+
+    function focusNextFilterField(currentEl) {
+        var fields = getFocusableFilterFields();
+        if (fields.length === 0) return false;
+        var currentIndex = fields.indexOf(currentEl);
+        var nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % fields.length;
+        var nextEl = fields[nextIndex];
+        if (nextEl) {
+            try { nextEl.focus(); } catch (focusError) {}
+            if (nextEl.tagName === 'INPUT' && (nextEl.type === 'text' || nextEl.type === 'date')) {
+                try { nextEl.select(); } catch (selectError) {}
+            }
+            return true;
+        }
+        return false;
+    }
+
+    function isFilterInputElement(el) {
+        if (!el) return false;
+        if (el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA' && el.tagName !== 'SELECT') return false;
+        if (el.type === 'hidden') return false;
+        return true;
+    }
+
+    function initFilterEnterKeyHandler() {
+        var filtersModalOverlay = document.getElementById('filtersModalOverlay');
+        if (!filtersModalOverlay) return;
+        if (filtersModalOverlay.dataset.enterBound === '1') return;
+        filtersModalOverlay.dataset.enterBound = '1';
+
+        filtersModalOverlay.addEventListener('keydown', function (e) {
+            if (e.key !== 'Enter') return;
+            if (e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) return;
+
+            var active = document.activeElement;
+            var insideModal = filtersModalOverlay.contains(active);
+
+            if (!insideModal) return;
+
+            if (isFilterInputElement(active)) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                var fields = getFocusableFilterFields();
+                var isLastField = fields.length > 0 && fields[fields.length - 1] === active;
+
+                if (isLastField) {
+                    applyFiltersFromModal();
+                } else {
+                    focusNextFilterField(active);
+                }
+                return;
+            }
+
+            if (active && active.classList && active.classList.contains('accordion-trigger')) {
+                return;
+            }
+
+            if (active && active.classList && active.classList.contains('sort-filter-btn')) {
+                return;
+            }
+
+            e.preventDefault();
+            e.stopPropagation();
+            applyFiltersFromModal();
         });
     }
 
@@ -1007,12 +1201,83 @@
         });
     }
 
+    function initFiltersApplyButton() {
+        var applyBtn = document.getElementById('filtersApplyBtn');
+        if (!applyBtn) return;
+        if (applyBtn.dataset.applyBound === '1') return;
+        applyBtn.dataset.applyBound = '1';
+        applyBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            applyFiltersFromModal();
+        });
+    }
+
+    function initOverlayAndClose() {
+        var overlay = document.getElementById('filtersModalOverlay');
+        if (overlay && overlay.dataset.overlayBound !== '1') {
+            overlay.dataset.overlayBound = '1';
+            overlay.addEventListener('click', function (e) {
+                if (e.target === overlay) toggleFiltersModal(false);
+            });
+        }
+        var closeBtn = document.getElementById('filtersModalCloseBtn');
+        if (closeBtn && closeBtn.dataset.closeBound !== '1') {
+            closeBtn.dataset.closeBound = '1';
+            closeBtn.addEventListener('click', function () {
+                toggleFiltersModal(false);
+            });
+        }
+        var resetBtn = document.getElementById('filtersResetBtn');
+        if (resetBtn && resetBtn.dataset.resetBound !== '1') {
+            resetBtn.dataset.resetBound = '1';
+            resetBtn.addEventListener('click', function () {
+                resetFiltersForm();
+            });
+        }
+    }
+
+    function initStepperButtons() {
+        document.querySelectorAll('.stepper-btn[data-stepper-target]').forEach(function (btn) {
+            if (btn.dataset.stepperBound === '1') return;
+            btn.dataset.stepperBound = '1';
+            var target = btn.getAttribute('data-stepper-target');
+            var delta = parseFloat(btn.getAttribute('data-stepper-delta')) || 0;
+            var dec = parseInt(btn.getAttribute('data-stepper-decimals'), 10) || 0;
+
+            function start(e) {
+                e.preventDefault();
+                var minAttr = btn.getAttribute('data-stepper-min');
+                var maxAttr = btn.getAttribute('data-stepper-max');
+                var minV = (minAttr === '' || minAttr === null) ? null : parseFloat(minAttr);
+                var maxV = (maxAttr === '' || maxAttr === null) ? null : parseFloat(maxAttr);
+                if (typeof startSteppingFilter === 'function') {
+                    startSteppingFilter(target, delta, minV, maxV, dec, btn);
+                }
+            }
+            function stop() {
+                if (typeof stopSteppingFilter === 'function') {
+                    stopSteppingFilter(btn);
+                }
+            }
+
+            btn.addEventListener('mousedown', start);
+            btn.addEventListener('mouseup', stop);
+            btn.addEventListener('mouseleave', stop);
+            btn.addEventListener('touchstart', start, { passive: false });
+            btn.addEventListener('touchend', stop);
+            btn.addEventListener('touchcancel', stop);
+        });
+    }
+
     function initAll() {
         try { initFilterSort(); } catch (sortInitError) { console.error('[filters] sort init failed', sortInitError); }
         try { initFilterMasks(); } catch (masksInitError) { console.error('[filters] masks init failed', masksInitError); }
         try { initFilterAccordions(); } catch (accordionsInitError) { console.error('[filters] accordions init failed', accordionsInitError); }
         try { initFilterClearButtons(); } catch (clearButtonsInitError) { console.error('[filters] clear buttons init failed', clearButtonsInitError); }
-        try { initFormSubmit(); } catch (formSubmitInitError) { console.error('[filters] form submit init failed', formSubmitInitError); }
+        try { initFiltersApplyButton(); } catch (applyInitError) { console.error('[filters] apply init failed', applyInitError); }
+        try { initOverlayAndClose(); } catch (overlayInitError) { console.error('[filters] overlay init failed', overlayInitError); }
+        try { initStepperButtons(); } catch (stepperInitError) { console.error('[filters] stepper init failed', stepperInitError); }
+        try { initFilterEnterKeyHandler(); } catch (enterInitError) { console.error('[filters] enter init failed', enterInitError); }
     }
 
     if (document.readyState === 'loading') {
@@ -1032,6 +1297,10 @@
     window.stopSteppingFilter = stopSteppingFilter;
     window.setupSelectAllCheckbox = setupSelectAllCheckbox;
     window.resetFiltersForm = resetFiltersForm;
-    window.stripEmptyFields = stripEmptyFields;
-    window.restoreFields = restoreFields;
+    window.applyFiltersFromModal = applyFiltersFromModal;
+    window.attachFiltersAsHiddenInputsTo = attachFiltersAsHiddenInputsTo;
+    window.removeEmptyFormFields = removeEmptyFormFields;
+    window.isFilterMeaningful = isFilterMeaningful;
+    window.submitCombinedSearch = submitCombinedSearch;
+    window.focusNextFilterField = focusNextFilterField;
 })();

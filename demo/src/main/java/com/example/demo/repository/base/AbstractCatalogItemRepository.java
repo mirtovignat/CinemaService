@@ -72,6 +72,11 @@ public interface AbstractCatalogItemRepository<Entity extends AbstractCatalogIte
             JOIN FETCH item.movie
             WHERE item.id.userId = :userId
             AND (
+                :query IS NULL
+                OR LOWER(CAST(item.movie.title AS STRING))
+                   LIKE CONCAT(LOWER(CAST(:query AS STRING)), '%')
+            )
+            AND (
                 :hasCursor = false
                 OR item.addedAt > :cursorAddedAt
                 OR (item.addedAt = :cursorAddedAt AND item.id.movieId > :cursorMovieId)
@@ -82,12 +87,18 @@ public interface AbstractCatalogItemRepository<Entity extends AbstractCatalogIte
                                  @Param("hasCursor") boolean hasCursor,
                                  @Param("cursorAddedAt") LocalDateTime cursorAddedAt,
                                  @Param("cursorMovieId") Long cursorMovieId,
+                                 @Param("query") String query,
                                  Pageable pageable);
 
     @Query("""
             SELECT item FROM #{#entityName} item
             JOIN FETCH item.movie
             WHERE item.id.userId = :userId
+            AND (
+                :query IS NULL
+                OR LOWER(CAST(item.movie.title AS STRING))
+                   LIKE CONCAT(LOWER(CAST(:query AS STRING)), '%')
+            )
             AND (
                 :hasCursor = false
                 OR item.addedAt < :cursorAddedAt
@@ -99,5 +110,17 @@ public interface AbstractCatalogItemRepository<Entity extends AbstractCatalogIte
                                   @Param("hasCursor") boolean hasCursor,
                                   @Param("cursorAddedAt") LocalDateTime cursorAddedAt,
                                   @Param("cursorMovieId") Long cursorMovieId,
+                                  @Param("query") String query,
                                   Pageable pageable);
+
+    @Query("""
+            SELECT item.movie.title FROM #{#entityName} item
+            WHERE item.id.userId = :userId
+            AND LOWER(CAST(item.movie.title AS STRING))
+                LIKE CONCAT(LOWER(CAST(:prefix AS STRING)), '%')
+            ORDER BY item.movie.title ASC
+            """)
+    List<String> findTitlesStartingWith(@Param("userId") Long userId,
+                                        @Param("prefix") String prefix,
+                                        Pageable pageable);
 }

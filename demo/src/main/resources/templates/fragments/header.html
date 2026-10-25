@@ -16,9 +16,9 @@
     <div class="search-container">
         <form id="headerSearchForm" action="/" method="get" class="search-form">
             <div class="search-input-wrapper" id="headerSearchWrapper">
-            <span class="search-icon">
-                <th:block th:replace="~{fragments/icons :: icon-search}"></th:block>
-            </span>
+                <span class="search-icon">
+                    <th:block th:replace="~{fragments/icons :: icon-search}"></th:block>
+                </span>
                 <button type="button"
                         class="filters-inline-btn"
                         id="headerFiltersBtn"
@@ -27,13 +27,9 @@
                     <th:block th:replace="~{fragments/icons :: icon-filter}"></th:block>
                 </button>
                 <label for="headerSearchInput" class="visually-hidden">Поиск фильмов</label>
-                <input type="text" id="headerSearchInput" name="title" autocomplete="off"
+                <input type="text" id="headerSearchInput" autocomplete="off"
                        placeholder="Поиск фильмов..." maxlength="100"
-                       th:value="${param.title != null and !#strings.isEmpty(param.title[0])
-                                ? (#strings.length(param.title[0]) > 30
-                                    ? #strings.substring(param.title[0], 0, 30) + '…'
-                                    : param.title[0])
-                                : ''}">
+                       th:value="${param.title != null and !#strings.isEmpty(param.title[0]) ? param.title[0] : ''}">
 
                 <button type="button"
                         class="header-search-clear"
@@ -54,14 +50,14 @@
                 <span id="headerAutocompleteOverlay"
                       class="search-autocomplete-overlay"
                       aria-hidden="true">
-                <span class="typed" id="headerAutocompleteTyped"></span>
-                <span class="hint" id="headerAutocompleteHint"></span>
-            </span>
+                    <span class="typed" id="headerAutocompleteTyped"></span>
+                    <span class="hint" id="headerAutocompleteHint"></span>
+                </span>
 
                 <div id="headerSuggestions" class="header-suggestions"></div>
             </div>
         </form>
-        <button type="submit" form="headerSearchForm" class="search-btn search-btn-outside" id="headerSearchSubmitBtn">
+        <button type="button" class="search-btn search-btn-outside" id="headerSearchSubmitBtn">
             Найти
         </button>
     </div>
@@ -170,7 +166,7 @@
                 </button>
             </div>
 
-            <form action="/" method="get" id="filterForm" accept-charset="UTF-8">
+            <form id="filterForm" accept-charset="UTF-8" onsubmit="return false;">
 
                 <div class="filter-group sort-filter-group">
                     <div class="sort-filter-row">
@@ -508,7 +504,7 @@
                 </div>
 
                 <div class="filters-modal-footer">
-                    <button type="submit" class="btn btn-primary">Применить фильтры</button>
+                    <button type="button" class="btn btn-primary" id="filtersApplyBtn">Применить фильтры</button>
                     <button type="button" class="btn btn-secondary" id="filtersResetBtn">Сброс</button>
                 </div>
             </form>

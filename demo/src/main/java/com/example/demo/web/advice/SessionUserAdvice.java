@@ -4,13 +4,13 @@ import com.example.demo.dto.badges.BadgeCountsDTO;
 import com.example.demo.dto.user.SessionUser;
 import com.example.demo.service.BadgeService;
 import com.example.demo.web.security.CurrentUserProvider;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
 @ControllerAdvice
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class SessionUserAdvice {
 
     private final BadgeService badgeService;

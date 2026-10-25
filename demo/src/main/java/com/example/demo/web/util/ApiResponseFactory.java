@@ -3,14 +3,14 @@ package com.example.demo.web.util;
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.exception.SuccessCode;
 import com.example.demo.util.MessageUtils;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
 @Component
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class ApiResponseFactory {
 
     private final MessageUtils messageUtils;

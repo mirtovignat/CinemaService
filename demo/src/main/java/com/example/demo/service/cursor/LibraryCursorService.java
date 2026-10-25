@@ -7,10 +7,15 @@ import com.example.demo.mapper.entity.PurchasedMapper;
 import com.example.demo.model.entity.PurchasedMovie;
 import com.example.demo.repository.entity.PurchasedMovieRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class LibraryCursorService extends AbstractUserCursorService<PurchasedMovie, LibrarianMovieViewDTO> {
+
+    private final PurchasedMovieRepository purchasedMovieRepository;
 
     public LibraryCursorService(CursorCodec cursorCodec,
                                 KeyCodec keyCodec,
@@ -29,5 +34,10 @@ public class LibraryCursorService extends AbstractUserCursorService<PurchasedMov
                         .toList(),
                 purchasedMovieRepository::fetchAscending,
                 purchasedMovieRepository::fetchDescending);
+        this.purchasedMovieRepository = purchasedMovieRepository;
+    }
+
+    public List<String> findTitlesStartingWith(Long userId, String prefix, Pageable pageable) {
+        return purchasedMovieRepository.findTitlesStartingWith(userId, prefix, pageable);
     }
 }

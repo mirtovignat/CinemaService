@@ -6,9 +6,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Builder
-public record RangesSnapshot(
+public record MovieRangesSnapshot(
         Range<BigDecimal> price,
-        Range<Integer> duration,
+        Range<Long> duration,
         Range<LocalDate> releaseDate
 ) {
 }

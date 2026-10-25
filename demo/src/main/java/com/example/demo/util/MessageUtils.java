@@ -2,31 +2,33 @@ package com.example.demo.util;
 
 import com.example.demo.exception.ErrorCode;
 import com.example.demo.exception.SuccessCode;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Component;
 
 @Component
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class MessageUtils {
 
     private final MessageSource messageSource;
 
-    public String getError(ErrorCode code, Object... args) {
+    public String getError(ErrorCode errorCode,
+                           Object... args) {
         return messageSource.getMessage(
-                "error." + code.name(),
+                "error." + errorCode.name(),
                 args,
-                code.name(),
+                errorCode.name(),
                 LocaleContextHolder.getLocale()
         );
     }
 
-    public String getSuccess(SuccessCode code, Object... args) {
+    public String getSuccess(SuccessCode successCode,
+                             Object... args) {
         return messageSource.getMessage(
-                "success." + code.name(),
+                "success." + successCode.name(),
                 args,
-                code.name(),
+                successCode.name(),
                 LocaleContextHolder.getLocale()
         );
     }

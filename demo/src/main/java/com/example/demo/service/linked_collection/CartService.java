@@ -1,6 +1,5 @@
 package com.example.demo.service.linked_collection;
 
-import com.example.demo.dto.catalog.CartItemViewDTO;
 import com.example.demo.dto.catalog.CartSummaryDTO;
 import com.example.demo.exception.ErrorCode;
 import com.example.demo.model.entity.CartItem;
@@ -9,13 +8,13 @@ import com.example.demo.repository.entity.MovieRepository;
 import com.example.demo.repository.entity.PurchasedMovieRepository;
 import com.example.demo.repository.entity.UserRepository;
 import com.example.demo.repository.projection.CartSummaryProjection;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
 @Service
-public class CartService extends AbstractLinkedCollectionService<CartItem, CartItemViewDTO> {
+public class CartService extends AbstractLinkedCollectionService<CartItem> {
 
     private final PurchasedMovieRepository purchasedMovieRepository;
     private final CartItemRepository cartItemRepository;
@@ -36,7 +35,6 @@ public class CartService extends AbstractLinkedCollectionService<CartItem, CartI
     }
 
     @Override
-    @Transactional
     public void add(Long movieId, Long userId) {
         if (purchasedMovieRepository.existsByMovieIdAndUserId(movieId, userId)) {
             return;
@@ -44,20 +42,23 @@ public class CartService extends AbstractLinkedCollectionService<CartItem, CartI
         if (existsInCollection(movieId, userId)) {
             return;
         }
-        save(movieId, userId);
+        CartItem preparedCartItem = prepare(movieId, userId);
+        try {
+            persist(preparedCartItem);
+        } catch (DataIntegrityViolationException ignored) {
+        }
     }
 
-    @Transactional(readOnly = true)
     public CartSummaryDTO getPurchasableSummary(Long userId) {
         return toSummaryDto(cartItemRepository.findPurchasableSummaryByUserId(userId));
     }
 
-    private CartSummaryDTO toSummaryDto(CartSummaryProjection projection) {
-        if (projection == null) {
+    private CartSummaryDTO toSummaryDto(CartSummaryProjection cartSummaryProjection) {
+        if (cartSummaryProjection == null) {
             return CartSummaryDTO.empty();
         }
-        long count = projection.getCount() != null ? projection.getCount() : 0L;
-        BigDecimal total = projection.getTotal() != null ? projection.getTotal() : BigDecimal.ZERO;
+        long count = cartSummaryProjection.getCount() != null ? cartSummaryProjection.getCount() : 0L;
+        BigDecimal total = cartSummaryProjection.getTotal() != null ? cartSummaryProjection.getTotal() : BigDecimal.ZERO;
         return CartSummaryDTO.builder()
                 .count(count)
                 .total(total)

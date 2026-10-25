@@ -13,33 +13,35 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
-@Transactional(readOnly = true)
 public class RatedQueryService {
 
-    private final RatedMovieRepository ratedRepository;
+    private final RatedMovieRepository ratedMovieRepository;
     private final RatedMapper ratedMapper;
     private final MovieService movieService;
     private final int ratingsToLimit;
 
-    public RatedQueryService(RatedMovieRepository ratedRepository,
+    public RatedQueryService(RatedMovieRepository ratedMovieRepository,
                              RatedMapper ratedMapper,
                              @Lazy MovieService movieService,
                              @Value("${app.rating.top-limit:4}") int ratingsToLimit) {
-        this.ratedRepository = ratedRepository;
+        this.ratedMovieRepository = ratedMovieRepository;
         this.ratedMapper = ratedMapper;
         this.movieService = movieService;
         this.ratingsToLimit = ratingsToLimit;
     }
 
     public RatedMovieFormDTO getPreFilledForm(Long movieId, Long userId) {
-        return ratedRepository.findByMovieIdAndUserId(movieId, userId)
+        if (movieId == null || userId == null) {
+            return RatedMovieFormDTO.builder()
+                    .id(movieId)
+                    .build();
+        }
+        return ratedMovieRepository.findByMovieIdAndUserId(movieId, userId)
                 .map(ratedMapper::toFormView)
                 .orElse(RatedMovieFormDTO.builder()
                         .id(movieId)
@@ -55,11 +57,11 @@ public class RatedQueryService {
     }
 
     public Long getReviewsCountForMovie(Long movieId) {
-        return ratedRepository.countByMovieId(movieId);
+        return ratedMovieRepository.countByMovieId(movieId);
     }
 
     public List<RatedMovieViewDTO> getTopNRatedMovies(Long userId) {
-        return ratedRepository.findTopNByUserIdOrderByRatingValueDesc(
+        return ratedMovieRepository.findTopNByUserIdOrderByRatingValueDesc(
                         userId,
                         PageRequest.of(0, ratingsToLimit)
                 ).stream()
@@ -67,9 +69,8 @@ public class RatedQueryService {
                 .toList();
     }
 
-    @Transactional(readOnly = true)
     public Map<Long, ReviewViewDTO> getOwnRatings(Long userId) {
-        return ratedRepository.findAllActiveByUserId(userId).stream()
+        return ratedMovieRepository.findAllActiveByUserId(userId).stream()
                 .map(ratedMovie -> ratedMapper.toReviewViewWithOwn(ratedMovie, userId))
                 .collect(Collectors.toMap(
                         ReviewViewDTO::movieId,
@@ -79,11 +80,27 @@ public class RatedQueryService {
                 ));
     }
 
+    @Transactional(readOnly = true)
+    public Map<Long, ReviewViewDTO> getOwnRatingsForMovies(Collection<Long> movieIds, Long userId) {
+        if (movieIds == null || movieIds.isEmpty() || userId == null) {
+            return Map.of();
+        }
+        Set<Long> requestedIds = new LinkedHashSet<>(movieIds);
+        return getOwnRatings(userId).entrySet().stream()
+                .filter(entry -> requestedIds.contains(entry.getKey()))
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (existing, replacement) -> existing,
+                        LinkedHashMap::new
+                ));
+    }
+
     public ReviewViewDTO getRating(Long movieId, Long userId) {
         if (userId == null || movieId == null) {
             return null;
         }
-        return ratedRepository.findOwnReview(movieId, userId)
+        return ratedMovieRepository.findOwnReview(movieId, userId)
                 .map(ratedMovie -> ratedMapper.toReviewViewWithOwn(ratedMovie, userId))
                 .orElse(null);
     }

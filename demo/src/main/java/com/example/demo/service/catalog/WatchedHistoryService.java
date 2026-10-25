@@ -50,7 +50,6 @@ public class WatchedHistoryService {
         userRepository.save(user);
     }
 
-    @Transactional(readOnly = true)
     public boolean isHistorySaved(Long userId) {
         return userRepository.findSaveHistoryById(userId);
     }

@@ -25,6 +25,11 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
             WHERE ratedMovie.id.userId = :userId
             AND ratedMovie.deletableState.deleted = false
             AND (
+                :query IS NULL
+                OR LOWER(CAST(ratedMovie.movie.title AS STRING))
+                   LIKE CONCAT(LOWER(CAST(:query AS STRING)), '%')
+            )
+            AND (
                 :hasCursor = false
                 OR ratedMovie.addedAt > :cursorAddedAt
                 OR (ratedMovie.addedAt = :cursorAddedAt AND ratedMovie.id.movieId > :cursorMovieId)
@@ -35,6 +40,7 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
                                      @Param("hasCursor") boolean hasCursor,
                                      @Param("cursorAddedAt") LocalDateTime cursorAddedAt,
                                      @Param("cursorMovieId") Long cursorMovieId,
+                                     @Param("query") String query,
                                      Pageable pageable);
 
     @Override
@@ -43,6 +49,11 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
             JOIN FETCH ratedMovie.movie
             WHERE ratedMovie.id.userId = :userId
             AND ratedMovie.deletableState.deleted = false
+            AND (
+                :query IS NULL
+                OR LOWER(CAST(ratedMovie.movie.title AS STRING))
+                   LIKE CONCAT(LOWER(CAST(:query AS STRING)), '%')
+            )
             AND (
                 :hasCursor = false
                 OR ratedMovie.addedAt < :cursorAddedAt
@@ -54,7 +65,21 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
                                       @Param("hasCursor") boolean hasCursor,
                                       @Param("cursorAddedAt") LocalDateTime cursorAddedAt,
                                       @Param("cursorMovieId") Long cursorMovieId,
+                                      @Param("query") String query,
                                       Pageable pageable);
+
+    @Override
+    @Query("""
+            SELECT DISTINCT ratedMovie.movie.title FROM RatedMovie ratedMovie
+            WHERE ratedMovie.id.userId = :userId
+            AND ratedMovie.deletableState.deleted = false
+            AND LOWER(CAST(ratedMovie.movie.title AS STRING))
+                LIKE CONCAT(LOWER(CAST(:prefix AS STRING)), '%')
+            ORDER BY ratedMovie.movie.title ASC
+            """)
+    List<String> findTitlesStartingWith(@Param("userId") Long userId,
+                                        @Param("prefix") String prefix,
+                                        Pageable pageable);
 
     @Query("""
             SELECT ratedMovie FROM RatedMovie ratedMovie
@@ -195,6 +220,7 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
 
     @Query("""
             SELECT ratedMovie FROM RatedMovie ratedMovie
+            JOIN FETCH ratedMovie.movie
             WHERE ratedMovie.id.userId = :userId
             AND ratedMovie.deletableState.deleted = false
             ORDER BY ratedMovie.ratingValue DESC

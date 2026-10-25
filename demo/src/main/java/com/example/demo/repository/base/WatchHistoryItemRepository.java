@@ -1,5 +1,6 @@
 package com.example.demo.repository.base;
 
+import com.example.demo.dto.catalog.WatchedSuggestionDTO;
 import com.example.demo.model.base.WatchHistoryItem;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -9,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -30,6 +32,11 @@ public interface WatchHistoryItemRepository extends JpaRepository<WatchHistoryIt
             JOIN FETCH purchasedMovie.movie
             WHERE purchasedMovie.user.id = :userId
             AND (
+                :query IS NULL
+                OR LOWER(CAST(purchasedMovie.movie.title AS STRING))
+                   LIKE CONCAT(LOWER(CAST(:query AS STRING)), '%')
+            )
+            AND (
                 :hasCursor = false
                 OR watchHistoryItem.watchedAt > :cursorWatchedAt
                 OR (watchHistoryItem.watchedAt = :cursorWatchedAt AND watchHistoryItem.id > :cursorId)
@@ -40,6 +47,7 @@ public interface WatchHistoryItemRepository extends JpaRepository<WatchHistoryIt
                                            @Param("hasCursor") boolean hasCursor,
                                            @Param("cursorWatchedAt") LocalDateTime cursorWatchedAt,
                                            @Param("cursorId") Long cursorId,
+                                           @Param("query") String query,
                                            Pageable pageable);
 
     @Query("""
@@ -48,6 +56,11 @@ public interface WatchHistoryItemRepository extends JpaRepository<WatchHistoryIt
             JOIN FETCH watchHistoryItem.purchasedMovie purchasedMovie
             JOIN FETCH purchasedMovie.movie
             WHERE purchasedMovie.user.id = :userId
+            AND (
+                :query IS NULL
+                OR LOWER(CAST(purchasedMovie.movie.title AS STRING))
+                   LIKE CONCAT(LOWER(CAST(:query AS STRING)), '%')
+            )
             AND (
                 :hasCursor = false
                 OR watchHistoryItem.watchedAt < :cursorWatchedAt
@@ -59,5 +72,26 @@ public interface WatchHistoryItemRepository extends JpaRepository<WatchHistoryIt
                                             @Param("hasCursor") boolean hasCursor,
                                             @Param("cursorWatchedAt") LocalDateTime cursorWatchedAt,
                                             @Param("cursorId") Long cursorId,
+                                            @Param("query") String query,
                                             Pageable pageable);
+
+    @Query("""
+            SELECT new com.example.demo.dto.catalog.WatchedSuggestionDTO(
+                purchasedMovie.movie.id,
+                purchasedMovie.movie.title,
+                COUNT(watchHistoryItem.id),
+                MAX(watchHistoryItem.watchedAt)
+            )
+            FROM WatchHistoryItem watchHistoryItem
+            JOIN watchHistoryItem.purchasedMovie purchasedMovie
+            WHERE purchasedMovie.user.id = :userId
+            AND LOWER(CAST(purchasedMovie.movie.title AS STRING))
+                LIKE CONCAT(LOWER(CAST(:prefix AS STRING)), '%')
+            GROUP BY purchasedMovie.movie.id, purchasedMovie.movie.title
+            ORDER BY MAX(watchHistoryItem.watchedAt) DESC, purchasedMovie.movie.id ASC
+            """)
+    List<WatchedSuggestionDTO> findGroupedWatchedSuggestionsStartingWith(
+            @Param("userId") Long userId,
+            @Param("prefix") String prefix,
+            Pageable pageable);
 }

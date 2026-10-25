@@ -59,7 +59,8 @@
              data-cursor-template="cartCardTemplate"
              th:attr="data-cursor-next=${response.nextCursor()},
                       data-cursor-has-more=${response.hasMore()},
-                      data-cursor-sort=${response.sort()}">
+                      data-cursor-sort=${response.sort()},
+                      data-cursor-query=${query}">
 
             <div class="media-card cart-card"
                  th:each="cartMovie : ${response.items()}"

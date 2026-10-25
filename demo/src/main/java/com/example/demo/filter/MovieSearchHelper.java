@@ -1,23 +1,24 @@
-package com.example.demo.util;
+package com.example.demo.filter;
 
 import com.example.demo.dto.movie.MovieSearchDTO;
-import com.example.demo.filter.MovieFilter;
 import com.example.demo.mapper.entity.MovieMapper;
 import com.example.demo.model.entity.Movie;
 import com.example.demo.repository.entity.MovieRepository;
-import com.example.demo.repository.specification.MovieSpecifications;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @Component
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class MovieSearchHelper {
 
     private static final int SUGGESTIONS_LIMIT = 10;
@@ -25,42 +26,46 @@ public class MovieSearchHelper {
     private final MovieRepository movieRepository;
     private final MovieSpecifications movieSpecifications;
     private final MovieMapper movieMapper;
+    private final MovieFilterValidator movieFilterValidator;
 
+    @Transactional(readOnly = true)
     public Page<Movie> findMovies(MovieFilter movieFilter,
                                   String title,
                                   Pageable pageable) {
-        boolean hasFilter = movieFilter != null && movieFilter.hasAnyCriteria();
-        boolean hasTitle = title != null && !title.isBlank();
-
-        if (!hasFilter && !hasTitle) {
+        if (!movieFilterValidator.hasAnySearchCriteria(movieFilter, title)) {
             return movieRepository.findAllPaged(pageable);
         }
 
         Specification<Movie> specification = Specification.allOf(
                 movieSpecifications.byFilter(movieFilter),
-                movieSpecifications.titleStartsWith(title)
+                movieSpecifications.fieldStartsWith("title", title)
         );
+
         return movieRepository.findAll(specification, pageable);
     }
 
+    @Transactional(readOnly = true)
     public List<MovieSearchDTO> getSuggestions(String searchQuery) {
-        if (searchQuery == null || searchQuery.isBlank()) {
+        Optional<String> sanitized = movieFilterValidator.normalizeSearchQueryOptional(searchQuery);
+        if (sanitized.isEmpty()) {
             return Collections.emptyList();
         }
 
-        String sanitizedSearchQuery = TitleNormalizer.normalize(searchQuery);
+        Specification<Movie> specification =
+                movieSpecifications.fieldStartsWithNormalized("title", sanitized.get());
 
-        if (sanitizedSearchQuery.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        Pageable limitPageable = PageRequest.of(0, SUGGESTIONS_LIMIT);
-        return movieRepository.findAll(
-                        movieSpecifications.titleStartsWith(sanitizedSearchQuery),
-                        limitPageable
+        List<Movie> movies = movieRepository
+                .findAll(
+                        specification,
+                        PageRequest.of(
+                                0,
+                                SUGGESTIONS_LIMIT,
+                                Sort.by(Sort.Direction.ASC, "title", "id")
+                        )
                 )
-                .getContent()
-                .stream()
+                .getContent();
+
+        return movies.stream()
                 .map(movieMapper::toMovieSearch)
                 .toList();
     }

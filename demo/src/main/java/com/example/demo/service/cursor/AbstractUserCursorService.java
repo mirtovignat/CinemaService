@@ -35,6 +35,7 @@ public abstract class AbstractUserCursorService<EntityType, DataType>
     @Override
     protected Slice<EntityType> fetchSlice(String cursorValue,
                                            SortDirection sortDirection,
+                                           String query,
                                            PageRequest pageRequest,
                                            UserCursorContext userCursorContext) {
         Long userId = userCursorContext.userId();
@@ -48,9 +49,9 @@ public abstract class AbstractUserCursorService<EntityType, DataType>
 
         return switch (sortDirection) {
             case ASC -> ascFetcher.fetch(
-                    userId, hasCursor, cursorAddedAt, cursorIdentifier, pageRequest);
+                    userId, hasCursor, cursorAddedAt, cursorIdentifier, query, pageRequest);
             case DESC -> descFetcher.fetch(
-                    userId, hasCursor, cursorAddedAt, cursorIdentifier, pageRequest);
+                    userId, hasCursor, cursorAddedAt, cursorIdentifier, query, pageRequest);
         };
     }
 }

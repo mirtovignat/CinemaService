@@ -3,109 +3,86 @@ package com.example.demo.filter;
 import com.example.demo.dto.movie.MovieCardViewDTO;
 import com.example.demo.dto.movie.MovieForUser;
 import com.example.demo.service.movie.MovieService;
-import lombok.Builder;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
-import java.util.Optional;
+import java.util.function.Function;
 
 @Component
-@RequiredArgsConstructor
 public class MovieFilterFacade {
 
     private final MovieService movieService;
-    private final MovieSortResolver sortResolver;
-    private final MovieFilterQueryBuilder queryBuilder;
-    private final GenreValidator genreValidator;
+    private final MovieSortResolver movieSortResolver;
+    private final MovieFilterValidator movieFilterValidator;
+    private final int defaultPageSize;
+    private final int genreDefaultPageSize;
 
-    @Builder
-    public record Result(
-            Page<MovieForUser<MovieCardViewDTO>> page,
-            String filterQuery
-    ) {
+    public MovieFilterFacade(MovieService movieService,
+                             MovieSortResolver movieSortResolver,
+                             MovieFilterValidator movieFilterValidator,
+                             @Value("${app.pagination.default-size:35}") int defaultPageSize,
+                             @Value("${app.pagination.genre-default-size:15}") int genreDefaultPageSize) {
+        this.movieService = movieService;
+        this.movieSortResolver = movieSortResolver;
+        this.movieFilterValidator = movieFilterValidator;
+        this.defaultPageSize = defaultPageSize;
+        this.genreDefaultPageSize = genreDefaultPageSize;
     }
 
-    public Result filter(MovieFilter filter,
-                         MovieSearchContext context,
-                         int page,
-                         int size,
-                         Long userId) {
+    public Page<MovieForUser<MovieCardViewDTO>> filterMovies(
+            MovieFilter movieFilter,
+            String title,
+            PageRequestContext pageRequestContext,
+            Long userId) {
 
-        int safePage = Math.max(page, 0);
-        int safeSize = size > 0 ? size : 35;
+        MovieFilter effectiveFilter = movieFilterValidator.orEmpty(movieFilter);
+        movieFilterValidator.validate(effectiveFilter);
 
-        Pageable pageable = sortResolver.resolve(safePage, safeSize, context.sortBy(), context.sortDirection());
-
-        Page<MovieForUser<MovieCardViewDTO>> result =
-                movieService.getMovies(filter, context.title(), pageable, userId);
-
-        result = clampToLastExistingPage(
-                result,
-                safePage,
-                lastPage -> {
-                    Pageable lastPageable = sortResolver.resolve(
-                            lastPage, safeSize, context.sortBy(), context.sortDirection());
-                    return movieService.getMovies(filter, context.title(), lastPageable, userId);
-                }
+        return executeWithPagination(
+                pageRequestContext,
+                defaultPageSize,
+                pageable -> movieService.getMovies(effectiveFilter, title, pageable, userId)
         );
-
-        String filterQuery = queryBuilder.build(filter, context);
-
-        return new Result(result, filterQuery);
     }
 
-    public Optional<Result> filterByGenre(String genre,
-                                          String sortBy,
-                                          String sortDirection,
-                                          int page,
-                                          int size,
-                                          Long userId) {
+    public Page<MovieForUser<MovieCardViewDTO>> filterByGenre(
+            String genre,
+            PageRequestContext pageRequestContext,
+            Long userId) {
 
-        if (!genreValidator.isValid(genre)) {
-            return Optional.empty();
-        }
-
-        int safePage = Math.max(page, 0);
-        int safeSize = size > 0 ? size : 15;
-
-        Pageable pageable = sortResolver.resolve(safePage, safeSize, sortBy, sortDirection);
-
-        Page<MovieForUser<MovieCardViewDTO>> result =
-                movieService.getMoviesByGenre(genre, pageable, userId);
-
-        result = clampToLastExistingPage(
-                result,
-                safePage,
-                lastPage -> {
-                    Pageable lastPageable = sortResolver.resolve(lastPage, safeSize, sortBy, sortDirection);
-                    return movieService.getMoviesByGenre(genre, lastPageable, userId);
-                }
+        return executeWithPagination(
+                pageRequestContext,
+                genreDefaultPageSize,
+                pageable -> movieService.getMoviesByGenre(genre, pageable, userId)
         );
-
-        MovieSearchContext movieSearchContext = MovieSearchContext.ofGenre(genre, sortBy, sortDirection);
-        String filterQuery = queryBuilder.build(null, movieSearchContext);
-
-        return Optional.of(Result.builder()
-                .page(result)
-                .filterQuery(filterQuery)
-                .build());
     }
 
-    private Page<MovieForUser<MovieCardViewDTO>> clampToLastExistingPage(
-            Page<MovieForUser<MovieCardViewDTO>> result,
-            int requestedPage,
-            java.util.function.IntFunction<Page<MovieForUser<MovieCardViewDTO>>> reloadWithPage
-    ) {
+    private Page<MovieForUser<MovieCardViewDTO>> executeWithPagination(
+            PageRequestContext pageRequestContext,
+            int defaultSize,
+            Function<Pageable, Page<MovieForUser<MovieCardViewDTO>>> fetchFunction) {
+
+        Pageable pageable = movieSortResolver.resolve(pageRequestContext, defaultSize);
+
+        Page<MovieForUser<MovieCardViewDTO>> result = fetchFunction.apply(pageable);
+
         int totalPages = result.getTotalPages();
-        if (totalPages <= 0) {
+        int requestedPage = pageable.getPageNumber();
+
+        if (totalPages <= 0 || requestedPage < totalPages) {
             return result;
         }
-        if (requestedPage < totalPages) {
-            return result;
-        }
-        int lastPage = totalPages - 1;
-        return reloadWithPage.apply(lastPage);
+
+        PageRequestContext lastPageRequestContext = PageRequestContext.builder()
+                .sortBy(pageRequestContext.sortBy())
+                .sortDirection(pageRequestContext.sortDirection())
+                .page(totalPages - 1)
+                .size(pageable.getPageSize())
+                .build();
+
+        Pageable lastPageable = movieSortResolver.resolve(lastPageRequestContext, defaultSize);
+        return fetchFunction.apply(lastPageable);
     }
 }

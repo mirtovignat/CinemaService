@@ -7,10 +7,15 @@ import com.example.demo.mapper.entity.RatedMapper;
 import com.example.demo.model.entity.RatedMovie;
 import com.example.demo.repository.entity.RatedMovieRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class RatedCursorService extends AbstractUserCursorService<RatedMovie, RatedMovieViewDTO> {
+
+    private final RatedMovieRepository ratedMovieRepository;
 
     public RatedCursorService(CursorCodec cursorCodec,
                               KeyCodec keyCodec,
@@ -30,5 +35,10 @@ public class RatedCursorService extends AbstractUserCursorService<RatedMovie, Ra
                         .toList(),
                 ratedMovieRepository::fetchAscending,
                 ratedMovieRepository::fetchDescending);
+        this.ratedMovieRepository = ratedMovieRepository;
+    }
+
+    public List<String> findTitlesStartingWith(Long userId, String prefix, Pageable pageable) {
+        return ratedMovieRepository.findTitlesStartingWith(userId, prefix, pageable);
     }
 }

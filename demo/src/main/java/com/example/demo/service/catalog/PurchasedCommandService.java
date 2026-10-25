@@ -24,10 +24,10 @@ import java.util.Set;
 @Service
 public class PurchasedCommandService {
 
-    private final PurchasedMovieRepository purchasedMovieRepository;
-    private final UserRepository userRepository;
     private final CartService cartService;
     private final MovieRepository movieRepository;
+    private final UserRepository userRepository;
+    private final PurchasedMovieRepository purchasedMovieRepository;
     private final UserQueryService userQueryService;
     private final PurchasedQueryService purchasedQueryService;
 
@@ -43,7 +43,7 @@ public class PurchasedCommandService {
             return userQueryService.getBalance(userId);
         }
         List<Long> movieIds = cartItems.stream()
-                .map(item -> item.getMovie().getId())
+                .map(cartItem -> cartItem.getMovie().getId())
                 .toList();
         return purchaseMovies(movieIds, userId, false);
     }
@@ -51,40 +51,50 @@ public class PurchasedCommandService {
     private BigDecimal purchaseMovies(List<Long> requestedMovieIds, Long userId,
                                       boolean isSinglePurchase) {
         User user = userQueryService.getUser(userId);
-        Set<Long> alreadyPurchasedIds = purchasedQueryService.getPurchasedMovieIds(userId);
-        List<Long> idsToBuy = requestedMovieIds.stream()
-                .filter(id -> !alreadyPurchasedIds.contains(id))
+        Set<Long> alreadyPurchasedMovieIds = purchasedQueryService.getPurchasedMovieIds(userId);
+        List<Long> movieIdsToBuy = requestedMovieIds.stream()
+                .filter(movieId -> !alreadyPurchasedMovieIds.contains(movieId))
                 .distinct()
                 .toList();
 
-        if (idsToBuy.isEmpty()) {
+        if (movieIdsToBuy.isEmpty()) {
             clearCartFor(requestedMovieIds, userId, isSinglePurchase);
             return user.getBalance();
         }
-        List<Movie> moviesToBuy = movieRepository.findAllById(idsToBuy);
 
-        if (moviesToBuy.size() != idsToBuy.size()) {
+        List<Movie> moviesToBuy = movieRepository.findAllById(movieIdsToBuy);
+        if (moviesToBuy.size() != movieIdsToBuy.size()) {
             throw BusinessException.of(ErrorCode.ENTITY_NOT_FOUND);
         }
 
-        BigDecimal totalPrice = moviesToBuy.stream()
-                .map(Movie::getPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        List<PurchasedMovie> purchasesToSave = buildPurchases(user, moviesToBuy);
+        BigDecimal totalPrice = calculateTotalPrice(purchasesToSave);
+
         if (user.getBalance().compareTo(totalPrice) < 0) {
             throw BusinessException.of(ErrorCode.INSUFFICIENT_FUNDS, totalPrice, user.getBalance());
         }
         user.spendMoney(totalPrice);
         userRepository.save(user);
-        List<PurchasedMovie> purchases = moviesToBuy.stream()
-                .map(movie -> {
-                    PurchasedMovie purchased = PurchasedMovie.builder().build();
-                    purchased.setPriceSnapshot(movie.getPrice());
-                    return AbstractCatalogItem.init(purchased, user, movie);
-                })
-                .toList();
-        purchasedMovieRepository.saveAll(purchases);
+        purchasedMovieRepository.saveAll(purchasesToSave);
+
         clearCartFor(requestedMovieIds, userId, isSinglePurchase);
         return user.getBalance();
+    }
+
+    private List<PurchasedMovie> buildPurchases(User user, List<Movie> moviesToBuy) {
+        return moviesToBuy.stream()
+                .map(movie -> {
+                    PurchasedMovie purchasedMovie = PurchasedMovie.builder().build();
+                    purchasedMovie.setPriceSnapshot(movie.getPrice());
+                    return AbstractCatalogItem.init(purchasedMovie, user, movie);
+                })
+                .toList();
+    }
+
+    private BigDecimal calculateTotalPrice(List<PurchasedMovie> purchasesToSave) {
+        return purchasesToSave.stream()
+                .map(PurchasedMovie::getPriceSnapshot)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     private void clearCartFor(List<Long> requestedMovieIds, Long userId, boolean isSinglePurchase) {

@@ -8,10 +8,15 @@ import com.example.demo.mapper.entity.FavouritesMapper;
 import com.example.demo.model.entity.FavouriteMovie;
 import com.example.demo.repository.entity.FavouriteMovieRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class FavouritesCursorService extends AbstractUserCursorService<FavouriteMovie, FavouriteMovieViewDTO> {
+
+    private final FavouriteMovieRepository favouriteMovieRepository;
 
     public FavouritesCursorService(CursorCodec cursorCodec,
                                    KeyCodec keyCodec,
@@ -31,5 +36,10 @@ public class FavouritesCursorService extends AbstractUserCursorService<Favourite
                 ),
                 favouriteMovieRepository::fetchAscending,
                 favouriteMovieRepository::fetchDescending);
+        this.favouriteMovieRepository = favouriteMovieRepository;
+    }
+
+    public List<String> findTitlesStartingWith(Long userId, String prefix, Pageable pageable) {
+        return favouriteMovieRepository.findTitlesStartingWith(userId, prefix, pageable);
     }
 }

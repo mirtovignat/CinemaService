@@ -42,7 +42,9 @@
                  data-group-history
                  th:attr="data-cursor-next=${response != null ? response.nextCursor() : null},
                           data-cursor-has-more=${response != null ? response.hasMore() : false},
-                          data-cursor-sort=${response != null ? response.sort() : 'desc'}">
+                          data-cursor-sort=${response != null ? response.sort() : 'desc'},
+                          data-cursor-query=${query},
+                          data-highlight-history-id=${highlightHistoryId}">
 
                 <th:block th:if="${response != null and response.items() != null}">
                     <div th:each="item : ${response.items()}"
@@ -373,6 +375,7 @@
 <script th:src="@{/js/modules/watched-local-time.js}" defer></script>
 <script th:src="@{/js/modules/sort-toggle.js}" defer></script>
 <script th:src="@{/js/modules/cursor-pagination.js}" defer></script>
+<script th:src="@{/js/modules/history-highlight.js}" defer></script>
 <script th:src="@{/js/main.js}" defer></script>
 
 <th:block th:replace="~{fragments/footer :: footer}"></th:block>

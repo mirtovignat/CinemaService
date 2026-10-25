@@ -11,7 +11,7 @@ import com.example.demo.dto.user.SessionUser;
 import com.example.demo.exception.SuccessCode;
 import com.example.demo.service.catalog.RatedCommandService;
 import com.example.demo.service.catalog.RatedQueryService;
-import com.example.demo.service.cursor.CursorPageService;
+import com.example.demo.service.cursor.ReviewCursorService;
 import com.example.demo.service.movie.MovieService;
 import com.example.demo.service.user.UserQueryService;
 import com.example.demo.util.MessageUtils;
@@ -37,7 +37,7 @@ public class RatedController {
 
     private final RatedCommandService ratedCommandService;
     private final RatedQueryService ratedQueryService;
-    private final CursorPageService<ReviewCursorContext, ReviewViewDTO> reviewCursorService;
+    private final ReviewCursorService reviewCursorService;
     private final UserQueryService userQueryService;
     private final MovieService movieService;
     private final MessageUtils messageUtils;
@@ -60,6 +60,7 @@ public class RatedController {
                 reviewCursorService.page(
                         reviewsQueryDTO.cursor(),
                         sortDirection,
+                        null,
                         ReviewCursorContext.builder()
                                 .movieId(id)
                                 .viewerId(userId)
@@ -94,6 +95,7 @@ public class RatedController {
         return reviewCursorService.page(
                 reviewsQueryDTO.cursor(),
                 sortDirection,
+                null,
                 ReviewCursorContext.builder()
                         .movieId(id)
                         .viewerId(userId)

@@ -150,15 +150,12 @@
             if (key === 'releaseYear') {
                 value = extractYear(item.releaseDate || item.release_year || item.year || '');
             }
-
             if (key === 'addedAtTime') {
                 value = formatTimeHHmm(resolveAddedAt(item));
             }
-
             if (key === 'addedAt' || key === 'watchedAt') {
                 value = formatTimeHHmmss(resolveAddedAt(item));
             }
-
             if (key === 'price') {
                 if (value !== undefined && value !== null) {
                     value = formatPriceWithCurrency(value);
@@ -168,17 +165,14 @@
                     value = formatPricePlain(value);
                 }
             }
-
             if (key === 'rating' || key === 'ratingValue') {
                 if (value !== undefined && value !== null) {
                     value = formatRatingValue(value);
                 }
             }
-
             if (key === 'releaseDate') {
                 value = extractYear(value);
             }
-
             if (key === 'review') {
                 var text = (value === null || value === undefined) ? '' : String(value).trim();
                 var empty = text === '';
@@ -280,22 +274,17 @@
     function isSentinelVisible(state) {
         var s = state.sentinel;
         if (!s || !s.isConnected) return false;
-
         var rect = s.getBoundingClientRect();
-
         var rootRect;
         if (state.scrollRoot && state.scrollRoot.isConnected) {
             rootRect = state.scrollRoot.getBoundingClientRect();
         } else {
             rootRect = { top: 0, bottom: window.innerHeight || document.documentElement.clientHeight };
         }
-
         if (rect.top - rootRect.bottom < EDGE_MARGIN_PX) return true;
-
         var doc = document.documentElement;
         var winBottom = window.innerHeight || doc.clientHeight;
         if (rect.top - winBottom < EDGE_MARGIN_PX) return true;
-
         return false;
     }
 
@@ -320,6 +309,7 @@
             nextCursor: nextCursor,
             hasMore: hasMore,
             fetching: false,
+            fetchToken: 0,
             sentinel: null,
             loader: null,
             scrollRoot: null,
@@ -406,12 +396,18 @@
         state.fetchNext = function () {
             if (state.fetching || !state.hasMore) return Promise.resolve(false);
             state.fetching = true;
+            var myToken = ++state.fetchToken;
 
             ensureTail();
 
             var params = new URLSearchParams();
             params.set('sort', state.sort);
             if (state.nextCursor) params.set('cursor', state.nextCursor);
+
+            var query = container.getAttribute('data-cursor-query');
+            if (query && query.trim() !== '') {
+                params.set('query', query);
+            }
 
             return fetch(state.endpoint + '?' + params.toString(), {
                 headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
@@ -420,6 +416,7 @@
                 cache: 'no-store'
             })
             .then(function (r) {
+                if (myToken !== state.fetchToken) return { aborted: true };
                 if (r.type === 'opaqueredirect' || r.status === 0) {
                     window.location.href = '/login';
                     return Promise.reject(new Error('unauth'));
@@ -432,6 +429,9 @@
                 return r.json();
             })
             .then(function (response) {
+                if (myToken !== state.fetchToken) return false;
+                if (response && response.aborted) return false;
+
                 var cursorPageResponse = (response && response.cursorPageResponse)
                     ? response.cursorPageResponse
                     : response;
@@ -475,22 +475,21 @@
                     window.applyStatusesFromSession();
                 }
 
-                if (typeof window.reapplyCatalogSearchFilter === 'function') {
-                    window.reapplyCatalogSearchFilter();
-                }
-
                 ensureTail();
                 rebindScrollParents();
 
                 return items.length > 0;
             })
             .catch(function (e) {
+                if (myToken !== state.fetchToken) return false;
                 console.warn('[cursor-pagination] error', e);
                 state.hasMore = false;
                 return false;
             })
             .finally(function () {
-                state.fetching = false;
+                if (myToken === state.fetchToken) {
+                    state.fetching = false;
+                }
             });
         };
 

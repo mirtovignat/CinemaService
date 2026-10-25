@@ -12,5 +12,6 @@ public interface SliceFetcher<Entity> {
                         boolean hasCursor,
                         LocalDateTime cursorAddedAt,
                         Long cursorIdentifier,
+                        String query,
                         Pageable pageable);
 }

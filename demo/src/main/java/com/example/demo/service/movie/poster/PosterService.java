@@ -27,30 +27,30 @@ public class PosterService {
     }
 
     public String uploadPosterFromUrl(String imageUrl, String fileName) {
-        byte[] bytes = download(imageUrl);
-        upload(bytes, fileName);
+        byte[] posterBytes = download(imageUrl);
+        upload(posterBytes, fileName);
         return getPublicUrl(fileName);
     }
 
     public byte[] download(String imageUrl) {
-        byte[] bytes = restClient.get()
+        byte[] posterBytes = restClient.get()
                 .uri(imageUrl)
                 .retrieve()
                 .body(byte[].class);
 
-        if (bytes == null || bytes.length == 0) {
+        if (posterBytes == null || posterBytes.length == 0) {
             throw new IllegalStateException("Не удалось скачать постер: " + imageUrl);
         }
-        return bytes;
+        return posterBytes;
     }
 
-    public void upload(byte[] bytes, String fileName) {
-        try (InputStream inputStream = new ByteArrayInputStream(bytes)) {
+    public void upload(byte[] posterBytes, String fileName) {
+        try (InputStream inputStream = new ByteArrayInputStream(posterBytes)) {
             minioClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(minIOConfig.getBucketName())
                             .object(fileName)
-                            .stream(inputStream, bytes.length, -1)
+                            .stream(inputStream, posterBytes.length, -1)
                             .contentType("image/jpeg")
                             .build()
             );

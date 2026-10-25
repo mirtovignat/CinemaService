@@ -8,25 +8,23 @@ import com.example.demo.mapper.entity.UserMapper;
 import com.example.demo.model.entity.User;
 import com.example.demo.repository.entity.UserRepository;
 import com.example.demo.service.catalog.RatedQueryService;
-import com.example.demo.service.movie.FilterMetaService;
+import com.example.demo.service.movie.MovieFilterMetaService;
 import com.example.demo.service.movie.MovieRecommendationService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
 @Service
 @AllArgsConstructor
-@Transactional(readOnly = true)
 public class UserQueryService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final RatedQueryService ratedQueryService;
     private final MovieRecommendationService movieRecommendationService;
-    private final FilterMetaService filterMetaService;
+    private final MovieFilterMetaService movieFilterMetaService;
 
     public PersonalAccountResponse buildUserPage(User user) {
         Long userId = user.getId();
@@ -39,7 +37,7 @@ public class UserQueryService {
                 .userSidebarViewDTO(userMapper.toSidebarView(user))
                 .topThreeRatedMovies(ratedQueryService.getTopNRatedMovies(userId))
                 .recommendedMovies(firstPage.getContent())
-                .genres(filterMetaService.getAllGenres())
+                .genres(movieFilterMetaService.getAllGenres())
                 .build();
     }
 

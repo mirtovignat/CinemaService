@@ -3,7 +3,7 @@ package com.example.demo.cursor;
 import com.example.demo.dto.base.UserStatus;
 import com.example.demo.model.base.AbstractCatalogItem;
 import com.example.demo.service.linked_collection.UserStatusResolver;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.function.BiFunction;
 
 @Component
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class UserStatusMapperHelper {
 
     private final UserStatusResolver userStatusResolver;

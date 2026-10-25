@@ -3,6 +3,7 @@ package com.example.demo.controller.catalog;
 import com.example.demo.cursor.CursorPageRequest;
 import com.example.demo.cursor.context.UserCursorContext;
 import com.example.demo.dto.catalog.LibrarianMovieViewDTO;
+import com.example.demo.dto.catalog.WatchedSuggestionDTO;
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.dto.response.CursorPageResponse;
 import com.example.demo.dto.response.UserCursorPageResponse;
@@ -11,17 +12,19 @@ import com.example.demo.exception.SuccessCode;
 import com.example.demo.mapper.entity.UserMapper;
 import com.example.demo.service.catalog.WatchedHistoryService;
 import com.example.demo.service.cursor.WatchedHistoryCursorService;
-import com.example.demo.service.movie.FilterMetaService;
+import com.example.demo.service.movie.MovieFilterMetaService;
 import com.example.demo.service.user.UserQueryService;
 import com.example.demo.util.MessageUtils;
 import com.example.demo.web.resolver.CurrentUserId;
 import com.example.demo.web.util.ApiResponseFactory;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @AllArgsConstructor
@@ -29,27 +32,33 @@ import java.util.Map;
 @RequestMapping("/watched")
 public class WatchedHistoryController {
 
+    private static final int SUGGESTIONS_LIMIT = 10;
+
     private final WatchedHistoryCursorService watchedHistoryCursorService;
     private final WatchedHistoryService watchedHistoryService;
     private final UserQueryService userQueryService;
     private final UserMapper userMapper;
-    private final FilterMetaService filterMetaService;
+    private final MovieFilterMetaService movieFilterMetaService;
     private final MessageUtils messageUtils;
     private final ApiResponseFactory apiResponseFactory;
 
     @GetMapping
     public String getPage(@ModelAttribute CursorPageRequest cursorPageRequest,
+                          @RequestParam(value = "highlight", required = false) Long highlightHistoryId,
                           @CurrentUserId Long userId,
                           Model model) {
+        model.addAttribute("query", cursorPageRequest.query());
+        model.addAttribute("highlightHistoryId", highlightHistoryId);
         model.addAttribute("response",
                 watchedHistoryCursorService.page(
                         cursorPageRequest.cursor(),
                         cursorPageRequest.direction(),
+                        cursorPageRequest.query(),
                         UserCursorContext.builder()
                                 .userId(userId)
                                 .build()));
         model.addAttribute("userSidebarViewDTO", userMapper.toSidebarView(userQueryService.getUser(userId)));
-        model.addAttribute("genres", filterMetaService.getAllGenres());
+        model.addAttribute("genres", movieFilterMetaService.getAllGenres());
         model.addAttribute("saveHistory", watchedHistoryService.isHistorySaved(userId));
         return "account/watched";
     }
@@ -58,19 +67,30 @@ public class WatchedHistoryController {
     @ResponseBody
     public UserCursorPageResponse<LibrarianMovieViewDTO> more(@ModelAttribute CursorPageRequest cursorPageRequest,
                                                               @CurrentUserId Long userId) {
-        CursorPageResponse<LibrarianMovieViewDTO> page = watchedHistoryCursorService.page(
+        CursorPageResponse<LibrarianMovieViewDTO> cursorPageResponse = watchedHistoryCursorService.page(
                 cursorPageRequest.cursor(),
                 cursorPageRequest.direction(),
+                cursorPageRequest.query(),
                 UserCursorContext.builder()
                         .userId(userId)
                         .build());
-        UserSidebarViewDTO sidebar = userMapper.toSidebarView(userQueryService.getUser(userId));
+        UserSidebarViewDTO userSidebarViewDTO = userMapper.toSidebarView(userQueryService.getUser(userId));
         return UserCursorPageResponse.<LibrarianMovieViewDTO>builder()
-                .cursorPageResponse(page)
-                .userSidebarViewDTO(sidebar)
+                .cursorPageResponse(cursorPageResponse)
+                .userSidebarViewDTO(userSidebarViewDTO)
                 .build();
     }
 
+    @GetMapping("/suggestions")
+    @ResponseBody
+    public List<WatchedSuggestionDTO> suggestions(@RequestParam(value = "query", required = false, defaultValue = "") String query,
+                                                  @CurrentUserId(required = false) Long userId) {
+        if (userId == null) return List.of();
+        String trimmed = query == null ? "" : query.trim();
+        if (trimmed.isEmpty()) return List.of();
+        return watchedHistoryCursorService.findGroupedWatchedSuggestionsStartingWith(
+                userId, trimmed, PageRequest.of(0, SUGGESTIONS_LIMIT));
+    }
     @PostMapping("/add/{id}")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> watch(@PathVariable Long id,
@@ -109,7 +129,7 @@ public class WatchedHistoryController {
     public ResponseEntity<ApiResponse> setWatchedHistory(@RequestParam boolean save,
                                                          @CurrentUserId Long userId) {
         watchedHistoryService.setWatchedHistory(userId, save);
-        SuccessCode code = save ? SuccessCode.HISTORY_ENABLED : SuccessCode.HISTORY_DISABLED;
-        return apiResponseFactory.ok(code);
+        SuccessCode successCode = save ? SuccessCode.HISTORY_ENABLED : SuccessCode.HISTORY_DISABLED;
+        return apiResponseFactory.ok(successCode);
     }
 }

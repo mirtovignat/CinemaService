@@ -1,7 +1,7 @@
 package com.example.demo.config;
 
 import com.example.demo.web.entry_point.AjaxAwareEntryPoint;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,7 +19,7 @@ import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class SecurityConfig {
 
     public static final String[] PUBLIC_URLS = {

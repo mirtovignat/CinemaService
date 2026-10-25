@@ -8,7 +8,7 @@ import com.example.demo.web.security.SessionAuthenticator;
 import com.example.demo.web.util.ApiResponseFactory;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,7 +20,7 @@ import java.math.BigDecimal;
 
 @Controller
 @RequestMapping("/orders")
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class PurchasedController {
 
     private final PurchasedCommandService purchasedCommandService;
@@ -48,7 +48,12 @@ public class PurchasedController {
                 id,
                 sessionUser.id()
         );
-        return respond(sessionUser, newBalance, httpServletRequest, httpServletResponse);
+        return respond(
+                sessionUser,
+                newBalance,
+                httpServletRequest,
+                httpServletResponse
+        );
     }
 
     private ResponseEntity<ApiResponse> respond(SessionUser sessionUser,

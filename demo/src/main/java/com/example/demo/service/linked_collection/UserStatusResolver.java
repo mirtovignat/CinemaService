@@ -8,6 +8,7 @@ import com.example.demo.repository.entity.PurchasedMovieRepository;
 import com.example.demo.service.catalog.RatedQueryService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
@@ -24,7 +25,11 @@ public class UserStatusResolver {
         if (userId == null || movieIds == null || movieIds.isEmpty()) {
             return Map.of();
         }
+        return loadAllUserStatuses(userId, movieIds);
+    }
 
+    @Transactional(readOnly = true)
+    public Map<Long, UserStatus> loadAllUserStatuses(Long userId, Collection<Long> movieIds) {
         Set<Long> cartMovieIds = new LinkedHashSet<>(
                 cartItemRepository.findMovieIdsByUserIdAndMovieIdIn(userId, movieIds));
         Set<Long> favouriteMovieIds = new LinkedHashSet<>(
@@ -47,6 +52,11 @@ public class UserStatusResolver {
         if (userId == null) {
             return UserStatuses.empty();
         }
+        return loadUserStatuses(userId);
+    }
+
+    @Transactional(readOnly = true)
+    public UserStatuses loadUserStatuses(Long userId) {
         return UserStatuses.builder()
                 .cart(new LinkedHashSet<>(cartItemRepository.findMovieIdsByUserId(userId)))
                 .favourites(new LinkedHashSet<>(favouriteMovieRepository.findMovieIdsByUserId(userId)))
