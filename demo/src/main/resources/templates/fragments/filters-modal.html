@@ -71,14 +71,14 @@
                 </div>
                 <input type="hidden" id="filterSortBy" name="sortBy"
                        th:value="${param.sortBy != null ? param.sortBy[0] : ''}">
-                <input type="hidden" id="filtersortDirection" name="sortDirection"
+                <input type="hidden" id="filterSortDirection" name="sortDirection"
                        th:value="${param.sortDirection != null ? param.sortDirection[0] : ''}">
             </div>
 
             <div class="filter-group">
                 <div class="filter-row">
                     <div class="amount-input-with-stepper">
-                        <label for="priceFrom" class="filter-sublabel">Цена (От)</label>
+                        <label for="priceFrom" class="filter-sublabel">Цена (От):</label>
                         <div class="filter-input-with-clear">
                             <input type="text" inputmode="decimal" id="priceFrom" name="priceFrom"
                                    class="filter-input"
@@ -95,7 +95,7 @@
                         </div>
                     </div>
                     <div class="amount-input-with-stepper">
-                        <label for="priceTo" class="filter-sublabel">Цена (До)</label>
+                        <label for="priceTo" class="filter-sublabel">Цена (До):</label>
                         <div class="filter-input-with-clear">
                             <input type="text" inputmode="decimal" id="priceTo" name="priceTo" class="filter-input"
                                    placeholder="100000 ₽"
@@ -116,7 +116,7 @@
             <div class="filter-group">
                 <div class="filter-row">
                     <div class="amount-input-with-stepper">
-                        <label for="ratingFrom" class="filter-sublabel">Рейтинг (От)</label>
+                        <label for="ratingFrom" class="filter-sublabel">Рейтинг (От):</label>
                         <div class="filter-input-with-clear">
                             <input type="text" inputmode="decimal" id="ratingFrom" name="ratingFrom"
                                    class="filter-input" placeholder="0.0"
@@ -142,7 +142,7 @@
                         </div>
                     </div>
                     <div class="amount-input-with-stepper">
-                        <label for="ratingTo" class="filter-sublabel">Рейтинг (До)</label>
+                        <label for="ratingTo" class="filter-sublabel">Рейтинг (До):</label>
                         <div class="filter-input-with-clear">
                             <input type="text" inputmode="decimal" id="ratingTo" name="ratingTo"
                                    class="filter-input"
@@ -255,7 +255,7 @@
             <div class="filter-group">
                 <div class="filter-row">
                     <div class="filter-input-with-clear">
-                        <label for="releaseDateFrom" class="filter-sublabel">Дата выхода (От)</label>
+                        <label for="releaseDateFrom" class="filter-sublabel">Дата выхода (От):</label>
                         <input type="date" id="releaseDateFrom" name="releaseDateFrom" class="filter-input"
                                th:value="${param.releaseDateFrom != null ? param.releaseDateFrom[0] : ''}"
                                th:max="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
@@ -269,7 +269,7 @@
                         </button>
                     </div>
                     <div class="filter-input-with-clear">
-                        <label for="releaseDateTo" class="filter-sublabel">Дата выхода (До)</label>
+                        <label for="releaseDateTo" class="filter-sublabel">Дата выхода (До):</label>
                         <input type="date" id="releaseDateTo" name="releaseDateTo" class="filter-input"
                                th:value="${param.releaseDateTo != null ? param.releaseDateTo[0] : ''}"
                                th:max="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
@@ -288,7 +288,7 @@
             <div class="filter-group">
                 <div class="duration-range-inline">
                     <div class="duration-block">
-                        <span class="range-prefix">Длительность (От)</span>
+                        <span class="range-prefix">Длительность (От):</span>
                         <div class="duration-picker">
                             <div class="duration-field">
                                 <label for="durationFromHours" class="visually-hidden">Часы от</label>
@@ -321,7 +321,7 @@
                     </div>
                     <span class="range-separator">—</span>
                     <div class="duration-block">
-                        <span class="range-prefix">Длительность (До)</span>
+                        <span class="range-prefix">Длительность (До):</span>
                         <div class="duration-picker">
                             <div class="duration-field">
                                 <label for="durationToHours" class="visually-hidden">Часы до</label>

@@ -7,6 +7,7 @@ import com.example.demo.repository.entity.MovieRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,11 +37,23 @@ public class MovieFilterMetaService {
     public Slice<String> searchDirectors(CursorPageRequest cursorPageRequest) {
         String cursor = cursorPageRequest.cursor();
         boolean hasCursor = cursor != null && !cursor.isBlank();
-        return movieRepository.fetchDirectorsKeyset(
+        String cursorDirector = hasCursor ? cursor : "";
+        String cursorSurname = hasCursor ? surnameOf(cursor) : "";
+
+        List<String> rows = movieRepository.fetchDirectorsKeyset(
                 cursorPageRequest.query() != null ? cursorPageRequest.query() : "",
                 hasCursor,
-                hasCursor ? cursor : "",
-                PageRequest.of(0, pageSize)
+                cursorSurname,
+                cursorDirector,
+                pageSize + 1
+        );
+
+        boolean hasMore = rows.size() > pageSize;
+        List<String> content = hasMore ? rows.subList(0, pageSize) : rows;
+        return new SliceImpl<>(
+                content,
+                PageRequest.of(0, pageSize),
+                hasMore
         );
     }
 
@@ -59,5 +72,14 @@ public class MovieFilterMetaService {
     @Transactional(readOnly = true)
     public MovieRangesSnapshot getRanges() {
         return movieRangesSnapshotMapper.toSnapshot(movieRepository.findRanges());
+    }
+
+    private String surnameOf(String directorFullName) {
+        if (directorFullName == null || directorFullName.isBlank()) {
+            return "";
+        }
+        String trimmed = directorFullName.trim();
+        int index = trimmed.indexOf(' ');
+        return index < 0 ? trimmed : trimmed.substring(index + 1).trim();
     }
 }

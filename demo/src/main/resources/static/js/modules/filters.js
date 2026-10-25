@@ -17,6 +17,8 @@
         'X-Requested-With': 'XMLHttpRequest'
     };
 
+    var LIMITS_READY = false;
+
     function formatPriceValue(value) {
         var numberValue = Number(value);
         if (isNaN(numberValue)) return '';
@@ -42,10 +44,10 @@
         var priceToInput = document.getElementById('priceTo');
 
         if (priceFromInput) {
-            priceFromInput.setAttribute('placeholder', 'От ' + formatPriceValue(FILTER_LIMITS.priceMin) + ' ₽');
+            priceFromInput.setAttribute('placeholder', 'Мин. ' + formatPriceValue(FILTER_LIMITS.priceMin) + ' ₽');
         }
         if (priceToInput) {
-            priceToInput.setAttribute('placeholder', 'До ' + formatPriceValue(FILTER_LIMITS.priceMax) + ' ₽');
+            priceToInput.setAttribute('placeholder', 'Макс. ' + formatPriceValue(FILTER_LIMITS.priceMax) + ' ₽');
         }
 
         document.querySelectorAll(
@@ -380,7 +382,7 @@
         return fetch('/filters/meta', { headers: AJAX_HEADERS })
             .then(function (response) { return response.ok ? response.json() : null; })
             .then(function (meta) {
-                if (!meta) return;
+                if (!meta) { LIMITS_READY = true; return; }
                 if (meta.ranges) {
                     if (meta.ranges.price) {
                         if (meta.ranges.price.min != null) FILTER_LIMITS.priceMin = Number(meta.ranges.price.min);
@@ -395,11 +397,12 @@
                         if (meta.ranges.releaseDate.max != null) FILTER_LIMITS.releaseDateMax = String(meta.ranges.releaseDate.max);
                     }
                 }
+                LIMITS_READY = true;
                 applyPriceLimitsToUi();
                 applyDurationLimitsToUi();
                 applyReleaseDateLimitsToUi();
             })
-            .catch(function () {});
+            .catch(function () { LIMITS_READY = true; });
     }
 
     function calculateRangeMinutes() {
@@ -685,7 +688,6 @@
     function setupSelectAllCheckbox(dropdownElementId, checkboxName) {
         var dropdownElement = document.getElementById(dropdownElementId);
         if (!dropdownElement) return;
-        if (!dropdownElement.querySelector('input[name="' + checkboxName + '"]')) return;
 
         var existingSelectAllElement = dropdownElement.querySelector('.accordion-select-all');
         if (existingSelectAllElement) existingSelectAllElement.remove();
@@ -857,6 +859,100 @@
         });
     }
 
+    function getCheckedValues(name) {
+        var result = [];
+        document.querySelectorAll('#filterForm input[type="checkbox"][name="' + name + '"]:checked')
+            .forEach(function (cb) { result.push(cb.value); });
+        return result;
+    }
+
+    function getAllCheckboxCount(name) {
+        return document.querySelectorAll('#filterForm input[type="checkbox"][name="' + name + '"]').length;
+    }
+
+    function collectMeaningfulFilters() {
+        var result = {};
+
+        function num(id) {
+            var el = document.getElementById(id);
+            if (!el || el.value.trim() === '') return null;
+            var n = parseFloat(el.value.replace(',', '.'));
+            return isNaN(n) ? null : n;
+        }
+
+        function str(id) {
+            var el = document.getElementById(id);
+            return el ? el.value.trim() : '';
+        }
+
+        var pFrom = num('priceFrom');
+        var pTo = num('priceTo');
+        if (pFrom != null && FILTER_LIMITS.priceMin != null && pFrom > FILTER_LIMITS.priceMin) {
+            result.priceFrom = pFrom.toFixed(2);
+        }
+        if (pTo != null && FILTER_LIMITS.priceMax != null && pTo < FILTER_LIMITS.priceMax) {
+            result.priceTo = pTo.toFixed(2);
+        }
+
+        var rFrom = num('ratingFrom');
+        var rTo = num('ratingTo');
+        if (rFrom != null && rFrom > 0.1) result.ratingFrom = rFrom.toFixed(1);
+        if (rTo != null && rTo < 10) result.ratingTo = rTo.toFixed(1);
+
+        var relFrom = str('releaseDateFrom');
+        var relTo = str('releaseDateTo');
+        if (relFrom && FILTER_LIMITS.releaseDateMin && relFrom > FILTER_LIMITS.releaseDateMin) {
+            result.releaseDateFrom = relFrom;
+        }
+        if (relTo && FILTER_LIMITS.releaseDateMax && relTo < FILTER_LIMITS.releaseDateMax) {
+            result.releaseDateTo = relTo;
+        }
+
+        calculateRangeMinutes();
+        var durFrom = str('minDuration');
+        var durTo = str('maxDuration');
+        if (durFrom && FILTER_LIMITS.durationMin != null && Number(durFrom) > FILTER_LIMITS.durationMin) {
+            result.durationFrom = durFrom;
+        }
+        if (durTo && FILTER_LIMITS.durationMax != null && Number(durTo) < FILTER_LIMITS.durationMax) {
+            result.durationTo = durTo;
+        }
+
+        var genres = getCheckedValues('genres');
+        var allGenres = getAllCheckboxCount('genres');
+        if (genres.length > 0 && (allGenres === 0 || genres.length < allGenres)) {
+            result.genres = genres;
+        }
+
+        var directors = getCheckedValues('directors');
+        var allDirectors = getAllCheckboxCount('directors');
+        if (directors.length > 0 && (allDirectors === 0 || directors.length < allDirectors)) {
+            result.directors = directors;
+        }
+
+        var sort = getCurrentSortSelection();
+        if (sort) {
+            result.sortBy = sort.key;
+            result.sortDirection = sort.dir;
+        }
+
+        return result;
+    }
+
+    function buildQueryString(title, filters) {
+        var params = new URLSearchParams();
+        if (title) params.set('title', title);
+        Object.keys(filters).forEach(function (key) {
+            var v = filters[key];
+            if (Array.isArray(v)) {
+                v.forEach(function (item) { params.append(key, item); });
+            } else {
+                params.set(key, v);
+            }
+        });
+        return params.toString();
+    }
+
     function attachFiltersAsHiddenInputsTo(targetForm) {
         if (!targetForm) return;
         targetForm.querySelectorAll('[data-from-filters="1"]').forEach(function (el) { el.remove(); });
@@ -974,97 +1070,41 @@
     }
 
     function submitCombinedSearch() {
-        var headerForm = document.getElementById('headerSearchForm');
-        if (!headerForm) return;
-
-        if (typeof validateFilter === 'function' && !validateFilter()) return;
+        if (!validateFilter()) return;
 
         var headerInput = document.getElementById('headerSearchInput');
-        var trimmedTitle = headerInput ? headerInput.value.trim() : '';
-        var cleanTitle = trimmedTitle.replace(/…+$/, '').trim();
+        var title = headerInput ? headerInput.value.trim().replace(/…+$/, '').trim() : '';
+        var filters = collectMeaningfulFilters();
 
-        var hasTitle = cleanTitle !== '';
-        var hasMeaningfulFilters = isFilterMeaningful();
-
-        if (!hasTitle && !hasMeaningfulFilters) {
+        if (!title && Object.keys(filters).length === 0) {
             if (typeof showFlashMessage === 'function') {
                 showFlashMessage('Введите запрос или задайте значимые фильтры', 'warning');
             }
             return;
         }
 
-        if (headerInput) {
-            headerInput.removeAttribute('name');
-            var hiddenTitle = headerForm.querySelector('input[type="hidden"][name="title"]');
-
-            if (hasTitle) {
-                if (!hiddenTitle) {
-                    hiddenTitle = document.createElement('input');
-                    hiddenTitle.type = 'hidden';
-                    hiddenTitle.name = 'title';
-                    headerForm.appendChild(hiddenTitle);
-                }
-                hiddenTitle.value = cleanTitle;
-            } else if (hiddenTitle) {
-                hiddenTitle.remove();
-            }
-        }
-
-        attachFiltersAsHiddenInputsTo(headerForm);
-        removeEmptyFormFields(headerForm);
-
-        headerForm.removeAttribute('onsubmit');
-        headerForm.submit();
+        var query = buildQueryString(title, filters);
+        window.location.href = '/movies' + (query ? '?' + query : '');
     }
 
     function applyFiltersFromModal() {
-        if (typeof validateFilter === 'function' && !validateFilter()) return;
+        if (!validateFilter()) return;
 
-        if (!isFilterMeaningful()) {
+        var headerInput = document.getElementById('headerSearchInput');
+        var title = headerInput ? headerInput.value.trim().replace(/…+$/, '').trim() : '';
+        var filters = collectMeaningfulFilters();
+
+        if (!title && Object.keys(filters).length === 0) {
             if (typeof showFlashMessage === 'function') {
-                showFlashMessage('Выбранные фильтры не сужают выборку. Задайте значимые параметры.', 'warning');
+                showFlashMessage('Ничего не выбрано: фильтр не изменит список.', 'warning');
             }
+            toggleFiltersModal(false);
             return;
         }
 
         toggleFiltersModal(false);
-
-        var headerForm = document.getElementById('headerSearchForm');
-        if (headerForm) {
-            var headerInput = document.getElementById('headerSearchInput');
-            if (headerInput) {
-                var trimmedTitle = headerInput.value.trim();
-                var cleanTitle = trimmedTitle.replace(/…+$/, '').trim();
-
-                headerInput.removeAttribute('name');
-
-                var hiddenTitle = headerForm.querySelector('input[type="hidden"][name="title"]');
-
-                if (cleanTitle !== '') {
-                    if (!hiddenTitle) {
-                        hiddenTitle = document.createElement('input');
-                        hiddenTitle.type = 'hidden';
-                        hiddenTitle.name = 'title';
-                        headerForm.appendChild(hiddenTitle);
-                    }
-                    hiddenTitle.value = cleanTitle;
-                } else if (hiddenTitle) {
-                    hiddenTitle.remove();
-                }
-            }
-
-            attachFiltersAsHiddenInputsTo(headerForm);
-            removeEmptyFormFields(headerForm);
-            headerForm.removeAttribute('onsubmit');
-            headerForm.submit();
-            return;
-        }
-
-        var filterForm = document.getElementById('filterForm');
-        if (filterForm) {
-            filterForm.removeAttribute('onsubmit');
-            filterForm.submit();
-        }
+        var query = buildQueryString(title, filters);
+        window.location.href = '/movies' + (query ? '?' + query : '');
     }
 
     function getFocusableFilterFields() {
@@ -1312,20 +1352,31 @@
         });
     }
 
-    function initFiltersOpenButton() {
-        var filtersBtn = document.getElementById('headerFiltersBtn');
-        if (!filtersBtn) return;
-        if (filtersBtn.dataset.filtersOpenBound === '1') return;
-        filtersBtn.dataset.filtersOpenBound = '1';
-        filtersBtn.addEventListener('click', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleFiltersModal();
+    function bindWheelPassthrough() {
+        var outer = document.getElementById('filterForm');
+        if (!outer) return;
+        if (outer.dataset.wheelPassBound === '1') return;
+        outer.dataset.wheelPassBound = '1';
+
+        outer.querySelectorAll('[data-accordion-dropdown]').forEach(function (inner) {
+            inner.addEventListener('wheel', function (e) {
+                var atTop = inner.scrollTop <= 0;
+                var atBottom = Math.ceil(inner.scrollTop + inner.clientHeight) >= inner.scrollHeight - 1;
+                var goingUp = e.deltaY < 0;
+                var goingDown = e.deltaY > 0;
+
+                if ((goingDown && atBottom) || (goingUp && atTop) || inner.scrollHeight <= inner.clientHeight) {
+                    e.preventDefault();
+                    var step = e.deltaY;
+                    if (e.deltaMode === 1) step *= 16;
+                    else if (e.deltaMode === 2) step *= outer.clientHeight;
+                    outer.scrollTop += step;
+                }
+            }, { passive: false });
         });
     }
 
     function initAll() {
-        try { initFiltersOpenButton(); } catch (openInitError) { console.error('[filters] open button init failed', openInitError); }
         try { initFilterSort(); } catch (sortInitError) { console.error('[filters] sort init failed', sortInitError); }
         try { initFilterMasks(); } catch (masksInitError) { console.error('[filters] masks init failed', masksInitError); }
         try { initFilterAccordions(); } catch (accordionsInitError) { console.error('[filters] accordions init failed', accordionsInitError); }
@@ -1334,6 +1385,7 @@
         try { initOverlayAndClose(); } catch (overlayInitError) { console.error('[filters] overlay init failed', overlayInitError); }
         try { initStepperButtons(); } catch (stepperInitError) { console.error('[filters] stepper init failed', stepperInitError); }
         try { initFilterEnterKeyHandler(); } catch (enterInitError) { console.error('[filters] enter init failed', enterInitError); }
+        try { bindWheelPassthrough(); } catch (wheelInitError) { console.error('[filters] wheel init failed', wheelInitError); }
     }
 
     if (document.readyState === 'loading') {

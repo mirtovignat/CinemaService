@@ -1,7 +1,7 @@
 .filters-modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(5, 7, 15, 0.92);
+    background: rgba(5, 7, 15, 0.45);
     display: flex;
     justify-content: center;
     align-items: flex-start;
@@ -17,7 +17,8 @@
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
 }
 
 .filters-modal-content {
