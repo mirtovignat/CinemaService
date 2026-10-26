@@ -1,8 +1,8 @@
 package com.example.demo.repository.entity;
 
-import com.example.demo.model.entity.Movie;
 import com.example.demo.model.entity.RatedMovie;
 import com.example.demo.repository.base.AbstractCatalogItemRepository;
+import com.example.demo.repository.projection.MovieRatingStatsProjection;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.Modifying;
@@ -10,7 +10,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
@@ -207,6 +206,16 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
             """)
     Long countByMovieId(@Param("movieId") Long movieId);
 
+    @Query("""
+            SELECT
+                AVG(ratedMovie.ratingValue) AS avgRating,
+                COUNT(ratedMovie) AS totalCount
+            FROM RatedMovie ratedMovie
+            WHERE ratedMovie.movie.id = :movieId
+            AND ratedMovie.deletableState.deleted = false
+            """)
+    MovieRatingStatsProjection calculateRatingStats(@Param("movieId") Long movieId);
+
     @Modifying
     @Query("""
             UPDATE RatedMovie ratedMovie
@@ -237,13 +246,6 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
     List<RatedMovie> findTopNByUserIdOrderByRatingValueDesc(
             @Param("userId") Long userId,
             Pageable pageable);
-
-    @Query("""
-            SELECT AVG(ratedMovie.ratingValue) FROM RatedMovie ratedMovie
-            WHERE ratedMovie.movie = :movie
-            AND ratedMovie.deletableState.deleted = false
-            """)
-    BigDecimal calculateAverageRating(@Param("movie") Movie movie);
 
     @Query("""
             SELECT ratedMovie FROM RatedMovie ratedMovie

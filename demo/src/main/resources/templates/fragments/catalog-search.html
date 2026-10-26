@@ -3,7 +3,10 @@
 <body>
 
 <div th:fragment="catalogSearch" class="catalog-search">
-    <form class="catalog-search-form" method="get" action="" data-catalog-search-form>
+    <form class="catalog-search-form"
+          method="get"
+          action="/movies"
+          data-catalog-search-form>
         <div class="catalog-search-input-wrapper" data-catalog-search-wrapper>
             <span class="catalog-search-icon">
                 <th:block th:replace="~{fragments/icons :: icon-search}"></th:block>
@@ -11,11 +14,11 @@
             <label for="catalogSearchInput" class="visually-hidden">Поиск по началу названия</label>
             <input type="text"
                    id="catalogSearchInput"
-                   name="query"
+                   name="title"
                    autocomplete="off"
                    placeholder="Поиск по началу названия..."
                    maxlength="100"
-                   th:value="${query != null ? query : ''}"
+                   th:value="${title != null ? title : ''}"
                    data-catalog-search-input>
 
             <button type="button"
@@ -35,7 +38,6 @@
         </div>
         <button type="submit" class="catalog-search-submit-btn">Найти</button>
     </form>
-    <div class="catalog-search-empty" data-catalog-search-empty>Ничего не найдено</div>
 </div>
 
 </body>

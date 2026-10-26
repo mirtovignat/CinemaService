@@ -105,7 +105,6 @@
         if (avatarElement) {
             if (isDeleted) {
                 avatarElement.classList.add('avatar--deleted');
-                // Иконка удаленного пользователя (аналог svg из Thymeleaf)
                 avatarElement.innerHTML = '<span class="avatar-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="17" y1="11" x2="23" y2="11"></line></svg></span>';
             } else {
                 avatarElement.classList.remove('avatar--deleted');
@@ -565,37 +564,20 @@
     var RETRY_BASE_DELAY_MS = 1000;
     var MAX_BACKOFF_MS = 30000;
     var FETCH_TIMEOUT_MS = 10000;
-    var OBSERVER_DEBOUNCE_MS = 150;
 
     var retryCount = 0;
     var disabledUntil = 0;
-    var observerTimer = null;
     var retryTimer = null;
 
-    var sentinel = document.createElement('div');
-    sentinel.setAttribute('aria-hidden', 'true');
-    sentinel.style.height = '1px';
-    sentinel.style.width = '100%';
-    sentinel.style.pointerEvents = 'none';
-    loadMoreWrapper.appendChild(sentinel);
+    reviewsBody.addEventListener('scroll', function() {
+        if (isLoading || !hasMore) return;
 
-    var observer = new IntersectionObserver(onIntersect, {
-        root: reviewsBody,
-        rootMargin: '0px 0px 200px 0px',
-        threshold: 0
-    });
-    observer.observe(sentinel);
+        if (reviewsBody.scrollHeight - reviewsBody.scrollTop - reviewsBody.clientHeight < 300) {
+            requestLoad();
+        }
+    }, { passive: true });
 
     maybeFillOnce();
-
-    function onIntersect(entries) {
-        if (!entries[0].isIntersecting) return;
-        if (observerTimer) return;
-        observerTimer = setTimeout(() => {
-            observerTimer = null;
-            requestLoad();
-        }, OBSERVER_DEBOUNCE_MS);
-    }
 
     function maybeFillOnce() {
         if (!hasMore) return;
@@ -618,15 +600,10 @@
     }
 
     function disconnectObserver() {
-        if (observerTimer) {
-            clearTimeout(observerTimer);
-            observerTimer = null;
-        }
         if (retryTimer) {
             clearTimeout(retryTimer);
             retryTimer = null;
         }
-        observer.disconnect();
     }
 
     async function loadNext() {
@@ -690,6 +667,8 @@
                 disconnectObserver();
                 loadMoreWrapper.remove();
                 appendEndMarker();
+            } else {
+                setTimeout(maybeFillOnce, 100);
             }
         } catch (error) {
             var isAbort = error && error.name === 'AbortError';

@@ -1,12 +1,14 @@
 (function () {
     'use strict';
 
-    var SUGGESTIONS_DEBOUNCE_MS = 200;
+    var SUGGESTIONS_DEBOUNCE_MS = 250;
     var SUGGESTIONS_LIMIT = 10;
 
     var DEFAULT_STORAGE_KEY = 'lastSearchQuery';
     var SEARCH_CLEARED_KEY = 'searchClearedFlag';
     var KNOWN_TITLES_KEY = 'knownTitles';
+
+    var suggestionsCache = {};
 
     function hasMeaningfulChars(value) {
         return /[a-zа-я0-9ё]/i.test(String(value || ''));
@@ -140,6 +142,10 @@
     }
 
     function fetchSuggestionsPayload(url) {
+        if (suggestionsCache[url]) {
+            return Promise.resolve(suggestionsCache[url]);
+        }
+
         return fetch(url, {
             headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
             credentials: 'same-origin', cache: 'no-store'
@@ -152,20 +158,12 @@
             if (contentType.indexOf('text/html') !== -1) return [];
             return response.json();
         })
-        .then(normalizeSuggestionsPayload)
+        .then(function (json) {
+            var normalized = normalizeSuggestionsPayload(json);
+            suggestionsCache[url] = normalized;
+            return normalized;
+        })
         .catch(function () { return []; });
-    }
-
-    function detectCatalogSuggestionsEndpoint() {
-        if (window.__collectionSuggestionsEndpoint) return window.__collectionSuggestionsEndpoint;
-        var path = (window.location.pathname || '').replace(/\/$/, '');
-        if (path === '/cart') return '/cart/suggestions';
-        if (path === '/favourites') return '/favourites/suggestions';
-        if (path === '/library') return '/library/suggestions';
-        if (path === '/history') return '/history/suggestions';
-        if (path === '/rated/history') return '/rated/history/suggestions';
-        if (path === '/watched') return '/watched/suggestions';
-        return null;
     }
 
     function commonPrefixOriginal(titles) {
@@ -206,7 +204,6 @@
         var typedElement = config.typedEl || null;
         var hintElement = config.hintEl || null;
         var getSuggestionsUrl = config.getSuggestionsUrl;
-        var onBeforeSubmit = config.onBeforeSubmit || null;
         var submitForm = config.submitForm || null;
         var onEmptyAfterClear = config.onEmptyAfterClear || null;
         var onRememberQuery = config.onRememberQuery || null;
@@ -362,7 +359,6 @@
             input.removeAttribute('name');
             if (visualValue != null) input.value = visualValue;
             if (typeof onRememberQuery === 'function' && visualValue != null) onRememberQuery(visualValue);
-            if (typeof onBeforeSubmit === 'function') onBeforeSubmit();
             hideSuggestions();
             hideAutocomplete();
             if (typeof submitForm === 'function') submitForm();
@@ -372,7 +368,6 @@
         function submitFromSuggestion(title, movieId) {
             if (!title) return;
 
-            // Если у подсказки есть ID фильма и это поиск фильма - идём сразу на страницу
             if (isMovieSearch && movieId) {
                 if (typeof onRememberQuery === 'function') onRememberQuery(title);
                 window.location.href = '/movies/' + encodeURIComponent(movieId);
@@ -427,7 +422,10 @@
             clearTimeout(debounceTimer);
 
             if (!value || !hasMeaningfulChars(value)) { hideSuggestions(); return; }
-            debounceTimer = setTimeout(function () { runFetchSuggestions(value); }, SUGGESTIONS_DEBOUNCE_MS);
+
+            debounceTimer = setTimeout(function () {
+                runFetchSuggestions(value);
+            }, SUGGESTIONS_DEBOUNCE_MS);
         });
 
         input.addEventListener('keydown', function (event) {
@@ -539,14 +537,22 @@
             suggestionRowClass: 'catalog-suggestion-item',
             suggestionTitleClass: 'catalog-suggestion-title',
             queryParamName: 'title',
-            isMovieSearch: true, // Указываем, что это поиск фильмов
+            isMovieSearch: true,
             getSuggestionsUrl: function (query) { return '/movies/suggestions?query=' + encodeURIComponent(query); },
             submitForm: function () {
-                if (typeof window.submitCombinedSearch === 'function') window.submitCombinedSearch();
-                else headerSearchForm.submit();
-            },
-            onBeforeSubmit: function () {
-                if (typeof validateSearchQuery === 'function' && !validateSearchQuery()) throw new Error('validation');
+                if (isCatalogPage()) {
+                    if (typeof window.submitCombinedSearch === 'function') {
+                        window.submitCombinedSearch();
+                        return;
+                    }
+                }
+
+                var value = headerSearchInput.value.trim();
+                if (value) {
+                    window.location.href = '/movies?title=' + encodeURIComponent(value);
+                } else {
+                    window.location.href = '/movies';
+                }
             },
             onRememberQuery: function (value) {
                 clearSearchCleared();
@@ -565,7 +571,6 @@
         if (submitBtn) {
             submitBtn.addEventListener('click', function (event) {
                 event.preventDefault();
-                if (typeof validateSearchQuery === 'function' && !validateSearchQuery()) return;
                 engine.submit();
             });
         }
@@ -587,8 +592,7 @@
         var wrapper = document.querySelector('[data-catalog-search-wrapper]');
         if (!form || !input || !wrapper) return;
 
-        var path = (window.location.pathname || '').replace(/\/$/, '');
-        var storageKey = 'lastSearchQuery:' + path;
+        var storageKey = 'lastSearchQuery:catalog';
 
         var engine = createSearchEngine({
             form: form,
@@ -596,31 +600,39 @@
             wrapper: wrapper,
             clear: document.querySelector('[data-catalog-search-clear]'),
             suggestionsBox: document.querySelector('[data-catalog-search-suggestions]'),
-            queryParamName: 'query',
+            queryParamName: 'title',
             isMovieSearch: false,
             getSuggestionsUrl: function (query) {
-                var endpoint = detectCatalogSuggestionsEndpoint();
-                if (!endpoint) return null;
-                return endpoint + '?query=' + encodeURIComponent(query);
+                return '/movies/suggestions?query=' + encodeURIComponent(query);
             },
-            submitForm: function () { form.submit(); },
+            submitForm: function () {
+                var value = input.value.trim().replace(/…+$/, '').trim();
+                var url = '/movies';
+                if (value) url += '?title=' + encodeURIComponent(value);
+                window.location.href = url;
+            },
             onRememberQuery: function (value) {
                 writeLastSearch(storageKey, value);
             },
             onEmptyAfterClear: function () {
                 writeLastSearch(storageKey, '');
-                window.location.replace(window.location.pathname);
+                var path = (window.location.pathname || '').replace(/\/$/, '');
+                if (path === '' || path === '/movies') {
+                    window.location.replace('/movies');
+                } else {
+                    window.location.href = '/movies';
+                }
             }
         });
 
         if (!engine) return;
 
         var urlParams = new URLSearchParams(window.location.search);
-        var urlQuery = urlParams.get('query');
+        var urlTitle = urlParams.get('title');
         var savedQuery = readLastSearch(storageKey);
 
-        if (urlQuery) {
-            engine.setValue(savedQuery || urlQuery);
+        if (urlTitle) {
+            engine.setValue(savedQuery || urlTitle);
         }
     }
 

@@ -8,11 +8,6 @@ import java.util.List;
 
 public final class CursorUtils {
 
-    private static final String EMPTY_STRING = "";
-
-    private CursorUtils() {
-    }
-
     public static boolean hasCursor(CursorPageRequest cursorPageRequest) {
         String cursor = cursorPageRequest.cursor();
         return cursor != null && !cursor.isBlank();
@@ -20,11 +15,11 @@ public final class CursorUtils {
 
     public static String safeQuery(CursorPageRequest cursorPageRequest) {
         String query = cursorPageRequest.query();
-        return query != null ? query : EMPTY_STRING;
+        return query != null ? query : "";
     }
 
     public static String safeCursor(CursorPageRequest cursorPageRequest) {
-        return hasCursor(cursorPageRequest) ? cursorPageRequest.cursor() : EMPTY_STRING;
+        return hasCursor(cursorPageRequest) ? cursorPageRequest.cursor() : "";
     }
 
     public static <T> Slice<T> buildLimitedSlice(List<T> rows, int pageSize) {
@@ -37,7 +32,7 @@ public final class CursorUtils {
         if (query == null || query.isBlank()) {
             return null;
         }
-        String trimmed = query.trim().toLowerCase().replace('ё', 'е');
+        String trimmed = query.trim().toLowerCase();
         if (trimmed.isBlank()) {
             return null;
         }

@@ -271,23 +271,6 @@
         return result;
     }
 
-    function isSentinelVisible(state) {
-        var s = state.sentinel;
-        if (!s || !s.isConnected) return false;
-        var rect = s.getBoundingClientRect();
-        var rootRect;
-        if (state.scrollRoot && state.scrollRoot.isConnected) {
-            rootRect = state.scrollRoot.getBoundingClientRect();
-        } else {
-            rootRect = { top: 0, bottom: window.innerHeight || document.documentElement.clientHeight };
-        }
-        if (rect.top - rootRect.bottom < EDGE_MARGIN_PX) return true;
-        var doc = document.documentElement;
-        var winBottom = window.innerHeight || doc.clientHeight;
-        if (rect.top - winBottom < EDGE_MARGIN_PX) return true;
-        return false;
-    }
-
     function mount(container) {
         if (!container || container.dataset.cursorMounted === '1') return null;
         container.dataset.cursorMounted = '1';
@@ -310,11 +293,8 @@
             hasMore: hasMore,
             fetching: false,
             fetchToken: 0,
-            sentinel: null,
             loader: null,
-            scrollRoot: null,
             scrollParents: [],
-            pollTimer: null,
             scrollListeners: []
         };
 
@@ -326,40 +306,13 @@
             return false;
         }
 
-        function ensureSentinel() {
-            var s = container.querySelector('[data-cursor-sentinel]');
-            if (!s) {
-                s = document.createElement('div');
-                s.setAttribute('aria-hidden', 'true');
-                s.setAttribute('data-cursor-sentinel', '');
-                s.style.height = '1px';
-                s.style.width = '100%';
-                s.style.pointerEvents = 'none';
-            }
-            state.sentinel = s;
-            return s;
-        }
-
         function ensureTail() {
-            var s = ensureSentinel();
             var loader = container.querySelector('[data-cursor-loader]');
-
-            if (s.parentNode !== container) {
-                container.appendChild(s);
-            }
             if (loader) {
                 if (loader.parentNode !== container) {
                     container.appendChild(loader);
                 }
-                if (s.nextElementSibling !== loader) {
-                    container.appendChild(s);
-                    container.appendChild(loader);
-                }
                 state.loader = loader;
-            } else {
-                if (container.lastElementChild !== s) {
-                    container.appendChild(s);
-                }
             }
         }
 
@@ -387,10 +340,6 @@
                 }
                 state.scrollListeners.push({ node: node, handler: handler });
             });
-
-            state.scrollRoot = state.scrollParents.length > 1
-                ? state.scrollParents[state.scrollParents.length - 2]
-                : null;
         }
 
         state.fetchNext = function () {
@@ -439,13 +388,17 @@
                     ? cursorPageResponse.items
                     : [];
 
-                var sentinel = ensureSentinel();
                 var frag = document.createDocumentFragment();
                 items.forEach(function (item) {
                     var card = createCardFromTemplate(state.templateId, item);
                     if (card) frag.appendChild(card);
                 });
-                container.insertBefore(frag, sentinel);
+
+                if (state.loader && state.loader.parentNode === container) {
+                    container.insertBefore(frag, state.loader);
+                } else {
+                    container.appendChild(frag);
+                }
 
                 state.nextCursor = cursorPageResponse.nextCursor || null;
                 state.hasMore = !!cursorPageResponse.hasMore;
@@ -475,7 +428,6 @@
                     window.applyStatusesFromSession();
                 }
 
-                ensureTail();
                 rebindScrollParents();
 
                 return items.length > 0;
@@ -495,8 +447,19 @@
 
         state.checkEdge = function () {
             if (state.fetching || !state.hasMore) return;
-            ensureTail();
-            if (isSentinelVisible(state)) {
+
+            var minDistance = Infinity;
+            state.scrollParents.forEach(function(node) {
+                if (node === window) {
+                    var dist = document.documentElement.scrollHeight - window.scrollY - window.innerHeight;
+                    if (dist < minDistance) minDistance = dist;
+                } else {
+                    var dist = node.scrollHeight - node.scrollTop - node.clientHeight;
+                    if (dist < minDistance) minDistance = dist;
+                }
+            });
+
+            if (minDistance < EDGE_MARGIN_PX) {
                 state.fetchNext();
             }
         };
@@ -504,16 +467,8 @@
         ensureTail();
         rebindScrollParents();
 
-        state.pollTimer = setInterval(function () {
-            state.checkEdge();
-        }, POLL_INTERVAL_MS);
-
         state.destroy = function () {
-            if (state.pollTimer) clearInterval(state.pollTimer);
             detachScrollListeners();
-            if (state.sentinel && state.sentinel.parentNode) {
-                state.sentinel.remove();
-            }
             container.dataset.cursorMounted = '';
         };
 

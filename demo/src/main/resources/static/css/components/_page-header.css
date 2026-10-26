@@ -99,7 +99,6 @@
     min-width: 150px;
     max-width: 425px;
     z-index: 2000;
-    isolation: isolate;
 }
 
 .page-header-row .catalog-search form,

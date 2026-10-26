@@ -9,7 +9,6 @@
     align-items: stretch;
     margin: 0;
     z-index: 2000;
-    isolation: isolate;
 }
 
 .catalog-search-form {
@@ -155,7 +154,7 @@
     box-shadow:
         0 15px 35px rgba(0, 0, 0, 0.8),
         0 0 15px rgba(99, 102, 241, 0.2);
-    z-index: 2147483000;
+    z-index: 3000;
     flex-direction: column;
     gap: 4px;
     max-height: 320px;
@@ -264,6 +263,7 @@
 
 .catalog-search-input-wrapper.has-autocomplete input {
     color: transparent;
+    caret-color: #ffffff;
 }
 
 .catalog-search-input-wrapper.has-autocomplete input::placeholder {
@@ -310,6 +310,10 @@
     -webkit-text-fill-color: #6b7280 !important;
     white-space: pre;
     font-weight: 400;
+}
+
+.page-header-row .catalog-search-suggestions {
+    z-index: 3000;
 }
 
 @media (max-width: 900px) {

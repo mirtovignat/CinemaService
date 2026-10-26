@@ -9,12 +9,12 @@ import com.example.demo.model.entity.RatedMovie;
 import com.example.demo.model.entity.User;
 import com.example.demo.repository.entity.MovieRepository;
 import com.example.demo.repository.entity.RatedMovieRepository;
+import com.example.demo.repository.projection.MovieRatingStatsProjection;
 import com.example.demo.service.user.UserQueryService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -65,10 +65,18 @@ public class RatedCommandService {
     }
 
     private void synchronizeMovieRating(Movie movie, Long movieId) {
-        BigDecimal averageRating = ratedMovieRepository.calculateAverageRating(movie);
-        Long actualRatingsCount = ratedMovieRepository.countByMovieId(movieId);
-        movie.setRating(averageRating != null ? averageRating.setScale(1, RoundingMode.HALF_UP) : null);
-        movie.setRatingsCount(actualRatingsCount == null ? 0 : actualRatingsCount.intValue());
+        MovieRatingStatsProjection stats = ratedMovieRepository.calculateRatingStats(movieId);
+
+        if (stats == null || stats.getTotalCount() == null || stats.getTotalCount() == 0) {
+            movie.setRating(null);
+            movie.setRatingsCount(0);
+        } else {
+            movie.setRating(stats.getAvgRating() != null
+                    ? stats.getAvgRating().setScale(1, RoundingMode.HALF_UP)
+                    : null);
+            movie.setRatingsCount(stats.getTotalCount().intValue());
+        }
+
         movieRepository.save(movie);
     }
 }
