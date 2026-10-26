@@ -10,14 +10,13 @@ import com.example.demo.repository.entity.UserRepository;
 import com.example.demo.service.catalog.RatedQueryService;
 import com.example.demo.service.movie.MovieFilterMetaService;
 import com.example.demo.service.movie.MovieRecommendationService;
-import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 
 @Service
-@AllArgsConstructor
 public class UserQueryService {
 
     private final UserRepository userRepository;
@@ -25,6 +24,21 @@ public class UserQueryService {
     private final RatedQueryService ratedQueryService;
     private final MovieRecommendationService movieRecommendationService;
     private final MovieFilterMetaService movieFilterMetaService;
+    private final BigDecimal maxBalance;
+
+    public UserQueryService(UserRepository userRepository,
+                            UserMapper userMapper,
+                            RatedQueryService ratedQueryService,
+                            MovieRecommendationService movieRecommendationService,
+                            MovieFilterMetaService movieFilterMetaService,
+                            @Value("${app.wallet.max-balance:100000.00}") BigDecimal maxBalance) {
+        this.userRepository = userRepository;
+        this.userMapper = userMapper;
+        this.ratedQueryService = ratedQueryService;
+        this.movieRecommendationService = movieRecommendationService;
+        this.movieFilterMetaService = movieFilterMetaService;
+        this.maxBalance = maxBalance;
+    }
 
     public PersonalAccountResponse buildUserPage(User user) {
         Long userId = user.getId();
@@ -54,7 +68,7 @@ public class UserQueryService {
     }
 
     public WalletForOwnerViewDTO getWalletForOwner(Long userId) {
-        return userMapper.toWalletView(getUser(userId));
+        return userMapper.toWalletView(getUser(userId), maxBalance);
     }
 
     public UserForOwnerViewDTO getUserForOwner(Long userId) {

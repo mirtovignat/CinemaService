@@ -131,8 +131,7 @@ public class PersonalAccountController {
             HttpSession httpSession,
             RedirectAttributes redirectAttributes
     ) {
-        String suffix = userCommandService.prepareDeleteAccount(userId);
-        userCommandService.deleteAccount(userId, suffix);
+        userCommandService.deleteAccount(userId);
         httpSession.invalidate();
         String successMessage = messageUtils.getSuccess(SuccessCode.ACCOUNT_HAS_BEEN_REMOVED);
         redirectAttributes.addFlashAttribute("successMessage", successMessage);

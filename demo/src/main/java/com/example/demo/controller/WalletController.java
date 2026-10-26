@@ -36,9 +36,7 @@ public class WalletController {
     @GetMapping("/top-up")
     public String getTopUpForm(@CurrentUserId Long userId, Model model) {
         if (!model.containsAttribute("topUpFormDTO")) {
-            model.addAttribute("topUpFormDTO",
-                    TopUpFormDTO.builder()
-                            .build());
+            model.addAttribute("topUpFormDTO", TopUpFormDTO.builder().build());
         }
         model.addAttribute("wallet", userQueryService.getWalletForOwner(userId));
         return "account/top-up";

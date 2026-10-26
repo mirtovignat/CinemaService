@@ -4,106 +4,77 @@
 
 <div th:fragment="pager(page, url)"
      class="pagination"
-     th:if="${page != null and page.totalPages > 1}">
+     th:if="${page != null and page.totalPages > 1}"
+     th:with="currentPage=${page.number}, totalPages=${page.totalPages}">
 
     <th:block th:with="
-        totalPages=${page.totalPages},
-        currentPage=${page.number},
-        qTitle=${param.title != null and param.title.length > 0 and param.title[0] != null ? param.title[0] : ''},
-        qGenre=${param.genre != null and param.genre.length > 0 and param.genre[0] != null ? param.genre[0] : ''},
-        qPriceFrom=${param.priceFrom != null and param.priceFrom.length > 0 and param.priceFrom[0] != null ? param.priceFrom[0] : ''},
-        qPriceTo=${param.priceTo != null and param.priceTo.length > 0 and param.priceTo[0] != null ? param.priceTo[0] : ''},
-        qRatingFrom=${param.ratingFrom != null and param.ratingFrom.length > 0 and param.ratingFrom[0] != null ? param.ratingFrom[0] : ''},
-        qRatingTo=${param.ratingTo != null and param.ratingTo.length > 0 and param.ratingTo[0] != null ? param.ratingTo[0] : ''},
-        qDurationFrom=${param.durationFrom != null and param.durationFrom.length > 0 and param.durationFrom[0] != null ? param.durationFrom[0] : ''},
-        qDurationTo=${param.durationTo != null and param.durationTo.length > 0 and param.durationTo[0] != null ? param.durationTo[0] : ''},
-        qReleaseDateFrom=${param.releaseDateFrom != null and param.releaseDateFrom.length > 0 and param.releaseDateFrom[0] != null ? param.releaseDateFrom[0] : ''},
-        qReleaseDateTo=${param.releaseDateTo != null and param.releaseDateTo.length > 0 and param.releaseDateTo[0] != null ? param.releaseDateTo[0] : ''},
-        qGenres=${param.genres != null and param.genres.length > 0 ? #strings.listJoin(param.genres, ',') : ''},
-        qDirectors=${param.directors != null and param.directors.length > 0 ? #strings.listJoin(param.directors, ',') : ''},
-        qSortBy=${param.sortBy != null and param.sortBy.length > 0 and param.sortBy[0] != null ? param.sortBy[0] : ''},
-        qSortDirection=${param.sortDirection != null and param.sortDirection.length > 0 and param.sortDirection[0] != null ? param.sortDirection[0] : ''}
+        queryString=${
+            (param.title != null and param.title[0] != '' ? '&title=' + #uris.escapeQueryParam(param.title[0]) : '') +
+            (param.genre != null and param.genre[0] != '' ? '&genre=' + #uris.escapeQueryParam(param.genre[0]) : '') +
+            (param.priceFrom != null and param.priceFrom[0] != '' ? '&priceFrom=' + #uris.escapeQueryParam(param.priceFrom[0]) : '') +
+            (param.priceTo != null and param.priceTo[0] != '' ? '&priceTo=' + #uris.escapeQueryParam(param.priceTo[0]) : '') +
+            (param.ratingFrom != null and param.ratingFrom[0] != '' ? '&ratingFrom=' + #uris.escapeQueryParam(param.ratingFrom[0]) : '') +
+            (param.ratingTo != null and param.ratingTo[0] != '' ? '&ratingTo=' + #uris.escapeQueryParam(param.ratingTo[0]) : '') +
+            (param.durationFrom != null and param.durationFrom[0] != '' ? '&durationFrom=' + #uris.escapeQueryParam(param.durationFrom[0]) : '') +
+            (param.durationTo != null and param.durationTo[0] != '' ? '&durationTo=' + #uris.escapeQueryParam(param.durationTo[0]) : '') +
+            (param.releaseDateFrom != null and param.releaseDateFrom[0] != '' ? '&releaseDateFrom=' + #uris.escapeQueryParam(param.releaseDateFrom[0]) : '') +
+            (param.releaseDateTo != null and param.releaseDateTo[0] != '' ? '&releaseDateTo=' + #uris.escapeQueryParam(param.releaseDateTo[0]) : '') +
+            (param.genres != null and param.genres.length > 0 ? '&genres=' + #uris.escapeQueryParam(#strings.listJoin(param.genres, ',')) : '') +
+            (param.directors != null and param.directors.length > 0 ? '&directors=' + #uris.escapeQueryParam(#strings.listJoin(param.directors, ',')) : '') +
+            (param.sortBy != null and param.sortBy[0] != '' ? '&sortBy=' + #uris.escapeQueryParam(param.sortBy[0]) : '') +
+            (param.sortDirection != null and param.sortDirection[0] != '' ? '&sortDirection=' + #uris.escapeQueryParam(param.sortDirection[0]) : '')
+        },
+        baseUrl=${url + '?page='}
     ">
 
-        <th:block th:with="
-            baseQuery=${
-                (qTitle != '' ? '&title=' + #uris.escapeQueryParam(qTitle) : '')
-                + (qGenre != '' ? '&genre=' + #uris.escapeQueryParam(qGenre) : '')
-                + (qPriceFrom != '' ? '&priceFrom=' + #uris.escapeQueryParam(qPriceFrom) : '')
-                + (qPriceTo != '' ? '&priceTo=' + #uris.escapeQueryParam(qPriceTo) : '')
-                + (qRatingFrom != '' ? '&ratingFrom=' + #uris.escapeQueryParam(qRatingFrom) : '')
-                + (qRatingTo != '' ? '&ratingTo=' + #uris.escapeQueryParam(qRatingTo) : '')
-                + (qDurationFrom != '' ? '&durationFrom=' + #uris.escapeQueryParam(qDurationFrom) : '')
-                + (qDurationTo != '' ? '&durationTo=' + #uris.escapeQueryParam(qDurationTo) : '')
-                + (qReleaseDateFrom != '' ? '&releaseDateFrom=' + #uris.escapeQueryParam(qReleaseDateFrom) : '')
-                + (qReleaseDateTo != '' ? '&releaseDateTo=' + #uris.escapeQueryParam(qReleaseDateTo) : '')
-                + (qGenres != '' ? '&genres=' + #uris.escapeQueryParam(qGenres) : '')
-                + (qDirectors != '' ? '&directors=' + #uris.escapeQueryParam(qDirectors) : '')
-                + (qSortBy != '' ? '&sortBy=' + #uris.escapeQueryParam(qSortBy) : '')
-                + (qSortDirection != '' ? '&sortDirection=' + #uris.escapeQueryParam(qSortDirection) : '')
-            }
-        ">
+        <th:block th:if="${currentPage > 0}">
+            <a th:href="${baseUrl + (currentPage - 1) + queryString}" class="page-nav">
+                <th:block th:replace="~{fragments/icons :: icon-chevron-left}"></th:block>
+            </a>
+        </th:block>
 
-            <th:block th:with="baseUrl=${url + '?page='}">
+        <th:block th:if="${totalPages <= 7}">
+            <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                <a th:href="${baseUrl + i + queryString}"
+                   class="page-nav"
+                   th:classappend="${i == currentPage} ? 'active' : ''"
+                   th:text="${i + 1}"></a>
+            </th:block>
+        </th:block>
 
-                <th:block th:if="${currentPage > 0}">
-                    <a th:with="previousPage=${currentPage - 1}"
-                       th:href="${baseUrl + previousPage + baseQuery}"
+        <th:block th:unless="${totalPages <= 7}">
+
+            <a th:href="${baseUrl + '0' + queryString}"
+               class="page-nav"
+               th:classappend="${currentPage == 0} ? 'active' : ''">1</a>
+
+            <span th:if="${currentPage >= 4}" class="page-dots">…</span>
+
+            <th:block th:with="
+                startPage=${currentPage <= 3 ? 1 : (currentPage >= totalPages - 4 ? totalPages - 5 : currentPage - 1)},
+                endPage=${currentPage <= 3 ? 5 : (currentPage >= totalPages - 4 ? totalPages - 2 : currentPage + 1)}
+            ">
+                <th:block th:each="i : ${#numbers.sequence(startPage, endPage)}">
+                    <a th:if="${i > 0 and i < totalPages - 1}"
+                       th:href="${baseUrl + i + queryString}"
                        class="page-nav"
-                       th:attr="data-page=${previousPage}">
-                        <th:block th:replace="~{fragments/icons :: icon-chevron-left}"></th:block>
-                    </a>
+                       th:classappend="${i == currentPage} ? 'active' : ''"
+                       th:text="${i + 1}"></a>
                 </th:block>
-
-                <th:block th:if="${totalPages <= 7}">
-                    <th:block th:each="pageIndex : ${#numbers.sequence(0, totalPages - 1)}">
-                        <a th:href="${baseUrl + pageIndex + baseQuery}"
-                           class="page-nav"
-                           th:classappend="${pageIndex == currentPage} ? 'active' : ''"
-                           th:text="${pageIndex + 1}"
-                           th:attr="data-page=${pageIndex}"></a>
-                    </th:block>
-                </th:block>
-
-                <th:block th:unless="${totalPages <= 7}">
-                    <a th:href="${baseUrl + '0' + baseQuery}"
-                       class="page-nav"
-                       th:classappend="${currentPage == 0} ? 'active' : ''"
-                       data-page="0">1</a>
-
-                    <span th:if="${currentPage > 3}" class="page-dots">…</span>
-
-                    <th:block th:with="fromPage=${currentPage - 1 > 2 ? currentPage - 1 : 2},
-                                       toPage=${currentPage + 1 < totalPages - 2 ? currentPage + 1 : totalPages - 3}">
-                        <th:block th:each="pageIndex : ${#numbers.sequence(fromPage, toPage)}">
-                            <a th:href="${baseUrl + pageIndex + baseQuery}"
-                               class="page-nav"
-                               th:classappend="${pageIndex == currentPage} ? 'active' : ''"
-                               th:text="${pageIndex + 1}"
-                               th:attr="data-page=${pageIndex}"></a>
-                        </th:block>
-                    </th:block>
-
-                    <span th:if="${currentPage < totalPages - 4}" class="page-dots">…</span>
-
-                    <a th:href="${baseUrl + (totalPages - 1) + baseQuery}"
-                       class="page-nav"
-                       th:classappend="${currentPage == totalPages - 1} ? 'active' : ''"
-                       th:text="${totalPages}"
-                       th:attr="data-page=${totalPages - 1}"></a>
-                </th:block>
-
-                <th:block th:if="${currentPage < totalPages - 1}">
-                    <a th:with="nextPage=${currentPage + 1}"
-                       th:href="${baseUrl + nextPage + baseQuery}"
-                       class="page-nav"
-                       th:attr="data-page=${nextPage}">
-                        <th:block th:replace="~{fragments/icons :: icon-chevron-right}"></th:block>
-                    </a>
-                </th:block>
-
             </th:block>
 
+            <span th:if="${currentPage < totalPages - 4}" class="page-dots">…</span>
+
+            <a th:href="${baseUrl + (totalPages - 1) + queryString}"
+               class="page-nav"
+               th:classappend="${currentPage == totalPages - 1} ? 'active' : ''"
+               th:text="${totalPages}"></a>
+        </th:block>
+
+        <th:block th:if="${currentPage < totalPages - 1}">
+            <a th:href="${baseUrl + (currentPage + 1) + queryString}" class="page-nav">
+                <th:block th:replace="~{fragments/icons :: icon-chevron-right}"></th:block>
+            </a>
         </th:block>
 
     </th:block>

@@ -40,7 +40,7 @@ public class PurchasedCommandService {
     public BigDecimal purchaseBulk(Long userId) {
         List<CartItem> cartItems = cartService.findAll(userId);
         if (cartItems.isEmpty()) {
-            return userQueryService.getBalance(userId);
+            throw BusinessException.of(ErrorCode.EMPTY_CART);
         }
         List<Long> movieIds = cartItems.stream()
                 .map(cartItem -> cartItem.getMovie().getId())
@@ -50,7 +50,9 @@ public class PurchasedCommandService {
 
     private BigDecimal purchaseMovies(List<Long> requestedMovieIds, Long userId,
                                       boolean isSinglePurchase) {
-        User user = userQueryService.getUser(userId);
+        User user = userRepository.findByIdForUpdate(userId)
+                .orElseThrow(() -> BusinessException.of(ErrorCode.USER_NOT_FOUND, "id=" + userId));
+
         Set<Long> alreadyPurchasedMovieIds = purchasedQueryService.getPurchasedMovieIds(userId);
         List<Long> movieIdsToBuy = requestedMovieIds.stream()
                 .filter(movieId -> !alreadyPurchasedMovieIds.contains(movieId))

@@ -110,6 +110,13 @@ public class WatchedHistoryController {
     public ResponseEntity<WatchedMovieResponse> watch(@PathVariable Long id,
                                                       @CurrentUserId Long userId) {
         boolean saveHistory = watchedHistoryService.isHistorySaved(userId);
+
+        // Если история выключена, нам всё равно нужно проверить, куплен ли фильм.
+        // Если включена - watch() сам проверит это и выбросит ошибку.
+        if (!saveHistory) {
+            watchedHistoryService.ensurePurchased(id, userId);
+        }
+
         Long historyItemId = saveHistory ? watchedHistoryService.watch(id, userId) : null;
 
         String message = saveHistory

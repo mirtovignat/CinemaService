@@ -33,7 +33,7 @@ public class MovieSearchHelper {
                                   String title,
                                   Pageable pageable) {
         if (!movieFilterValidator.hasAnySearchCriteria(movieFilter, title)) {
-            return movieRepository.findAllPaged(pageable);
+            return movieRepository.findAll(pageable);
         }
 
         Specification<Movie> specification = Specification.allOf(

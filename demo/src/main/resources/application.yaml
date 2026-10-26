@@ -67,6 +67,15 @@ tmdb:
   poster-size: w500
 
 app:
+  validation:
+    username:
+      min-length: 3
+      max-length: 30
+      regex: "^[A-Za-zА-Яа-яЁё0-9_-]+$"
+    email:
+      regex: "^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+  wallet:
+    max-balance: 100000.00
   suggestions:
     limit: 10
   pagination:

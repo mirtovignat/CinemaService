@@ -5,6 +5,7 @@ import com.example.demo.repository.projection.WatchedSuggestionProjection;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -15,6 +16,13 @@ import java.util.Optional;
 
 @Repository
 public interface WatchHistoryItemRepository extends JpaRepository<WatchHistoryItem, Long> {
+
+    @Modifying
+    @Query("""
+            DELETE FROM WatchHistoryItem watchHistoryItem
+            WHERE watchHistoryItem.purchasedMovie.user.id = :userId
+            """)
+    void deleteAllByUserId(@Param("userId") Long userId);
 
     @Query("""
             SELECT watchHistoryItem

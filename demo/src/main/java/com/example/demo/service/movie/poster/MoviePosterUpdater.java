@@ -14,6 +14,7 @@ public class MoviePosterUpdater {
     private final PosterService posterService;
     private final MovieRepository movieRepository;
 
+    @Transactional
     public void replacePosterFromTMDB(Long movieId) {
         Movie movie = movieRepository.findById(movieId)
                 .orElseThrow(() -> new IllegalArgumentException("Фильм не найден: " + movieId));
@@ -31,14 +32,7 @@ public class MoviePosterUpdater {
         String fileName = "movie-" + movie.getId() + ".jpg";
         String minioUrl = posterService.uploadPosterFromUrl(tmdbPosterUrl, fileName);
 
-        updatePosterUrl(movieId, minioUrl);
-    }
-
-    @Transactional
-    public void updatePosterUrl(Long movieId, String posterUrl) {
-        Movie movie = movieRepository.findById(movieId)
-                .orElseThrow(() -> new IllegalArgumentException("Фильм не найден: " + movieId));
-        movie.setPosterUrl(posterUrl);
+        movie.setPosterUrl(minioUrl);
         movieRepository.save(movie);
     }
 }

@@ -28,7 +28,7 @@ public class WatchedHistoryService {
     public Long watch(Long movieId, Long userId) {
         PurchasedMovie purchasedMovie = purchasedMovieRepository
                 .findByMovieIdAndUserId(movieId, userId)
-                .orElseThrow(() -> BusinessException.of(ErrorCode.MOVIE_NOT_PURCHASED));
+                .orElseThrow(() -> BusinessException.of(ErrorCode.MOVIE_NOT_PURCHASED, movieId));
 
         int previousSize = purchasedMovie.getWatchedHistory().size();
         purchasedMovie.addWatchHistory(LocalDateTime.now(ZoneOffset.UTC));
@@ -40,6 +40,11 @@ public class WatchedHistoryService {
                     .getId();
         }
         return null;
+    }
+
+    @Transactional
+    public boolean ensurePurchased(Long movieId, Long userId) {
+        return purchasedMovieRepository.findByMovieIdAndUserId(movieId, userId).isPresent();
     }
 
     @Transactional

@@ -5,14 +5,16 @@ import com.example.demo.validation.annotation.ValidPhone;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import lombok.AllArgsConstructor;
+import org.springframework.stereotype.Component;
 
 @AllArgsConstructor
+@Component
 public class PhoneValidator implements ConstraintValidator<ValidPhone, String> {
 
     private final PhoneNormalizer phoneNormalizer;
 
     @Override
-    public boolean isValid(String value, ConstraintValidatorContext context) {
+    public boolean isValid(String value, ConstraintValidatorContext constraintValidatorContext) {
         if (value == null || value.isBlank()) {
             return true;
         }

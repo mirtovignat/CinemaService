@@ -6,10 +6,11 @@ import com.example.demo.dto.user.ProfileFieldUpdateDTO;
 import com.example.demo.exception.BusinessException;
 import com.example.demo.exception.ErrorCode;
 import com.example.demo.model.entity.User;
+import com.example.demo.repository.base.WatchHistoryItemRepository;
 import com.example.demo.repository.entity.*;
 import com.example.demo.util.PhoneNormalizer;
-import com.example.demo.util.UserSuffixGenerator;
-import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,10 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 
 @Service
-@AllArgsConstructor
 public class UserCommandService {
-
-    private static final BigDecimal MAX_BALANCE = new BigDecimal("100000.00");
 
     private final UserQueryService userQueryService;
     private final UserRepository userRepository;
@@ -28,14 +26,37 @@ public class UserCommandService {
     private final FavouriteMovieRepository favouriteMovieRepository;
     private final RatedMovieRepository ratedMovieRepository;
     private final PurchasedMovieRepository purchasedMovieRepository;
+    private final WatchHistoryItemRepository watchHistoryItemRepository;
     private final PasswordEncoder passwordEncoder;
-    private final UserSuffixGenerator userSuffixGenerator;
     private final PhoneNormalizer phoneNormalizer;
+    private final BigDecimal maxBalance;
+
+    public UserCommandService(UserQueryService userQueryService,
+                              UserRepository userRepository,
+                              CartItemRepository cartItemRepository,
+                              FavouriteMovieRepository favouriteMovieRepository,
+                              RatedMovieRepository ratedMovieRepository,
+                              PurchasedMovieRepository purchasedMovieRepository,
+                              WatchHistoryItemRepository watchHistoryItemRepository,
+                              PasswordEncoder passwordEncoder,
+                              PhoneNormalizer phoneNormalizer,
+                              @Value("${app.wallet.max-balance:100000.00}") BigDecimal maxBalance) {
+        this.userQueryService = userQueryService;
+        this.userRepository = userRepository;
+        this.cartItemRepository = cartItemRepository;
+        this.favouriteMovieRepository = favouriteMovieRepository;
+        this.ratedMovieRepository = ratedMovieRepository;
+        this.purchasedMovieRepository = purchasedMovieRepository;
+        this.watchHistoryItemRepository = watchHistoryItemRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.phoneNormalizer = phoneNormalizer;
+        this.maxBalance = maxBalance;
+    }
 
     public ProfileFieldUpdateDTO prepareAndValidateField(ProfileFieldUpdateDTO profileFieldUpdateDTO,
                                                          Long userId) {
         User user = userQueryService.getUser(userId);
-        String field = profileFieldUpdateDTO.field();
+        String field = profileFieldUpdateDTO.field() != null ? profileFieldUpdateDTO.field().trim() : "";
         Identifier identifier = profileFieldUpdateDTO.identifier();
 
         switch (identifier) {
@@ -46,7 +67,10 @@ public class UserCommandService {
                 if (userRepository.existsByUsername(field)) {
                     throw BusinessException.of(ErrorCode.ALREADY_TAKEN);
                 }
-                return profileFieldUpdateDTO;
+                return ProfileFieldUpdateDTO.builder()
+                        .identifier(identifier)
+                        .field(field)
+                        .build();
             }
             case EMAIL -> {
                 if (field.equals(user.getEmail())) {
@@ -55,13 +79,15 @@ public class UserCommandService {
                 if (userRepository.existsByEmail(field)) {
                     throw BusinessException.of(ErrorCode.ALREADY_TAKEN);
                 }
-                return profileFieldUpdateDTO;
+                return ProfileFieldUpdateDTO.builder()
+                        .identifier(identifier)
+                        .field(field)
+                        .build();
             }
             case PHONE -> {
-                String trimmedField = field != null ? field.trim() : "";
                 String currentPhone = user.getPhone() != null ? user.getPhone() : "";
 
-                if (trimmedField.isEmpty()) {
+                if (field.isEmpty()) {
                     if (currentPhone.isEmpty()) {
                         throw BusinessException.of(ErrorCode.DATA_COINCIDENCE);
                     }
@@ -70,7 +96,7 @@ public class UserCommandService {
                             .build();
                 }
 
-                String normalizedPhone = phoneNormalizer.normalize(trimmedField);
+                String normalizedPhone = phoneNormalizer.normalize(field);
                 if (normalizedPhone == null) {
                     throw BusinessException.of(ErrorCode.PHONE_INVALID);
                 }
@@ -91,18 +117,22 @@ public class UserCommandService {
 
     @Transactional
     public void updateField(Long userId, ProfileFieldUpdateDTO profileFieldUpdateDTO) {
-        switch (profileFieldUpdateDTO.identifier()) {
-            case USERNAME -> userRepository.updateUsername(userId, profileFieldUpdateDTO.field());
-            case EMAIL -> userRepository.updateEmail(userId, profileFieldUpdateDTO.field());
-            case PHONE -> {
-                String fieldValue = profileFieldUpdateDTO.field();
-                if (fieldValue == null || fieldValue.isBlank()) {
-                    userRepository.deletePhone(userId);
-                } else {
-                    userRepository.updatePhone(userId, fieldValue);
+        try {
+            switch (profileFieldUpdateDTO.identifier()) {
+                case USERNAME -> userRepository.updateUsername(userId, profileFieldUpdateDTO.field());
+                case EMAIL -> userRepository.updateEmail(userId, profileFieldUpdateDTO.field());
+                case PHONE -> {
+                    String fieldValue = profileFieldUpdateDTO.field();
+                    if (fieldValue == null || fieldValue.isBlank()) {
+                        userRepository.deletePhone(userId);
+                    } else {
+                        userRepository.updatePhone(userId, fieldValue);
+                    }
                 }
+                default -> throw BusinessException.of(ErrorCode.VALIDATION_ERROR);
             }
-            default -> throw BusinessException.of(ErrorCode.VALIDATION_ERROR);
+        } catch (DataIntegrityViolationException exception) {
+            throw BusinessException.of(ErrorCode.ALREADY_TAKEN);
         }
     }
 
@@ -133,26 +163,25 @@ public class UserCommandService {
         if (amount == null || amount.signum() <= 0) {
             throw BusinessException.of(ErrorCode.VALIDATION_ERROR);
         }
-        BigDecimal newBalance = user.getBalance().add(amount);
-        if (newBalance.compareTo(MAX_BALANCE) > 0) {
+        User lockedUser = userRepository.findByIdForUpdate(user.getId())
+                .orElseThrow(() -> BusinessException.of(ErrorCode.USER_NOT_FOUND, "id=" + user.getId()));
+        BigDecimal newBalance = lockedUser.getBalance().add(amount);
+        if (newBalance.compareTo(maxBalance) > 0) {
             throw BusinessException.of(ErrorCode.VALIDATION_ERROR);
         }
-        user.addMoney(amount);
-        userRepository.save(user);
-    }
-
-    public String prepareDeleteAccount(Long userId) {
-        User user = userQueryService.getUser(userId);
-        return userSuffixGenerator.generate(user);
+        lockedUser.addMoney(amount);
+        userRepository.save(lockedUser);
+        user.setBalance(lockedUser.getBalance());
     }
 
     @Transactional
-    public void deleteAccount(Long userId, String suffix) {
+    public void deleteAccount(Long userId) {
+        watchHistoryItemRepository.deleteAllByUserId(userId);
         favouriteMovieRepository.deleteAllByUserId(userId);
         cartItemRepository.deleteAllByUserId(userId);
         purchasedMovieRepository.deleteAllByUserId(userId);
         ratedMovieRepository.softDeleteAllByUserId(userId);
-        userRepository.softDeleteById(userId, suffix);
+        userRepository.softDeleteById(userId);
     }
 
     @Transactional

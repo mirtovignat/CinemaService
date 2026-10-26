@@ -12,6 +12,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.math.BigDecimal;
+
 @Mapper(componentModel = "spring",
         uses = {NameMapper.class, AgeMapper.class},
         imports = {NameMapper.class, AgeMapper.class})
@@ -42,7 +44,9 @@ public abstract class UserMapper {
     @Mapping(target = "ratings", ignore = true)
     @Mapping(target = "cartItems", ignore = true)
     @Mapping(target = "saveHistory", ignore = true)
+    @Mapping(target = "sex", expression = "java(Boolean.TRUE.equals(registerFormDTO.sex()))")
     public abstract User fromRegisterForm(RegisterFormDTO registerFormDTO);
 
-    public abstract WalletForOwnerViewDTO toWalletView(User user);
+    @Mapping(target = "maxBalance", source = "maxBalance")
+    public abstract WalletForOwnerViewDTO toWalletView(User user, BigDecimal maxBalance);
 }

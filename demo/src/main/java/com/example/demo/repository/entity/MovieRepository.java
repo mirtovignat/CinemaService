@@ -101,12 +101,6 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
     @Query("""
             SELECT movie
             FROM Movie movie
-            """)
-    Page<Movie> findAllPaged(Pageable pageable);
-
-    @Query("""
-            SELECT movie
-            FROM Movie movie
             WHERE movie.posterUrl IS NULL
             ORDER BY movie.id ASC
             """)

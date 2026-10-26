@@ -23,7 +23,7 @@ public record RegisterFormDTO(
         String username,
 
         @NotNull(message = "Заполните пол")
-        boolean sex,
+        Boolean sex,
 
         @NotNull(message = "Укажите дату рождения")
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)

@@ -3,7 +3,9 @@ package com.example.demo.repository.entity;
 import com.example.demo.exception.BusinessException;
 import com.example.demo.exception.ErrorCode;
 import com.example.demo.model.entity.User;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,6 +15,15 @@ import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT user
+            FROM User user
+            WHERE user.id = :userId
+            AND user.deletableState.deleted = false
+            """)
+    Optional<User> findByIdForUpdate(@Param("userId") Long userId);
 
     @Query("""
             SELECT user.saveHistory
@@ -26,12 +37,18 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("""
             UPDATE User user
             SET user.deletableState.deleted = true,
-                user.username = CONCAT('deleted_', user.id, '_', :suffix),
-                user.email = CONCAT('deleted_', user.id, '_', :suffix, '_', COALESCE(user.email, 'null')),
-                user.phone = CONCAT('deleted_', user.id, '_', :suffix, '_', COALESCE(user.phone, 'null'))
+                user.username = CONCAT('deleted_', user.id),
+                user.email = CASE
+                    WHEN user.email IS NULL THEN NULL
+                    ELSE CONCAT('deleted_', user.id, '_', user.email)
+                END,
+                user.phone = CASE
+                    WHEN user.phone IS NULL THEN NULL
+                    ELSE CONCAT('deleted_', user.id, '_', user.phone)
+                END
             WHERE user.id = :userId
             """)
-    void softDeleteById(@Param("userId") Long userId, @Param("suffix") String suffix);
+    void softDeleteById(@Param("userId") Long userId);
 
     default User findByIdOrThrow(Long id) {
         return findById(id)

@@ -6,6 +6,7 @@ public record WalletForOwnerViewDTO(
         String phone,
         String fullName,
         BigDecimal balance,
+        BigDecimal maxBalance,
         String currencyCode,
         String username
 ) {

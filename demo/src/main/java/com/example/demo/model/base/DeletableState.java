@@ -8,7 +8,7 @@ import lombok.*;
 @Embeddable
 @Getter
 @Setter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
 @AllArgsConstructor
 public class DeletableState {
     @Builder.Default

@@ -10,6 +10,7 @@ import com.example.demo.model.entity.User;
 import com.example.demo.repository.entity.UserRepository;
 import com.example.demo.util.PhoneNormalizer;
 import lombok.AllArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -53,8 +54,12 @@ public class AuthorizeService {
 
     public SessionUser register(RegisterFormDTO registerFormDTO) {
         User preparedUser = prepareUser(registerFormDTO);
-        User savedUser = userRepository.saveAndFlush(preparedUser);
-        return SessionUser.from(savedUser);
+        try {
+            User savedUser = userRepository.saveAndFlush(preparedUser);
+            return SessionUser.from(savedUser);
+        } catch (DataIntegrityViolationException exception) {
+            throw BusinessException.of(ErrorCode.ALREADY_REGISTERED);
+        }
     }
 
     private User prepareUser(RegisterFormDTO registerFormDTO) {
