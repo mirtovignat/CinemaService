@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.math.BigDecimal;
 
 @Mapper(componentModel = "spring",
-        uses = {NameMapper.class, AgeMapper.class},
         imports = {NameMapper.class, AgeMapper.class})
 public abstract class UserMapper {
 

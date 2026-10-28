@@ -67,15 +67,15 @@
                 title="Избранное">
             <th:block th:replace="~{fragments/icons :: icon-heart}"></th:block>
             <span id="favourites-count" class="count-badge"
-                  th:text="${badges.favouritesCount}"
-                  th:style="${badges.favouritesCount == 0} ? 'display: none;' : ''">0</span>
+                  th:text="${badges != null and badges.favouritesCount != null ? badges.favouritesCount : 0}"
+                  th:style="${(badges == null or badges.favouritesCount == null or badges.favouritesCount == 0)} ? 'display: none;' : ''">0</span>
         </button>
 
         <button type="button" class="action-button cart-btn" id="headerCartBtn" title="Корзина">
             <th:block th:replace="~{fragments/icons :: icon-cart}"></th:block>
             <span id="cart-count" class="count-badge"
-                  th:text="${badges.cartCount}"
-                  th:style="${badges.cartCount == 0} ? 'display: none;' : ''">0</span>
+                  th:text="${badges != null and badges.cartCount != null ? badges.cartCount : 0}"
+                  th:style="${(badges == null or badges.cartCount == null or badges.cartCount == 0)} ? 'display: none;' : ''">0</span>
         </button>
 
         <div th:if="${sessionUser.authenticated}" class="user-menu" id="userMenu">
@@ -145,6 +145,8 @@
          id="currentUserData"
          th:data-username="${sessionUser.username()}"
          style="display:none;"></div>
+
+    <th:block th:replace="~{fragments/filters-modal :: filtersModal}"></th:block>
 
 </header>
 

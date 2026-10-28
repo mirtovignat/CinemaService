@@ -7,6 +7,7 @@
     var DEFAULT_STORAGE_KEY = 'lastSearchQuery';
     var SEARCH_CLEARED_KEY = 'searchClearedFlag';
     var KNOWN_TITLES_KEY = 'knownTitles';
+    var CAME_FROM_SEARCH_KEY = 'cameFromSearch';
 
     var suggestionsCache = {};
 
@@ -164,6 +165,18 @@
             return normalized;
         })
         .catch(function () { return []; });
+    }
+
+    function detectCatalogSuggestionsEndpoint() {
+        if (window.__collectionSuggestionsEndpoint) return window.__collectionSuggestionsEndpoint;
+        var path = (window.location.pathname || '').replace(/\/$/, '');
+        if (path === '/cart') return '/cart/suggestions';
+        if (path === '/favourites') return '/favourites/suggestions';
+        if (path === '/library') return '/library/suggestions';
+        if (path === '/history') return '/history/suggestions';
+        if (path === '/rated/history') return '/rated/history/suggestions';
+        if (path === '/watched') return '/watched/suggestions';
+        return null;
     }
 
     function commonPrefixOriginal(titles) {
@@ -361,7 +374,10 @@
             if (typeof onRememberQuery === 'function' && visualValue != null) onRememberQuery(visualValue);
             hideSuggestions();
             hideAutocomplete();
-            if (typeof submitForm === 'function') submitForm();
+
+            try { sessionStorage.setItem(CAME_FROM_SEARCH_KEY, '1'); } catch (e) {}
+
+            if (typeof submitForm === 'function') submitForm(value);
             else form.submit();
         }
 
@@ -370,6 +386,7 @@
 
             if (isMovieSearch && movieId) {
                 if (typeof onRememberQuery === 'function') onRememberQuery(title);
+                try { sessionStorage.setItem(CAME_FROM_SEARCH_KEY, '1'); } catch (e) {}
                 window.location.href = '/movies/' + encodeURIComponent(movieId);
                 return;
             }
@@ -384,7 +401,7 @@
             var cleanValue = capitalizeFirst(raw.replace(/…+$/, '').trim());
 
             var exactFromFetched = findExactTitle(lastFetchedTitles, cleanValue);
-            if (exactFromFetched) {
+            if (exactFromFetched && lastFetchedItems.length === 1) {
                 submitRaw(exactFromFetched, exactFromFetched);
                 return;
             }
@@ -406,7 +423,7 @@
                 visualValue = buildVisualQuery(cleanValue, lastFetchedTitles);
             } else if (currentTopMatch && normalizeForMatch(currentTopMatch).length > normalizedClean.length) {
                 visualValue = currentTopMatch + '…';
-            } else if (isKnownFullTitle(cleanValue)) {
+            } else if (isKnownFullTitle(cleanValue) && lastFetchedItems.length === 1) {
                 visualValue = cleanValue;
             } else {
                 visualValue = cleanValue + '…';
@@ -539,15 +556,21 @@
             queryParamName: 'title',
             isMovieSearch: true,
             getSuggestionsUrl: function (query) { return '/movies/suggestions?query=' + encodeURIComponent(query); },
-            submitForm: function () {
-                if (isCatalogPage()) {
-                    if (typeof window.submitCombinedSearch === 'function') {
-                        window.submitCombinedSearch();
-                        return;
-                    }
+            submitForm: function (cleanValue) {
+                if (isCatalogPage() && typeof window.submitCombinedSearch === 'function') {
+                    window.submitCombinedSearch();
+                    return;
                 }
 
-                var value = headerSearchInput.value.trim();
+                var value = cleanValue;
+                if (!value) {
+                    var hidden = headerSearchForm.querySelector('input[type="hidden"][name="title"]');
+                    value = hidden ? hidden.value.trim() : '';
+                }
+                if (!value) {
+                    value = headerSearchInput.value.trim().replace(/…+$/, '').trim();
+                }
+
                 if (value) {
                     window.location.href = '/movies?title=' + encodeURIComponent(value);
                 } else {
@@ -575,13 +598,52 @@
             });
         }
 
+        var cameFromSearch = false;
+        try {
+            cameFromSearch = sessionStorage.getItem(CAME_FROM_SEARCH_KEY) === '1';
+            sessionStorage.removeItem(CAME_FROM_SEARCH_KEY);
+        } catch (e) {}
+
         var urlParams = new URLSearchParams(window.location.search);
         var urlTitle = urlParams.get('title');
         var savedTitle = readLastSearch(DEFAULT_STORAGE_KEY);
 
-        if (urlTitle) {
-            engine.setValue(savedTitle || urlTitle);
-        } else if (isMovieDetailsPage() && savedTitle) {
+        var isMainPage = window.location.pathname === '/' || window.location.pathname === '';
+
+        if (isMovieDetailsPage()) {
+            if (cameFromSearch && savedTitle) {
+                engine.setValue(savedTitle);
+            } else {
+                headerSearchInput.value = '';
+                headerSearchWrapper.classList.remove('has-value');
+                writeLastSearch(DEFAULT_STORAGE_KEY, '');
+            }
+        } else if (!isCatalogPage() && window.location.pathname !== '/') {
+            headerSearchInput.value = '';
+            headerSearchWrapper.classList.remove('has-value');
+            writeLastSearch(DEFAULT_STORAGE_KEY, '');
+        } else if (isMainPage) {
+            if (urlTitle) {
+                engine.setValue(savedTitle || urlTitle);
+            } else {
+                headerSearchInput.value = '';
+                headerSearchWrapper.classList.remove('has-value');
+                writeLastSearch(DEFAULT_STORAGE_KEY, '');
+            }
+        } else if (urlTitle) {
+            var totalMatches = 0;
+            var totalMatchesEl = document.getElementById('catalogTotalMatches');
+            if (totalMatchesEl) {
+                totalMatches = parseInt(totalMatchesEl.value, 10) || 0;
+            }
+
+            var cleanTitle = urlTitle.replace(/…+$/, '').trim();
+            if (totalMatches > 1) {
+                engine.setValue(cleanTitle + '…');
+            } else {
+                engine.setValue(cleanTitle);
+            }
+        } else if (savedTitle) {
             engine.setValue(savedTitle);
         }
     }
@@ -592,7 +654,8 @@
         var wrapper = document.querySelector('[data-catalog-search-wrapper]');
         if (!form || !input || !wrapper) return;
 
-        var storageKey = 'lastSearchQuery:catalog';
+        var path = (window.location.pathname || '').replace(/\/$/, '');
+        var storageKey = 'lastSearchQuery:' + path;
 
         var engine = createSearchEngine({
             form: form,
@@ -600,39 +663,31 @@
             wrapper: wrapper,
             clear: document.querySelector('[data-catalog-search-clear]'),
             suggestionsBox: document.querySelector('[data-catalog-search-suggestions]'),
-            queryParamName: 'title',
+            queryParamName: 'query',
             isMovieSearch: false,
             getSuggestionsUrl: function (query) {
-                return '/movies/suggestions?query=' + encodeURIComponent(query);
+                var endpoint = detectCatalogSuggestionsEndpoint();
+                if (!endpoint) return null;
+                return endpoint + '?query=' + encodeURIComponent(query);
             },
-            submitForm: function () {
-                var value = input.value.trim().replace(/…+$/, '').trim();
-                var url = '/movies';
-                if (value) url += '?title=' + encodeURIComponent(value);
-                window.location.href = url;
-            },
+            submitForm: function () { form.submit(); },
             onRememberQuery: function (value) {
                 writeLastSearch(storageKey, value);
             },
             onEmptyAfterClear: function () {
                 writeLastSearch(storageKey, '');
-                var path = (window.location.pathname || '').replace(/\/$/, '');
-                if (path === '' || path === '/movies') {
-                    window.location.replace('/movies');
-                } else {
-                    window.location.href = '/movies';
-                }
+                window.location.replace(window.location.pathname);
             }
         });
 
         if (!engine) return;
 
         var urlParams = new URLSearchParams(window.location.search);
-        var urlTitle = urlParams.get('title');
+        var urlQuery = urlParams.get('query');
         var savedQuery = readLastSearch(storageKey);
 
-        if (urlTitle) {
-            engine.setValue(savedQuery || urlTitle);
+        if (urlQuery) {
+            engine.setValue(savedQuery || urlQuery);
         }
     }
 

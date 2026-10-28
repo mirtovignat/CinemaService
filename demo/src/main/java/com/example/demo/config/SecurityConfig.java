@@ -42,7 +42,8 @@ public class SecurityConfig {
             "/rated/rating/**",
             "/movies/*/rating",
             "/movies/suggestions",
-            "/recommendations"
+            "/recommendations",
+            "/api/posters/**"
     };
 
     private final AjaxAwareEntryPoint ajaxAwareEntryPoint;
@@ -73,6 +74,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests
                         .requestMatchers(PUBLIC_URLS).permitAll()
                         .anyRequest().authenticated()
+                )
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/api/posters/**")
                 )
                 .formLogin(formLogin -> formLogin
                         .loginPage("/login")

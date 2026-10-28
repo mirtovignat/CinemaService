@@ -1,15 +1,15 @@
 package com.example.demo.mapper.util;
 
-import org.mapstruct.Mapper;
 import org.mapstruct.Named;
+import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 
-@Mapper(componentModel = "spring")
-public interface DurationMapper {
+@Component
+public class DurationMapper {
 
     @Named("durationToString")
-    default String durationToString(Duration duration) {
+    public String durationToString(Duration duration) {
         if (duration == null) {
             return null;
         }
@@ -21,12 +21,12 @@ public interface DurationMapper {
     }
 
     @Named("durationToSeconds")
-    default Long toSeconds(Duration duration) {
+    public Long toSeconds(Duration duration) {
         return duration != null ? duration.getSeconds() : null;
     }
 
     @Named("SecondsToDuration")
-    default Duration toDuration(Long seconds) {
+    public Duration toDuration(Long seconds) {
         return seconds != null ? Duration.ofSeconds(seconds) : null;
     }
 }

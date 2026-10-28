@@ -5,16 +5,11 @@ import jakarta.persistence.criteria.Root;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 public final class SpecificationUtils {
 
     private static final int IN_CLAUSE_CHUNK_SIZE = 500;
-
-    private SpecificationUtils() {
-    }
 
     public static <Entity> Specification<Entity> unrestricted() {
         return Specification.unrestricted();
@@ -60,6 +55,25 @@ public final class SpecificationUtils {
         return (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.or(
                 chunkPredicates(root, fieldName, list)
         );
+    }
+
+    public static <Entity> Specification<Entity> inIfNotEmptyIgnoringCase(
+            String fieldName,
+            Collection<String> values
+    ) {
+        if (CollectionUtils.isEmpty(values)) {
+            return unrestricted();
+        }
+        List<String> lowered = values.stream()
+                .filter(Objects::nonNull)
+                .map(value -> value.toLowerCase(Locale.ROOT))
+                .distinct()
+                .toList();
+        if (lowered.isEmpty()) {
+            return unrestricted();
+        }
+        return (root, criteriaQuery, criteriaBuilder) ->
+                criteriaBuilder.lower(root.get(fieldName)).in(lowered);
     }
 
     public static <Entity> Specification<Entity> fieldStartsWithNormalized(

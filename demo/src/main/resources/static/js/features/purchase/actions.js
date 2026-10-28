@@ -1,24 +1,125 @@
 (function () {
     'use strict';
 
+    function isMeaningful(v) {
+        return v !== null && v !== undefined && v !== '' && v !== 'null' && v !== 'undefined';
+    }
+
+    function escapeAttr(v) {
+        if (v === null || v === undefined) return '';
+        return String(v)
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    }
+
+    function buildWatchOverlay(movieId, movieTitle, posterUrl, variant) {
+        var cls = variant ? ' watch-btn-neon--' + variant : '';
+        return '<div class="poster-overlay">' +
+            '<button type="button" class="watch-btn-neon' + cls + '" data-action="watch-movie"' +
+            ' data-movie-id="' + escapeAttr(movieId) + '"' +
+            ' data-movie-title="' + escapeAttr(movieTitle) + '"' +
+            ' data-poster-url="' + escapeAttr(posterUrl) + '">' +
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">' +
+            '<polygon points="5 3 19 12 5 21 5 3"/></svg>' +
+            'Смотреть' +
+            '</button></div>';
+    }
+
+    function upgradeCatalogCard(card, movieId, movieTitle, posterUrl) {
+        var posterLink = card.querySelector('.movie-poster-link');
+        if (posterLink && posterLink.getAttribute('data-action') !== 'watch-movie') {
+            posterLink.setAttribute('data-action', 'watch-movie');
+            posterLink.setAttribute('data-movie-id', movieId);
+            posterLink.setAttribute('data-movie-title', movieTitle);
+            posterLink.setAttribute('data-poster-url', posterUrl);
+            posterLink.setAttribute('href', 'javascript:void(0);');
+            if (!posterLink.querySelector('.poster-overlay')) {
+                var holder = document.createElement('div');
+                holder.innerHTML = buildWatchOverlay(movieId, movieTitle, posterUrl, 'md');
+                posterLink.appendChild(holder.firstChild);
+            }
+        }
+
+        var purchaseBlock = card.querySelector('.purchase-buttons');
+        if (purchaseBlock) {
+            purchaseBlock.innerHTML = '';
+            var boughtLink = document.createElement('a');
+            boughtLink.className = 'bought-btn';
+            boughtLink.href = '/library?highlight=' + encodeURIComponent(movieId);
+            boughtLink.textContent = 'Куплено → К коллекции';
+            purchaseBlock.appendChild(boughtLink);
+        }
+    }
+
+    function upgradeShowPage(movieId, movieTitle, posterUrl) {
+        var container = document.querySelector('.movie-details-container');
+        if (!container) return;
+
+        var posterWrapper = container.querySelector('.poster-wrapper');
+        if (posterWrapper) {
+            posterWrapper.setAttribute('data-action', 'watch-movie');
+            posterWrapper.setAttribute('data-movie-id', movieId);
+            posterWrapper.setAttribute('data-movie-title', movieTitle);
+            posterWrapper.setAttribute('data-poster-url', posterUrl);
+            if (!posterWrapper.querySelector('.poster-overlay')) {
+                var holder = document.createElement('div');
+                holder.innerHTML = buildWatchOverlay(movieId, movieTitle, posterUrl, '');
+                posterWrapper.appendChild(holder.firstChild);
+            }
+        }
+
+        var actionButtons = container.querySelector('.action-buttons');
+        if (actionButtons) {
+            actionButtons.querySelectorAll('.cart-button, .buy-now-btn, .in-cart-btn-details, .to-cart-btn-details, .bought-btn')
+                .forEach(function (btn) { btn.remove(); });
+            var boughtLink = document.createElement('a');
+            boughtLink.className = 'bought-btn';
+            boughtLink.href = '/library?highlight=' + encodeURIComponent(movieId);
+            boughtLink.textContent = 'Куплено → В коллекцию';
+            actionButtons.appendChild(boughtLink);
+        }
+    }
+
     function markAsBought(movieId) {
-        var buyButtons = document.querySelectorAll(
-            '[data-action="buy-now"][data-movie-id="' + CSS.escape(movieId) + '"]'
-        );
-        buyButtons.forEach(function (buyBtn) {
+        if (!movieId) return;
+        var escaped = CSS.escape(String(movieId));
+
+        document.querySelectorAll(
+            '.movie-card[data-movie-id="' + escaped + '"]'
+        ).forEach(function (card) {
+            upgradeCatalogCard(
+                card,
+                card.getAttribute('data-movie-id') || movieId,
+                card.getAttribute('data-movie-title') || '',
+                card.getAttribute('data-poster-url') || ''
+            );
+        });
+
+        document.querySelectorAll(
+            '[data-action="buy-now"][data-movie-id="' + escaped + '"]'
+        ).forEach(function (buyBtn) {
             var container = buyBtn.parentNode;
             if (!container) return;
-
             container.querySelectorAll(
                 '.cart-button, .buy-now-btn, .in-cart-btn-details, .to-cart-btn-details'
             ).forEach(function (btn) { btn.remove(); });
-
             var boughtBtn = document.createElement('a');
             boughtBtn.className = 'bought-btn';
             boughtBtn.href = '/library?highlight=' + encodeURIComponent(movieId);
             boughtBtn.textContent = 'Куплено → В коллекцию';
             container.appendChild(boughtBtn);
         });
+
+        if (document.querySelector('.movie-details-container')) {
+            var container = document.querySelector('.movie-details-container');
+            upgradeShowPage(
+                movieId,
+                container.getAttribute('data-movie-title') || '',
+                ''
+            );
+        }
     }
 
     function errorMessage(err) {
@@ -106,7 +207,7 @@
             if (posterUrl && posterUrl !== 'null' && posterUrl !== 'undefined' && posterUrl.trim() !== '') {
                 img.src = posterUrl;
                 img.style.display = 'block';
-                img.onerror = function() { img.style.display = 'none'; };
+                img.onerror = function () { img.style.display = 'none'; };
             } else {
                 img.removeAttribute('src');
                 img.style.display = 'none';
@@ -142,6 +243,8 @@
         }
         Actions.register('buy-now', onBuyNow);
     }
+
+    window.markAsBought = markAsBought;
 
     if (window.Actions && typeof window.Actions.ready === 'function') {
         window.Actions.ready(register);

@@ -8,7 +8,7 @@ import com.example.demo.model.entity.PurchasedMovie;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring", uses = DateTimeMapperUtil.class)
+@Mapper(componentModel = "spring", imports = DateTimeMapperUtil.class)
 public interface PurchasedMapper {
 
     @Mapping(target = "id", source = "purchasedMovie.movie.id")
@@ -20,8 +20,7 @@ public interface PurchasedMapper {
     @Mapping(target = "ageRating", source = "purchasedMovie.movie.ageRating")
     @Mapping(target = "watched", constant = "true")
     @Mapping(target = "addedAt",
-            source = "watchedAt",
-            qualifiedByName = "toUtcIso")
+            expression = "java(DateTimeMapperUtil.toUtcIso(watchHistoryItem.getWatchedAt()))")
     @Mapping(target = "historyItemId", source = "id")
     @Mapping(target = "director", source = "purchasedMovie.movie.director")
     LibrarianMovieViewDTO toLibrarianViewFromHistoryItem(WatchHistoryItem watchHistoryItem);
@@ -30,8 +29,7 @@ public interface PurchasedMapper {
     @Mapping(target = "title", source = "movie.title")
     @Mapping(target = "priceSnapshot", source = "priceSnapshot")
     @Mapping(target = "addedAt",
-            source = "addedAt",
-            qualifiedByName = "toUtcIso")
+            expression = "java(DateTimeMapperUtil.toUtcIso(purchasedMovie.getAddedAt()))")
     HistoricalMovieViewDTO toOwnerViewFromHistorical(PurchasedMovie purchasedMovie);
 
     @Mapping(target = "id", source = "movie.id")
@@ -44,8 +42,7 @@ public interface PurchasedMapper {
     @Mapping(target = "watched",
             expression = "java(!purchasedMovie.getWatchedHistory().isEmpty())")
     @Mapping(target = "addedAt",
-            source = "addedAt",
-            qualifiedByName = "toUtcIso")
+            expression = "java(DateTimeMapperUtil.toUtcIso(purchasedMovie.getAddedAt()))")
     @Mapping(target = "historyItemId", ignore = true)
     @Mapping(target = "director", source = "movie.director")
     LibrarianMovieViewDTO toOwnerViewFromLibrarian(PurchasedMovie purchasedMovie);

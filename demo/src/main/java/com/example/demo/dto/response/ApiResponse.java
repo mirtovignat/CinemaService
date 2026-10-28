@@ -25,4 +25,12 @@ public record ApiResponse<DTO>(
                 .data(null)
                 .build();
     }
+
+    public static <DTO> ApiResponse<DTO> errorWithDto(ErrorCode errorCode, String message, DTO dto) {
+        return ApiResponse.<DTO>builder()
+                .code(errorCode.name())
+                .message(message)
+                .data(dto)
+                .build();
+    }
 }

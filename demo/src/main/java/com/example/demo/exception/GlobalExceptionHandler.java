@@ -2,9 +2,14 @@ package com.example.demo.exception;
 
 import com.example.demo.dto.authorize.LoginFormDTO;
 import com.example.demo.dto.authorize.RegisterFormDTO;
+import com.example.demo.dto.badges.BadgeCountsDTO;
+import com.example.demo.dto.movie.tmdb.TmdbCreateRequestDTO;
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.dto.user.PasswordChangingDTO;
+import com.example.demo.dto.user.SessionUser;
+import com.example.demo.service.BadgeService;
 import com.example.demo.util.MessageUtils;
+import com.example.demo.web.security.CurrentUserProvider;
 import com.example.demo.web.util.RequestUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
@@ -24,6 +29,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -34,10 +40,13 @@ public class GlobalExceptionHandler {
     private static final Map<String, String> FORM_VIEW_BY_REQUEST_URI = Map.of(
             "/register", "auth/register",
             "/login", "auth/login",
-            "/settings/change/pwd", "account/change-password"
+            "/settings/change/pwd", "account/change-password",
+            "/movies/tmdb/create", "catalog/create-movie"
     );
 
     private final MessageUtils messageUtils;
+    private final CurrentUserProvider currentUserProvider;
+    private final BadgeService badgeService;
 
     @ExceptionHandler(ClientAbortException.class)
     public void handleClientAbortException(ClientAbortException clientAbortException) {
@@ -47,8 +56,8 @@ public class GlobalExceptionHandler {
     public Object handleInsufficientAuthenticationException(
             InsufficientAuthenticationException insufficientAuthenticationException,
             HttpServletRequest httpServletRequest) {
+        String errorMessage = messageUtils.getError(ErrorCode.NOT_AUTHORIZED);
         if (RequestUtils.isAjaxRequest(httpServletRequest)) {
-            String errorMessage = messageUtils.getError(ErrorCode.NOT_AUTHORIZED);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.error(ErrorCode.NOT_AUTHORIZED, errorMessage));
         }
@@ -63,8 +72,21 @@ public class GlobalExceptionHandler {
         ErrorCode errorCode = businessException.getErrorCode();
         String errorMessage = messageUtils.getError(errorCode, businessException.getArgs());
         HttpStatus httpStatus = mapErrorCodeToHttpStatus(errorCode);
+        Object data = extractAjaxData(errorCode, businessException.getArgs());
         return buildErrorResponse(httpServletRequest, model, redirectAttributes,
-                errorCode, errorMessage, httpStatus);
+                errorCode, errorMessage, httpStatus, data);
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public Object handleIllegalStateException(IllegalStateException illegalStateException,
+                                              HttpServletRequest httpServletRequest,
+                                              Model model,
+                                              RedirectAttributes redirectAttributes) {
+        ErrorCode errorCode = ErrorCode.INTERNAL_ERROR;
+        String errorMessage = messageUtils.getError(errorCode);
+        HttpStatus httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+        return buildErrorResponse(httpServletRequest, model, redirectAttributes,
+                errorCode, errorMessage, httpStatus, null);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -92,9 +114,10 @@ public class GlobalExceptionHandler {
             return ResponseEntity.notFound().build();
         }
 
+        addCommonAttributes(model);
         model.addAttribute("status", 404);
-        model.addAttribute("error", "Страница не найдена");
-        model.addAttribute("message", "Возможно, страница была удалена или вы ошиблись в адресе.");
+        model.addAttribute("error", messageUtils.getError(ErrorCode.ENTITY_NOT_FOUND));
+        model.addAttribute("message", messageUtils.getError(ErrorCode.ENTITY_NOT_FOUND));
         return "error";
     }
 
@@ -105,15 +128,17 @@ public class GlobalExceptionHandler {
         log.error("Необработанное исключение на URI: {}",
                 httpServletRequest.getRequestURI(), exception);
 
+        String errorMessage = messageUtils.getError(ErrorCode.INTERNAL_ERROR);
+
         if (RequestUtils.isAjaxRequest(httpServletRequest)) {
-            String errorMessage = messageUtils.getError(ErrorCode.INTERNAL_ERROR);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error(ErrorCode.INTERNAL_ERROR, errorMessage));
         }
 
+        addCommonAttributes(model);
         model.addAttribute("status", 500);
-        model.addAttribute("error", "Внутренняя ошибка");
-        model.addAttribute("message", "Что-то пошло не так. Мы уже работаем над этим.");
+        model.addAttribute("error", errorMessage);
+        model.addAttribute("message", errorMessage);
         return "error";
     }
 
@@ -121,14 +146,16 @@ public class GlobalExceptionHandler {
                                        HttpServletRequest httpServletRequest,
                                        Model model,
                                        RedirectAttributes redirectAttributes) {
+        String validationMessage = resolveFirstFieldErrorMessage(bindingResult);
+
         if (RequestUtils.isAjaxRequest(httpServletRequest)) {
-            String validationMessage = resolveFirstFieldErrorMessage(bindingResult);
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error(ErrorCode.VALIDATION_ERROR, validationMessage));
         }
 
         String formViewName = resolveFormViewName(httpServletRequest);
         if (formViewName != null) {
+            addCommonAttributes(model);
             String bindingObjectName = bindingResult.getObjectName();
             if (!model.containsAttribute(bindingObjectName)) {
                 model.addAttribute(bindingObjectName, bindingResult.getTarget());
@@ -137,16 +164,15 @@ public class GlobalExceptionHandler {
             return formViewName;
         }
 
-        String validationMessage = resolveFirstFieldErrorMessage(bindingResult);
         return buildErrorResponse(httpServletRequest, model, redirectAttributes,
-                ErrorCode.VALIDATION_ERROR, validationMessage, HttpStatus.BAD_REQUEST);
+                ErrorCode.VALIDATION_ERROR, validationMessage, HttpStatus.BAD_REQUEST, null);
     }
 
     private String resolveFirstFieldErrorMessage(BindingResult bindingResult) {
         return bindingResult.getFieldErrors().stream()
                 .findFirst()
                 .map(FieldError::getDefaultMessage)
-                .orElse("Ошибка валидации");
+                .orElse(messageUtils.getError(ErrorCode.VALIDATION_ERROR));
     }
 
     private Object buildErrorResponse(HttpServletRequest httpServletRequest,
@@ -154,14 +180,16 @@ public class GlobalExceptionHandler {
                                       RedirectAttributes redirectAttributes,
                                       ErrorCode errorCode,
                                       String errorMessage,
-                                      HttpStatus httpStatus) {
+                                      HttpStatus httpStatus,
+                                      Object data) {
         if (RequestUtils.isAjaxRequest(httpServletRequest)) {
             return ResponseEntity.status(httpStatus)
-                    .body(ApiResponse.error(errorCode, errorMessage));
+                    .body(ApiResponse.errorWithDto(errorCode, errorMessage, data));
         }
 
         String formViewName = resolveFormViewName(httpServletRequest);
         if (formViewName != null) {
+            addCommonAttributes(model);
             restoreFormModel(formViewName, model);
             model.addAttribute("errorMessage", errorMessage);
             return formViewName;
@@ -171,6 +199,30 @@ public class GlobalExceptionHandler {
             redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
         }
         return "redirect:" + resolveFallbackLocalPath(httpServletRequest);
+    }
+
+    private Object extractAjaxData(ErrorCode errorCode, Object[] args) {
+        if (errorCode != ErrorCode.TMDB_MOVIE_ALREADY_EXISTS) {
+            return null;
+        }
+        if (args == null || args.length == 0) {
+            return null;
+        }
+        return args[0];
+    }
+
+    private void addCommonAttributes(Model model) {
+        SessionUser sessionUser = currentUserProvider.getSessionUser();
+        if (sessionUser == null) {
+            sessionUser = SessionUser.ANONYMOUS;
+        }
+        model.addAttribute("sessionUser", sessionUser);
+
+        if (!sessionUser.isAuthenticated()) {
+            model.addAttribute("badges", BadgeCountsDTO.builder().build());
+            return;
+        }
+        model.addAttribute("badges", badgeService.getBadgeCounts(sessionUser.id()));
     }
 
     private String resolveFallbackLocalPath(HttpServletRequest httpServletRequest) {
@@ -227,6 +279,12 @@ public class GlobalExceptionHandler {
                 && !model.containsAttribute("passwordChangingDTO")) {
             model.addAttribute("passwordChangingDTO", PasswordChangingDTO.builder().build());
         }
+        if ("catalog/create-movie".equals(formViewName)
+                && !model.containsAttribute("tmdbCreateRequestDTO")) {
+            model.addAttribute("tmdbCreateRequestDTO", TmdbCreateRequestDTO.builder()
+                    .moviePriceItems(List.of())
+                    .build());
+        }
     }
 
     private boolean canUseFlashAttributes(HttpServletRequest httpServletRequest) {
@@ -235,10 +293,11 @@ public class GlobalExceptionHandler {
 
     private HttpStatus mapErrorCodeToHttpStatus(ErrorCode errorCode) {
         return switch (errorCode) {
-            case USER_NOT_FOUND, ENTITY_NOT_FOUND -> HttpStatus.NOT_FOUND;
+            case USER_NOT_FOUND, ENTITY_NOT_FOUND, TMDB_SEARCH_EMPTY -> HttpStatus.NOT_FOUND;
             case PASSWORD_INVALID, NOT_AUTHORIZED -> HttpStatus.UNAUTHORIZED;
             case INSUFFICIENT_FUNDS -> HttpStatus.PAYMENT_REQUIRED;
-            case ALREADY_REGISTERED, ALREADY_TAKEN, DATA_COINCIDENCE -> HttpStatus.CONFLICT;
+            case ALREADY_REGISTERED, ALREADY_TAKEN, DATA_COINCIDENCE, MOVIE_ALREADY_EXISTS, TMDB_MOVIE_ALREADY_EXISTS -> HttpStatus.CONFLICT;
+            case TMDB_UNAVAILABLE -> HttpStatus.SERVICE_UNAVAILABLE;
             default -> HttpStatus.BAD_REQUEST;
         };
     }

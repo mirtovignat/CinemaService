@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ru">
 <head>
-    <title th:text="${moviesPageResponse != null and moviesPageResponse.isSearch()} ? 'Результаты поиска — CinemaService' : 'Каталог — CinemaService'">
-        Каталог</title>
+    <title th:text="${moviesPageResponse != null and moviesPageResponse.isSearch()} ? 'Результаты поиска — CinemaService' : 'Каталог — CinemaService'">Каталог</title>
     <th:block th:replace="~{fragments/head :: head}"></th:block>
     <link rel="stylesheet" th:href="@{/css/pages/_catalog.css}">
 </head>
@@ -25,9 +24,20 @@
                 <th:block th:replace="~{fragments/icons :: icon-search}"></th:block>
             </span>
         </h1>
-        <h1 th:unless="${moviesPageResponse != null and moviesPageResponse.isSearch()}" style="text-align:center;">Лучшие фильмы и сериалы СПЕЦИАЛЬНО ДЛЯ
-            ВАС!</h1>
+        <th:block th:unless="${moviesPageResponse != null and moviesPageResponse.isSearch()}">
+            <div class="catalog-header-row">
+                <h1 style="text-align:center;">Лучшие фильмы и сериалы СПЕЦИАЛЬНО ДЛЯ ВАС!</h1>
+                <a th:href="@{/movies/new}" class="suggest-movie-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    Предложить свой
+                </a>
+            </div>
+        </th:block>
     </div>
+
+    <input type="hidden" id="catalogTotalMatches" th:value="${moviesPageResponse != null and moviesPageResponse.cardsPage() != null ? moviesPageResponse.cardsPage().totalElements : 0}">
 
     <div class="catalog-content">
         <div id="catalogContent">
@@ -50,10 +60,6 @@
 <th:block th:replace="~{fragments/modals/favourites-modals :: favouritesModals}"></th:block>
 <th:block th:replace="~{fragments/modals/ratings-modals :: ratingsModals}"></th:block>
 
-<th:block th:replace="~{fragments/filters-modal :: filtersModal}"></th:block>
-
-<script th:src="@{/js/modules/filters-search.js}" defer></script>
-<script th:src="@{/js/modules/filters.js}" defer></script>
 <script th:src="@{/js/pages/page-catalog.js}" defer></script>
 <script th:src="@{/js/main.js}" defer></script>
 

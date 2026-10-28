@@ -4,17 +4,21 @@ import com.example.demo.exception.BusinessException;
 import com.example.demo.exception.ErrorCode;
 import com.example.demo.model.entity.Movie;
 import com.example.demo.repository.projection.MovieRangeProjection;
+import com.example.demo.repository.projection.MovieReferProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecificationExecutor<Movie> {
 
@@ -23,11 +27,38 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
                 .orElseThrow(() -> BusinessException.of(ErrorCode.ENTITY_NOT_FOUND));
     }
 
+    boolean existsByTmdbId(Long tmdbId);
+
     @Query("""
-            SELECT DISTINCT movie.genre
+            SELECT movie.tmdbId
+            FROM Movie movie
+            WHERE movie.tmdbId IN :tmdbIds
+            """)
+    Set<Long> findExistingTmdbIds(@Param("tmdbIds") Collection<Long> tmdbIds);
+
+    @Query("""
+            SELECT movie.id            AS id,
+                   movie.title         AS title,
+                   movie.releaseDate   AS releaseDate
+            FROM Movie movie
+            WHERE movie.tmdbId IN :tmdbIds
+            """)
+    List<MovieReferProjection> findRefsByTmdbIds(@Param("tmdbIds") Collection<Long> tmdbIds);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+            UPDATE Movie movie
+            SET movie.posterUrl = :url
+            WHERE movie.id = :id
+            """)
+    int updatePosterUrl(@Param("id") Long id,
+                        @Param("url") String url);
+
+    @Query("""
+            SELECT DISTINCT FUNCTION('initcap', movie.genre)
             FROM Movie movie
             WHERE movie.genre IS NOT NULL
-            ORDER BY movie.genre
+            ORDER BY FUNCTION('initcap', movie.genre)
             """)
     List<String> findAllDistinctGenres();
 
@@ -52,12 +83,12 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
     );
 
     @Query("""
-            SELECT DISTINCT movie.genre
+            SELECT DISTINCT FUNCTION('initcap', movie.genre)
             FROM Movie movie
             WHERE movie.genre IS NOT NULL
-            AND (:hasCursor = false OR movie.genre > :cursor)
+            AND (:hasCursor = false OR FUNCTION('initcap', movie.genre) > :cursor)
             AND (LOWER(movie.genre) LIKE LOWER(CONCAT(:prefix, '%')))
-            ORDER BY movie.genre ASC
+            ORDER BY FUNCTION('initcap', movie.genre) ASC
             """)
     Slice<String> fetchGenresKeyset(
             @Param("prefix") String prefix,

@@ -153,6 +153,53 @@ main.catalog-wrapper:has(.empty-message) .catalog-header-icon svg {
     height: 20px;
 }
 
+.catalog-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    padding: 0 1rem;
+}
+
+.catalog-header-row h1 {
+    margin: 0;
+}
+
+.suggest-movie-form {
+    display: flex;
+    margin: 0;
+}
+
+.suggest-movie-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.2rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #c4b5fd;
+    background: rgba(139, 92, 246, 0.1);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    white-space: nowrap;
+}
+
+.suggest-movie-btn:hover {
+    background: rgba(139, 92, 246, 0.2);
+    border-color: #a78bfa;
+    color: #fff;
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+}
+
+.suggest-movie-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
 #catalogContent {
     flex: 0 0 auto;
 }
@@ -762,6 +809,13 @@ main.catalog-wrapper:has(.empty-message--search) .catalog-header-icon svg {
 
 main.catalog-wrapper:has(.empty-message--search) .catalog-content {
     padding-top: 0.75rem;
+}
+
+@media (max-width: 640px) {
+    .catalog-header-row {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
 }
 
 @media (max-width: 480px) {

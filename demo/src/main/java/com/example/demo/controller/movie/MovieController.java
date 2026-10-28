@@ -7,6 +7,9 @@ import com.example.demo.dto.movie.MovieCardViewDTO;
 import com.example.demo.dto.movie.MovieDetailsViewDTO;
 import com.example.demo.dto.movie.MovieForUser;
 import com.example.demo.dto.movie.MovieSearchDTO;
+import com.example.demo.dto.movie.tmdb.TmdbCreateRequestDTO;
+import com.example.demo.dto.movie.tmdb.TmdbSearchRequest;
+import com.example.demo.dto.movie.tmdb.TmdbSearchResultDTO;
 import com.example.demo.dto.response.CursorPageResponse;
 import com.example.demo.dto.response.GenreMoviesPageResponse;
 import com.example.demo.dto.response.MoviesPageResponse;
@@ -25,6 +28,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,19 +65,18 @@ public class MovieController {
             return "catalog/index";
         }
 
-        Page<MovieForUser<MovieCardViewDTO>> result = movieFilterFacade.filterMovies(
+        Page<MovieForUser<MovieCardViewDTO>> moviePage = movieFilterFacade.filterMovies(
                 movieFilter, title, pageRequestContext, userId
         );
 
         boolean hasActiveCriteria = isSearch(title, movieFilter);
-
-        String redirect = redirectIfSingle(result, hasActiveCriteria, pageRequestContext);
+        String redirect = redirectIfSingle(moviePage, hasActiveCriteria, pageRequestContext, title);
         if (redirect != null) {
             return redirect;
         }
 
         MoviesPageResponse moviesPageResponse = MoviesPageResponse.builder()
-                .cardsPage(result)
+                .cardsPage(moviePage)
                 .movieFilter(movieFilter)
                 .isSearch(hasActiveCriteria)
                 .build();
@@ -89,17 +92,17 @@ public class MovieController {
             @CurrentUserId(required = false) Long userId,
             Model model
     ) {
-        Page<MovieForUser<MovieCardViewDTO>> result = movieFilterFacade.filterByGenre(
+        Page<MovieForUser<MovieCardViewDTO>> moviePage = movieFilterFacade.filterByGenre(
                 genre, pageRequestContext, userId
         );
 
-        String redirect = redirectIfSingle(result, true, pageRequestContext);
+        String redirect = redirectIfSingle(moviePage, true, pageRequestContext, null);
         if (redirect != null) {
             return redirect;
         }
 
         GenreMoviesPageResponse genreMoviesPageResponse = GenreMoviesPageResponse.builder()
-                .cardsPage(result)
+                .cardsPage(moviePage)
                 .genre(genre)
                 .isSearch(true)
                 .build();
@@ -133,8 +136,8 @@ public class MovieController {
             @CurrentUserId(required = false) Long userId,
             Model model
     ) {
-        MovieForUser<MovieDetailsViewDTO> card = movieService.getCard(id, userId);
-        model.addAttribute("card", card);
+        MovieForUser<MovieDetailsViewDTO> movieForUser = movieService.getCard(id, userId);
+        model.addAttribute("card", movieForUser);
         return "catalog/show";
     }
 
@@ -151,28 +154,77 @@ public class MovieController {
         return ResponseEntity.ok(movieService.getMovieSearchDTO(query));
     }
 
+    @GetMapping("/movies/new")
+    public String showCreateMovieForm() {
+        return "catalog/create-movie";
+    }
+
+    @GetMapping("/movies/tmdb/search")
+    @ResponseBody
+    public ResponseEntity<List<TmdbSearchResultDTO>> searchTmdb(
+            @RequestParam(required = false) List<Long> tmdbIds,
+            @RequestParam(required = false) List<String> titles,
+            @RequestParam(required = false) List<String> directors,
+            @RequestParam(required = false) List<String> actors
+    ) {
+        TmdbSearchRequest tmdbSearchRequest = TmdbSearchRequest.builder()
+                .tmdbIds(tmdbIds)
+                .titles(titles)
+                .directors(directors)
+                .actors(actors)
+                .build();
+        return ResponseEntity.ok(movieService.searchTmdb(tmdbSearchRequest));
+    }
+
+    @PostMapping("/movies/tmdb/create")
+    public String createFromTmdb(
+            @Valid @ModelAttribute TmdbCreateRequestDTO tmdbCreateRequestDTO,
+            BindingResult bindingResult,
+            RedirectAttributes redirectAttributes
+    ) {
+        if (bindingResult.hasErrors()) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    bindingResult.getFieldErrors().isEmpty()
+                            ? null
+                            : bindingResult.getFieldErrors().get(0).getDefaultMessage());
+            return "redirect:/movies/new";
+        }
+
+        List<MovieDetailsViewDTO> createdMovieDetails = movieService.createMovies(
+                tmdbCreateRequestDTO.moviePriceItems()
+        );
+
+        redirectAttributes.addFlashAttribute("successMessage",
+                "Создано фильмов: " + createdMovieDetails.size());
+        return "redirect:/movies";
+    }
+
     private boolean isSearch(String title, MovieFilter movieFilter) {
         return (title != null && !title.isBlank())
                 || (movieFilter != null && movieFilter.hasAnyCriteria());
     }
 
     private String redirectIfSingle(
-            Page<MovieForUser<MovieCardViewDTO>> page,
+            Page<MovieForUser<MovieCardViewDTO>> moviePage,
             boolean hasActiveCriteria,
-            PageRequestContext pageRequestContext
+            PageRequestContext pageRequestContext,
+            String searchedTitle
     ) {
-        if (!hasActiveCriteria) {
-            return null;
+        if (!hasActiveCriteria) return null;
+        if (moviePage.getTotalElements() != 1 || moviePage.getContent().isEmpty()) return null;
+        if (pageRequestContext.getSafePage() != 0) return null;
+        if (moviePage.getPageable().getPageSize() <= 1) return null;
+
+        MovieCardViewDTO singleMovie = moviePage.getContent().get(0).movie();
+
+        if (searchedTitle != null && !searchedTitle.isBlank()) {
+            String normalizedSearched = searchedTitle.trim().toLowerCase().replace('ё', 'е');
+            String normalizedMovieTitle = singleMovie.title().trim().toLowerCase().replace('ё', 'е');
+            if (normalizedSearched.equals(normalizedMovieTitle)) {
+                return null;
+            }
         }
-        if (page.getTotalElements() != 1 || page.getContent().isEmpty()) {
-            return null;
-        }
-        if (pageRequestContext.getSafePage() != 0) {
-            return null;
-        }
-        if (page.getPageable().getPageSize() <= 1) {
-            return null;
-        }
-        return "redirect:/movies/" + page.getContent().get(0).movie().id();
+
+        return "redirect:/movies/" + singleMovie.id();
     }
 }

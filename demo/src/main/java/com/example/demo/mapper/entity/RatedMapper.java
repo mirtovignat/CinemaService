@@ -9,7 +9,7 @@ import com.example.demo.model.entity.RatedMovie;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring", uses = DateTimeMapperUtil.class)
+@Mapper(componentModel = "spring")
 public abstract class RatedMapper {
 
     public ReviewViewDTO toReviewViewWithOwn(RatedMovie ratedMovie, Long currentUserId) {

@@ -1,12 +1,11 @@
 package com.example.demo.mapper.util;
 
-import org.mapstruct.Mapper;
 import org.mapstruct.Named;
 
-@Mapper(componentModel = "spring")
-public interface NameMapper {
+public final class NameMapper {
 
-    static String toFullName(String surname, String name, String patronymic) {
+    @Named("toFullName")
+    public static String toFullName(String surname, String name, String patronymic) {
         if (surname == null || name == null) {
             return null;
         }
@@ -17,7 +16,7 @@ public interface NameMapper {
     }
 
     @Named("extractSurname")
-    static String extractSurname(String fullName) {
+    public static String extractSurname(String fullName) {
         if (fullName == null || fullName.isBlank()) {
             return "";
         }
@@ -26,7 +25,7 @@ public interface NameMapper {
     }
 
     @Named("extractName")
-    static String extractName(String fullName) {
+    public static String extractName(String fullName) {
         if (fullName == null || fullName.isBlank()) {
             return "";
         }
@@ -35,7 +34,7 @@ public interface NameMapper {
     }
 
     @Named("extractPatronymic")
-    static String extractPatronymic(String fullName) {
+    public static String extractPatronymic(String fullName) {
         if (fullName == null || fullName.isBlank()) {
             return "";
         }

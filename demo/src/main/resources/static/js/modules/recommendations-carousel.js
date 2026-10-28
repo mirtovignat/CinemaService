@@ -234,6 +234,29 @@
 
         wrapper.addEventListener('scroll', state.checkEdge, { passive: true });
 
+        wrapper.addEventListener('wheel', function (event) {
+            if (wrapper.scrollWidth <= wrapper.clientWidth) return;
+
+            var delta = Math.abs(event.deltaX) > Math.abs(event.deltaY)
+                ? event.deltaX
+                : event.deltaY;
+
+            if (!delta) return;
+
+            var atStart = wrapper.scrollLeft <= 0 && delta < 0;
+            var atEnd = wrapper.scrollLeft + wrapper.clientWidth >= wrapper.scrollWidth - 1 && delta > 0;
+
+            if (atStart || atEnd) return;
+
+            event.preventDefault();
+
+            var step = delta;
+            if (event.deltaMode === 1) step *= 16;
+            else if (event.deltaMode === 2) step *= wrapper.clientWidth;
+
+            wrapper.scrollLeft += step;
+        }, { passive: false });
+
         if (window.ResizeObserver) {
             var resizeObserver = new ResizeObserver(function () {
                 state.fillUntilOverflow().then(function () {

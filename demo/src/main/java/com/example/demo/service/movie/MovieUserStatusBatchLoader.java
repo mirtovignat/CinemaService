@@ -31,15 +31,18 @@ public class MovieUserStatusBatchLoader {
 
         Map<Long, MovieUserStatus> result = new HashMap<>(movieIds.size());
         for (Long movieId : movieIds) {
-            UserStatus status = statuses.getOrDefault(movieId, UserStatus.builder().build());
-            boolean isBought = status.bought();
-            boolean isInCart = !isBought && status.inCart();
-            result.put(movieId, MovieUserStatus.builder()
-                    .bought(isBought)
-                    .inCart(isInCart)
-                    .inFavourites(status.inFavourites())
-                    .ownRating(ownRatings.get(movieId))
-                    .build());
+            UserStatus userStatus = statuses.getOrDefault(movieId, UserStatus.builder().build());
+            boolean isBought = userStatus.bought();
+            boolean isInCart = !isBought && userStatus.inCart();
+            result.put(
+                    movieId,
+                    MovieUserStatus.builder()
+                            .bought(isBought)
+                            .inCart(isInCart)
+                            .inFavourites(userStatus.inFavourites())
+                            .ownRating(ownRatings.get(movieId))
+                            .build()
+            );
         }
         return result;
     }
