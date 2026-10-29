@@ -806,6 +806,16 @@ input[type="date"]:focus {
     z-index: 5;
 }
 
+.amount-input-with-stepper,
+.filter-input-with-clear {
+    position: relative;
+}
+
+.amount-input-with-stepper > .filter-field-error,
+.filter-input-with-clear > .filter-field-error {
+    bottom: -18px;
+}
+
 .filter-group.has-error .filter-input,
 .filter-group.has-error .accordion-trigger {
     border-color: #f87171;

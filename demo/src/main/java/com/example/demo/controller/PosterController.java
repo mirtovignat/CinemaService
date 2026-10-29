@@ -1,6 +1,6 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.tmdb.RefreshAllResult;
+import com.example.demo.dto.movie.tmdb.RefreshAllResult;
 import com.example.demo.service.movie.poster.MoviePosterService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;

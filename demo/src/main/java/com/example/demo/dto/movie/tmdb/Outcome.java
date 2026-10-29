@@ -1,4 +1,4 @@
-package com.example.demo.dto.tmdb;
+package com.example.demo.dto.movie.tmdb;
 
 public enum Outcome {
     OK,

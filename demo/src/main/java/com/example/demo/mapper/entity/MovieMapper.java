@@ -4,7 +4,7 @@ import com.example.demo.dto.movie.MovieCardViewDTO;
 import com.example.demo.dto.movie.MovieDetailsViewDTO;
 import com.example.demo.dto.movie.MovieSearchDTO;
 import com.example.demo.dto.movie.tmdb.TMDBMovieDTO;
-import com.example.demo.dto.movie.tmdb.TmdbSearchResultDTO;
+import com.example.demo.dto.movie.tmdb.TMDBSearchResultDTO;
 import com.example.demo.mapper.util.DurationMapper;
 import com.example.demo.mapper.util.TmdbMappingUtil;
 import com.example.demo.model.entity.Movie;
@@ -40,7 +40,7 @@ public interface MovieMapper {
     @Mapping(target = "originalTitle", source = "originalTitle")
     @Mapping(target = "releaseDate", source = "releaseDate")
     @Mapping(target = "posterUrl", source = "posterPath", qualifiedByName = "posterPathToUrl")
-    TmdbSearchResultDTO toTmdbSearchResult(TMDBMovieDTO tmdbMovie);
+    TMDBSearchResultDTO toTmdbSearchResult(TMDBMovieDTO tmdbMovie);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "ratingSort", ignore = true)

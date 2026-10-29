@@ -8,6 +8,7 @@ import java.util.List;
 public record MovieFilterMetaResponse(
         List<String> genres,
         List<String> directors,
+        List<String> actors,
         MovieRangesSnapshot movieRangesSnapshot
 ) {
 }

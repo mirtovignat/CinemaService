@@ -40,7 +40,8 @@ public record MovieFilter(
         BigDecimal ratingTo,
 
         List<String> genres,
-        List<String> directors
+        List<String> directors,
+        List<String> actors
 ) {
 
     public boolean hasAnyCriteria() {
@@ -53,6 +54,7 @@ public record MovieFilter(
                 (ratingFrom != null) ||
                 (ratingTo != null) ||
                 (genres != null && !genres.isEmpty()) ||
-                (directors != null && !directors.isEmpty());
+                (directors != null && !directors.isEmpty()) ||
+                (actors != null && !actors.isEmpty());
     }
 }

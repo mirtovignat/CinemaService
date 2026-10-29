@@ -3,7 +3,7 @@ package com.example.demo.exception;
 import com.example.demo.dto.authorize.LoginFormDTO;
 import com.example.demo.dto.authorize.RegisterFormDTO;
 import com.example.demo.dto.badges.BadgeCountsDTO;
-import com.example.demo.dto.movie.tmdb.TmdbCreateRequestDTO;
+import com.example.demo.dto.movie.tmdb.TMDBCreateRequestDTO;
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.dto.user.PasswordChangingDTO;
 import com.example.demo.dto.user.SessionUser;
@@ -54,7 +54,6 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InsufficientAuthenticationException.class)
     public Object handleInsufficientAuthenticationException(
-            InsufficientAuthenticationException insufficientAuthenticationException,
             HttpServletRequest httpServletRequest) {
         String errorMessage = messageUtils.getError(ErrorCode.NOT_AUTHORIZED);
         if (RequestUtils.isAjaxRequest(httpServletRequest)) {
@@ -78,8 +77,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(IllegalStateException.class)
-    public Object handleIllegalStateException(IllegalStateException illegalStateException,
-                                              HttpServletRequest httpServletRequest,
+    public Object handleIllegalStateException(HttpServletRequest httpServletRequest,
                                               Model model,
                                               RedirectAttributes redirectAttributes) {
         ErrorCode errorCode = ErrorCode.INTERNAL_ERROR;
@@ -281,7 +279,7 @@ public class GlobalExceptionHandler {
         }
         if ("catalog/create-movie".equals(formViewName)
                 && !model.containsAttribute("tmdbCreateRequestDTO")) {
-            model.addAttribute("tmdbCreateRequestDTO", TmdbCreateRequestDTO.builder()
+            model.addAttribute("tmdbCreateRequestDTO", TMDBCreateRequestDTO.builder()
                     .moviePriceItems(List.of())
                     .build());
         }

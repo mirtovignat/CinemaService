@@ -32,7 +32,8 @@ public class MovieSpecifications {
                 SpecificationUtils.greaterThanOrEqualToIfNotNull("rating", notEmptyMovieFilter.ratingFrom()),
                 SpecificationUtils.lessThanOrEqualToIfNotNull("rating", notEmptyMovieFilter.ratingTo()),
                 SpecificationUtils.inIfNotEmpty("genre", notEmptyMovieFilter.genres()),
-                SpecificationUtils.inIfNotEmpty("director", notEmptyMovieFilter.directors())
+                SpecificationUtils.inIfNotEmpty("director", notEmptyMovieFilter.directors()),
+                SpecificationUtils.arrayContainsAny("actors", notEmptyMovieFilter.actors())
         );
     }
 

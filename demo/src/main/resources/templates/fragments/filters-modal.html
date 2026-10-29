@@ -28,45 +28,29 @@
                 <div class="sort-filter-row">
                     <span class="sort-filter-label">Отсортировать по цене:</span>
                     <div class="sort-filter-options" role="group" aria-label="Сортировка по цене">
-                        <button type="button" class="sort-filter-btn" data-sort-key="price" data-sort-dir="asc">
-                            Возр.
-                        </button>
-                        <button type="button" class="sort-filter-btn" data-sort-key="price" data-sort-dir="desc">
-                            Убыв.
-                        </button>
+                        <button type="button" class="sort-filter-btn" data-sort-key="price" data-sort-dir="asc">Возр.</button>
+                        <button type="button" class="sort-filter-btn" data-sort-key="price" data-sort-dir="desc">Убыв.</button>
                     </div>
                 </div>
                 <div class="sort-filter-row">
                     <span class="sort-filter-label">Отсортировать по длительности:</span>
                     <div class="sort-filter-options" role="group" aria-label="Сортировка по длительности">
-                        <button type="button" class="sort-filter-btn" data-sort-key="duration" data-sort-dir="asc">
-                            Возр.
-                        </button>
-                        <button type="button" class="sort-filter-btn" data-sort-key="duration" data-sort-dir="desc">
-                            Убыв.
-                        </button>
+                        <button type="button" class="sort-filter-btn" data-sort-key="duration" data-sort-dir="asc">Возр.</button>
+                        <button type="button" class="sort-filter-btn" data-sort-key="duration" data-sort-dir="desc">Убыв.</button>
                     </div>
                 </div>
                 <div class="sort-filter-row">
                     <span class="sort-filter-label">Отсортировать по рейтингу:</span>
                     <div class="sort-filter-options" role="group" aria-label="Сортировка по рейтингу">
-                        <button type="button" class="sort-filter-btn" data-sort-key="rating" data-sort-dir="asc">
-                            Возр.
-                        </button>
-                        <button type="button" class="sort-filter-btn" data-sort-key="rating" data-sort-dir="desc">
-                            Убыв.
-                        </button>
+                        <button type="button" class="sort-filter-btn" data-sort-key="rating" data-sort-dir="asc">Возр.</button>
+                        <button type="button" class="sort-filter-btn" data-sort-key="rating" data-sort-dir="desc">Убыв.</button>
                     </div>
                 </div>
                 <div class="sort-filter-row">
                     <span class="sort-filter-label">Отсортировать по дате выхода:</span>
                     <div class="sort-filter-options" role="group" aria-label="Сортировка по дате выхода">
-                        <button type="button" class="sort-filter-btn" data-sort-key="releaseDate"
-                                data-sort-dir="asc">Возр.
-                        </button>
-                        <button type="button" class="sort-filter-btn" data-sort-key="releaseDate"
-                                data-sort-dir="desc">Убыв.
-                        </button>
+                        <button type="button" class="sort-filter-btn" data-sort-key="releaseDate" data-sort-dir="asc">Возр.</button>
+                        <button type="button" class="sort-filter-btn" data-sort-key="releaseDate" data-sort-dir="desc">Убыв.</button>
                     </div>
                 </div>
                 <input type="hidden" id="filterSortBy" name="sortBy"
@@ -209,6 +193,28 @@
                     </div>
                     <div class="accordion-list" data-accordion-list></div>
                     <div class="accordion-empty" data-accordion-empty>Ничего не найдено</div>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label for="actorsInput" class="filter-sublabel">Актёры (через запятую):</label>
+                <div class="filter-input-with-clear">
+                    <input type="text"
+                           id="actorsInput"
+                           name="actors"
+                           class="filter-input"
+                           placeholder="Киану Ривз, Лоренс Фишбёрн"
+                           autocomplete="off"
+                           maxlength="500"
+                           th:value="${param.actors != null and param.actors.length > 0 ? #strings.listJoin(param.actors, ', ') : ''}">
+                    <button type="button" class="filter-clear-btn" data-clear-target="actorsInput"
+                            aria-label="Очистить" title="Очистить">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                             aria-hidden="true">
+                            <path d="M7 7l10 10M17 7L7 17"/>
+                        </svg>
+                    </button>
                 </div>
             </div>
 

@@ -383,24 +383,41 @@
             .then(function (response) { return response.ok ? response.json() : null; })
             .then(function (meta) {
                 if (!meta) { LIMITS_READY = true; return; }
-                if (meta.ranges) {
-                    if (meta.ranges.price) {
-                        if (meta.ranges.price.min != null) FILTER_LIMITS.priceMin = Number(meta.ranges.price.min);
-                        if (meta.ranges.price.max != null) FILTER_LIMITS.priceMax = Number(meta.ranges.price.max);
+
+                if (meta.movieRangesSnapshot) {
+                    var ranges = meta.movieRangesSnapshot;
+                    if (ranges.price) {
+                        if (ranges.price.min != null) FILTER_LIMITS.priceMin = Number(ranges.price.min);
+                        if (ranges.price.max != null) FILTER_LIMITS.priceMax = Number(ranges.price.max);
                     }
-                    if (meta.ranges.duration) {
-                        if (meta.ranges.duration.min != null) FILTER_LIMITS.durationMin = Number(meta.ranges.duration.min);
-                        if (meta.ranges.duration.max != null) FILTER_LIMITS.durationMax = Number(meta.ranges.duration.max);
+                    if (ranges.duration) {
+                        if (ranges.duration.min != null) FILTER_LIMITS.durationMin = Number(ranges.duration.min);
+                        if (ranges.duration.max != null) FILTER_LIMITS.durationMax = Number(ranges.duration.max);
                     }
-                    if (meta.ranges.releaseDate) {
-                        if (meta.ranges.releaseDate.min != null) FILTER_LIMITS.releaseDateMin = String(meta.ranges.releaseDate.min);
-                        if (meta.ranges.releaseDate.max != null) FILTER_LIMITS.releaseDateMax = String(meta.ranges.releaseDate.max);
+                    if (ranges.releaseDate) {
+                        if (ranges.releaseDate.min != null) FILTER_LIMITS.releaseDateMin = String(ranges.releaseDate.min);
+                        if (ranges.releaseDate.max != null) FILTER_LIMITS.releaseDateMax = String(ranges.releaseDate.max);
                     }
                 }
+
                 LIMITS_READY = true;
                 applyPriceLimitsToUi();
                 applyDurationLimitsToUi();
                 applyReleaseDateLimitsToUi();
+
+                if (meta.genres && meta.genres.length > 0) {
+                    var genresDropdown = document.getElementById('genresDropdown');
+                    if (genresDropdown) {
+                        appendCheckboxesToAccordion(genresDropdown, 'genres', sortGenresAlphabetically(meta.genres), null);
+                    }
+                }
+
+                if (meta.directors && meta.directors.length > 0) {
+                    var directorsDropdown = document.getElementById('directorsDropdown');
+                    if (directorsDropdown) {
+                        appendCheckboxesToAccordion(directorsDropdown, 'directors', sortDirectorsBySurname(meta.directors), displayDirectorName);
+                    }
+                }
             })
             .catch(function () { LIMITS_READY = true; });
     }
@@ -437,8 +454,7 @@
             groupEl.classList.remove('has-error');
         });
         document.querySelectorAll('.filter-field-error').forEach(function (errEl) {
-            errEl.textContent = '';
-            errEl.style.display = 'none';
+            errEl.remove();
         });
         document.querySelectorAll('.filter-input, .accordion-trigger').forEach(function (inputElement) {
             inputElement.style.borderColor = '';
@@ -457,26 +473,27 @@
     function showFilterFieldError(inputElement, errorMessage) {
         if (!inputElement) return;
 
-        var groupElement = inputElement.closest('.filter-group') || inputElement.parentNode;
-        if (!groupElement) return;
+        var wrapper = inputElement.closest('.amount-input-with-stepper, .filter-input-with-clear')
+                      || inputElement.parentNode;
+        if (!wrapper) return;
 
-        groupElement.classList.add('has-error');
+        var groupElement = inputElement.closest('.filter-group');
+        if (groupElement) groupElement.classList.add('has-error');
 
-        var errorElement = groupElement.querySelector('.filter-field-error');
+        var inputId = inputElement.id || ('auto-' + Math.random().toString(36).slice(2));
+        var errorElement = wrapper.querySelector('.filter-field-error[data-error-for="' + inputId + '"]');
         if (!errorElement) {
             errorElement = document.createElement('div');
             errorElement.className = 'filter-field-error';
-            groupElement.appendChild(errorElement);
+            errorElement.setAttribute('data-error-for', inputId);
+            wrapper.appendChild(errorElement);
         }
 
         errorElement.textContent = errorMessage;
         errorElement.title = errorMessage;
         errorElement.style.display = '';
 
-        var wrapper = inputElement.closest('.filter-input-with-clear, .amount-input-with-stepper');
-        if (wrapper) wrapper.classList.add('has-error');
-
-        try { inputElement.focus(); } catch (focusError) {}
+        if (wrapper.classList) wrapper.classList.add('has-error');
     }
 
     function getCheckboxState(checkboxName) {
@@ -506,15 +523,6 @@
         var releaseDateFromInput = document.getElementById('releaseDateFrom');
         var releaseDateToInput = document.getElementById('releaseDateTo');
 
-        var fromHoursValue = parseInt((document.getElementById('durationFromHours') || {}).value || '0', 10);
-        var fromMinutesValue = parseInt((document.getElementById('durationFromMinutes') || {}).value || '0', 10);
-        var fromSecondsValue = parseInt((document.getElementById('durationFromSeconds') || {}).value || '0', 10);
-        var toHoursValue = parseInt((document.getElementById('durationToHours') || {}).value || '0', 10);
-        var toMinutesValue = parseInt((document.getElementById('durationToMinutes') || {}).value || '0', 10);
-        var toSecondsValue = parseInt((document.getElementById('durationToSeconds') || {}).value || '0', 10);
-        var totalFromSeconds = fromHoursValue * 3600 + fromMinutesValue * 60 + fromSecondsValue;
-        var totalToSeconds = toHoursValue * 3600 + toMinutesValue * 60 + toSecondsValue;
-
         var priceErrorText =
             'Минимальная цена — ' + formatPriceValue(FILTER_LIMITS.priceMin) +
             ' ₽, максимальная — ' + formatPriceValue(FILTER_LIMITS.priceMax) + ' ₽';
@@ -532,7 +540,7 @@
             }
         }
 
-        if (!hasError && priceToInput && priceToInput.value.trim() !== '') {
+        if (priceToInput && priceToInput.value.trim() !== '') {
             parsedPriceTo = parseFloat(priceToInput.value.replace(',', '.'));
             if (isNaN(parsedPriceTo) || parsedPriceTo < FILTER_LIMITS.priceMin || parsedPriceTo > FILTER_LIMITS.priceMax) {
                 showFilterFieldError(priceToInput, priceErrorText);
@@ -542,7 +550,7 @@
             }
         }
 
-        if (!hasError && parsedPriceFrom !== null && parsedPriceTo !== null && parsedPriceFrom > parsedPriceTo) {
+        if (parsedPriceFrom !== null && parsedPriceTo !== null && parsedPriceFrom > parsedPriceTo) {
             showFilterFieldError(priceFromInput, 'Цена «от» не может быть больше цены «до»');
             hasError = true;
         }
@@ -560,7 +568,7 @@
             }
         }
 
-        if (!hasError && ratingToInput && ratingToInput.value.trim() !== '') {
+        if (ratingToInput && ratingToInput.value.trim() !== '') {
             parsedRatingTo = parseFloat(ratingToInput.value.replace(',', '.'));
             if (isNaN(parsedRatingTo) || parsedRatingTo < 0.1 || parsedRatingTo > 10) {
                 showFilterFieldError(ratingToInput, 'Рейтинг «до» должен быть от 0.1 до 10');
@@ -570,7 +578,7 @@
             }
         }
 
-        if (!hasError && parsedRatingFrom !== null && parsedRatingTo !== null && parsedRatingFrom > parsedRatingTo) {
+        if (parsedRatingFrom !== null && parsedRatingTo !== null && parsedRatingFrom > parsedRatingTo) {
             showFilterFieldError(ratingFromInput, 'Рейтинг «от» не может быть больше рейтинга «до»');
             hasError = true;
         }
@@ -584,23 +592,39 @@
             showFilterFieldError(targetDateInput, dateRangeValidationResult.error);
             hasError = true;
         } else {
+            var fromDateError = '';
             if (releaseDateFromValue && FILTER_LIMITS.releaseDateMin && releaseDateFromValue < FILTER_LIMITS.releaseDateMin) {
-                showFilterFieldError(releaseDateFromInput, 'Дата «от» не может быть раньше ' + FILTER_LIMITS.releaseDateMin);
+                fromDateError = 'Дата «от» не может быть раньше ' + FILTER_LIMITS.releaseDateMin;
+            }
+            if (!fromDateError && releaseDateFromValue && FILTER_LIMITS.releaseDateMax && releaseDateFromValue > FILTER_LIMITS.releaseDateMax) {
+                fromDateError = 'Дата «от» не может быть позже ' + FILTER_LIMITS.releaseDateMax;
+            }
+            if (fromDateError) {
+                showFilterFieldError(releaseDateFromInput, fromDateError);
                 hasError = true;
             }
-            if (!hasError && releaseDateFromValue && FILTER_LIMITS.releaseDateMax && releaseDateFromValue > FILTER_LIMITS.releaseDateMax) {
-                showFilterFieldError(releaseDateFromInput, 'Дата «от» не может быть позже ' + FILTER_LIMITS.releaseDateMax);
-                hasError = true;
+
+            var toDateError = '';
+            if (releaseDateToValue && FILTER_LIMITS.releaseDateMin && releaseDateToValue < FILTER_LIMITS.releaseDateMin) {
+                toDateError = 'Дата «до» не может быть раньше ' + FILTER_LIMITS.releaseDateMin;
             }
-            if (!hasError && releaseDateToValue && FILTER_LIMITS.releaseDateMin && releaseDateToValue < FILTER_LIMITS.releaseDateMin) {
-                showFilterFieldError(releaseDateToInput, 'Дата «до» не может быть раньше ' + FILTER_LIMITS.releaseDateMin);
-                hasError = true;
+            if (!toDateError && releaseDateToValue && FILTER_LIMITS.releaseDateMax && releaseDateToValue > FILTER_LIMITS.releaseDateMax) {
+                toDateError = 'Дата «до» не может быть позже ' + FILTER_LIMITS.releaseDateMax;
             }
-            if (!hasError && releaseDateToValue && FILTER_LIMITS.releaseDateMax && releaseDateToValue > FILTER_LIMITS.releaseDateMax) {
-                showFilterFieldError(releaseDateToInput, 'Дата «до» не может быть позже ' + FILTER_LIMITS.releaseDateMax);
+            if (toDateError) {
+                showFilterFieldError(releaseDateToInput, toDateError);
                 hasError = true;
             }
         }
+
+        var fromHoursValue = parseInt((document.getElementById('durationFromHours') || {}).value || '0', 10);
+        var fromMinutesValue = parseInt((document.getElementById('durationFromMinutes') || {}).value || '0', 10);
+        var fromSecondsValue = parseInt((document.getElementById('durationFromSeconds') || {}).value || '0', 10);
+        var toHoursValue = parseInt((document.getElementById('durationToHours') || {}).value || '0', 10);
+        var toMinutesValue = parseInt((document.getElementById('durationToMinutes') || {}).value || '0', 10);
+        var toSecondsValue = parseInt((document.getElementById('durationToSeconds') || {}).value || '0', 10);
+        var totalFromSeconds = fromHoursValue * 3600 + fromMinutesValue * 60 + fromSecondsValue;
+        var totalToSeconds = toHoursValue * 3600 + toMinutesValue * 60 + toSecondsValue;
 
         var durationFromHoursElement = document.getElementById('durationFromHours');
         var durationFromMinutesElement = document.getElementById('durationFromMinutes');
@@ -625,12 +649,12 @@
             hasError = true;
         }
 
-        if (!hasError && (toAllZero || toHoursValue > maxDurationValues.h || toMinutesValue > 59 || toSecondsValue > 59)) {
+        if (toAllZero || toHoursValue > maxDurationValues.h || toMinutesValue > 59 || toSecondsValue > 59) {
             showFilterFieldError(durationToHoursElement, durationErrorText);
             hasError = true;
         }
 
-        if (!hasError && totalToSeconds > 0 && totalToSeconds < FILTER_LIMITS.durationMin) {
+        if (totalToSeconds > 0 && totalToSeconds < FILTER_LIMITS.durationMin) {
             showFilterFieldError(
                 durationToHoursElement,
                 'Длительность «до» должна быть не менее ' + formatDurationHuman(FILTER_LIMITS.durationMin)
@@ -638,17 +662,15 @@
             hasError = true;
         }
 
-        if (!hasError && totalFromSeconds > 0 && totalToSeconds > 0 && totalFromSeconds > totalToSeconds) {
+        if (totalFromSeconds > 0 && totalToSeconds > 0 && totalFromSeconds > totalToSeconds) {
             showFilterFieldError(
-                document.getElementById('durationFromHours'),
+                durationFromHoursElement,
                 'Длительность «от» не может быть больше длительности «до»'
             );
             hasError = true;
         }
 
-        if (hasError) return false;
-
-        return true;
+        return !hasError;
     }
 
     function stepFilterValue(inputElementId, deltaValue, minValue, maxValue, decimalPlaces) {
@@ -930,6 +952,14 @@
             result.directors = directors;
         }
 
+        var actorsInput = document.getElementById('actorsInput');
+        if (actorsInput && actorsInput.value.trim() !== '') {
+            var actorsList = actorsInput.value.split(/[,;]+/).map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 0; });
+            if (actorsList.length > 0) {
+                result.actors = actorsList;
+            }
+        }
+
         var sort = getCurrentSortSelection();
         if (sort) {
             result.sortBy = sort.key;
@@ -971,6 +1001,22 @@
                 hiddenCheckbox.value = sourceEl.value;
                 hiddenCheckbox.setAttribute('data-from-filters', '1');
                 targetForm.appendChild(hiddenCheckbox);
+                return;
+            }
+
+            if (sourceEl.id === 'actorsInput') {
+                var actorsVal = (sourceEl.value || '').trim();
+                if (actorsVal !== '') {
+                    var actorsArr = actorsVal.split(/[,;]+/).map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 0; });
+                    actorsArr.forEach(function (actorName) {
+                        var hiddenActor = document.createElement('input');
+                        hiddenActor.type = 'hidden';
+                        hiddenActor.name = 'actors';
+                        hiddenActor.value = actorName;
+                        hiddenActor.setAttribute('data-from-filters', '1');
+                        targetForm.appendChild(hiddenActor);
+                    });
+                }
                 return;
             }
 
@@ -1065,6 +1111,11 @@
 
         var directorsState = getCheckboxState('directors');
         if (directorsState.checked > 0) return true;
+
+        var actorsInput = document.getElementById('actorsInput');
+        if (actorsInput && actorsInput.value.trim() !== '') {
+            return true;
+        }
 
         return false;
     }

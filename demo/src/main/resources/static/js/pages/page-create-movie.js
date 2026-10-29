@@ -36,6 +36,8 @@
     var bulkPriceInput = document.getElementById('bulkPriceInput');
     var fillAllBtn = document.getElementById('fillAllBtn');
     var selectionSummary = document.getElementById('selectionSummary');
+    var emptyState = document.getElementById('emptyState');
+    var loadingState = document.getElementById('loadingState');
 
     var confirmModal = document.getElementById('confirmModal');
     var confirmModalText = document.getElementById('confirmModalText');
@@ -45,6 +47,19 @@
 
     confirmModalOk.textContent = messages.confirmYes;
     confirmModalCancel.textContent = messages.confirmNo;
+
+    function showLoading() {
+        if (emptyState) emptyState.style.display = 'none';
+        if (loadingState) loadingState.style.display = 'flex';
+    }
+
+    function hideLoading() {
+        if (loadingState) loadingState.style.display = 'none';
+    }
+
+    function showEmptyState() {
+        if (emptyState) emptyState.style.display = 'flex';
+    }
 
     function askConfirm(message) {
         confirmModalText.textContent = message;
@@ -358,6 +373,7 @@
 
         searchBtn.disabled = true;
         searchBtn.textContent = 'Ищем...';
+        showLoading();
 
         fetch(url, { headers: { 'Accept': 'application/json' } })
             .then(function (response) {
@@ -371,6 +387,8 @@
                 });
             })
             .then(function (result) {
+                hideLoading();
+
                 if (!result.ok) {
                     searchResults = [];
                     selectedTmdbIds.clear();
@@ -403,6 +421,7 @@
                 renderResults();
             })
             .catch(function () {
+                hideLoading();
                 showError(messages.failed);
             })
             .finally(function () {
@@ -496,6 +515,7 @@
         updateCreateButton();
         updateSelectAllButton();
         updateFillAllButton();
+        showEmptyState();
     }
 
     function buildCreateForm() {

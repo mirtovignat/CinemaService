@@ -21,6 +21,7 @@
             (param.releaseDateTo != null and param.releaseDateTo[0] != '' ? '&releaseDateTo=' + #uris.escapeQueryParam(param.releaseDateTo[0]) : '') +
             (param.genres != null and param.genres.length > 0 ? '&genres=' + #uris.escapeQueryParam(#strings.listJoin(param.genres, ',')) : '') +
             (param.directors != null and param.directors.length > 0 ? '&directors=' + #uris.escapeQueryParam(#strings.listJoin(param.directors, ',')) : '') +
+            (param.actors != null and param.actors.length > 0 ? '&actors=' + #uris.escapeQueryParam(#strings.listJoin(param.actors, ',')) : '') +
             (param.sortBy != null and param.sortBy[0] != '' ? '&sortBy=' + #uris.escapeQueryParam(param.sortBy[0]) : '') +
             (param.sortDirection != null and param.sortDirection[0] != '' ? '&sortDirection=' + #uris.escapeQueryParam(param.sortDirection[0]) : '')
         },

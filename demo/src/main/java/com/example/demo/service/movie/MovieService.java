@@ -3,8 +3,8 @@ package com.example.demo.service.movie;
 import com.example.demo.dto.movie.*;
 import com.example.demo.dto.movie.tmdb.MoviePriceItem;
 import com.example.demo.dto.movie.tmdb.TMDBMovieDTO;
-import com.example.demo.dto.movie.tmdb.TmdbSearchRequest;
-import com.example.demo.dto.movie.tmdb.TmdbSearchResultDTO;
+import com.example.demo.dto.movie.tmdb.TMDBSearchRequest;
+import com.example.demo.dto.movie.tmdb.TMDBSearchResultDTO;
 import com.example.demo.exception.BusinessException;
 import com.example.demo.exception.ErrorCode;
 import com.example.demo.filter.MovieFilter;
@@ -82,7 +82,7 @@ public class MovieService {
     }
 
     @Transactional(readOnly = true)
-    public List<TmdbSearchResultDTO> searchTmdb(TmdbSearchRequest tmdbSearchRequest) {
+    public List<TMDBSearchResultDTO> searchTmdb(TMDBSearchRequest tmdbSearchRequest) {
         if (tmdbSearchRequest == null) {
             throw BusinessException.of(ErrorCode.TMDB_SEARCH_EMPTY);
         }
@@ -152,7 +152,7 @@ public class MovieService {
                 .toList();
     }
 
-    private Set<Long> intersectByFields(TmdbSearchRequest tmdbSearchRequest) {
+    private Set<Long> intersectByFields(TMDBSearchRequest tmdbSearchRequest) {
         List<Set<Long>> criteriaSets = new ArrayList<>();
 
         if (tmdbSearchRequest.titles() != null && !tmdbSearchRequest.titles().isEmpty()) {

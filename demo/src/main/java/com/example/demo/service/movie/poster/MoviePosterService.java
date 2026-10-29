@@ -1,8 +1,8 @@
 package com.example.demo.service.movie.poster;
 
+import com.example.demo.dto.movie.tmdb.Outcome;
+import com.example.demo.dto.movie.tmdb.RefreshAllResult;
 import com.example.demo.dto.movie.tmdb.TMDBMovieDTO;
-import com.example.demo.dto.tmdb.Outcome;
-import com.example.demo.dto.tmdb.RefreshAllResult;
 import com.example.demo.model.entity.Movie;
 import com.example.demo.repository.entity.MovieRepository;
 import lombok.RequiredArgsConstructor;

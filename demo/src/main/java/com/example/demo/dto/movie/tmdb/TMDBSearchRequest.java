@@ -5,7 +5,7 @@ import lombok.Builder;
 import java.util.List;
 
 @Builder
-public record TmdbSearchRequest(
+public record TMDBSearchRequest(
         List<Long> tmdbIds,
         List<String> titles,
         List<String> directors,

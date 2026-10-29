@@ -5,7 +5,9 @@ import jakarta.persistence.criteria.Root;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.CollectionUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 public final class SpecificationUtils {
 
@@ -57,25 +59,6 @@ public final class SpecificationUtils {
         );
     }
 
-    public static <Entity> Specification<Entity> inIfNotEmptyIgnoringCase(
-            String fieldName,
-            Collection<String> values
-    ) {
-        if (CollectionUtils.isEmpty(values)) {
-            return unrestricted();
-        }
-        List<String> lowered = values.stream()
-                .filter(Objects::nonNull)
-                .map(value -> value.toLowerCase(Locale.ROOT))
-                .distinct()
-                .toList();
-        if (lowered.isEmpty()) {
-            return unrestricted();
-        }
-        return (root, criteriaQuery, criteriaBuilder) ->
-                criteriaBuilder.lower(root.get(fieldName)).in(lowered);
-    }
-
     public static <Entity> Specification<Entity> fieldStartsWithNormalized(
             String fieldName,
             String sanitizedSearchQuery
@@ -114,5 +97,40 @@ public final class SpecificationUtils {
             predicates.add(root.get(fieldName).in(chunk));
         }
         return predicates.toArray(Predicate[]::new);
+    }
+
+    public static <Entity> Specification<Entity> arrayContainsAny(
+            String fieldName,
+            Collection<String> values
+    ) {
+        if (CollectionUtils.isEmpty(values)) {
+            return unrestricted();
+        }
+        List<String> sanitized = values.stream()
+                .filter(value -> value != null && !value.isBlank())
+                .distinct()
+                .toList();
+        if (sanitized.isEmpty()) {
+            return unrestricted();
+        }
+
+        return (root, criteriaQuery, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            for (String value : sanitized) {
+                Predicate predicate = criteriaBuilder.like(
+                        criteriaBuilder.lower(
+                                criteriaBuilder.function(
+                                        "array_to_string",
+                                        String.class,
+                                        root.get(fieldName),
+                                        criteriaBuilder.literal(",")
+                                )
+                        ),
+                        "%" + value.toLowerCase() + "%"
+                );
+                predicates.add(predicate);
+            }
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
     }
 }
