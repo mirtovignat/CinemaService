@@ -59,6 +59,29 @@ public final class SpecificationUtils {
         );
     }
 
+    public static <Entity> Specification<Entity> arrayContains(
+            String fieldName,
+            Collection<String> values
+    ) {
+        if (CollectionUtils.isEmpty(values)) {
+            return unrestricted();
+        }
+        List<String> sanitized = values.stream()
+                .filter(value -> value != null && !value.isBlank())
+                .distinct()
+                .toList();
+        if (sanitized.isEmpty()) {
+            return unrestricted();
+        }
+        return (root, criteriaQuery, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            for (String value : sanitized) {
+                predicates.add(criteriaBuilder.isMember(value, root.get(fieldName)));
+            }
+            return criteriaBuilder.or(predicates.toArray(new Predicate[0]));
+        };
+    }
+
     public static <Entity> Specification<Entity> fieldStartsWithNormalized(
             String fieldName,
             String sanitizedSearchQuery

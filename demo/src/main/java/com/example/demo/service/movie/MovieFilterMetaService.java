@@ -6,7 +6,6 @@ import com.example.demo.dto.movie.range.MovieRangesSnapshot;
 import com.example.demo.mapper.entity.MovieRangesSnapshotMapper;
 import com.example.demo.repository.entity.MovieRepository;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,14 +46,14 @@ public class MovieFilterMetaService {
 
     @Transactional(readOnly = true)
     public Slice<String> searchGenres(CursorPageRequest cursorPageRequest) {
-        Slice<String> genresSlice = movieRepository.fetchGenresKeyset(
+        List<String> rows = movieRepository.fetchGenresKeyset(
                 CursorUtils.safeQuery(cursorPageRequest),
                 CursorUtils.hasCursor(cursorPageRequest),
                 CursorUtils.safeCursor(cursorPageRequest),
-                PageRequest.of(0, pageSize + 1)
+                pageSize + 1
         );
 
-        return CursorUtils.buildLimitedSlice(genresSlice.getContent(), pageSize);
+        return CursorUtils.buildLimitedSlice(rows, pageSize);
     }
 
     @Transactional(readOnly = true)

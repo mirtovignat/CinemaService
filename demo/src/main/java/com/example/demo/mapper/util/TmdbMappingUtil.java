@@ -2,6 +2,7 @@ package com.example.demo.mapper.util;
 
 import com.example.demo.dto.movie.tmdb.TMDBCast;
 import com.example.demo.dto.movie.tmdb.TMDBCredits;
+import com.example.demo.dto.movie.tmdb.TMDBCrew;
 import com.example.demo.dto.movie.tmdb.TMDBGenre;
 import org.mapstruct.Named;
 import org.springframework.stereotype.Component;
@@ -12,8 +13,6 @@ import java.util.List;
 
 @Component
 public class TmdbMappingUtil {
-
-    private static final String DEFAULT_GENRE = "Другое";
 
     @Named("posterPathToUrl")
     public String posterPathToUrl(String posterPath) {
@@ -28,16 +27,16 @@ public class TmdbMappingUtil {
         return runtime != null ? Duration.ofMinutes(runtime) : Duration.ZERO;
     }
 
-    @Named("firstGenreName")
-    public String firstGenreName(List<TMDBGenre> genres) {
+    @Named("allGenreNames")
+    public List<String> allGenreNames(List<TMDBGenre> genres) {
         if (genres == null || genres.isEmpty()) {
-            return DEFAULT_GENRE;
+            return List.of("Другое");
         }
-        String name = genres.get(0).name();
-        if (name == null || name.isBlank()) {
-            return DEFAULT_GENRE;
-        }
-        return Character.toUpperCase(name.charAt(0)) + name.substring(1);
+        return genres.stream()
+                .map(TMDBGenre::name)
+                .filter(n -> n != null && !n.isBlank())
+                .map(n -> Character.toUpperCase(n.charAt(0)) + n.substring(1))
+                .toList();
     }
 
     @Named("parseReleaseDate")
@@ -61,5 +60,32 @@ public class TmdbMappingUtil {
                 .limit(10)
                 .map(TMDBCast::name)
                 .toList();
+    }
+
+    @Named("extractDirector")
+    public String extractDirector(TMDBCredits credits) {
+        if (credits == null || credits.crew() == null) {
+            return null;
+        }
+        return credits.crew().stream()
+                .filter(c -> "Director".equalsIgnoreCase(c.job()))
+                .map(TMDBCrew::name)
+                .findFirst()
+                .orElse(null);
+    }
+
+    @Named("certificationToAge")
+    public Integer certificationToAge(String certification) {
+        if (certification == null || certification.isBlank()) {
+            return 16;
+        }
+        return switch (certification.trim()) {
+            case "0", "G" -> 0;
+            case "6", "PG" -> 6;
+            case "12", "PG-13" -> 12;
+            case "16", "R" -> 16;
+            case "18", "NC-17" -> 18;
+            default -> 16;
+        };
     }
 }

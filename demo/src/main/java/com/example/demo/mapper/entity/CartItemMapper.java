@@ -13,7 +13,7 @@ public interface CartItemMapper {
     @Mapping(target = "id", source = "cartItem.movie.id")
     @Mapping(target = "title", source = "cartItem.movie.title")
     @Mapping(target = "posterUrl", source = "cartItem.movie.posterUrl")
-    @Mapping(target = "genre", source = "cartItem.movie.genre")
+    @Mapping(target = "genre", expression = "java(cartItem.getMovie().getGenre() != null && !cartItem.getMovie().getGenre().isEmpty() ? String.join(\", \", cartItem.getMovie().getGenre()) : null)")
     @Mapping(target = "price", source = "cartItem.movie.price")
     @Mapping(target = "rating", source = "cartItem.movie.rating")
     @Mapping(target = "releaseDate", source = "cartItem.movie.releaseDate")

@@ -17,7 +17,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -41,6 +43,38 @@ public class TMDBService {
             }
         }
         return russianMovie;
+    }
+
+    public String getCertification(Long tmdbId) {
+        URI requestUri = UriComponentsBuilder
+                .fromUriString(tmdbConfig.getApiUrl() + "/movie/" + tmdbId + "/release_dates")
+                .build()
+                .encode()
+                .toUri();
+        try {
+            JsonNode root = restClient.get()
+                    .uri(requestUri)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + tmdbConfig.getAccessToken())
+                    .retrieve()
+                    .body(JsonNode.class);
+            if (root == null || !root.has("results")) return null;
+            for (JsonNode country : root.get("results")) {
+                String iso = country.path("iso_3166_1").asText("");
+                if ("RU".equalsIgnoreCase(iso) || "US".equalsIgnoreCase(iso)) {
+                    JsonNode dates = country.path("release_dates");
+                    if (dates.isArray()) {
+                        for (JsonNode d : dates) {
+                            String cert = d.path("certification").asText("");
+                            if (!cert.isBlank()) return cert;
+                        }
+                    }
+                }
+            }
+            return null;
+        } catch (Exception e) {
+            log.warn("Failed to fetch certification for tmdbId={}: {}", tmdbId, e.getMessage());
+            return null;
+        }
     }
 
     private TMDBMovieDTO fetchMovieById(Long tmdbId, String languageCode) {
@@ -71,19 +105,52 @@ public class TMDBService {
     }
 
     public List<TMDBMovieDTO> searchMovies(String searchQuery) {
-        List<TMDBMovieDTO> russianResults = fetchSearchMovies(searchQuery, "ru-RU");
-        if (russianResults.isEmpty()) {
-            russianResults = fetchSearchMovies(searchQuery, "en-US");
+        List<TMDBMovieDTO> allResults = new ArrayList<>();
+        Set<Long> seenIds = new LinkedHashSet<>();
+
+        for (int page = 1; page <= 3; page++) {
+            List<TMDBMovieDTO> pageResults = fetchSearchMovies(searchQuery, "ru-RU", page);
+            for (TMDBMovieDTO dto : pageResults) {
+                if (dto == null || dto.id() == null) continue;
+                if (seenIds.add(dto.id())) {
+                    allResults.add(dto);
+                }
+            }
+            if (pageResults.size() < 20) break;
+            try {
+                Thread.sleep(120);
+            } catch (InterruptedException ignored) {
+                Thread.currentThread().interrupt();
+            }
         }
-        return russianResults;
+
+        if (allResults.isEmpty()) {
+            for (int page = 1; page <= 2; page++) {
+                List<TMDBMovieDTO> pageResults = fetchSearchMovies(searchQuery, "en-US", page);
+                for (TMDBMovieDTO dto : pageResults) {
+                    if (dto == null || dto.id() == null) continue;
+                    if (seenIds.add(dto.id())) {
+                        allResults.add(dto);
+                    }
+                }
+                if (pageResults.size() < 20) break;
+                try {
+                    Thread.sleep(120);
+                } catch (InterruptedException ignored) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+
+        return allResults;
     }
 
-    private List<TMDBMovieDTO> fetchSearchMovies(String searchQuery, String languageCode) {
+    private List<TMDBMovieDTO> fetchSearchMovies(String searchQuery, String languageCode, int page) {
         URI requestUri = UriComponentsBuilder
                 .fromUriString(tmdbConfig.getApiUrl() + "/search/movie")
                 .queryParam("language", languageCode)
                 .queryParam("query", searchQuery)
-                .queryParam("page", 1)
+                .queryParam("page", page)
                 .build()
                 .encode()
                 .toUri();
@@ -96,8 +163,8 @@ public class TMDBService {
                     .retrieve()
                     .body(TMDBSearchResponse.class);
         } catch (HttpClientErrorException clientErrorException) {
-            log.warn("TMDB search client error for query='{}': {} ({})",
-                    searchQuery, clientErrorException.getStatusCode(), clientErrorException.getMessage());
+            log.warn("TMDB search client error for query='{}' page={}: {} ({})",
+                    searchQuery, page, clientErrorException.getStatusCode(), clientErrorException.getMessage());
             return List.of();
         } catch (ResourceAccessException resourceAccessException) {
             throw tmdbUnavailable(resourceAccessException, requestUri);

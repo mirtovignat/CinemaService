@@ -27,90 +27,92 @@
             data-msg-confirm-no='Отмена'
          ">
 
-        <div class="create-movie-header-group">
-            <h1 class="create-movie-title">Добавить фильм</h1>
+        <div class="scrollable-content">
+            <div class="create-movie-header-group">
+                <h1 class="create-movie-title">Добавить фильм</h1>
 
-            <form id="createMovieSearchForm" data-persist="true" onsubmit="return false;" class="create-movie-search-form">
-                <div class="search-block">
-                    <div class="search-block-title">1. По TMDB ID</div>
-                    <div class="form-group">
-                        <label for="tmdbIdInput">
-                            TMDB ID
-                            <span class="hint">Через запятую, точку с запятой или с новой строки. Не более 100.</span>
-                        </label>
-                        <textarea id="tmdbIdInput" name="tmdbIdInput" rows="2" placeholder="862, 863, 10193"></textarea>
-                    </div>
-                </div>
-
-                <div class="search-block">
-                    <div class="search-block-title">2. По названию</div>
-                    <div class="form-group">
-                        <label for="titleInput">
-                            Названия
-                            <span class="hint">Каждое с новой строки. Точное совпадение, ru/en.</span>
-                        </label>
-                        <textarea id="titleInput" name="titleInput" rows="2" placeholder="Матрица&#10;Матрица: Перезагрузка"></textarea>
-                    </div>
-                </div>
-
-                <div class="search-block">
-                    <div class="search-block-title">3. По режиссёру / актёру</div>
-                    <div class="mode-panel--grid">
+                <form id="createMovieSearchForm" data-persist="true" onsubmit="return false;" class="create-movie-search-form">
+                    <div class="search-block">
+                        <div class="search-block-title">1. По TMDB ID</div>
                         <div class="form-group">
-                            <label for="directorInput">
-                                Режиссёры
-                                <span class="hint">Каждый с новой строки.</span>
+                            <label for="tmdbIdInput">
+                                TMDB ID
+                                <span class="hint">Через запятую, точку с запятой или с новой строки. Не более 100.</span>
                             </label>
-                            <textarea id="directorInput" name="directorInput" rows="2"
-                                      placeholder="Лана Вачовски&#10;Лилли Вачовски"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="actorInput">
-                                Актёры
-                                <span class="hint">Каждый с новой строки.</span>
-                            </label>
-                            <textarea id="actorInput" name="actorInput" rows="2" placeholder="Киану Ривз&#10;Лоренс Фишбёрн"></textarea>
+                            <textarea id="tmdbIdInput" name="tmdbIdInput" rows="2" placeholder="862, 863, 10193"></textarea>
                         </div>
                     </div>
-                </div>
 
-                <div class="search-actions">
-                    <button type="button" class="btn-search" id="searchBtn">Найти</button>
-                    <button type="button" class="btn-clear" id="clearBtn">Очистить</button>
-                </div>
-            </form>
-        </div>
+                    <div class="search-block">
+                        <div class="search-block-title">2. По названию</div>
+                        <div class="form-group">
+                            <label for="titleInput">
+                                Названия
+                                <span class="hint">Каждое с новой строки. Точное совпадение, ru/en.</span>
+                            </label>
+                            <textarea id="titleInput" name="titleInput" rows="2" placeholder="Матрица&#10;Матрица: Перезагрузка"></textarea>
+                        </div>
+                    </div>
 
-        <div class="results-and-summary">
-            <div class="results-toolbar">
-                <button type="button" class="btn-select-all" id="selectAllBtn" disabled>Выбрать все</button>
-                <div class="bulk-price">
-                    <label for="bulkPriceInput" class="price-label">Цена для всех (₽):</label>
-                    <input type="number" id="bulkPriceInput" class="price-input" step="0.01" min="0.01"
-                           placeholder="Например, 299"/>
-                    <button type="button" class="btn-fill-all" id="fillAllBtn" disabled>Применить</button>
-                </div>
+                    <div class="search-block">
+                        <div class="search-block-title">3. По режиссёру / актёру</div>
+                        <div class="mode-panel--grid">
+                            <div class="form-group">
+                                <label for="directorInput">
+                                    Режиссёры
+                                    <span class="hint">Каждый с новой строки.</span>
+                                </label>
+                                <textarea id="directorInput" name="directorInput" rows="2"
+                                          placeholder="Лана Вачовски&#10;Лилли Вачовски"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="actorInput">
+                                    Актёры
+                                    <span class="hint">Каждый с новой строки.</span>
+                                </label>
+                                <textarea id="actorInput" name="actorInput" rows="2" placeholder="Киану Ривз&#10;Лоренс Фишбёрн"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="search-actions">
+                        <button type="button" class="btn-search" id="searchBtn">Найти</button>
+                        <button type="button" class="btn-clear" id="clearBtn">Очистить</button>
+                    </div>
+                </form>
             </div>
 
-            <div id="errorMessage" class="error-message"></div>
-
-            <div class="selection-summary">
-                <span id="selectionSummary">Выбрано: 0 / 100</span>
-            </div>
-
-            <div id="resultsContainer" class="results"></div>
-
-            <div id="emptyState" class="empty-state">
-                <div class="empty-icon">🎬</div>
-                <div class="empty-title">Здесь появятся фильмы</div>
-                <div class="empty-desc">Введите TMDB ID, название или имя режиссёра/актёра в поля выше, затем нажмите
-                    «Найти».
+            <div class="results-and-summary">
+                <div class="results-toolbar">
+                    <button type="button" class="btn-select-all" id="selectAllBtn" disabled>Выбрать все</button>
+                    <div class="bulk-price">
+                        <label for="bulkPriceInput" class="price-label">Цена для всех (₽):</label>
+                        <input type="number" id="bulkPriceInput" class="price-input" step="0.01" min="0.01"
+                               placeholder="Например, 299"/>
+                        <button type="button" class="btn-fill-all" id="fillAllBtn" disabled>Применить</button>
+                    </div>
                 </div>
-            </div>
 
-            <div id="loadingState" class="loading-state" style="display: none;">
-                <div class="spinner"></div>
-                <div class="loading-text">Идет поиск фильмов...</div>
+                <div id="errorMessage" class="error-message"></div>
+
+                <div class="selection-summary">
+                    <span id="selectionSummary">Выбрано: 0 / 100</span>
+                </div>
+
+                <div id="resultsContainer" class="results"></div>
+
+                <div id="emptyState" class="empty-state">
+                    <div class="empty-icon">🎬</div>
+                    <div class="empty-title">Здесь появятся фильмы</div>
+                    <div class="empty-desc">Введите TMDB ID, название или имя режиссёра/актёра в поля выше, затем нажмите
+                        «Найти».
+                    </div>
+                </div>
+
+                <div id="loadingState" class="loading-state">
+                    <div class="spinner"></div>
+                    <div class="loading-text">Идет поиск фильмов...</div>
+                </div>
             </div>
         </div>
 
@@ -132,5 +134,7 @@
 </div>
 
 <script th:src="@{/js/pages/page-create-movie.js}" defer></script>
+
+<th:block th:replace="~{fragments/footer :: footer}"></th:block>
 </body>
 </html>

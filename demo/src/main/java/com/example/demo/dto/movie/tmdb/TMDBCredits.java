@@ -7,6 +7,7 @@ import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record TMDBCredits(
-        @JsonProperty("cast") List<TMDBCast> tmdbCasts
+        @JsonProperty("cast") List<TMDBCast> tmdbCasts,
+        @JsonProperty("crew") List<TMDBCrew> crew
 ) {
 }

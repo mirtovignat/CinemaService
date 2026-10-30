@@ -13,43 +13,38 @@ import org.mapstruct.Mapping;
 public abstract class RatedMapper {
 
     public ReviewViewDTO toReviewViewWithOwn(RatedMovie ratedMovie, Long currentUserId) {
-        if (ratedMovie == null) {
-            return null;
-        }
+        if (ratedMovie == null) return null;
         boolean isDeleted = isAuthorDeleted(ratedMovie);
-
         return ReviewViewDTO.builder()
                 .movieId(ratedMovie.getMovie() != null ? ratedMovie.getMovie().getId() : null)
                 .username(ratedMovie.getUser() != null ? ratedMovie.getUser().getUsername() : null)
                 .ratingValue(RatingMapper.normalizeRating(ratedMovie.getRatingValue()))
                 .reviewText(ratedMovie.getReview())
                 .addedAt(DateTimeMapperUtil.toUtcIso(ratedMovie.getAddedAt()))
-                .own(ratedMovie.getUser() != null
-                        && ratedMovie.getUser().getId().equals(currentUserId))
+                .own(ratedMovie.getUser() != null && ratedMovie.getUser().getId().equals(currentUserId))
                 .deleted(isDeleted)
                 .build();
     }
 
     public boolean isAuthorDeleted(RatedMovie ratedMovie) {
-        if (ratedMovie == null || ratedMovie.getUser() == null) {
-            return true;
-        }
+        if (ratedMovie == null || ratedMovie.getUser() == null) return true;
         String username = ratedMovie.getUser().getUsername();
         return ratedMovie.getUser().getDeletableState().isDeleted()
                 || (username != null && username.startsWith("deleted_"));
     }
 
     public RatedMovieViewDTO toOwnerView(RatedMovie ratedMovie) {
-        if (ratedMovie == null) {
-            return null;
-        }
+        if (ratedMovie == null) return null;
+        var movie = ratedMovie.getMovie();
+        String genre = (movie.getGenre() != null && !movie.getGenre().isEmpty())
+                ? String.join(", ", movie.getGenre()) : null;
         return RatedMovieViewDTO.builder()
-                .id(ratedMovie.getMovie().getId())
-                .title(ratedMovie.getMovie().getTitle())
-                .posterUrl(ratedMovie.getMovie().getPosterUrl())
-                .genre(ratedMovie.getMovie().getGenre())
-                .rating(RatingMapper.normalizeRating(ratedMovie.getMovie().getRating()))
-                .releaseDate(ratedMovie.getMovie().getReleaseDate())
+                .id(movie.getId())
+                .title(movie.getTitle())
+                .posterUrl(movie.getPosterUrl())
+                .genre(genre)
+                .rating(RatingMapper.normalizeRating(movie.getRating()))
+                .releaseDate(movie.getReleaseDate())
                 .ratingValue(RatingMapper.normalizeRating(ratedMovie.getRatingValue()))
                 .review(ratedMovie.getReview())
                 .addedAt(DateTimeMapperUtil.toUtcIso(ratedMovie.getAddedAt()))

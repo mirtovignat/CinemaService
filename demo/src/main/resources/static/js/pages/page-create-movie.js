@@ -73,11 +73,8 @@
             lastError = state.lastError || null;
 
             if (lastError) {
-                if (lastError.code === 'TMDB_MOVIE_ALREADY_EXISTS') {
-                    renderAlreadyExists(lastError.data);
-                } else {
-                    showError(lastError.message);
-                }
+                showError(lastError.message);
+                hideEmptyState();
             }
 
             if (searchResults.length > 0) {
@@ -94,17 +91,20 @@
         } catch (e) {}
     }
 
+    function hideEmptyState() {
+        if (emptyState) emptyState.style.setProperty('display', 'none', 'important');
+    }
+
+    function showEmptyState() {
+        if (emptyState) emptyState.style.removeProperty('display');
+    }
+
     function showLoading() {
-        if (emptyState) emptyState.style.display = 'none';
         if (loadingState) loadingState.style.display = 'flex';
     }
 
     function hideLoading() {
         if (loadingState) loadingState.style.display = 'none';
-    }
-
-    function showEmptyState() {
-        if (emptyState) emptyState.style.display = 'flex';
     }
 
     function askConfirm(message) {
@@ -188,13 +188,14 @@
 
     function updateSelectAllButton() {
         if (!selectAllBtn) return;
-        if (searchResults.length === 0) {
+        var selectable = searchResults.filter(function (m) { return m.existingMovieId == null; });
+        if (selectable.length === 0) {
             selectAllBtn.disabled = true;
             selectAllBtn.textContent = 'Выбрать все';
             return;
         }
         selectAllBtn.disabled = false;
-        var allSelected = selectedTmdbIds.size === searchResults.length;
+        var allSelected = selectable.every(function (m) { return selectedTmdbIds.has(m.tmdbId); });
         selectAllBtn.textContent = allSelected ? 'Снять выделение' : 'Выбрать все';
     }
 
@@ -204,25 +205,42 @@
         fillAllBtn.disabled = selectedTmdbIds.size === 0 || !hasBulkPrice;
     }
 
+    function buildPosterPlaceholder() {
+        var placeholder = document.createElement('div');
+        placeholder.className = 'movie-poster-placeholder';
+        placeholder.innerHTML =
+            '<div class="poster-placeholder-icon">' +
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" ' +
+                     'fill="none" stroke="currentColor" stroke-width="1.6" ' +
+                     'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+                    '<rect x="3" y="3" width="18" height="18" rx="3"/>' +
+                    '<circle cx="9" cy="9" r="2"/>' +
+                    '<path d="m21 15-4.35-4.35a1.5 1.5 0 0 0-2.12 0L7 18"/>' +
+                '</svg>' +
+            '</div>' +
+            '<div class="poster-placeholder-text">Нет постера</div>' +
+            '<div class="poster-placeholder-sub">Изображение недоступно</div>';
+        return placeholder;
+    }
+
     function buildPosterArea(movie, card) {
+        var posterWrapper = document.createElement('div');
+        posterWrapper.className = 'result-poster';
+
         if (movie.posterUrl) {
             var image = document.createElement('img');
             image.src = movie.posterUrl;
             image.alt = movie.title || '';
             image.addEventListener('error', function () {
-                image.style.display = 'none';
-                var placeholder = document.createElement('div');
-                placeholder.className = 'poster-placeholder';
-                placeholder.textContent = 'Нет постера';
-                card.insertBefore(placeholder, image);
+                image.remove();
+                posterWrapper.appendChild(buildPosterPlaceholder());
             }, { once: true });
-            card.appendChild(image);
+            posterWrapper.appendChild(image);
         } else {
-            var placeholder = document.createElement('div');
-            placeholder.className = 'poster-placeholder';
-            placeholder.textContent = 'Нет постера';
-            card.appendChild(placeholder);
+            posterWrapper.appendChild(buildPosterPlaceholder());
         }
+
+        card.appendChild(posterWrapper);
     }
 
     function buildPriceArea(movie, card) {
@@ -259,14 +277,27 @@
     }
 
     function renderResultCard(movie) {
+        var isExisting = movie.existingMovieId != null;
         var card = document.createElement('div');
-        card.className = 'result-card' + (selectedTmdbIds.has(movie.tmdbId) ? ' selected' : '');
+        card.className = 'result-card'
+            + (selectedTmdbIds.has(movie.tmdbId) ? ' selected' : '')
+            + (isExisting ? ' existing' : '');
         card.dataset.tmdbId = movie.tmdbId;
+        if (isExisting) {
+            card.dataset.existingMovieId = movie.existingMovieId;
+        }
 
-        var checkboxIndicator = document.createElement('div');
-        checkboxIndicator.className = 'checkbox-indicator';
-        checkboxIndicator.textContent = '✓';
-        card.appendChild(checkboxIndicator);
+        if (!isExisting) {
+            var checkboxIndicator = document.createElement('div');
+            checkboxIndicator.className = 'checkbox-indicator';
+            checkboxIndicator.textContent = '✓';
+            card.appendChild(checkboxIndicator);
+        } else {
+            var badge = document.createElement('div');
+            badge.className = 'existing-badge';
+            badge.textContent = 'Уже на сайте';
+            card.appendChild(badge);
+        }
 
         buildPosterArea(movie, card);
 
@@ -280,25 +311,33 @@
         yearElement.textContent = movie.releaseDate ? String(movie.releaseDate).substring(0, 4) : '';
         card.appendChild(yearElement);
 
-        buildPriceArea(movie, card);
+        if (isExisting) {
+            var link = document.createElement('a');
+            link.className = 'existing-link';
+            link.href = '/movies/' + movie.existingMovieId;
+            link.textContent = 'Перейти к фильму →';
+            card.appendChild(link);
+        } else {
+            buildPriceArea(movie, card);
 
-        card.addEventListener('click', function () {
-            if (selectedTmdbIds.has(movie.tmdbId)) {
-                selectedTmdbIds.delete(movie.tmdbId);
-                card.classList.remove('selected');
-            } else {
-                if (selectedTmdbIds.size >= MAX_RESULTS) {
-                    showError(messages.limitReached.replace('{0}', MAX_RESULTS));
-                    return;
+            card.addEventListener('click', function () {
+                if (selectedTmdbIds.has(movie.tmdbId)) {
+                    selectedTmdbIds.delete(movie.tmdbId);
+                    card.classList.remove('selected');
+                } else {
+                    if (selectedTmdbIds.size >= MAX_RESULTS) {
+                        showError(messages.limitReached.replace('{0}', MAX_RESULTS));
+                        return;
+                    }
+                    selectedTmdbIds.add(movie.tmdbId);
+                    card.classList.add('selected');
                 }
-                selectedTmdbIds.add(movie.tmdbId);
-                card.classList.add('selected');
-            }
-            updateCreateButton();
-            updateSelectAllButton();
-            updateFillAllButton();
-            saveState();
-        });
+                updateCreateButton();
+                updateSelectAllButton();
+                updateFillAllButton();
+                saveState();
+            });
+        }
 
         return card;
     }
@@ -308,12 +347,22 @@
         searchResults.forEach(function (movie) {
             resultsContainer.appendChild(renderResultCard(movie));
         });
+
+        if (searchResults.length > 0) {
+            resultsContainer.style.display = 'grid';
+            hideEmptyState();
+        } else {
+            resultsContainer.style.display = 'none';
+        }
+
         updateCreateButton();
         updateSelectAllButton();
         updateFillAllButton();
     }
 
     function buildSearchUrl() {
+        var parts = [];
+
         var tmdbIds = parseTmdbIds(tmdbIdInput.value);
         var titles = splitLines(titleInput.value);
         var directors = splitLines(directorInput.value);
@@ -323,13 +372,20 @@
             return null;
         }
 
-        var params = new URLSearchParams();
-        tmdbIds.forEach(function (tmdbId) { params.append('tmdbIds', tmdbId); });
-        titles.forEach(function (title) { params.append('titles', title); });
-        directors.forEach(function (director) { params.append('directors', director); });
-        actors.forEach(function (actor) { params.append('actors', actor); });
+        tmdbIds.forEach(function (id) {
+            parts.push('tmdbIds=' + encodeURIComponent(id));
+        });
+        titles.forEach(function (title) {
+            parts.push('titles=' + encodeURIComponent(title));
+        });
+        directors.forEach(function (director) {
+            parts.push('directors=' + encodeURIComponent(director));
+        });
+        actors.forEach(function (actor) {
+            parts.push('actors=' + encodeURIComponent(actor));
+        });
 
-        return '/movies/tmdb/search?' + params.toString();
+        return '/movies/tmdb/search?' + parts.join('&');
     }
 
     function readError(response) {
@@ -346,52 +402,26 @@
             });
     }
 
-    function renderAlreadyExists(list) {
-        errorMessage.innerHTML = '';
-        if (!list || list.length === 0) {
-            showError(messages.failed);
-            return;
-        }
-
-        var intro = document.createElement('div');
-        intro.className = 'error-title';
-        intro.textContent = list.length === 1 ? 'Этот фильм уже есть на сайте:' : 'Эти фильмы уже есть на сайте:';
-        errorMessage.appendChild(intro);
-
-        var listContainer = document.createElement('div');
-        listContainer.className = 'tmdb-error-list';
-
-        var ul = document.createElement('ul');
-        ul.className = 'already-exists-list';
-
-        list.forEach(function (movieRefer) {
-            var li = document.createElement('li');
-            var link = document.createElement('a');
-            link.href = '/movies/' + movieRefer.id;
-            link.textContent = movieRefer.title || '';
-            if (movieRefer.year != null) {
-                var yearSpan = document.createElement('span');
-                yearSpan.className = 'year-muted';
-                yearSpan.textContent = ' (' + movieRefer.year + ')';
-                link.appendChild(yearSpan);
-            }
-            li.appendChild(link);
-            ul.appendChild(li);
-        });
-
-        listContainer.appendChild(ul);
-        errorMessage.appendChild(listContainer);
-        errorMessage.classList.add('show');
-    }
-
     function handleSearchClick() {
         clearError();
         lastError = null;
+
         var url = buildSearchUrl();
         if (!url) {
             showError(messages.emptyInput);
             return;
         }
+
+        hideEmptyState();
+        hideLoading();
+        searchResults = [];
+        selectedTmdbIds.clear();
+        prices = {};
+        resultsContainer.innerHTML = '';
+        resultsContainer.style.display = 'none';
+        updateCreateButton();
+        updateSelectAllButton();
+        updateFillAllButton();
 
         searchBtn.disabled = true;
         searchBtn.textContent = 'Ищем...';
@@ -412,33 +442,15 @@
                 hideLoading();
 
                 if (!result.ok) {
-                    searchResults = [];
-                    selectedTmdbIds.clear();
-                    prices = {};
-                    resultsContainer.innerHTML = '';
-                    updateCreateButton();
-                    updateSelectAllButton();
-                    updateFillAllButton();
-
                     lastError = result.error;
-                    if (result.error.code === 'TMDB_MOVIE_ALREADY_EXISTS') {
-                        renderAlreadyExists(result.error.data);
-                    } else {
-                        showError(result.error.message);
-                    }
+                    showError(result.error.message);
                     saveState();
                     return;
                 }
 
                 searchResults = result.data || [];
-                selectedTmdbIds.clear();
-                prices = {};
 
                 if (searchResults.length === 0) {
-                    resultsContainer.innerHTML = '';
-                    updateCreateButton();
-                    updateSelectAllButton();
-                    updateFillAllButton();
                     showError(messages.failed);
                     saveState();
                     return;
@@ -458,20 +470,21 @@
     }
 
     function handleSelectAllClick() {
-        if (searchResults.length === 0) return;
-        var allSelected = selectedTmdbIds.size === searchResults.length;
+        var selectable = searchResults.filter(function (m) { return m.existingMovieId == null; });
+        if (selectable.length === 0) return;
+        var allSelected = selectable.every(function (m) { return selectedTmdbIds.has(m.tmdbId); });
         if (allSelected) {
             selectedTmdbIds.clear();
         } else {
-            searchResults.forEach(function (movie) {
+            selectable.forEach(function (movie) {
                 if (selectedTmdbIds.size >= MAX_RESULTS) return;
                 selectedTmdbIds.add(movie.tmdbId);
             });
-            if (searchResults.length > MAX_RESULTS) {
+            if (selectable.length > MAX_RESULTS) {
                 showError(messages.limitReached.replace('{0}', MAX_RESULTS));
             }
         }
-        var cards = resultsContainer.querySelectorAll('.result-card');
+        var cards = resultsContainer.querySelectorAll('.result-card:not(.existing)');
         cards.forEach(function (card) {
             if (selectedTmdbIds.has(Number(card.dataset.tmdbId))) {
                 card.classList.add('selected');
@@ -530,6 +543,7 @@
         prices = {};
         lastError = null;
         resultsContainer.innerHTML = '';
+        resultsContainer.style.display = 'none';
         tmdbIdInput.value = '';
         titleInput.value = '';
         directorInput.value = '';
@@ -539,12 +553,12 @@
         updateFillAllButton();
         clearSavedState();
 
+        showEmptyState();
+
         var form = document.getElementById('createMovieSearchForm');
         if (form && window.FormPersist) {
             window.FormPersist.clear(form);
         }
-
-        showEmptyState();
     }
 
     function buildCreateForm() {

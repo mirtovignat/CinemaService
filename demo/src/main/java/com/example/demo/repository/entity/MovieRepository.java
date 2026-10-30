@@ -39,7 +39,8 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
     @Query("""
             SELECT movie.id            AS id,
                    movie.title         AS title,
-                   movie.releaseDate   AS releaseDate
+                   movie.releaseDate   AS releaseDate,
+                   movie.tmdbId        AS tmdbId
             FROM Movie movie
             WHERE movie.tmdbId IN :tmdbIds
             """)
@@ -54,12 +55,12 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
     int updatePosterUrl(@Param("id") Long id,
                         @Param("url") String url);
 
-    @Query("""
-            SELECT DISTINCT FUNCTION('initcap', movie.genre)
-            FROM Movie movie
-            WHERE movie.genre IS NOT NULL
-            ORDER BY FUNCTION('initcap', movie.genre)
-            """)
+    @Query(value = """
+            SELECT DISTINCT INITCAP(g)
+            FROM movies, unnest(genre) AS g
+            WHERE g IS NOT NULL
+            ORDER BY INITCAP(g)
+            """, nativeQuery = true)
     List<String> findAllDistinctGenres();
 
     @Query(value = """
@@ -82,19 +83,20 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
             @Param("limit") int limit
     );
 
-    @Query("""
-            SELECT DISTINCT FUNCTION('initcap', movie.genre)
-            FROM Movie movie
-            WHERE movie.genre IS NOT NULL
-            AND (:hasCursor = false OR FUNCTION('initcap', movie.genre) > :cursor)
-            AND (LOWER(movie.genre) LIKE LOWER(CONCAT(:prefix, '%')))
-            ORDER BY FUNCTION('initcap', movie.genre) ASC
-            """)
-    Slice<String> fetchGenresKeyset(
+    @Query(value = """
+            SELECT DISTINCT INITCAP(g)
+            FROM movies, unnest(genre) AS g
+            WHERE g IS NOT NULL
+              AND (:hasCursor = false OR INITCAP(g) > :cursor)
+              AND LOWER(g) LIKE LOWER(CONCAT(:prefix, '%'))
+            ORDER BY INITCAP(g) ASC
+            LIMIT :limit
+            """, nativeQuery = true)
+    List<String> fetchGenresKeyset(
             @Param("prefix") String prefix,
             @Param("hasCursor") boolean hasCursor,
             @Param("cursor") String cursor,
-            Pageable pageable
+            @Param("limit") int limit
     );
 
     @Query("""
@@ -152,11 +154,15 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
             Pageable pageable
     );
 
-    @Query("""
-            SELECT movie
-            FROM Movie movie
-            WHERE movie.genre = :genre
-            """)
+    @Query(value = """
+            SELECT * FROM movies
+            WHERE :genre = ANY(genre)
+            """,
+            countQuery = """
+                    SELECT COUNT(*) FROM movies
+                    WHERE :genre = ANY(genre)
+                    """,
+            nativeQuery = true)
     Page<Movie> findAllByGenre(Pageable pageable, @Param("genre") String genre);
 
     @Query("""

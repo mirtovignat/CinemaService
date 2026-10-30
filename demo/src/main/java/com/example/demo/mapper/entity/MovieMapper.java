@@ -21,6 +21,7 @@ public interface MovieMapper {
             qualifiedByName = "durationToString")
     @Mapping(target = "description", ignore = true)
     @Mapping(target = "currencyCode", ignore = true)
+    @Mapping(target = "genre", expression = "java(movie.getGenre() != null && !movie.getGenre().isEmpty() ? String.join(\", \", movie.getGenre()) : null)")
     MovieCardViewDTO toCard(Movie movie);
 
     @Mapping(target = "formattedDuration",
@@ -31,8 +32,10 @@ public interface MovieMapper {
     @Mapping(target = "inCart", ignore = true)
     @Mapping(target = "inFavourites", ignore = true)
     @Mapping(target = "ownRating", ignore = true)
+    @Mapping(target = "genre", expression = "java(movie.getGenre() != null && !movie.getGenre().isEmpty() ? String.join(\", \", movie.getGenre()) : null)")
     MovieDetailsViewDTO toDetails(Movie movie);
 
+    @Mapping(target = "genre", expression = "java(movie.getGenre() != null && !movie.getGenre().isEmpty() ? String.join(\", \", movie.getGenre()) : null)")
     MovieSearchDTO toMovieSearch(Movie movie);
 
     @Mapping(target = "tmdbId", source = "id")
@@ -54,12 +57,12 @@ public interface MovieMapper {
     @Mapping(target = "tmdbId", source = "tmdbMovie.id")
     @Mapping(target = "title", source = "tmdbMovie.title")
     @Mapping(target = "description", source = "tmdbMovie.overview")
-    @Mapping(target = "ageRating", constant = "16")
+    @Mapping(target = "ageRating", source = "ageRating")
     @Mapping(target = "price", source = "price")
     @Mapping(target = "duration", source = "tmdbMovie.runtime", qualifiedByName = "runtimeToDuration")
-    @Mapping(target = "genre", source = "tmdbMovie.genres", qualifiedByName = "firstGenreName")
+    @Mapping(target = "genre", source = "tmdbMovie.genres", qualifiedByName = "allGenreNames")
     @Mapping(target = "releaseDate", source = "tmdbMovie.releaseDate", qualifiedByName = "parseReleaseDate")
     @Mapping(target = "actors", source = "tmdbMovie.credits", qualifiedByName = "castToActors")
-    @Mapping(target = "director", ignore = true)
-    Movie fromTmdb(TMDBMovieDTO tmdbMovie, BigDecimal price);
+    @Mapping(target = "director", source = "tmdbMovie.credits", qualifiedByName = "extractDirector")
+    Movie fromTmdb(TMDBMovieDTO tmdbMovie, BigDecimal price, Integer ageRating);
 }

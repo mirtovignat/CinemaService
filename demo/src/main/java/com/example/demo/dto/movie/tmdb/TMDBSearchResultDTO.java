@@ -1,4 +1,3 @@
-
 package com.example.demo.dto.movie.tmdb;
 
 import lombok.Builder;
@@ -9,6 +8,7 @@ public record TMDBSearchResultDTO(
         String title,
         String originalTitle,
         String releaseDate,
-        String posterUrl
+        String posterUrl,
+        Long existingMovieId
 ) {
 }

@@ -6,4 +6,5 @@ public interface MovieReferProjection {
     Long getId();
     String getTitle();
     LocalDate getReleaseDate();
+    Long getTmdbId();
 }
