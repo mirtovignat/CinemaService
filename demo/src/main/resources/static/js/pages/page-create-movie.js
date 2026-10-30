@@ -2,10 +2,12 @@
     'use strict';
 
     var MAX_RESULTS = 100;
+    var STORAGE_KEY = 'createMovieState';
 
     var searchResults = [];
     var selectedTmdbIds = new Set();
     var prices = {};
+    var lastError = null;
 
     var root = document.querySelector('.create-movie-wrapper');
     var messages = {
@@ -17,8 +19,6 @@
         fillAllEmptyPrice: root ? root.dataset.msgFillAllEmptyPrice : '',
         fillAllNothing: root ? root.dataset.msgFillAllNothing : '',
         limitReached: root ? root.dataset.msgLimitReached : '',
-        alreadyExistsIntro: root ? root.dataset.msgAlreadyExistsIntro : '',
-        alreadyExistsIntroPlural: root ? root.dataset.msgAlreadyExistsIntroPlural : '',
         confirmYes: root ? root.dataset.msgConfirmYes : 'Да',
         confirmNo: root ? root.dataset.msgConfirmNo : 'Отмена'
     };
@@ -47,6 +47,52 @@
 
     confirmModalOk.textContent = messages.confirmYes;
     confirmModalCancel.textContent = messages.confirmNo;
+
+    function saveState() {
+        try {
+            var state = {
+                searchResults: searchResults,
+                selectedTmdbIds: Array.from(selectedTmdbIds),
+                prices: prices,
+                lastError: lastError
+            };
+            sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (e) {}
+    }
+
+    function restoreState() {
+        try {
+            var raw = sessionStorage.getItem(STORAGE_KEY);
+            if (!raw) return false;
+            var state = JSON.parse(raw);
+            if (!state) return false;
+
+            searchResults = state.searchResults || [];
+            selectedTmdbIds = new Set(state.selectedTmdbIds || []);
+            prices = state.prices || {};
+            lastError = state.lastError || null;
+
+            if (lastError) {
+                if (lastError.code === 'TMDB_MOVIE_ALREADY_EXISTS') {
+                    renderAlreadyExists(lastError.data);
+                } else {
+                    showError(lastError.message);
+                }
+            }
+
+            if (searchResults.length > 0) {
+                renderResults();
+                return true;
+            }
+        } catch (e) {}
+        return false;
+    }
+
+    function clearSavedState() {
+        try {
+            sessionStorage.removeItem(STORAGE_KEY);
+        } catch (e) {}
+    }
 
     function showLoading() {
         if (emptyState) emptyState.style.display = 'none';
@@ -78,26 +124,21 @@
         }
     }
 
-    confirmModalOk.addEventListener('click', function () {
-        closeConfirm(true);
-    });
-    confirmModalCancel.addEventListener('click', function () {
-        closeConfirm(false);
-    });
+    confirmModalOk.addEventListener('click', function () { closeConfirm(true); });
+    confirmModalCancel.addEventListener('click', function () { closeConfirm(false); });
     confirmModal.addEventListener('click', function (event) {
-        if (event.target === confirmModal) {
-            closeConfirm(false);
-        }
+        if (event.target === confirmModal) closeConfirm(false);
     });
     document.addEventListener('keydown', function (event) {
-        if (event.key === 'Escape' && !confirmModal.hidden) {
-            closeConfirm(false);
-        }
+        if (event.key === 'Escape' && !confirmModal.hidden) closeConfirm(false);
     });
 
     function showError(message) {
         errorMessage.innerHTML = '';
-        errorMessage.textContent = message;
+        var textDiv = document.createElement('div');
+        textDiv.className = 'error-text';
+        textDiv.textContent = message;
+        errorMessage.appendChild(textDiv);
         errorMessage.classList.add('show');
     }
 
@@ -113,11 +154,8 @@
     }
 
     function splitLines(raw) {
-        if (!raw) {
-            return [];
-        }
-        return raw
-            .split(/[\n,;]+/)
+        if (!raw) return [];
+        return raw.split(/[\n,;]+/)
             .map(function (part) { return part.trim(); })
             .filter(function (part) { return part.length > 0; });
     }
@@ -129,24 +167,17 @@
     }
 
     function allSelectedHavePrice() {
-        if (selectedTmdbIds.size === 0) {
-            return false;
-        }
+        if (selectedTmdbIds.size === 0) return false;
         var ok = true;
         selectedTmdbIds.forEach(function (tmdbId) {
-            if (parsePrice(prices[tmdbId]) === null) {
-                ok = false;
-            }
+            if (parsePrice(prices[tmdbId]) === null) ok = false;
         });
         return ok;
     }
 
     function updateSelectionSummary() {
-        if (!selectionSummary) {
-            return;
-        }
-        selectionSummary.textContent =
-            'Выбрано: ' + selectedTmdbIds.size + ' / ' + MAX_RESULTS;
+        if (!selectionSummary) return;
+        selectionSummary.textContent = 'Выбрано: ' + selectedTmdbIds.size + ' / ' + MAX_RESULTS;
     }
 
     function updateCreateButton() {
@@ -156,9 +187,7 @@
     }
 
     function updateSelectAllButton() {
-        if (!selectAllBtn) {
-            return;
-        }
+        if (!selectAllBtn) return;
         if (searchResults.length === 0) {
             selectAllBtn.disabled = true;
             selectAllBtn.textContent = 'Выбрать все';
@@ -170,9 +199,7 @@
     }
 
     function updateFillAllButton() {
-        if (!fillAllBtn) {
-            return;
-        }
+        if (!fillAllBtn) return;
         var hasBulkPrice = parsePrice(bulkPriceInput ? bulkPriceInput.value : null) !== null;
         fillAllBtn.disabled = selectedTmdbIds.size === 0 || !hasBulkPrice;
     }
@@ -201,9 +228,7 @@
     function buildPriceArea(movie, card) {
         var priceWrapper = document.createElement('div');
         priceWrapper.className = 'price-wrapper';
-        priceWrapper.addEventListener('click', function (event) {
-            event.stopPropagation();
-        });
+        priceWrapper.addEventListener('click', function (event) { event.stopPropagation(); });
 
         var priceLabel = document.createElement('label');
         priceLabel.className = 'price-label';
@@ -223,12 +248,10 @@
         }
         priceInput.addEventListener('input', function () {
             var raw = priceInput.value.trim();
-            if (raw === '') {
-                delete prices[movie.tmdbId];
-            } else {
-                prices[movie.tmdbId] = raw;
-            }
+            if (raw === '') delete prices[movie.tmdbId];
+            else prices[movie.tmdbId] = raw;
             updateCreateButton();
+            saveState();
         });
         priceWrapper.appendChild(priceInput);
 
@@ -274,6 +297,7 @@
             updateCreateButton();
             updateSelectAllButton();
             updateFillAllButton();
+            saveState();
         });
 
         return card;
@@ -300,18 +324,10 @@
         }
 
         var params = new URLSearchParams();
-        tmdbIds.forEach(function (tmdbId) {
-            params.append('tmdbIds', tmdbId);
-        });
-        titles.forEach(function (title) {
-            params.append('titles', title);
-        });
-        directors.forEach(function (director) {
-            params.append('directors', director);
-        });
-        actors.forEach(function (actor) {
-            params.append('actors', actor);
-        });
+        tmdbIds.forEach(function (tmdbId) { params.append('tmdbIds', tmdbId); });
+        titles.forEach(function (title) { params.append('titles', title); });
+        directors.forEach(function (director) { params.append('directors', director); });
+        actors.forEach(function (actor) { params.append('actors', actor); });
 
         return '/movies/tmdb/search?' + params.toString();
     }
@@ -338,13 +354,16 @@
         }
 
         var intro = document.createElement('div');
-        intro.textContent = list.length === 1
-            ? messages.alreadyExistsIntro
-            : messages.alreadyExistsIntroPlural;
+        intro.className = 'error-title';
+        intro.textContent = list.length === 1 ? 'Этот фильм уже есть на сайте:' : 'Эти фильмы уже есть на сайте:';
         errorMessage.appendChild(intro);
+
+        var listContainer = document.createElement('div');
+        listContainer.className = 'tmdb-error-list';
 
         var ul = document.createElement('ul');
         ul.className = 'already-exists-list';
+
         list.forEach(function (movieRefer) {
             var li = document.createElement('li');
             var link = document.createElement('a');
@@ -359,12 +378,15 @@
             li.appendChild(link);
             ul.appendChild(li);
         });
-        errorMessage.appendChild(ul);
+
+        listContainer.appendChild(ul);
+        errorMessage.appendChild(listContainer);
         errorMessage.classList.add('show');
     }
 
     function handleSearchClick() {
         clearError();
+        lastError = null;
         var url = buildSearchUrl();
         if (!url) {
             showError(messages.emptyInput);
@@ -397,11 +419,14 @@
                     updateCreateButton();
                     updateSelectAllButton();
                     updateFillAllButton();
+
+                    lastError = result.error;
                     if (result.error.code === 'TMDB_MOVIE_ALREADY_EXISTS') {
                         renderAlreadyExists(result.error.data);
                     } else {
                         showError(result.error.message);
                     }
+                    saveState();
                     return;
                 }
 
@@ -415,10 +440,12 @@
                     updateSelectAllButton();
                     updateFillAllButton();
                     showError(messages.failed);
+                    saveState();
                     return;
                 }
 
                 renderResults();
+                saveState();
             })
             .catch(function () {
                 hideLoading();
@@ -431,17 +458,13 @@
     }
 
     function handleSelectAllClick() {
-        if (searchResults.length === 0) {
-            return;
-        }
+        if (searchResults.length === 0) return;
         var allSelected = selectedTmdbIds.size === searchResults.length;
         if (allSelected) {
             selectedTmdbIds.clear();
         } else {
             searchResults.forEach(function (movie) {
-                if (selectedTmdbIds.size >= MAX_RESULTS) {
-                    return;
-                }
+                if (selectedTmdbIds.size >= MAX_RESULTS) return;
                 selectedTmdbIds.add(movie.tmdbId);
             });
             if (searchResults.length > MAX_RESULTS) {
@@ -459,6 +482,7 @@
         updateCreateButton();
         updateSelectAllButton();
         updateFillAllButton();
+        saveState();
     }
 
     function handleFillAllClick() {
@@ -476,9 +500,7 @@
 
         var targets = [];
         selectedTmdbIds.forEach(function (tmdbId) {
-            if (parsePrice(prices[tmdbId]) === null) {
-                targets.push(tmdbId);
-            }
+            if (parsePrice(prices[tmdbId]) === null) targets.push(tmdbId);
         });
 
         if (targets.length === 0) {
@@ -487,9 +509,7 @@
         }
 
         askConfirm(messages.fillAllConfirm).then(function (confirmed) {
-            if (!confirmed) {
-                return;
-            }
+            if (!confirmed) return;
             targets.forEach(function (tmdbId) {
                 prices[tmdbId] = String(bulkPrice);
                 var priceInput = document.getElementById('priceInput-' + tmdbId);
@@ -499,6 +519,7 @@
                 }
             });
             updateCreateButton();
+            saveState();
         });
     }
 
@@ -507,6 +528,7 @@
         searchResults = [];
         selectedTmdbIds.clear();
         prices = {};
+        lastError = null;
         resultsContainer.innerHTML = '';
         tmdbIdInput.value = '';
         titleInput.value = '';
@@ -515,6 +537,13 @@
         updateCreateButton();
         updateSelectAllButton();
         updateFillAllButton();
+        clearSavedState();
+
+        var form = document.getElementById('createMovieSearchForm');
+        if (form && window.FormPersist) {
+            window.FormPersist.clear(form);
+        }
+
         showEmptyState();
     }
 
@@ -563,9 +592,7 @@
             if (parsePrice(prices[tmdbId]) === null) {
                 hasInvalid = true;
                 var priceInput = document.getElementById('priceInput-' + tmdbId);
-                if (priceInput) {
-                    priceInput.classList.add('error');
-                }
+                if (priceInput) priceInput.classList.add('error');
             }
         });
         if (hasInvalid) {
@@ -576,29 +603,25 @@
         var form = buildCreateForm();
         document.body.appendChild(form);
         form.submit();
+
+        clearSavedState();
+        var searchForm = document.getElementById('createMovieSearchForm');
+        if (searchForm && window.FormPersist) {
+            window.FormPersist.clear(searchForm);
+        }
     }
 
     searchBtn.addEventListener('click', handleSearchClick);
-
-    if (clearBtn) {
-        clearBtn.addEventListener('click', handleClearClick);
-    }
-
-    if (selectAllBtn) {
-        selectAllBtn.addEventListener('click', handleSelectAllClick);
-    }
-
-    if (fillAllBtn) {
-        fillAllBtn.addEventListener('click', handleFillAllClick);
-    }
-
-    if (bulkPriceInput) {
-        bulkPriceInput.addEventListener('input', updateFillAllButton);
-    }
-
+    if (clearBtn) clearBtn.addEventListener('click', handleClearClick);
+    if (selectAllBtn) selectAllBtn.addEventListener('click', handleSelectAllClick);
+    if (fillAllBtn) fillAllBtn.addEventListener('click', handleFillAllClick);
+    if (bulkPriceInput) bulkPriceInput.addEventListener('input', updateFillAllButton);
     createBtn.addEventListener('click', handleCreateClick);
+
+    restoreState();
 
     updateCreateButton();
     updateSelectAllButton();
     updateFillAllButton();
+
 })();

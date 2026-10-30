@@ -84,8 +84,10 @@ public class MovieService {
     @Transactional(readOnly = true)
     public List<TMDBSearchResultDTO> searchTmdb(TMDBSearchRequest tmdbSearchRequest) {
         if (tmdbSearchRequest == null) {
-            throw BusinessException.of(ErrorCode.TMDB_SEARCH_EMPTY);
+            throw BusinessException.of(ErrorCode.VALIDATION_ERROR);
         }
+
+        String criteriaDescription = tmdbSearchRequest.describeCriteria();
 
         Set<Long> intersectedTmdbIds;
         if (tmdbSearchRequest.hasAnyIds()) {
@@ -93,11 +95,11 @@ public class MovieService {
         } else if (tmdbSearchRequest.hasAnyFields()) {
             intersectedTmdbIds = intersectByFields(tmdbSearchRequest);
         } else {
-            throw BusinessException.of(ErrorCode.TMDB_SEARCH_EMPTY);
+            throw BusinessException.of(ErrorCode.VALIDATION_ERROR);
         }
 
         if (intersectedTmdbIds.isEmpty()) {
-            throw BusinessException.of(ErrorCode.TMDB_SEARCH_EMPTY);
+            throw BusinessException.of(ErrorCode.TMDB_SEARCH_EMPTY, criteriaDescription);
         }
 
         Set<Long> existingTmdbIds = movieRepository.findExistingTmdbIds(intersectedTmdbIds);
@@ -135,7 +137,7 @@ public class MovieService {
         }
 
         if (uniqueTmdbMovies.isEmpty()) {
-            throw BusinessException.of(ErrorCode.TMDB_SEARCH_EMPTY);
+            throw BusinessException.of(ErrorCode.TMDB_SEARCH_EMPTY, criteriaDescription);
         }
 
         List<TMDBMovieDTO> sortedByDateDesc = uniqueTmdbMovies.values().stream()
@@ -157,10 +159,12 @@ public class MovieService {
 
         if (tmdbSearchRequest.titles() != null && !tmdbSearchRequest.titles().isEmpty()) {
             Set<Long> titleMatches = new LinkedHashSet<>();
+            boolean anyNonBlank = false;
             for (String title : tmdbSearchRequest.titles()) {
                 if (title == null || title.isBlank()) {
                     continue;
                 }
+                anyNonBlank = true;
                 for (TMDBMovieDTO tmdbMovieDTO : tmdbService.searchMovies(title)) {
                     if (tmdbMovieDTO == null || tmdbMovieDTO.id() == null) {
                         continue;
@@ -174,44 +178,59 @@ public class MovieService {
                     titleMatches.add(tmdbMovieDTO.id());
                 }
             }
-            criteriaSets.add(titleMatches);
+            if (anyNonBlank) {
+                criteriaSets.add(titleMatches);
+            }
         }
 
         if (tmdbSearchRequest.directors() != null && !tmdbSearchRequest.directors().isEmpty()) {
             Set<Long> directorMatches = new LinkedHashSet<>();
+            boolean anyNonBlank = false;
             for (String director : tmdbSearchRequest.directors()) {
                 if (director == null || director.isBlank()) {
                     continue;
                 }
+                anyNonBlank = true;
                 for (TMDBMovieDTO tmdbMovieDTO : tmdbService.searchMoviesByDirector(director)) {
                     if (tmdbMovieDTO != null && tmdbMovieDTO.id() != null) {
                         directorMatches.add(tmdbMovieDTO.id());
                     }
                 }
             }
-            criteriaSets.add(directorMatches);
+            if (anyNonBlank) {
+                criteriaSets.add(directorMatches);
+            }
         }
 
         if (tmdbSearchRequest.actors() != null && !tmdbSearchRequest.actors().isEmpty()) {
-            Set<Long> actorMatches = new LinkedHashSet<>();
+            List<Set<Long>> perActorSets = new ArrayList<>();
             for (String actor : tmdbSearchRequest.actors()) {
                 if (actor == null || actor.isBlank()) {
                     continue;
                 }
+                Set<Long> actorMatches = new LinkedHashSet<>();
                 for (TMDBMovieDTO tmdbMovieDTO : tmdbService.searchMoviesByActor(actor)) {
                     if (tmdbMovieDTO != null && tmdbMovieDTO.id() != null) {
                         actorMatches.add(tmdbMovieDTO.id());
                     }
                 }
+                perActorSets.add(actorMatches);
             }
-            criteriaSets.add(actorMatches);
+
+            if (!perActorSets.isEmpty()) {
+                Set<Long> actorIntersection = new LinkedHashSet<>(perActorSets.get(0));
+                for (int index = 1; index < perActorSets.size(); index++) {
+                    actorIntersection.retainAll(perActorSets.get(index));
+                }
+                criteriaSets.add(actorIntersection);
+            }
         }
 
         if (criteriaSets.isEmpty()) {
             return Set.of();
         }
 
-        Set<Long> intersectedTmdbIds = criteriaSets.get(0);
+        Set<Long> intersectedTmdbIds = new LinkedHashSet<>(criteriaSets.get(0));
         for (int index = 1; index < criteriaSets.size(); index++) {
             intersectedTmdbIds.retainAll(criteriaSets.get(index));
         }
@@ -264,7 +283,7 @@ public class MovieService {
         }
 
         if (createdMovieDetails.isEmpty()) {
-            throw BusinessException.of(ErrorCode.TMDB_SEARCH_EMPTY);
+            throw BusinessException.of(ErrorCode.TMDB_SEARCH_EMPTY, "ID TMDB");
         }
 
         return createdMovieDetails;

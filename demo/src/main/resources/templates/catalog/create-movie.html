@@ -23,8 +23,6 @@
             data-msg-fill-all-empty-price=#{error.CREATE_MOVIE_FILL_ALL_EMPTY_PRICE},
             data-msg-fill-all-nothing=#{error.CREATE_MOVIE_FILL_ALL_NOTHING},
             data-msg-limit-reached=#{error.TOO_MANY_TMDB_RESULTS('{0}','{1}')},
-            data-msg-already-exists-intro=#{error.TMDB_MOVIE_ALREADY_EXISTS},
-            data-msg-already-exists-intro-plural=#{error.TMDB_MOVIE_ALREADY_EXISTS},
             data-msg-confirm-yes='Да',
             data-msg-confirm-no='Отмена'
          ">
@@ -32,7 +30,7 @@
         <div class="create-movie-header-group">
             <h1 class="create-movie-title">Добавить фильм</h1>
 
-            <div class="create-movie-search-form">
+            <form id="createMovieSearchForm" data-persist="true" onsubmit="return false;" class="create-movie-search-form">
                 <div class="search-block">
                     <div class="search-block-title">1. По TMDB ID</div>
                     <div class="form-group">
@@ -40,7 +38,7 @@
                             TMDB ID
                             <span class="hint">Через запятую, точку с запятой или с новой строки. Не более 100.</span>
                         </label>
-                        <textarea id="tmdbIdInput" rows="2" placeholder="862, 863, 10193"></textarea>
+                        <textarea id="tmdbIdInput" name="tmdbIdInput" rows="2" placeholder="862, 863, 10193"></textarea>
                     </div>
                 </div>
 
@@ -51,7 +49,7 @@
                             Названия
                             <span class="hint">Каждое с новой строки. Точное совпадение, ru/en.</span>
                         </label>
-                        <textarea id="titleInput" rows="2" placeholder="Матрица&#10;Матрица: Перезагрузка"></textarea>
+                        <textarea id="titleInput" name="titleInput" rows="2" placeholder="Матрица&#10;Матрица: Перезагрузка"></textarea>
                     </div>
                 </div>
 
@@ -63,7 +61,7 @@
                                 Режиссёры
                                 <span class="hint">Каждый с новой строки.</span>
                             </label>
-                            <textarea id="directorInput" rows="2"
+                            <textarea id="directorInput" name="directorInput" rows="2"
                                       placeholder="Лана Вачовски&#10;Лилли Вачовски"></textarea>
                         </div>
                         <div class="form-group">
@@ -71,7 +69,7 @@
                                 Актёры
                                 <span class="hint">Каждый с новой строки.</span>
                             </label>
-                            <textarea id="actorInput" rows="2" placeholder="Киану Ривз&#10;Лоренс Фишбёрн"></textarea>
+                            <textarea id="actorInput" name="actorInput" rows="2" placeholder="Киану Ривз&#10;Лоренс Фишбёрн"></textarea>
                         </div>
                     </div>
                 </div>
@@ -80,7 +78,7 @@
                     <button type="button" class="btn-search" id="searchBtn">Найти</button>
                     <button type="button" class="btn-clear" id="clearBtn">Очистить</button>
                 </div>
-            </div>
+            </form>
         </div>
 
         <div class="results-and-summary">
