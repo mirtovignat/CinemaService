@@ -32,7 +32,7 @@ public final class CursorUtils {
         if (query == null || query.isBlank()) {
             return null;
         }
-        String trimmed = query.trim().toLowerCase();
+        String trimmed = query.trim().toLowerCase().replace('ё', 'е');
         if (trimmed.isBlank()) {
             return null;
         }

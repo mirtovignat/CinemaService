@@ -46,23 +46,20 @@ public class RecommendationCursorService
                                       SortDirection sortDirection,
                                       String query,
                                       PageRequest pageRequest,
-                                      RecommendationCursorContext recommendationCursorContext) {
-        if (sortDirection == SortDirection.ASC) {
-            throw new IllegalArgumentException("Recommendations support only DESC");
-        }
+                                      RecommendationCursorContext ctx) {
 
         boolean hasCursor = cursorValue != null;
 
         BigDecimal cursorRating = null;
         Long cursorIdentifier = null;
         if (hasCursor) {
-            RecommendationCursorKey recommendationCursorKey = recommendationKeyCodec.decode(cursorValue);
-            cursorRating = recommendationCursorKey.rating();
-            cursorIdentifier = recommendationCursorKey.identifier();
+            RecommendationCursorKey key = recommendationKeyCodec.decode(cursorValue);
+            cursorRating = key.rating();
+            cursorIdentifier = key.identifier();
         }
 
         return movieRepository.findRecommendedMoviesSliceKeyset(
-                recommendationCursorContext.excludedMovieIds(),
+                ctx.excludedMovieIds(),
                 hasCursor,
                 cursorRating,
                 cursorIdentifier,

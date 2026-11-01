@@ -1,6 +1,8 @@
 package com.example.demo.controller.movie;
 
+import com.example.demo.cursor.Cursor;
 import com.example.demo.cursor.CursorPageRequest;
+import com.example.demo.cursor.codec.CursorCodec;
 import com.example.demo.dto.movie.range.MovieFilterMetaResponse;
 import com.example.demo.dto.movie.range.MovieRangesSnapshot;
 import com.example.demo.dto.response.CursorPageResponse;
@@ -21,24 +23,23 @@ import java.util.List;
 public class MovieFilterController {
 
     private final MovieFilterMetaService movieFilterMetaService;
+    private final CursorCodec cursorCodec;
 
     @GetMapping("/meta")
     public ResponseEntity<MovieFilterMetaResponse> meta() {
-        MovieRangesSnapshot movieRangesSnapshot = movieFilterMetaService.getRanges();
-
+        MovieRangesSnapshot snapshot = movieFilterMetaService.getRanges();
         CursorPageRequest initialRequest = CursorPageRequest.builder().build();
 
         return ResponseEntity.ok(MovieFilterMetaResponse.builder()
                 .genres(movieFilterMetaService.getAllGenres())
                 .directors(movieFilterMetaService.searchDirectors(initialRequest).getContent())
-                .movieRangesSnapshot(movieRangesSnapshot)
+                .movieRangesSnapshot(snapshot)
                 .build());
     }
 
     @GetMapping("/directors/search")
     public ResponseEntity<CursorPageResponse<String>> searchDirectors(
             @ModelAttribute CursorPageRequest cursorPageRequest) {
-
         Slice<String> slice = movieFilterMetaService.searchDirectors(cursorPageRequest);
         return ResponseEntity.ok(toResponse(slice));
     }
@@ -46,7 +47,6 @@ public class MovieFilterController {
     @GetMapping("/genres/search")
     public ResponseEntity<CursorPageResponse<String>> searchGenres(
             @ModelAttribute CursorPageRequest cursorPageRequest) {
-
         Slice<String> slice = movieFilterMetaService.searchGenres(cursorPageRequest);
         return ResponseEntity.ok(toResponse(slice));
     }
@@ -57,7 +57,8 @@ public class MovieFilterController {
 
         String nextCursor = null;
         if (hasMore && !items.isEmpty()) {
-            nextCursor = items.get(items.size() - 1);
+            String lastValue = items.get(items.size() - 1);
+            nextCursor = cursorCodec.encode(Cursor.builder().value(lastValue).build());
         }
 
         return CursorPageResponse.<String>builder()

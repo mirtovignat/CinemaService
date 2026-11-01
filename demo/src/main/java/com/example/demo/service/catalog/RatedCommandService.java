@@ -9,13 +9,11 @@ import com.example.demo.model.entity.RatedMovie;
 import com.example.demo.model.entity.User;
 import com.example.demo.repository.entity.MovieRepository;
 import com.example.demo.repository.entity.RatedMovieRepository;
-import com.example.demo.repository.projection.MovieRatingStatsProjection;
 import com.example.demo.service.user.UserQueryService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
@@ -28,8 +26,7 @@ public class RatedCommandService {
     private final MovieRepository movieRepository;
 
     @Transactional
-    public void addOrUpdateRating(Long movieId, Long userId,
-                                  RatedMovieFormDTO ratedMovieFormDTO) {
+    public void addOrUpdateRating(Long movieId, Long userId, RatedMovieFormDTO dto) {
         User user = userQueryService.getUser(userId);
         Movie movie = movieRepository.findByIdOrThrow(movieId);
 
@@ -42,41 +39,22 @@ public class RatedCommandService {
             ratedMovie = AbstractCatalogItem.init(RatedMovie.builder().build(), user, movie);
         }
 
-        ratedMovie.setRatingValue(ratedMovieFormDTO.rating());
-        ratedMovie.setReview(ratedMovieFormDTO.review());
+        ratedMovie.setRatingValue(dto.rating());
+        ratedMovie.setReview(dto.review());
         if (isNew) {
             ratedMovie.setAddedAt(LocalDateTime.now(ZoneOffset.UTC));
         }
         ratedMovie.getDeletableState().setDeleted(false);
 
         ratedMovieRepository.saveAndFlush(ratedMovie);
-        synchronizeMovieRating(movie, movieId);
     }
 
     @Transactional
     public void deleteRating(Long movieId, Long userId) {
-        Movie movie = movieRepository.findByIdOrThrow(movieId);
-
-        int affectedRows = ratedMovieRepository.softDeleteByMovieIdAndUserId(movieId, userId);
-        if (affectedRows == 0) {
+        movieRepository.findByIdOrThrow(movieId);
+        int affected = ratedMovieRepository.softDeleteByMovieIdAndUserId(movieId, userId);
+        if (affected == 0) {
             throw BusinessException.of(ErrorCode.ENTITY_NOT_FOUND);
         }
-        synchronizeMovieRating(movie, movieId);
-    }
-
-    private void synchronizeMovieRating(Movie movie, Long movieId) {
-        MovieRatingStatsProjection stats = ratedMovieRepository.calculateRatingStats(movieId);
-
-        if (stats == null || stats.getTotalCount() == null || stats.getTotalCount() == 0) {
-            movie.setRating(null);
-            movie.setRatingsCount(0);
-        } else {
-            movie.setRating(stats.getAvgRating() != null
-                    ? stats.getAvgRating().setScale(1, RoundingMode.HALF_UP)
-                    : null);
-            movie.setRatingsCount(stats.getTotalCount().intValue());
-        }
-
-        movieRepository.save(movie);
     }
 }
