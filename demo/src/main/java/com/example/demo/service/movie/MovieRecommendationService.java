@@ -59,6 +59,9 @@ public class MovieRecommendationService {
     @Transactional(readOnly = true)
     public Set<Long> collectExcludedMovieIds(Long userId) {
         Set<Long> excludedMovieIds = new LinkedHashSet<>();
+        if (userId == null) {
+            return excludedMovieIds;
+        }
         excludedMovieIds.addAll(cartItemRepository.findMovieIdsByUserId(userId));
         excludedMovieIds.addAll(favouriteMovieRepository.findMovieIdsByUserId(userId));
         excludedMovieIds.addAll(purchasedMovieRepository.findMovieIdsByUserId(userId));

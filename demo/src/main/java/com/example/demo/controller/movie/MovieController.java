@@ -7,9 +7,6 @@ import com.example.demo.dto.movie.MovieCardViewDTO;
 import com.example.demo.dto.movie.MovieDetailsViewDTO;
 import com.example.demo.dto.movie.MovieForUser;
 import com.example.demo.dto.movie.MovieSearchDTO;
-import com.example.demo.dto.movie.tmdb.TMDBCreateRequestDTO;
-import com.example.demo.dto.movie.tmdb.search.TMDBSearchRequest;
-import com.example.demo.dto.movie.tmdb.search.TMDBSearchResultDTO;
 import com.example.demo.dto.response.CursorPageResponse;
 import com.example.demo.dto.response.GenreMoviesPageResponse;
 import com.example.demo.dto.response.MoviesPageResponse;
@@ -20,7 +17,6 @@ import com.example.demo.filter.PageRequestContext;
 import com.example.demo.service.cursor.RecommendationCursorService;
 import com.example.demo.service.movie.MovieRecommendationService;
 import com.example.demo.service.movie.MovieService;
-import com.example.demo.service.movie.tmdb.TMDBImportService;
 import com.example.demo.web.resolver.CurrentUserId;
 import com.example.demo.web.resolver.MovieSingleResultResolver;
 import jakarta.validation.Valid;
@@ -31,7 +27,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +43,6 @@ public class MovieController {
     private final RecommendationCursorService recommendationCursorService;
     private final MovieSingleResultResolver movieSingleResultResolver;
     private final MovieFilterValidator movieFilterValidator;
-    private final TMDBImportService tmdbImportService;
 
     @GetMapping({"/", "/movies"})
     public String showMovies(
@@ -60,10 +54,11 @@ public class MovieController {
             Model model
     ) {
         if (bindingResult.hasErrors()) {
+            MovieFilter effectiveFilter = movieFilterValidator.orEmpty(movieFilter);
             Page<MovieForUser<MovieCardViewDTO>> emptyPage = Page.empty();
             MoviesPageResponse moviesPageResponse = MoviesPageResponse.builder()
                     .cardsPage(emptyPage)
-                    .movieFilter(movieFilter)
+                    .movieFilter(effectiveFilter)
                     .isSearch(false)
                     .build();
             model.addAttribute("moviesPageResponse", moviesPageResponse);
@@ -158,50 +153,5 @@ public class MovieController {
     @ResponseBody
     public ResponseEntity<List<MovieSearchDTO>> getSearchSuggestions(@RequestParam String query) {
         return ResponseEntity.ok(movieService.getMovieSearchDTO(query));
-    }
-
-    @GetMapping("/movies/new")
-    public String showCreateMovieForm() {
-        return "catalog/create-movie";
-    }
-
-    @GetMapping("/movies/tmdb/search")
-    @ResponseBody
-    public ResponseEntity<List<TMDBSearchResultDTO>> searchTmdb(
-            @RequestParam(required = false) List<Long> tmdbIds,
-            @RequestParam(required = false) List<String> titles,
-            @RequestParam(required = false) List<String> directors,
-            @RequestParam(required = false) List<String> actors
-    ) {
-        TMDBSearchRequest tmdbSearchRequest = TMDBSearchRequest.builder()
-                .tmdbIds(tmdbIds)
-                .titles(titles)
-                .directors(directors)
-                .actors(actors)
-                .build();
-        return ResponseEntity.ok(tmdbImportService.search(tmdbSearchRequest));
-    }
-
-    @PostMapping("/movies/tmdb/create")
-    public String createFromTmdb(
-            @Valid @ModelAttribute TMDBCreateRequestDTO tmdbCreateRequestDTO,
-            BindingResult bindingResult,
-            RedirectAttributes redirectAttributes
-    ) {
-        if (bindingResult.hasErrors()) {
-            redirectAttributes.addFlashAttribute("errorMessage",
-                    bindingResult.getFieldErrors().isEmpty()
-                            ? null
-                            : bindingResult.getFieldErrors().get(0).getDefaultMessage());
-            return "redirect:/movies/new";
-        }
-
-        List<MovieDetailsViewDTO> createdMovieDetails = tmdbImportService.createMovies(
-                tmdbCreateRequestDTO.moviePriceItems()
-        );
-
-        redirectAttributes.addFlashAttribute("successMessage",
-                "Создано фильмов: " + createdMovieDetails.size());
-        return "redirect:/";
     }
 }

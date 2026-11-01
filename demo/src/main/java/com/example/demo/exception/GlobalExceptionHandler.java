@@ -3,7 +3,6 @@ package com.example.demo.exception;
 import com.example.demo.dto.authorize.LoginFormDTO;
 import com.example.demo.dto.authorize.RegisterFormDTO;
 import com.example.demo.dto.badges.BadgeCountsDTO;
-import com.example.demo.dto.movie.tmdb.TMDBCreateRequestDTO;
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.dto.user.PasswordChangingDTO;
 import com.example.demo.dto.user.SessionUser;
@@ -29,7 +28,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.net.URI;
-import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -40,8 +38,7 @@ public class GlobalExceptionHandler {
     private static final Map<String, String> FORM_VIEW_BY_REQUEST_URI = Map.of(
             "/register", "auth/register",
             "/login", "auth/login",
-            "/settings/change/pwd", "account/change-password",
-            "/movies/tmdb/create", "catalog/create-movie"
+            "/settings/change/pwd", "account/change-password"
     );
 
     private final MessageUtils messageUtils;
@@ -71,9 +68,8 @@ public class GlobalExceptionHandler {
         ErrorCode errorCode = businessException.getErrorCode();
         String errorMessage = messageUtils.getError(errorCode, businessException.getArgs());
         HttpStatus httpStatus = mapErrorCodeToHttpStatus(errorCode);
-        Object data = extractAjaxData(errorCode, businessException.getArgs());
         return buildErrorResponse(httpServletRequest, model, redirectAttributes,
-                errorCode, errorMessage, httpStatus, data);
+                errorCode, errorMessage, httpStatus, null);
     }
 
     @ExceptionHandler(IllegalStateException.class)
@@ -199,16 +195,6 @@ public class GlobalExceptionHandler {
         return "redirect:" + resolveFallbackLocalPath(httpServletRequest);
     }
 
-    private Object extractAjaxData(ErrorCode errorCode, Object[] args) {
-        if (errorCode != ErrorCode.TMDB_MOVIE_ALREADY_EXISTS) {
-            return null;
-        }
-        if (args == null || args.length == 0) {
-            return null;
-        }
-        return args[0];
-    }
-
     private void addCommonAttributes(Model model) {
         SessionUser sessionUser = currentUserProvider.getSessionUser();
         if (sessionUser == null) {
@@ -277,12 +263,6 @@ public class GlobalExceptionHandler {
                 && !model.containsAttribute("passwordChangingDTO")) {
             model.addAttribute("passwordChangingDTO", PasswordChangingDTO.builder().build());
         }
-        if ("catalog/create-movie".equals(formViewName)
-                && !model.containsAttribute("tmdbCreateRequestDTO")) {
-            model.addAttribute("tmdbCreateRequestDTO", TMDBCreateRequestDTO.builder()
-                    .moviePriceItems(List.of())
-                    .build());
-        }
     }
 
     private boolean canUseFlashAttributes(HttpServletRequest httpServletRequest) {
@@ -291,11 +271,10 @@ public class GlobalExceptionHandler {
 
     private HttpStatus mapErrorCodeToHttpStatus(ErrorCode errorCode) {
         return switch (errorCode) {
-            case USER_NOT_FOUND, ENTITY_NOT_FOUND, TMDB_SEARCH_EMPTY -> HttpStatus.NOT_FOUND;
+            case USER_NOT_FOUND, ENTITY_NOT_FOUND -> HttpStatus.NOT_FOUND;
             case PASSWORD_INVALID, NOT_AUTHORIZED -> HttpStatus.UNAUTHORIZED;
             case INSUFFICIENT_FUNDS -> HttpStatus.PAYMENT_REQUIRED;
-            case ALREADY_REGISTERED, ALREADY_TAKEN, DATA_COINCIDENCE, MOVIE_ALREADY_EXISTS, TMDB_MOVIE_ALREADY_EXISTS -> HttpStatus.CONFLICT;
-            case TMDB_UNAVAILABLE -> HttpStatus.SERVICE_UNAVAILABLE;
+            case ALREADY_REGISTERED, ALREADY_TAKEN, DATA_COINCIDENCE -> HttpStatus.CONFLICT;
             default -> HttpStatus.BAD_REQUEST;
         };
     }

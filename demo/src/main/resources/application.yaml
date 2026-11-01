@@ -60,15 +60,7 @@ minio:
   secret-key: ${MINIO_SECRET_KEY:minioadmin}
   bucket-name: ${MINIO_BUCKET_NAME:posters}
 
-tmdb:
-  api-url: https://api.themoviedb.org/3
-  image-url: https://image.tmdb.org/t/p
-  access-token: ${TMDB_ACCESS_TOKEN:}
-  poster-size: w500
-
 app:
-  tmdb:
-    request-delay-ms: 150
   validation:
     username:
       min-length: 3

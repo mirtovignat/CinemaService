@@ -4,6 +4,7 @@ import com.example.demo.exception.BusinessException;
 import com.example.demo.exception.ErrorCode;
 import org.springframework.stereotype.Component;
 
+import java.util.Locale;
 import java.util.Optional;
 
 @Component
@@ -30,7 +31,7 @@ public class MovieFilterValidator {
         if (rawSearchQuery == null || rawSearchQuery.isBlank()) {
             return Optional.empty();
         }
-        String trimmed = rawSearchQuery.trim().toLowerCase().replace('ё', 'е');
+        String trimmed = rawSearchQuery.trim().toLowerCase(Locale.ROOT).replace('ё', 'е');
         return trimmed.isBlank() ? Optional.empty() : Optional.of(trimmed);
     }
 

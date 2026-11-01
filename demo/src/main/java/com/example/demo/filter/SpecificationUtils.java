@@ -8,6 +8,7 @@ import org.springframework.util.CollectionUtils;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 
 public final class SpecificationUtils {
 
@@ -59,34 +60,11 @@ public final class SpecificationUtils {
         );
     }
 
-    public static <Entity> Specification<Entity> arrayContains(
-            String fieldName,
-            Collection<String> values
-    ) {
-        if (CollectionUtils.isEmpty(values)) {
-            return unrestricted();
-        }
-        List<String> sanitized = values.stream()
-                .filter(value -> value != null && !value.isBlank())
-                .distinct()
-                .toList();
-        if (sanitized.isEmpty()) {
-            return unrestricted();
-        }
-        return (root, criteriaQuery, criteriaBuilder) -> {
-            List<Predicate> predicates = new ArrayList<>();
-            for (String value : sanitized) {
-                predicates.add(criteriaBuilder.isMember(value, root.get(fieldName)));
-            }
-            return criteriaBuilder.or(predicates.toArray(new Predicate[0]));
-        };
-    }
-
     public static <Entity> Specification<Entity> fieldStartsWithNormalized(
             String fieldName,
             String sanitizedSearchQuery
     ) {
-        String escapedQuery = escapeLike(sanitizedSearchQuery.toLowerCase().replace('ё', 'е'));
+        String escapedQuery = escapeLike(sanitizedSearchQuery.toLowerCase(Locale.ROOT).replace('ё', 'е'));
         return (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.like(
                 criteriaBuilder.lower(
                         criteriaBuilder.function(
@@ -131,6 +109,7 @@ public final class SpecificationUtils {
         }
         List<String> sanitized = values.stream()
                 .filter(value -> value != null && !value.isBlank())
+                .map(value -> value.toLowerCase(Locale.ROOT).trim())
                 .distinct()
                 .toList();
         if (sanitized.isEmpty()) {
@@ -149,11 +128,12 @@ public final class SpecificationUtils {
                                         criteriaBuilder.literal(",")
                                 )
                         ),
-                        "%" + value.toLowerCase() + "%"
+                        "%" + escapeLike(value) + "%",
+                        '\\'
                 );
                 predicates.add(predicate);
             }
-            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+            return criteriaBuilder.or(predicates.toArray(new Predicate[0]));
         };
     }
 }

@@ -1,9 +1,6 @@
 package com.example.demo.filter;
 
-import jakarta.validation.constraints.DecimalMax;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.*;
 import lombok.Builder;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -14,9 +11,11 @@ import java.util.List;
 @Builder
 public record MovieFilter(
         @PositiveOrZero(message = "Цена от не может быть отрицательной")
+        @Digits(integer = 10, fraction = 2, message = "Цена от имеет неверный формат")
         BigDecimal priceFrom,
 
         @PositiveOrZero(message = "Цена до не может быть отрицательной")
+        @Digits(integer = 10, fraction = 2, message = "Цена до имеет неверный формат")
         BigDecimal priceTo,
 
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)

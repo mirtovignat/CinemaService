@@ -55,8 +55,6 @@ services:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
       MINIO_BUCKET_NAME: posters
-
-      TMDB_ACCESS_TOKEN: ${TMDB_ACCESS_TOKEN}
     depends_on:
       postgres:
         condition: service_healthy
