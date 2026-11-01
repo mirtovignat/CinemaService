@@ -670,7 +670,10 @@
                 if (!endpoint) return null;
                 return endpoint + '?query=' + encodeURIComponent(query);
             },
-            submitForm: function () { form.submit(); },
+            submitForm: function () {
+                form.setAttribute('action', window.location.pathname);
+                form.submit();
+            },
             onRememberQuery: function (value) {
                 writeLastSearch(storageKey, value);
             },

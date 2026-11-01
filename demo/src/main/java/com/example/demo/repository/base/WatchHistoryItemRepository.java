@@ -10,7 +10,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,16 +42,11 @@ public interface WatchHistoryItemRepository extends JpaRepository<WatchHistoryIt
                 :query IS NULL
                 OR TRANSLATE(LOWER(purchasedMovie.movie.title), 'ё', 'е') LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
             )
-            AND (
-                :hasCursor = false
-                OR watchHistoryItem.watchedAt > :cursorWatchedAt
-                OR (watchHistoryItem.watchedAt = :cursorWatchedAt AND watchHistoryItem.id > :cursorId)
-            )
-            ORDER BY watchHistoryItem.watchedAt ASC, watchHistoryItem.id ASC
+            AND (:hasCursor = false OR watchHistoryItem.id > :cursorId)
+            ORDER BY watchHistoryItem.id ASC
             """)
     Slice<WatchHistoryItem> fetchAscending(@Param("userId") Long userId,
                                            @Param("hasCursor") boolean hasCursor,
-                                           @Param("cursorWatchedAt") LocalDateTime cursorWatchedAt,
                                            @Param("cursorId") Long cursorId,
                                            @Param("query") String query,
                                            Pageable pageable);
@@ -67,16 +61,11 @@ public interface WatchHistoryItemRepository extends JpaRepository<WatchHistoryIt
                 :query IS NULL
                 OR TRANSLATE(LOWER(purchasedMovie.movie.title), 'ё', 'е') LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
             )
-            AND (
-                :hasCursor = false
-                OR watchHistoryItem.watchedAt < :cursorWatchedAt
-                OR (watchHistoryItem.watchedAt = :cursorWatchedAt AND watchHistoryItem.id < :cursorId)
-            )
-            ORDER BY watchHistoryItem.watchedAt DESC, watchHistoryItem.id DESC
+            AND (:hasCursor = false OR watchHistoryItem.id < :cursorId)
+            ORDER BY watchHistoryItem.id DESC
             """)
     Slice<WatchHistoryItem> fetchDescending(@Param("userId") Long userId,
                                             @Param("hasCursor") boolean hasCursor,
-                                            @Param("cursorWatchedAt") LocalDateTime cursorWatchedAt,
                                             @Param("cursorId") Long cursorId,
                                             @Param("query") String query,
                                             Pageable pageable);

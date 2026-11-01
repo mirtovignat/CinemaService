@@ -2,7 +2,7 @@ package com.example.demo.service.cursor;
 
 import com.example.demo.cursor.UserStatusMapperHelper;
 import com.example.demo.cursor.codec.CursorCodec;
-import com.example.demo.cursor.codec.KeyCodec;
+import com.example.demo.cursor.codec.IdCodec;
 import com.example.demo.dto.catalog.CartItemViewDTO;
 import com.example.demo.mapper.entity.CartItemMapper;
 import com.example.demo.model.entity.CartItem;
@@ -19,22 +19,16 @@ public class CartCursorService extends AbstractUserCursorService<CartItem, CartI
     private final CartItemRepository cartItemRepository;
 
     public CartCursorService(CursorCodec cursorCodec,
-                             KeyCodec keyCodec,
+                             IdCodec idCodec,
                              CartItemRepository cartItemRepository,
                              UserStatusMapperHelper userStatusMapperHelper,
                              CartItemMapper cartItemMapper,
                              @Value("${app.catalog.cursorPageResponse-size:20}") int defaultPageSize) {
         super(cursorCodec,
-                keyCodec,
+                idCodec,
                 defaultPageSize,
-                cartItem -> keyCodec.encode(
-                        cartItem.getAddedAt(),
-                        cartItem.getAbstractCatalogItemId().getMovieId()
-                ),
-                cartItems -> userStatusMapperHelper.mapWithStatuses(
-                        cartItems,
-                        cartItemMapper::toOwnerView
-                ),
+                cartItem -> idCodec.encode(cartItem.getId()),
+                cartItems -> userStatusMapperHelper.mapWithStatuses(cartItems, cartItemMapper::toOwnerView),
                 cartItemRepository::fetchAscending,
                 cartItemRepository::fetchDescending);
         this.cartItemRepository = cartItemRepository;

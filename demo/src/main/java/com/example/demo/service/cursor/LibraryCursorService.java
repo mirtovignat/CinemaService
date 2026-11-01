@@ -1,7 +1,7 @@
 package com.example.demo.service.cursor;
 
 import com.example.demo.cursor.codec.CursorCodec;
-import com.example.demo.cursor.codec.KeyCodec;
+import com.example.demo.cursor.codec.IdCodec;
 import com.example.demo.dto.catalog.LibrarianMovieViewDTO;
 import com.example.demo.mapper.entity.PurchasedMapper;
 import com.example.demo.model.entity.PurchasedMovie;
@@ -18,20 +18,15 @@ public class LibraryCursorService extends AbstractUserCursorService<PurchasedMov
     private final PurchasedMovieRepository purchasedMovieRepository;
 
     public LibraryCursorService(CursorCodec cursorCodec,
-                                KeyCodec keyCodec,
+                                IdCodec idCodec,
                                 PurchasedMovieRepository purchasedMovieRepository,
                                 PurchasedMapper purchasedMapper,
                                 @Value("${app.catalog.cursorPageResponse-size:20}") int defaultPageSize) {
         super(cursorCodec,
-                keyCodec,
+                idCodec,
                 defaultPageSize,
-                purchasedMovie -> keyCodec.encode(
-                        purchasedMovie.getAddedAt(),
-                        purchasedMovie.getAbstractCatalogItemId().getMovieId()
-                ),
-                purchasedMovies -> purchasedMovies.stream()
-                        .map(purchasedMapper::toOwnerViewFromLibrarian)
-                        .toList(),
+                purchasedMovie -> idCodec.encode(purchasedMovie.getId()),
+                purchasedMovies -> purchasedMovies.stream().map(purchasedMapper::toOwnerViewFromLibrarian).toList(),
                 purchasedMovieRepository::fetchAscending,
                 purchasedMovieRepository::fetchDescending);
         this.purchasedMovieRepository = purchasedMovieRepository;

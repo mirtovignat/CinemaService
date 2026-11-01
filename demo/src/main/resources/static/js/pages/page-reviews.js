@@ -651,10 +651,28 @@
             if (reviews.length > 0) {
                 var fragment = document.createDocumentFragment();
                 reviews.forEach(review => {
+                    var isDuplicate = false;
+                    var allCards = reviewsList.querySelectorAll('.review-card');
+                    for (var i = 0; i < allCards.length; i++) {
+                        var card = allCards[i];
+                        var cardUsername = card.querySelector('.username-text');
+                        var cardName = cardUsername ? cardUsername.textContent.trim() : '';
+
+                        if (cardName === review.username) {
+                            isDuplicate = true;
+                            break;
+                        }
+                    }
+
+                    if (isDuplicate) return;
+
                     var reviewCard = buildCard(review, false, false);
                     if (reviewCard) fragment.appendChild(reviewCard);
                 });
-                reviewsList.appendChild(fragment);
+
+                if (fragment.hasChildNodes()) {
+                    reviewsList.appendChild(fragment);
+                }
                 formatReviewDates();
             } else {
                 hasMore = false;
@@ -667,6 +685,9 @@
                 disconnectObserver();
                 loadMoreWrapper.remove();
                 appendEndMarker();
+                if (typeof updateReviewsCount === 'function') {
+                    updateReviewsCount(movieId);
+                }
             } else {
                 setTimeout(maybeFillOnce, 100);
             }

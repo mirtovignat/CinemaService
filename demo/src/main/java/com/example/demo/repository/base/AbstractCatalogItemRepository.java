@@ -1,7 +1,6 @@
 package com.example.demo.repository.base;
 
 import com.example.demo.model.base.AbstractCatalogItem;
-import com.example.demo.model.base.AbstractCatalogItemId;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,25 +9,24 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.query.Param;
 
-import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 @NoRepositoryBean
 public interface AbstractCatalogItemRepository<Entity extends AbstractCatalogItem>
-        extends JpaRepository<Entity, AbstractCatalogItemId> {
+        extends JpaRepository<Entity, Long> {
 
     @Query("""
             SELECT item FROM #{#entityName} item
             JOIN FETCH item.movie
-            WHERE item.id.userId = :userId
+            WHERE item.user.id = :userId
             """)
     List<Entity> findAllByUserId(@Param("userId") Long userId);
 
     @Query("""
             SELECT COUNT(item) > 0 FROM #{#entityName} item
-            WHERE item.id.movieId = :movieId AND item.id.userId = :userId
+            WHERE item.movie.id = :movieId AND item.user.id = :userId
             """)
     boolean existsByMovieIdAndUserId(@Param("movieId") Long movieId,
                                      @Param("userId") Long userId);
@@ -36,7 +34,7 @@ public interface AbstractCatalogItemRepository<Entity extends AbstractCatalogIte
     @Query("""
             SELECT item FROM #{#entityName} item
             JOIN FETCH item.movie
-            WHERE item.id.movieId = :movieId AND item.id.userId = :userId
+            WHERE item.movie.id = :movieId AND item.user.id = :userId
             """)
     Optional<Entity> findByMovieIdAndUserId(@Param("movieId") Long movieId,
                                             @Param("userId") Long userId);
@@ -44,7 +42,7 @@ public interface AbstractCatalogItemRepository<Entity extends AbstractCatalogIte
     @Modifying
     @Query("""
             DELETE FROM #{#entityName} item
-            WHERE item.id.movieId = :movieId AND item.id.userId = :userId
+            WHERE item.movie.id = :movieId AND item.user.id = :userId
             """)
     void deleteByMovieIdAndUserId(@Param("movieId") Long movieId,
                                   @Param("userId") Long userId);
@@ -52,26 +50,26 @@ public interface AbstractCatalogItemRepository<Entity extends AbstractCatalogIte
     @Modifying
     @Query("""
             DELETE FROM #{#entityName} item
-            WHERE item.id.userId = :userId
+            WHERE item.user.id = :userId
             """)
     void deleteAllByUserId(@Param("userId") Long userId);
 
     @Query("""
             SELECT COUNT(item) FROM #{#entityName} item
-            WHERE item.id.userId = :userId
+            WHERE item.user.id = :userId
             """)
     Long countByUserId(@Param("userId") Long userId);
 
     @Query("""
-            SELECT item.id.movieId FROM #{#entityName} item
-            WHERE item.id.userId = :userId
+            SELECT item.movie.id FROM #{#entityName} item
+            WHERE item.user.id = :userId
             """)
     List<Long> findMovieIdsByUserId(@Param("userId") Long userId);
 
     @Query("""
-            SELECT item.id.movieId FROM #{#entityName} item
-            WHERE item.id.userId = :userId
-            AND item.id.movieId IN :movieIds
+            SELECT item.movie.id FROM #{#entityName} item
+            WHERE item.user.id = :userId
+            AND item.movie.id IN :movieIds
             """)
     List<Long> findMovieIdsByUserIdAndMovieIdIn(@Param("userId") Long userId,
                                                 @Param("movieIds") Collection<Long> movieIds);
@@ -79,50 +77,40 @@ public interface AbstractCatalogItemRepository<Entity extends AbstractCatalogIte
     @Query("""
             SELECT item FROM #{#entityName} item
             JOIN FETCH item.movie
-            WHERE item.id.userId = :userId
+            WHERE item.user.id = :userId
             AND (
                 :query IS NULL
                 OR TRANSLATE(LOWER(item.movie.title), 'ё', 'е') LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
             )
-            AND (
-                :hasCursor = false
-                OR item.addedAt > :cursorAddedAt
-                OR (item.addedAt = :cursorAddedAt AND item.id.movieId > :cursorMovieId)
-            )
-            ORDER BY item.addedAt ASC, item.id.movieId ASC
+            AND (:hasCursor = false OR item.id > :cursorId)
+            ORDER BY item.id ASC
             """)
     Slice<Entity> fetchAscending(@Param("userId") Long userId,
                                  @Param("hasCursor") boolean hasCursor,
-                                 @Param("cursorAddedAt") LocalDateTime cursorAddedAt,
-                                 @Param("cursorMovieId") Long cursorMovieId,
+                                 @Param("cursorId") Long cursorId,
                                  @Param("query") String query,
                                  Pageable pageable);
 
     @Query("""
             SELECT item FROM #{#entityName} item
             JOIN FETCH item.movie
-            WHERE item.id.userId = :userId
+            WHERE item.user.id = :userId
             AND (
                 :query IS NULL
                 OR TRANSLATE(LOWER(item.movie.title), 'ё', 'е') LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
             )
-            AND (
-                :hasCursor = false
-                OR item.addedAt < :cursorAddedAt
-                OR (item.addedAt = :cursorAddedAt AND item.id.movieId < :cursorMovieId)
-            )
-            ORDER BY item.addedAt DESC, item.id.movieId DESC
+            AND (:hasCursor = false OR item.id < :cursorId)
+            ORDER BY item.id DESC
             """)
     Slice<Entity> fetchDescending(@Param("userId") Long userId,
                                   @Param("hasCursor") boolean hasCursor,
-                                  @Param("cursorAddedAt") LocalDateTime cursorAddedAt,
-                                  @Param("cursorMovieId") Long cursorMovieId,
+                                  @Param("cursorId") Long cursorId,
                                   @Param("query") String query,
                                   Pageable pageable);
 
     @Query("""
             SELECT item.movie.title FROM #{#entityName} item
-            WHERE item.id.userId = :userId
+            WHERE item.user.id = :userId
             AND TRANSLATE(LOWER(item.movie.title), 'ё', 'е') LIKE CONCAT(CAST(:prefix AS string), '%') ESCAPE '\\'
             ORDER BY item.movie.title ASC
             """)

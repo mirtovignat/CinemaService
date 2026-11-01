@@ -20,15 +20,14 @@ import java.time.ZoneOffset;
 @MappedSuperclass
 public abstract class AbstractCatalogItem {
 
-    @EmbeddedId
-    private AbstractCatalogItemId abstractCatalogItemId;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @MapsId("userId")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @MapsId("movieId")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "movie_id", nullable = false)
     private Movie movie;
@@ -44,8 +43,6 @@ public abstract class AbstractCatalogItem {
         entity.setAddedAt(LocalDateTime.now(ZoneOffset.UTC));
         entity.setUser(user);
         entity.setMovie(movie);
-        AbstractCatalogItemId abstractCatalogItemId = AbstractCatalogItemId.from(movie, user);
-        entity.setAbstractCatalogItemId(abstractCatalogItemId);
         return entity;
     }
 }

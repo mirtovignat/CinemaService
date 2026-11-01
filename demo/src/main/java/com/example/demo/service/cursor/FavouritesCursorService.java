@@ -2,7 +2,7 @@ package com.example.demo.service.cursor;
 
 import com.example.demo.cursor.UserStatusMapperHelper;
 import com.example.demo.cursor.codec.CursorCodec;
-import com.example.demo.cursor.codec.KeyCodec;
+import com.example.demo.cursor.codec.IdCodec;
 import com.example.demo.dto.catalog.FavouriteMovieViewDTO;
 import com.example.demo.mapper.entity.FavouritesMapper;
 import com.example.demo.model.entity.FavouriteMovie;
@@ -19,21 +19,16 @@ public class FavouritesCursorService extends AbstractUserCursorService<Favourite
     private final FavouriteMovieRepository favouriteMovieRepository;
 
     public FavouritesCursorService(CursorCodec cursorCodec,
-                                   KeyCodec keyCodec,
+                                   IdCodec idCodec,
                                    FavouriteMovieRepository favouriteMovieRepository,
                                    UserStatusMapperHelper userStatusMapperHelper,
                                    FavouritesMapper favouritesMapper,
                                    @Value("${app.catalog.cursorPageResponse-size:20}") int defaultPageSize) {
         super(cursorCodec,
-                keyCodec,
+                idCodec,
                 defaultPageSize,
-                favouriteMovie -> keyCodec.encode(
-                        favouriteMovie.getAddedAt(),
-                        favouriteMovie.getAbstractCatalogItemId().getMovieId()),
-                favouriteMovies -> userStatusMapperHelper.mapWithStatuses(
-                        favouriteMovies,
-                        favouritesMapper::toOwnerView
-                ),
+                favouriteMovie -> idCodec.encode(favouriteMovie.getId()),
+                favouriteMovies -> userStatusMapperHelper.mapWithStatuses(favouriteMovies, favouritesMapper::toOwnerView),
                 favouriteMovieRepository::fetchAscending,
                 favouriteMovieRepository::fetchDescending);
         this.favouriteMovieRepository = favouriteMovieRepository;

@@ -34,18 +34,8 @@
 
             <div class="reviews-header-right">
                 <div class="sort-toggle-group" id="sortToggleGroup">
-                    <button type="button"
-                            class="sort-option"
-                            data-order="desc"
-                            data-action="sort-toggle">
-                        Сначала новые
-                    </button>
-                    <button type="button"
-                            class="sort-option"
-                            data-order="asc"
-                            data-action="sort-toggle">
-                        Сначала старые
-                    </button>
+                    <button type="button" class="sort-option" data-order="desc" data-action="sort-toggle">Сначала новые</button>
+                    <button type="button" class="sort-option" data-order="asc" data-action="sort-toggle">Сначала старые</button>
                 </div>
 
                 <div class="movie-rating-summary">
@@ -81,7 +71,8 @@
                 <div th:if="${reviewsPageResponse.reviewViewDTO != null}"
                      class="review-card own-card"
                      data-own="true"
-                     th:data-movie-id="${reviewsPageResponse.movieId}">
+                     th:data-movie-id="${reviewsPageResponse.movieId}"
+                     th:attr="data-date=${reviewsPageResponse.reviewViewDTO.addedAt}">
                     <div class="review-header">
                         <div class="review-user">
                             <div class="avatar"
@@ -95,8 +86,7 @@
                             </div>
                             <span class="review-username">
                                 <span class="username-text" th:text="${reviewsPageResponse.reviewViewDTO.username}">Пользователь</span>
-                                <span th:if="${reviewsPageResponse.reviewViewDTO.deleted}"
-                                      class="deleted-badge">Удалённый аккаунт</span>
+                                <span th:if="${reviewsPageResponse.reviewViewDTO.deleted}" class="deleted-badge">Удалённый аккаунт</span>
                             </span>
                             <span class="own-badge">Ваш отзыв</span>
                         </div>
@@ -152,8 +142,7 @@
                             </div>
                             <span class="review-username">
                                 <span class="username-text" th:text="${review.username}">Пользователь</span>
-                                <span th:if="${review.deleted}"
-                                      class="deleted-badge">Удалённый аккаунт</span>
+                                <span th:if="${review.deleted}" class="deleted-badge">Удалённый аккаунт</span>
                             </span>
                         </div>
                         <div class="review-meta">
@@ -177,8 +166,7 @@
                 </div>
             </div>
 
-            <div id="noReviewsBlock"
-                 class="empty-reviews"
+            <div id="noReviewsBlock" class="empty-reviews"
                  th:style="${(reviewsPageResponse.totalReviews == 0 and reviewsPageResponse.reviewViewDTO == null) ? '' : 'display:none;'}">
                 <div class="empty-reviews-icon">
                     <th:block th:replace="~{fragments/icons :: icon-comments}"></th:block>
@@ -191,16 +179,13 @@
                 </div>
             </div>
 
-            <div id="loadMoreWrapper"
-                 class="reviews-load-more"
+            <div id="loadMoreWrapper" class="reviews-load-more"
                  th:if="${reviewsPageResponse.cursorPageResponse.hasMore()}"
                  th:attr="data-movie-id=${reviewsPageResponse.movieId},
                           data-sort=${reviewsPageResponse.cursorPageResponse.sort()},
                           data-cursor=${reviewsPageResponse.cursorPageResponse.nextCursor()},
                           data-has-more=${reviewsPageResponse.cursorPageResponse.hasMore()}">
-                <div class="reviews-spinner-wrapper"
-                     id="reviewsSpinnerWrapper"
-                     style="display:none;">
+                <div class="reviews-spinner-wrapper" id="reviewsSpinnerWrapper" style="display:none;">
                     <div class="reviews-spinner"></div>
                 </div>
             </div>
@@ -272,6 +257,5 @@
 <script th:src="@{/js/main.js}" defer></script>
 
 <th:block th:replace="~{fragments/footer :: footer}"></th:block>
-
 </body>
 </html>

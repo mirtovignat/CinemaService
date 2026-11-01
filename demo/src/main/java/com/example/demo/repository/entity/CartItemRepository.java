@@ -14,11 +14,11 @@ public interface CartItemRepository extends AbstractCatalogItemRepository<CartIt
             SELECT COUNT(cartItem) AS count,
                    COALESCE(SUM(cartItem.movie.price), 0) AS total
             FROM CartItem cartItem
-            WHERE cartItem.abstractCatalogItemId.userId = :userId
+            WHERE cartItem.user.id = :userId
             AND NOT EXISTS (
                 SELECT 1 FROM PurchasedMovie purchasedMovie
-                WHERE purchasedMovie.abstractCatalogItemId.userId = :userId
-                AND purchasedMovie.abstractCatalogItemId.movieId = cartItem.abstractCatalogItemId.movieId
+                WHERE purchasedMovie.user.id = :userId
+                AND purchasedMovie.movie.id = cartItem.movie.id
             )
             """)
     CartSummaryProjection findPurchasableSummaryByUserId(

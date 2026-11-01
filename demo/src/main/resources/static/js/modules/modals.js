@@ -3,19 +3,26 @@
 
     var current = null;
 
-    function handleModalOverlayClick(e) {
-        if (e.target.classList && e.target.classList.contains('modal')) {
-            e.target.classList.remove('show');
-            if (e.target.id === 'confirmDeleteModal') {
-                window._deleteMovieId = null;
-            }
+    function isOverlayTarget(target) {
+        if (!target || !target.classList) return false;
+        return target.classList.contains('modal') || target.classList.contains('modal-overlay');
+    }
+
+    function hasActiveSelection() {
+        try {
+            var sel = window.getSelection();
+            return !!(sel && sel.toString().length > 0);
+        } catch (e) {
+            return false;
         }
-        if (e.target.classList && e.target.classList.contains('modal-overlay')) {
-            e.target.classList.remove('active');
-            if (!document.querySelector('.modal-overlay.active')) {
-                document.body.style.overflow = '';
-            }
-        }
+    }
+
+    function handleNamedModalClose(e) {
+        var closeEl = findActionEl(e.target, 'data-modal-close');
+        if (!closeEl) return;
+        e.preventDefault();
+        var modal = closeEl.closest('.modal');
+        if (modal) modal.classList.remove('show');
     }
 
     function handleEscape(e) {
@@ -134,11 +141,61 @@
         return target.closest('[' + attr + ']');
     }
 
+    var overlayMouseDownTarget = null;
+
+    function handleOverlayMouseDown(e) {
+        overlayMouseDownTarget = isOverlayTarget(e.target) ? e.target : null;
+    }
+
+    function handleOverlayMouseUp(e) {
+        if (!overlayMouseDownTarget) return;
+        if (!isOverlayTarget(e.target) || e.target !== overlayMouseDownTarget) {
+            overlayMouseDownTarget = null;
+            return;
+        }
+        if (hasActiveSelection()) {
+            overlayMouseDownTarget = null;
+            return;
+        }
+
+        var target = overlayMouseDownTarget;
+        overlayMouseDownTarget = null;
+
+        if (target.classList.contains('modal')) {
+            target.classList.remove('show');
+            if (target.id === 'confirmDeleteModal') {
+                window._deleteMovieId = null;
+            }
+        }
+
+        if (target.classList.contains('modal-overlay')) {
+            target.classList.remove('active');
+            if (!document.querySelector('.modal-overlay.active')) {
+                document.body.style.overflow = '';
+            }
+        }
+    }
+
     function bindAppModal() {
         var root = document.getElementById('appModal');
         if (!root) return;
         if (root.dataset.modalBound === '1') return;
         root.dataset.modalBound = '1';
+
+        var appOverlayMouseDown = false;
+
+        root.addEventListener('mousedown', function (e) {
+            appOverlayMouseDown = (e.target === root);
+        });
+
+        root.addEventListener('mouseup', function (e) {
+            var wasOverlay = appOverlayMouseDown;
+            appOverlayMouseDown = false;
+            if (!wasOverlay) return;
+            if (e.target !== root) return;
+            if (hasActiveSelection()) return;
+            cancel();
+        });
 
         root.addEventListener('click', function (e) {
             var actionEl = findActionEl(e.target, 'data-modal-action');
@@ -155,20 +212,12 @@
                     return;
                 }
             }
-            if (e.target === root) cancel();
         });
     }
 
-    function handleNamedModalClose(e) {
-        var closeEl = findActionEl(e.target, 'data-modal-close');
-        if (!closeEl) return;
-        e.preventDefault();
-        var modal = closeEl.closest('.modal');
-        if (modal) modal.classList.remove('show');
-    }
-
     function initModals() {
-        document.addEventListener('click', handleModalOverlayClick);
+        document.addEventListener('mousedown', handleOverlayMouseDown, true);
+        document.addEventListener('mouseup', handleOverlayMouseUp, true);
         document.addEventListener('click', handleNamedModalClose);
         document.addEventListener('keydown', handleEscape);
         bindAppModal();

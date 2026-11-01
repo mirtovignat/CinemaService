@@ -1,9 +1,8 @@
 package com.example.demo.service.cursor;
 
-import com.example.demo.cursor.Part;
 import com.example.demo.cursor.SortDirection;
 import com.example.demo.cursor.codec.CursorCodec;
-import com.example.demo.cursor.codec.KeyCodec;
+import com.example.demo.cursor.codec.IdCodec;
 import com.example.demo.cursor.context.ReviewCursorContext;
 import com.example.demo.dto.catalog.ReviewViewDTO;
 import com.example.demo.mapper.entity.RatedMapper;
@@ -14,34 +13,26 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-
 @Service
 public class ReviewCursorService
         extends AbstractCursorService<RatedMovie, ReviewViewDTO, ReviewCursorContext> {
 
     private final RatedMovieRepository ratedMovieRepository;
-    private final KeyCodec keyCodec;
+    private final IdCodec idCodec;
 
     public ReviewCursorService(CursorCodec cursorCodec,
-                               KeyCodec keyCodec,
+                               IdCodec idCodec,
                                RatedMovieRepository ratedMovieRepository,
                                RatedMapper ratedMapper,
                                @Value("${app.reviews.cursorPageResponse-size:10}") int defaultPageSize) {
         super(cursorCodec,
                 defaultPageSize,
-                ratedMovie -> keyCodec.encode(
-                        ratedMovie.getAddedAt(),
-                        ratedMovie.getAbstractCatalogItemId().getUserId()),
+                ratedMovie -> idCodec.encode(ratedMovie.getId()),
                 ratedMovies -> ratedMovies.stream()
-                        .map(ratedMovie -> ratedMapper.toReviewViewWithOwn(
-                                        ratedMovie,
-                                        null
-                                )
-                        )
+                        .map(ratedMovie -> ratedMapper.toReviewViewWithOwn(ratedMovie, null))
                         .toList());
         this.ratedMovieRepository = ratedMovieRepository;
-        this.keyCodec = keyCodec;
+        this.idCodec = idCodec;
     }
 
     @Override
@@ -53,30 +44,13 @@ public class ReviewCursorService
         Long movieId = reviewCursorContext.movieId();
         Long viewerId = reviewCursorContext.viewerId();
         boolean hasCursor = cursorValue != null;
-        LocalDateTime cursorAddedAt = hasCursor
-                ? keyCodec.decode(cursorValue, LocalDateTime::parse, Part.LEFT)
-                : null;
-        Long cursorUserId = hasCursor
-                ? keyCodec.decode(cursorValue, Long::parseLong, Part.RIGHT)
-                : null;
+        Long cursorId = hasCursor ? idCodec.decode(cursorValue) : null;
 
         return switch (sortDirection) {
             case ASC -> ratedMovieRepository.fetchReviewsAscending(
-                    movieId,
-                    viewerId,
-                    hasCursor,
-                    cursorAddedAt,
-                    cursorUserId,
-                    pageRequest
-            );
+                    movieId, viewerId, hasCursor, cursorId, pageRequest);
             case DESC -> ratedMovieRepository.fetchReviewsDescending(
-                    movieId,
-                    viewerId,
-                    hasCursor,
-                    cursorAddedAt,
-                    cursorUserId,
-                    pageRequest
-            );
+                    movieId, viewerId, hasCursor, cursorId, pageRequest);
         };
     }
 }

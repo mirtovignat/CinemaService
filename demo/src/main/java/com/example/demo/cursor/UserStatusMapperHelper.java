@@ -25,17 +25,17 @@ public class UserStatusMapperHelper {
         }
 
         EntityType firstItem = items.get(0);
-        Long userId = firstItem.getAbstractCatalogItemId().getUserId();
+        Long userId = firstItem.getUser().getId();
 
         List<Long> movieIds = items.stream()
-                .map(item -> item.getAbstractCatalogItemId().getMovieId())
+                .map(item -> item.getMovie().getId())
                 .toList();
 
         Map<Long, UserStatus> userStatuses = userStatusResolver.loadAllUserStatuses(userId, movieIds);
 
         return items.stream()
                 .map(item -> {
-                    Long movieId = item.getAbstractCatalogItemId().getMovieId();
+                    Long movieId = item.getMovie().getId();
                     UserStatus userStatus = userStatuses.getOrDefault(
                             movieId,
                             UserStatus.builder().build()

@@ -1,7 +1,7 @@
 package com.example.demo.service.cursor;
 
 import com.example.demo.cursor.codec.CursorCodec;
-import com.example.demo.cursor.codec.KeyCodec;
+import com.example.demo.cursor.codec.IdCodec;
 import com.example.demo.dto.catalog.LibrarianMovieViewDTO;
 import com.example.demo.mapper.entity.PurchasedMapper;
 import com.example.demo.model.base.WatchHistoryItem;
@@ -19,16 +19,14 @@ public class WatchedHistoryCursorService extends AbstractUserCursorService<Watch
     private final WatchHistoryItemRepository watchHistoryItemRepository;
 
     public WatchedHistoryCursorService(CursorCodec cursorCodec,
-                                       KeyCodec keyCodec,
+                                       IdCodec idCodec,
                                        WatchHistoryItemRepository watchHistoryItemRepository,
                                        PurchasedMapper purchasedMapper,
                                        @Value("${app.catalog.cursorPageResponse-size:20}") int defaultPageSize) {
         super(cursorCodec,
-                keyCodec,
+                idCodec,
                 defaultPageSize,
-                watchHistoryItem -> keyCodec.encode(
-                        watchHistoryItem.getWatchedAt(),
-                        watchHistoryItem.getId()),
+                watchHistoryItem -> idCodec.encode(watchHistoryItem.getId()),
                 watchHistoryItems -> watchHistoryItems.stream()
                         .map(purchasedMapper::toLibrarianViewFromHistoryItem)
                         .toList(),

@@ -7,6 +7,20 @@
         return document.querySelector('[data-modal-' + name + ']');
     }
 
+    function isOverlayTarget(target) {
+        if (!target || !target.classList) return false;
+        return target.classList.contains('modal') || target.classList.contains('modal-overlay');
+    }
+
+    function hasActiveSelection() {
+        try {
+            var sel = window.getSelection();
+            return !!(sel && sel.toString().length > 0);
+        } catch (e) {
+            return false;
+        }
+    }
+
     function open(options) {
         var root = document.getElementById('appModal');
         if (!root) {
@@ -108,15 +122,6 @@
         }
     }
 
-    function handleNamedOverlayClick(e) {
-        var overlay = e.target;
-        if (!overlay) return;
-        if (overlay.classList && overlay.classList.contains('modal-overlay') && overlay.classList.contains('active')) {
-            overlay.classList.remove('active');
-            document.body.style.overflow = '';
-        }
-    }
-
     function handleEscapeNamed(e) {
         if (e.key !== 'Escape') return;
         document.querySelectorAll('.modal.show').forEach(function (m) {
@@ -129,9 +134,54 @@
         });
     }
 
+    var overlayMouseDownTarget = null;
+
+    function handleOverlayMouseDown(e) {
+        overlayMouseDownTarget = isOverlayTarget(e.target) ? e.target : null;
+    }
+
+    function handleOverlayMouseUp(e) {
+        if (!overlayMouseDownTarget) return;
+        if (!isOverlayTarget(e.target) || e.target !== overlayMouseDownTarget) {
+            overlayMouseDownTarget = null;
+            return;
+        }
+        if (hasActiveSelection()) {
+            overlayMouseDownTarget = null;
+            return;
+        }
+
+        var target = overlayMouseDownTarget;
+        overlayMouseDownTarget = null;
+
+        if (target.classList.contains('modal-overlay')) {
+            target.classList.remove('active');
+            if (!document.querySelector('.modal-overlay.active')) {
+                document.body.style.overflow = '';
+            }
+        } else if (target.classList.contains('modal') && target.id !== 'appModal') {
+            target.classList.remove('show');
+        }
+    }
+
     function init() {
         var root = document.getElementById('appModal');
         if (root) {
+            var appOverlayMouseDown = false;
+
+            root.addEventListener('mousedown', function (e) {
+                appOverlayMouseDown = (e.target === root);
+            });
+
+            root.addEventListener('mouseup', function (e) {
+                var wasOverlay = appOverlayMouseDown;
+                appOverlayMouseDown = false;
+                if (!wasOverlay) return;
+                if (e.target !== root) return;
+                if (hasActiveSelection()) return;
+                cancel();
+            });
+
             root.addEventListener('click', function (e) {
                 var actionEl = findActionEl(e.target, 'data-modal-action');
                 if (actionEl) {
@@ -147,12 +197,12 @@
                         return;
                     }
                 }
-                if (e.target === root) cancel();
             });
         }
 
+        document.addEventListener('mousedown', handleOverlayMouseDown, true);
+        document.addEventListener('mouseup', handleOverlayMouseUp, true);
         document.addEventListener('click', handleNamedModalClick);
-        document.addEventListener('click', handleNamedOverlayClick);
         document.addEventListener('keydown', handleEscapeNamed);
     }
 
