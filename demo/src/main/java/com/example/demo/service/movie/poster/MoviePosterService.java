@@ -5,61 +5,72 @@ import com.example.demo.dto.movie.tmdb.RefreshAllResult;
 import com.example.demo.dto.movie.tmdb.TMDBMovieDTO;
 import com.example.demo.model.entity.Movie;
 import com.example.demo.repository.entity.MovieRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import com.example.demo.service.movie.tmdb.TMDBService;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class MoviePosterService {
 
     private final MovieRepository movieRepository;
     private final MoviePosterWriter moviePosterWriter;
     private final TMDBService tmdbService;
     private final PosterService posterService;
+    private final int refreshBatchSize;
+
+    public MoviePosterService(MovieRepository movieRepository,
+                              MoviePosterWriter moviePosterWriter,
+                              TMDBService tmdbService,
+                              PosterService posterService,
+                              @Value("${app.tmdb.refresh-batch-size:500}") int refreshBatchSize) {
+        this.movieRepository = movieRepository;
+        this.moviePosterWriter = moviePosterWriter;
+        this.tmdbService = tmdbService;
+        this.posterService = posterService;
+        this.refreshBatchSize = refreshBatchSize;
+    }
 
     public RefreshAllResult refreshAll() {
-        List<Movie> movies = movieRepository.findAll();
-        int updated = 0, skipped = 0, failed = 0;
-        for (Movie movie : movies) {
+        List<Movie> movieList = movieRepository
+                .findAll(PageRequest.of(0, refreshBatchSize))
+                .getContent();
+
+        int updated = 0;
+        int skipped = 0;
+        int failed = 0;
+
+        for (Movie movie : movieList) {
             switch (refresh(movie)) {
                 case OK -> updated++;
                 case NO_TMDB -> skipped++;
                 case FAILED -> failed++;
             }
         }
+
         return RefreshAllResult.builder()
-                .total(movies.size())
+                .total(movieList.size())
                 .skipped(skipped)
                 .updated(updated)
                 .failed(failed)
                 .build();
     }
 
-    public String refreshOne(Long movieId) {
+    public Outcome refreshOne(Long movieId) {
         Movie movie = movieRepository.findByIdOrThrow(movieId);
-        return switch (refresh(movie)) {
-            case OK -> movieRepository.findById(movieId).orElseThrow().getPosterUrl();
-            case NO_TMDB -> throw new IllegalStateException(
-                    "Movie " + movieId + " has no tmdbId");
-            case FAILED -> throw new IllegalStateException(
-                    "Poster refresh failed for movie " + movieId);
-        };
+        return refresh(movie);
     }
 
     private Outcome refresh(Movie movie) {
         Long tmdbId = movie.getTmdbId();
         if (tmdbId == null) {
-            log.debug("Skip movie id={}: no tmdbId", movie.getId());
             return Outcome.NO_TMDB;
         }
         try {
             TMDBMovieDTO tmdbMovieDTO = tmdbService.getMovieById(tmdbId);
             if (tmdbMovieDTO == null || tmdbMovieDTO.posterPath() == null || tmdbMovieDTO.posterPath().isBlank()) {
-                log.warn("TMDB has no poster: movie id={} tmdbId={}", movie.getId(), tmdbId);
                 return Outcome.FAILED;
             }
             String remoteUrl = tmdbService.getPosterUrl(tmdbMovieDTO.posterPath());
@@ -68,8 +79,6 @@ public class MoviePosterService {
             moviePosterWriter.savePosterUrl(movie.getId(), minioUrl);
             return Outcome.OK;
         } catch (Exception exception) {
-            log.warn("Poster refresh failed: movie id={} tmdbId={} — {}",
-                    movie.getId(), tmdbId, exception.getMessage());
             return Outcome.FAILED;
         }
     }

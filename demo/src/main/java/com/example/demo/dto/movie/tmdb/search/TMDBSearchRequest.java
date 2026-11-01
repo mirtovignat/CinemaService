@@ -1,4 +1,4 @@
-package com.example.demo.dto.movie.tmdb;
+package com.example.demo.dto.movie.tmdb.search;
 
 import lombok.Builder;
 

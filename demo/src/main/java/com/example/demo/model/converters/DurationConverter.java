@@ -7,6 +7,7 @@ import java.time.Duration;
 
 @Converter(autoApply = true)
 public class DurationConverter implements AttributeConverter<Duration, Long> {
+
     @Override
     public Long convertToDatabaseColumn(Duration duration) {
         return duration == null ? null : duration.getSeconds();
@@ -16,4 +17,5 @@ public class DurationConverter implements AttributeConverter<Duration, Long> {
     public Duration convertToEntityAttribute(Long durationInDatabase) {
         return durationInDatabase == null ? null : Duration.ofSeconds(durationInDatabase);
     }
+
 }

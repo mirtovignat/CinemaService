@@ -1,12 +1,11 @@
-package com.example.demo.service.movie.poster;
+package com.example.demo.service.movie.tmdb;
 
 import com.example.demo.config.TMDBConfig;
 import com.example.demo.dto.movie.tmdb.TMDBMovieDTO;
-import com.example.demo.dto.movie.tmdb.TMDBSearchResponse;
+import com.example.demo.dto.movie.tmdb.search.TMDBSearchResponse;
 import com.example.demo.exception.BusinessException;
 import com.example.demo.exception.ErrorCode;
 import com.fasterxml.jackson.databind.JsonNode;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
@@ -21,9 +20,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-@Slf4j
 @Service
 public class TMDBService {
+
+    private static final long REQUEST_DELAY_MS = 150;
 
     private final TMDBConfig tmdbConfig;
     private final RestClient restClient;
@@ -35,17 +35,21 @@ public class TMDBService {
     }
 
     public TMDBMovieDTO getMovieById(Long tmdbId) {
-        TMDBMovieDTO russianMovie = fetchMovieById(tmdbId, "ru-RU");
-        if (russianMovie == null || russianMovie.title() == null || russianMovie.title().isBlank()) {
-            TMDBMovieDTO englishMovie = fetchMovieById(tmdbId, "en-US");
-            if (englishMovie != null) {
-                return englishMovie;
-            }
+        TMDBMovieDTO movie = fetchMovieById(tmdbId, "ru-RU");
+        if (movie == null) {
+            return null;
         }
-        return russianMovie;
+        if (movie.title() == null || movie.title().isBlank()) {
+            return null;
+        }
+        if (movie.overview() == null || movie.overview().isBlank()) {
+            return null;
+        }
+        return movie;
     }
 
     public String getCertification(Long tmdbId) {
+        sleepForTmdb();
         URI requestUri = UriComponentsBuilder
                 .fromUriString(tmdbConfig.getApiUrl() + "/movie/" + tmdbId + "/release_dates")
                 .build()
@@ -72,12 +76,19 @@ public class TMDBService {
             }
             return null;
         } catch (Exception e) {
-            log.warn("Failed to fetch certification for tmdbId={}: {}", tmdbId, e.getMessage());
             return null;
         }
     }
 
+    public String extractCertification(TMDBMovieDTO tmdbMovieDTO) {
+        if (tmdbMovieDTO == null || tmdbMovieDTO.id() == null) {
+            return null;
+        }
+        return getCertification(tmdbMovieDTO.id());
+    }
+
     private TMDBMovieDTO fetchMovieById(Long tmdbId, String languageCode) {
+        sleepForTmdb();
         URI requestUri = UriComponentsBuilder
                 .fromUriString(tmdbConfig.getApiUrl() + "/movie/" + tmdbId)
                 .queryParam("language", languageCode)
@@ -93,11 +104,8 @@ public class TMDBService {
                     .retrieve()
                     .body(TMDBMovieDTO.class);
         } catch (HttpClientErrorException.NotFound notFoundException) {
-            log.warn("TMDB movie not found: tmdbId={}", tmdbId);
             return null;
         } catch (HttpClientErrorException clientErrorException) {
-            log.warn("TMDB client error for tmdbId={}: {} ({})",
-                    tmdbId, clientErrorException.getStatusCode(), clientErrorException.getMessage());
             return null;
         } catch (ResourceAccessException resourceAccessException) {
             throw tmdbUnavailable(resourceAccessException, requestUri);
@@ -117,11 +125,6 @@ public class TMDBService {
                 }
             }
             if (pageResults.size() < 20) break;
-            try {
-                Thread.sleep(120);
-            } catch (InterruptedException ignored) {
-                Thread.currentThread().interrupt();
-            }
         }
 
         if (allResults.isEmpty()) {
@@ -134,11 +137,6 @@ public class TMDBService {
                     }
                 }
                 if (pageResults.size() < 20) break;
-                try {
-                    Thread.sleep(120);
-                } catch (InterruptedException ignored) {
-                    Thread.currentThread().interrupt();
-                }
             }
         }
 
@@ -146,6 +144,7 @@ public class TMDBService {
     }
 
     private List<TMDBMovieDTO> fetchSearchMovies(String searchQuery, String languageCode, int page) {
+        sleepForTmdb();
         URI requestUri = UriComponentsBuilder
                 .fromUriString(tmdbConfig.getApiUrl() + "/search/movie")
                 .queryParam("language", languageCode)
@@ -163,8 +162,6 @@ public class TMDBService {
                     .retrieve()
                     .body(TMDBSearchResponse.class);
         } catch (HttpClientErrorException clientErrorException) {
-            log.warn("TMDB search client error for query='{}' page={}: {} ({})",
-                    searchQuery, page, clientErrorException.getStatusCode(), clientErrorException.getMessage());
             return List.of();
         } catch (ResourceAccessException resourceAccessException) {
             throw tmdbUnavailable(resourceAccessException, requestUri);
@@ -192,6 +189,7 @@ public class TMDBService {
     }
 
     private Long findPersonId(String personName, String expectedDepartment) {
+        sleepForTmdb();
         URI requestUri = UriComponentsBuilder
                 .fromUriString(tmdbConfig.getApiUrl() + "/search/person")
                 .queryParam("language", "ru-RU")
@@ -209,8 +207,6 @@ public class TMDBService {
                     .retrieve()
                     .body(JsonNode.class);
         } catch (HttpClientErrorException clientErrorException) {
-            log.warn("TMDB person search client error for '{}': {} ({})",
-                    personName, clientErrorException.getStatusCode(), clientErrorException.getMessage());
             return null;
         } catch (ResourceAccessException resourceAccessException) {
             throw tmdbUnavailable(resourceAccessException, requestUri);
@@ -240,6 +236,7 @@ public class TMDBService {
     }
 
     private List<TMDBMovieDTO> fetchMovieCredits(Long personId, String roleName) {
+        sleepForTmdb();
         URI requestUri = UriComponentsBuilder
                 .fromUriString(tmdbConfig.getApiUrl() + "/person/" + personId + "/movie_credits")
                 .queryParam("language", "ru-RU")
@@ -255,8 +252,6 @@ public class TMDBService {
                     .retrieve()
                     .body(JsonNode.class);
         } catch (HttpClientErrorException clientErrorException) {
-            log.warn("TMDB credits client error for personId={}: {} ({})",
-                    personId, clientErrorException.getStatusCode(), clientErrorException.getMessage());
             return List.of();
         } catch (ResourceAccessException resourceAccessException) {
             throw tmdbUnavailable(resourceAccessException, requestUri);
@@ -301,8 +296,19 @@ public class TMDBService {
         return tmdbConfig.getImageUrl() + "/" + tmdbConfig.getPosterSize() + posterPath;
     }
 
+    public void pauseBetweenRequests() {
+        sleepForTmdb();
+    }
+
+    private void sleepForTmdb() {
+        try {
+            Thread.sleep(REQUEST_DELAY_MS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
     private BusinessException tmdbUnavailable(ResourceAccessException resourceAccessException, URI requestUri) {
-        log.warn("TMDB request failed: {} ({})", requestUri, resourceAccessException.getMessage());
         return BusinessException.of(ErrorCode.TMDB_UNAVAILABLE);
     }
 }

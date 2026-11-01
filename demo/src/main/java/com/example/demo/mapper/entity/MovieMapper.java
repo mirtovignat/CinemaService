@@ -4,7 +4,7 @@ import com.example.demo.dto.movie.MovieCardViewDTO;
 import com.example.demo.dto.movie.MovieDetailsViewDTO;
 import com.example.demo.dto.movie.MovieSearchDTO;
 import com.example.demo.dto.movie.tmdb.TMDBMovieDTO;
-import com.example.demo.dto.movie.tmdb.TMDBSearchResultDTO;
+import com.example.demo.dto.movie.tmdb.search.TMDBSearchResultDTO;
 import com.example.demo.mapper.util.DurationMapper;
 import com.example.demo.mapper.util.TmdbMappingUtil;
 import com.example.demo.model.entity.Movie;

@@ -8,8 +8,8 @@ import com.example.demo.dto.movie.MovieDetailsViewDTO;
 import com.example.demo.dto.movie.MovieForUser;
 import com.example.demo.dto.movie.MovieSearchDTO;
 import com.example.demo.dto.movie.tmdb.TMDBCreateRequestDTO;
-import com.example.demo.dto.movie.tmdb.TMDBSearchRequest;
-import com.example.demo.dto.movie.tmdb.TMDBSearchResultDTO;
+import com.example.demo.dto.movie.tmdb.search.TMDBSearchRequest;
+import com.example.demo.dto.movie.tmdb.search.TMDBSearchResultDTO;
 import com.example.demo.dto.response.CursorPageResponse;
 import com.example.demo.dto.response.GenreMoviesPageResponse;
 import com.example.demo.dto.response.MoviesPageResponse;
@@ -20,6 +20,7 @@ import com.example.demo.filter.PageRequestContext;
 import com.example.demo.service.cursor.RecommendationCursorService;
 import com.example.demo.service.movie.MovieRecommendationService;
 import com.example.demo.service.movie.MovieService;
+import com.example.demo.service.movie.tmdb.TMDBImportService;
 import com.example.demo.web.resolver.CurrentUserId;
 import com.example.demo.web.resolver.MovieSingleResultResolver;
 import jakarta.validation.Valid;
@@ -47,6 +48,7 @@ public class MovieController {
     private final RecommendationCursorService recommendationCursorService;
     private final MovieSingleResultResolver movieSingleResultResolver;
     private final MovieFilterValidator movieFilterValidator;
+    private final TMDBImportService tmdbImportService;
 
     @GetMapping({"/", "/movies"})
     public String showMovies(
@@ -177,7 +179,7 @@ public class MovieController {
                 .directors(directors)
                 .actors(actors)
                 .build();
-        return ResponseEntity.ok(movieService.searchTmdb(tmdbSearchRequest));
+        return ResponseEntity.ok(tmdbImportService.search(tmdbSearchRequest));
     }
 
     @PostMapping("/movies/tmdb/create")
@@ -194,7 +196,7 @@ public class MovieController {
             return "redirect:/movies/new";
         }
 
-        List<MovieDetailsViewDTO> createdMovieDetails = movieService.createMovies(
+        List<MovieDetailsViewDTO> createdMovieDetails = tmdbImportService.createMovies(
                 tmdbCreateRequestDTO.moviePriceItems()
         );
 

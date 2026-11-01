@@ -1,7 +1,9 @@
 package com.example.demo.exception;
 
+import lombok.Builder;
 import lombok.Getter;
 
+@Builder
 @Getter
 public class BusinessException extends RuntimeException {
 
@@ -15,6 +17,9 @@ public class BusinessException extends RuntimeException {
     }
 
     public static BusinessException of(ErrorCode errorCode, Object... args) {
-        return new BusinessException(errorCode, args);
+        return BusinessException.builder()
+                .errorCode(errorCode)
+                .args(args)
+                .build();
     }
 }

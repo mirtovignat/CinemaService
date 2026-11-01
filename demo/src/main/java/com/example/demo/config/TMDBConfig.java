@@ -19,4 +19,5 @@ public class TMDBConfig {
 
     @Value("${tmdb.poster-size:w500}")
     private String posterSize;
+
 }

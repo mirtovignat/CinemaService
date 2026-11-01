@@ -67,6 +67,8 @@ tmdb:
   poster-size: w500
 
 app:
+  tmdb:
+    request-delay-ms: 150
   validation:
     username:
       min-length: 3

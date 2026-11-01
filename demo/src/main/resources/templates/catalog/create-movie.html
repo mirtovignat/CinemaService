@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ru">
 <head>
-    <title>Добавить фильм — CinemaService</title>
+    <title>Добавить фильм(-ы) на сайт — CinemaService</title>
     <th:block th:replace="~{fragments/head :: head}"></th:block>
     <link rel="stylesheet" th:href="@{/css/pages/_create-movie.css}">
 </head>
@@ -14,7 +14,7 @@
 <main class="catalog-wrapper">
     <div class="create-movie-wrapper"
          th:attr="
-            data-max-results='100',
+            data-max-results='10000',
             data-msg-empty-input=#{error.CREATE_MOVIE_EMPTY_INPUT},
             data-msg-search-failed=#{error.CREATE_MOVIE_SEARCH_FAILED},
             data-msg-no-selection=#{error.CREATE_MOVIE_NO_SELECTION},
@@ -29,7 +29,7 @@
 
         <div class="scrollable-content">
             <div class="create-movie-header-group">
-                <h1 class="create-movie-title">Добавить фильм</h1>
+                <h1 class="create-movie-title">Добавить фильм(-ы) на сайт</h1>
 
                 <form id="createMovieSearchForm" data-persist="true" onsubmit="return false;" class="create-movie-search-form">
                     <div class="search-block">
@@ -94,6 +94,8 @@
                 </div>
 
                 <div id="errorMessage" class="error-message"></div>
+
+                <div id="resultsWarning" class="results-warning" style="display: none;"></div>
 
                 <div class="selection-summary">
                     <span id="selectionSummary">Выбрано: 0 / 100</span>

@@ -1,5 +1,6 @@
 package com.example.demo.dto.movie.tmdb;
 
+import com.example.demo.dto.movie.tmdb.release.TMDBReleaseDatesResponse;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
@@ -17,6 +18,7 @@ public record TMDBMovieDTO(
         @JsonProperty("runtime") Integer runtime,
         @JsonProperty("overview") String overview,
         @JsonProperty("genres") List<TMDBGenre> genres,
-        @JsonProperty("credits") TMDBCredits credits
+        @JsonProperty("credits") TMDBCredits credits,
+        @JsonProperty("release_dates") TMDBReleaseDatesResponse releaseDates
 ) {
 }

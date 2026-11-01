@@ -38,6 +38,7 @@
     var selectionSummary = document.getElementById('selectionSummary');
     var emptyState = document.getElementById('emptyState');
     var loadingState = document.getElementById('loadingState');
+    var resultsWarning = document.getElementById('resultsWarning');
 
     var confirmModal = document.getElementById('confirmModal');
     var confirmModalText = document.getElementById('confirmModalText');
@@ -107,6 +108,18 @@
         if (loadingState) loadingState.style.display = 'none';
     }
 
+    function showWarning(text) {
+        if (!resultsWarning) return;
+        resultsWarning.textContent = text;
+        resultsWarning.style.display = 'block';
+    }
+
+    function hideWarning() {
+        if (!resultsWarning) return;
+        resultsWarning.textContent = '';
+        resultsWarning.style.display = 'none';
+    }
+
     function askConfirm(message) {
         confirmModalText.textContent = message;
         confirmModal.hidden = false;
@@ -137,7 +150,7 @@
         errorMessage.innerHTML = '';
         var textDiv = document.createElement('div');
         textDiv.className = 'error-text';
-        textDiv.textContent = message;
+        textDiv.textContent = message || 'Ошибка';
         errorMessage.appendChild(textDiv);
         errorMessage.classList.add('show');
     }
@@ -355,6 +368,15 @@
             resultsContainer.style.display = 'none';
         }
 
+        if (searchResults.length >= MAX_RESULTS) {
+            showWarning(
+                'Показаны только ' + MAX_RESULTS + ' самых свежих результатов. ' +
+                'Если нужны остальные — уточните критерии поиска.'
+            );
+        } else {
+            hideWarning();
+        }
+
         updateCreateButton();
         updateSelectAllButton();
         updateFillAllButton();
@@ -388,14 +410,29 @@
         return '/movies/tmdb/search?' + parts.join('&');
     }
 
+    function unwrapSearchResponse(raw) {
+        if (raw == null) return [];
+        if (Array.isArray(raw)) return raw;
+        if (typeof raw === 'object' && Array.isArray(raw.data)) return raw.data;
+        return [];
+    }
+
     function readError(response) {
-        return response.json()
-            .then(function (body) {
-                return {
-                    code: body ? body.code : null,
-                    message: body && body.message ? body.message : messages.failed,
-                    data: body ? body.data : null
-                };
+        return response.text()
+            .then(function (text) {
+                if (!text) {
+                    return { code: null, message: messages.failed, data: null };
+                }
+                try {
+                    var body = JSON.parse(text);
+                    return {
+                        code: body ? body.code : null,
+                        message: body && body.message ? body.message : messages.failed,
+                        data: body ? body.data : null
+                    };
+                } catch (e) {
+                    return { code: null, message: messages.failed, data: null };
+                }
             })
             .catch(function () {
                 return { code: null, message: messages.failed, data: null };
@@ -404,6 +441,7 @@
 
     function handleSearchClick() {
         clearError();
+        hideWarning();
         lastError = null;
 
         var url = buildSearchUrl();
@@ -430,8 +468,16 @@
         fetch(url, { headers: { 'Accept': 'application/json' } })
             .then(function (response) {
                 if (response.ok) {
-                    return response.json().then(function (data) {
-                        return { ok: true, data: data };
+                    return response.text().then(function (text) {
+                        var parsed = [];
+                        if (text) {
+                            try {
+                                parsed = JSON.parse(text);
+                            } catch (e) {
+                                parsed = [];
+                            }
+                        }
+                        return { ok: true, data: parsed };
                     });
                 }
                 return readError(response).then(function (error) {
@@ -448,10 +494,23 @@
                     return;
                 }
 
-                searchResults = result.data || [];
+                var rawResults = unwrapSearchResponse(result.data);
+
+                var filtered = rawResults.filter(function (movie) {
+                    if (!movie || !movie.posterUrl) return false;
+                    if (typeof movie.posterUrl !== 'string') return false;
+                    var trimmed = movie.posterUrl.trim();
+                    return trimmed !== '' && trimmed !== 'null';
+                });
+
+                searchResults = filtered;
 
                 if (searchResults.length === 0) {
-                    showError(messages.failed);
+                    if (rawResults.length > 0) {
+                        showError('Найденные фильмы не имеют постера, поэтому они не показаны.');
+                    } else {
+                        showError(messages.failed);
+                    }
                     saveState();
                     return;
                 }
@@ -459,8 +518,9 @@
                 renderResults();
                 saveState();
             })
-            .catch(function () {
+            .catch(function (err) {
                 hideLoading();
+                if (window.console) console.error('[create-movie] search failed:', err);
                 showError(messages.failed);
             })
             .finally(function () {
@@ -538,6 +598,7 @@
 
     function handleClearClick() {
         clearError();
+        hideWarning();
         searchResults = [];
         selectedTmdbIds.clear();
         prices = {};

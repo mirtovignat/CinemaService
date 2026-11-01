@@ -1,9 +1,11 @@
 package com.example.demo.mapper.util;
 
+import com.example.demo.config.TMDBConfig;
 import com.example.demo.dto.movie.tmdb.TMDBCast;
 import com.example.demo.dto.movie.tmdb.TMDBCredits;
 import com.example.demo.dto.movie.tmdb.TMDBCrew;
 import com.example.demo.dto.movie.tmdb.TMDBGenre;
+import lombok.RequiredArgsConstructor;
 import org.mapstruct.Named;
 import org.springframework.stereotype.Component;
 
@@ -12,14 +14,17 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class TmdbMappingUtil {
+
+    private final TMDBConfig tmdbConfig;
 
     @Named("posterPathToUrl")
     public String posterPathToUrl(String posterPath) {
         if (posterPath == null || posterPath.isBlank()) {
             return null;
         }
-        return "https://image.tmdb.org/t/p/w500" + posterPath;
+        return tmdbConfig.getImageUrl() + "/" + tmdbConfig.getPosterSize() + posterPath;
     }
 
     @Named("runtimeToDuration")
@@ -28,14 +33,14 @@ public class TmdbMappingUtil {
     }
 
     @Named("allGenreNames")
-    public List<String> allGenreNames(List<TMDBGenre> genres) {
-        if (genres == null || genres.isEmpty()) {
+    public List<String> allGenreNames(List<TMDBGenre> tmdbGenres) {
+        if (tmdbGenres == null || tmdbGenres.isEmpty()) {
             return List.of("Другое");
         }
-        return genres.stream()
+        return tmdbGenres.stream()
                 .map(TMDBGenre::name)
-                .filter(n -> n != null && !n.isBlank())
-                .map(n -> Character.toUpperCase(n.charAt(0)) + n.substring(1))
+                .filter(name -> name != null && !name.isBlank())
+                .map(name -> Character.toUpperCase(name.charAt(0)) + name.substring(1))
                 .toList();
     }
 
@@ -52,23 +57,23 @@ public class TmdbMappingUtil {
     }
 
     @Named("castToActors")
-    public List<String> castToActors(TMDBCredits credits) {
-        if (credits == null || credits.tmdbCasts() == null) {
+    public List<String> castToActors(TMDBCredits tmdbCredits) {
+        if (tmdbCredits == null || tmdbCredits.tmdbCasts() == null) {
             return List.of();
         }
-        return credits.tmdbCasts().stream()
+        return tmdbCredits.tmdbCasts().stream()
                 .limit(10)
                 .map(TMDBCast::name)
                 .toList();
     }
 
     @Named("extractDirector")
-    public String extractDirector(TMDBCredits credits) {
-        if (credits == null || credits.crew() == null) {
+    public String extractDirector(TMDBCredits tmdbCredits) {
+        if (tmdbCredits == null || tmdbCredits.tmdbCrews() == null) {
             return null;
         }
-        return credits.crew().stream()
-                .filter(c -> "Director".equalsIgnoreCase(c.job()))
+        return tmdbCredits.tmdbCrews().stream()
+                .filter(crew -> "Director".equalsIgnoreCase(crew.job()))
                 .map(TMDBCrew::name)
                 .findFirst()
                 .orElse(null);
@@ -83,7 +88,6 @@ public class TmdbMappingUtil {
             case "0", "G" -> 0;
             case "6", "PG" -> 6;
             case "12", "PG-13" -> 12;
-            case "16", "R" -> 16;
             case "18", "NC-17" -> 18;
             default -> 16;
         };

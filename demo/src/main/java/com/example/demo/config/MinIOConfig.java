@@ -1,6 +1,9 @@
 package com.example.demo.config;
 
+import io.minio.BucketExistsArgs;
+import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
+import io.minio.SetBucketPolicyArgs;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -53,15 +56,15 @@ public class MinIOConfig {
 
     private void initBucket(MinioClient minioClient) throws Exception {
         boolean found = minioClient.bucketExists(
-                io.minio.BucketExistsArgs.builder().bucket(bucketName).build()
+                BucketExistsArgs.builder().bucket(bucketName).build()
         );
         if (!found) {
             minioClient.makeBucket(
-                    io.minio.MakeBucketArgs.builder().bucket(bucketName).build()
+                    MakeBucketArgs.builder().bucket(bucketName).build()
             );
         }
         minioClient.setBucketPolicy(
-                io.minio.SetBucketPolicyArgs.builder()
+                SetBucketPolicyArgs.builder()
                         .bucket(bucketName)
                         .config(buildPolicy(bucketName))
                         .build()
