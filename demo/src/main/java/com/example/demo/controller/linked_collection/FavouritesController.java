@@ -31,10 +31,6 @@ public class FavouritesController extends AbstractLinkedCollectionController<Fav
                                                                                   cursorPageResponse,
                                                                           Long userId,
                                                                           String query) {
-        return CollectionPageResponse.<FavouriteMovieViewDTO>builder()
-                .cursorPageResponse(cursorPageResponse)
-                .catalogCount(collectionService.getCount(userId))
-                .query(query)
-                .build();
+        return CollectionPageResponse.of(cursorPageResponse, collectionService.getCount(userId), query);
     }
 }

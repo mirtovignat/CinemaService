@@ -1,12 +1,13 @@
 package com.example.demo.dto.user;
 
 import com.example.demo.model.entity.User;
+import com.example.demo.util.text.StringSanitizer;
 import lombok.Builder;
 
 import java.math.BigDecimal;
 import java.util.Locale;
 
-@Builder
+@Builder(toBuilder = true)
 public record SessionUser(
         Long id,
         BigDecimal balance,
@@ -25,10 +26,9 @@ public record SessionUser(
     }
 
     public String getFirstUsernameLetter() {
-        if (username == null || username.isBlank()) {
-            return "U";
-        }
-        return username.substring(0, 1).toUpperCase(Locale.ROOT);
+        return StringSanitizer.trimToNull(username)
+                .map(usernamePart -> usernamePart.substring(0, 1).toUpperCase(Locale.ROOT))
+                .orElse("U");
     }
 
     public static SessionUser from(User user) {
@@ -41,19 +41,13 @@ public record SessionUser(
     }
 
     public SessionUser withBalance(BigDecimal newBalance) {
-        return SessionUser.builder()
-                .id(this.id)
+        return this.toBuilder()
                 .balance(newBalance)
-                .currencyCode(this.currencyCode)
-                .username(this.username)
                 .build();
     }
 
     public SessionUser withUsername(String newUsername) {
-        return SessionUser.builder()
-                .id(this.id)
-                .balance(this.balance)
-                .currencyCode(this.currencyCode)
+        return this.toBuilder()
                 .username(newUsername)
                 .build();
     }

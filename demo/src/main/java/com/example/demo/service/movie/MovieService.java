@@ -59,7 +59,7 @@ public class MovieService {
                 : MovieUserStatus.builder().build();
         return MovieForUser.<MovieDetailsViewDTO>builder()
                 .movie(movieDetailsViewDTO)
-                .status(movieUserStatus)
+                .movieUserStatus(movieUserStatus)
                 .build();
     }
 
@@ -88,10 +88,10 @@ public class MovieService {
         return movieRepository.findByIdOrThrow(movieId);
     }
 
-    private MovieForUser<MovieCardViewDTO> buildMovieForUser(Movie movie, MovieUserStatus status) {
+    private MovieForUser<MovieCardViewDTO> buildMovieForUser(Movie movie, MovieUserStatus movieUserStatus) {
         return MovieForUser.<MovieCardViewDTO>builder()
                 .movie(movieMapper.toCard(movie))
-                .status(status)
+                .movieUserStatus(movieUserStatus)
                 .build();
     }
 }

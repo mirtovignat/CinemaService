@@ -10,4 +10,16 @@ public record CartPageResponse<DTO>(
         Long catalogCount,
         String query
 ) {
+    public static <DTO> CartPageResponse<DTO> of(
+            CursorPageResponse<DTO> cursorPageResponse,
+            CartSummaryDTO cartSummaryDTO,
+            Long catalogCount,
+            String query) {
+        return CartPageResponse.<DTO>builder()
+                .cursorPageResponse(cursorPageResponse)
+                .cartSummaryDTO(cartSummaryDTO)
+                .catalogCount(catalogCount)
+                .query(query)
+                .build();
+    }
 }

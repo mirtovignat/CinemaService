@@ -63,8 +63,6 @@ public class PurchasedController {
                 httpServletRequest,
                 httpServletResponse
         );
-        return apiResponseFactory.ok(SuccessCode.PURCHASED, PurchasedMovieResponse.builder()
-                .newBalance(newBalance)
-                .build());
+        return apiResponseFactory.ok(SuccessCode.PURCHASED, PurchasedMovieResponse.of(newBalance));
     }
 }

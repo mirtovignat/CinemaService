@@ -8,4 +8,14 @@ public record CollectionPageResponse<DTO>(
         Long catalogCount,
         String query
 ) {
+    public static <DTO> CollectionPageResponse<DTO> of(
+            CursorPageResponse<DTO> cursorPageResponse,
+            Long catalogCount,
+            String query) {
+        return CollectionPageResponse.<DTO>builder()
+                .cursorPageResponse(cursorPageResponse)
+                .catalogCount(catalogCount)
+                .query(query)
+                .build();
+    }
 }

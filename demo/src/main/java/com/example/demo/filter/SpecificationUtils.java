@@ -1,5 +1,7 @@
 package com.example.demo.filter;
 
+import com.example.demo.util.text.LikeEscaper;
+import com.example.demo.util.text.SearchQueryNormalizer;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import org.springframework.data.jpa.domain.Specification;
@@ -8,7 +10,6 @@ import org.springframework.util.CollectionUtils;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 
 public final class SpecificationUtils {
 
@@ -64,7 +65,11 @@ public final class SpecificationUtils {
             String fieldName,
             String sanitizedSearchQuery
     ) {
-        String escapedQuery = escapeLike(sanitizedSearchQuery.toLowerCase(Locale.ROOT).replace('ё', 'е'));
+        String normalized = SearchQueryNormalizer.normalizeOrEmpty(sanitizedSearchQuery);
+        if (normalized.isEmpty()) {
+            return unrestricted();
+        }
+        String escapedQuery = LikeEscaper.escape(normalized);
         return (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.like(
                 criteriaBuilder.lower(
                         criteriaBuilder.function(
@@ -78,13 +83,6 @@ public final class SpecificationUtils {
                 escapedQuery + "%",
                 '\\'
         );
-    }
-
-    private static String escapeLike(String value) {
-        return value
-                .replace("\\", "\\\\")
-                .replace("%", "\\%")
-                .replace("_", "\\_");
     }
 
     private static <Value> Predicate[] chunkPredicates(Root<?> root,
@@ -108,8 +106,8 @@ public final class SpecificationUtils {
             return unrestricted();
         }
         List<String> sanitized = values.stream()
-                .filter(value -> value != null && !value.isBlank())
-                .map(value -> value.toLowerCase(Locale.ROOT).trim())
+                .filter(SearchQueryNormalizer::isMeaningful)
+                .map(SearchQueryNormalizer::normalizeOrEmpty)
                 .distinct()
                 .toList();
         if (sanitized.isEmpty()) {
@@ -128,7 +126,7 @@ public final class SpecificationUtils {
                                         criteriaBuilder.literal(",")
                                 )
                         ),
-                        "%" + escapeLike(value) + "%",
+                        "%" + LikeEscaper.escape(value) + "%",
                         '\\'
                 );
                 predicates.add(predicate);

@@ -38,12 +38,12 @@ public class CartController extends AbstractLinkedCollectionController<CartItemV
                                                                       cursorPageResponse,
                                                               Long userId,
                                                               String query) {
-        return CartPageResponse.<CartItemViewDTO>builder()
-                .cursorPageResponse(cursorPageResponse)
-                .cartSummaryDTO(cartService.getPurchasableSummary(userId))
-                .catalogCount(collectionService.getCount(userId))
-                .query(query)
-                .build();
+        return CartPageResponse.of(
+                cursorPageResponse,
+                cartService.getPurchasableSummary(userId),
+                collectionService.getCount(userId),
+                query
+        );
     }
 
     @GetMapping("/summary")

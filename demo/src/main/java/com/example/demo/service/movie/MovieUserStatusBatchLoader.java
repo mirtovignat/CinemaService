@@ -36,12 +36,7 @@ public class MovieUserStatusBatchLoader {
             boolean isInCart = !isBought && userStatus.inCart();
             result.put(
                     movieId,
-                    MovieUserStatus.builder()
-                            .bought(isBought)
-                            .inCart(isInCart)
-                            .inFavourites(userStatus.inFavourites())
-                            .ownRating(ownRatings.get(movieId))
-                            .build()
+                    MovieUserStatus.of(isBought, isInCart, userStatus.inFavourites(), ownRatings.get(movieId))
             );
         }
         return result;

@@ -30,6 +30,8 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.List;
+
 @Controller
 @AllArgsConstructor
 public class PersonalAccountController {
@@ -54,8 +56,9 @@ public class PersonalAccountController {
     public String editProfile(@CurrentUserId Long userId, Model model) {
         User user = userQueryService.getUser(userId);
         PersonalAccountResponse personalAccountResponse = userQueryService.buildUserPage(user);
+        List<String> genres = movieFilterMetaService.getAllGenres();
         model.addAttribute("personalAccountResponse", personalAccountResponse);
-        model.addAttribute("genres", movieFilterMetaService.getAllGenres());
+        model.addAttribute("genres", genres);
         return "account/profile";
     }
 
@@ -83,10 +86,7 @@ public class PersonalAccountController {
             sessionAuthenticator.updateSessionUser(updatedSessionUser, httpServletRequest, httpServletResponse);
         }
         UserForOwnerViewDTO userForOwnerViewDTO = userQueryService.getUserForOwner(userId);
-        UpdateFieldResponse updateFieldResponse = UpdateFieldResponse.builder()
-                .userForOwnerViewDTO(userForOwnerViewDTO)
-                .sessionUser(updatedSessionUser)
-                .build();
+        UpdateFieldResponse updateFieldResponse = UpdateFieldResponse.of(userForOwnerViewDTO, updatedSessionUser);
         return apiResponseFactory.ok(SuccessCode.UPDATED, updateFieldResponse);
     }
 

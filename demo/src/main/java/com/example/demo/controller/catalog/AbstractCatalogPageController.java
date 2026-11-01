@@ -52,12 +52,12 @@ public abstract class AbstractCatalogPageController<DTO> {
         UserSidebarViewDTO userSidebarViewDTO = userMapper.toSidebarView(userQueryService.getUser(userId));
         List<String> genres = movieFilterMetaService.getAllGenres();
 
-        return UserCatalogPageResponse.<DTO>builder()
-                .cursorPageResponse(cursorPageResponse)
-                .userSidebarViewDTO(userSidebarViewDTO)
-                .genres(genres)
-                .query(cursorPageRequest.query())
-                .build();
+        return UserCatalogPageResponse.of(
+                cursorPageResponse,
+                userSidebarViewDTO,
+                genres,
+                cursorPageRequest.query()
+        );
     }
 
     @GetMapping("/more")

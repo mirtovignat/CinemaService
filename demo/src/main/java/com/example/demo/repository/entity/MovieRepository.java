@@ -27,7 +27,7 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
             SELECT director
             FROM movies
             WHERE director IS NOT NULL
-              AND LOWER(director) LIKE LOWER(CONCAT(:prefix, '%'))
+              AND LOWER(director) LIKE LOWER(CONCAT(:prefix, '%')) ESCAPE '\\'
               AND (
                   :hasCursor = false
                   OR LOWER(director) > LOWER(:cursor)
@@ -112,7 +112,7 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
     @Query(value = """
             SELECT genre
             FROM movies
-            WHERE LOWER(genre) LIKE LOWER(CONCAT(:prefix, '%'))
+            WHERE LOWER(genre) LIKE LOWER(CONCAT(:prefix, '%')) ESCAPE '\\'
               AND (:hasCursor = false OR LOWER(genre) > LOWER(:cursor))
             GROUP BY genre
             ORDER BY LOWER(genre) ASC

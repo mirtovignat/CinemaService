@@ -1,5 +1,6 @@
 package com.example.demo.cursor;
 
+import com.example.demo.util.text.SearchQueryNormalizer;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
@@ -29,20 +30,6 @@ public final class CursorUtils {
     }
 
     public static String normalizeQuery(String query) {
-        if (query == null || query.isBlank()) {
-            return null;
-        }
-        String trimmed = query.trim().toLowerCase().replace('ё', 'е');
-        if (trimmed.isBlank()) {
-            return null;
-        }
-        return escapeLike(trimmed);
-    }
-
-    private static String escapeLike(String value) {
-        return value
-                .replace("\\", "\\\\")
-                .replace("%", "\\%")
-                .replace("_", "\\_");
+        return SearchQueryNormalizer.normalizeAndEscape(query);
     }
 }

@@ -35,9 +35,9 @@ public class MovieFilterMetaService {
     @Transactional(readOnly = true)
     public Slice<String> searchDirectors(CursorPageRequest cursorPageRequest) {
         List<String> rows = movieRepository.fetchDirectorsKeyset(
-                CursorUtils.safeQuery(cursorPageRequest),
+                escapeLike(CursorUtils.safeQuery(cursorPageRequest)),
                 CursorUtils.hasCursor(cursorPageRequest),
-                CursorUtils.safeCursor(cursorPageRequest),
+                escapeLike(CursorUtils.safeCursor(cursorPageRequest)),
                 pageSize + 1
         );
 
@@ -47,9 +47,9 @@ public class MovieFilterMetaService {
     @Transactional(readOnly = true)
     public Slice<String> searchGenres(CursorPageRequest cursorPageRequest) {
         List<String> rows = movieRepository.fetchGenresKeyset(
-                CursorUtils.safeQuery(cursorPageRequest),
+                escapeLike(CursorUtils.safeQuery(cursorPageRequest)),
                 CursorUtils.hasCursor(cursorPageRequest),
-                CursorUtils.safeCursor(cursorPageRequest),
+                escapeLike(CursorUtils.safeCursor(cursorPageRequest)),
                 pageSize + 1
         );
 
@@ -59,5 +59,15 @@ public class MovieFilterMetaService {
     @Transactional(readOnly = true)
     public MovieRangesSnapshot getRanges() {
         return movieRangesSnapshotMapper.toSnapshot(movieRepository.findRanges());
+    }
+
+    private static String escapeLike(String value) {
+        if (value == null || value.isEmpty()) {
+            return "";
+        }
+        return value
+                .replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
     }
 }

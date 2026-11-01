@@ -14,9 +14,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-
 @AllArgsConstructor
 @Service
 public class RatedCommandService {
@@ -41,9 +38,6 @@ public class RatedCommandService {
 
         ratedMovie.setRatingValue(dto.rating());
         ratedMovie.setReview(dto.review());
-        if (isNew) {
-            ratedMovie.setAddedAt(LocalDateTime.now(ZoneOffset.UTC));
-        }
         ratedMovie.getDeletableState().setDeleted(false);
 
         ratedMovieRepository.saveAndFlush(ratedMovie);

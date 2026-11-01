@@ -9,6 +9,9 @@ import com.example.demo.model.entity.User;
 import com.example.demo.repository.base.WatchHistoryItemRepository;
 import com.example.demo.repository.entity.*;
 import com.example.demo.util.PhoneNormalizer;
+import com.example.demo.util.text.StringSanitizer;
+import com.example.demo.util.validation.Amounts;
+import com.example.demo.util.validation.Emptiness;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -56,7 +59,7 @@ public class UserCommandService {
     public ProfileFieldUpdateDTO prepareAndValidateField(ProfileFieldUpdateDTO profileFieldUpdateDTO,
                                                          Long userId) {
         User user = userQueryService.getUser(userId);
-        String field = profileFieldUpdateDTO.field() != null ? profileFieldUpdateDTO.field().trim() : "";
+        String field = StringSanitizer.trimOrEmpty(profileFieldUpdateDTO.field());
         Identifier identifier = profileFieldUpdateDTO.identifier();
 
         switch (identifier) {
@@ -85,7 +88,7 @@ public class UserCommandService {
                         .build();
             }
             case PHONE -> {
-                String currentPhone = user.getPhone() != null ? user.getPhone() : "";
+                String currentPhone = StringSanitizer.trimOrEmpty(user.getPhone());
 
                 if (field.isEmpty()) {
                     if (currentPhone.isEmpty()) {
@@ -122,11 +125,10 @@ public class UserCommandService {
                 case USERNAME -> userRepository.updateUsername(userId, profileFieldUpdateDTO.field());
                 case EMAIL -> userRepository.updateEmail(userId, profileFieldUpdateDTO.field());
                 case PHONE -> {
-                    String fieldValue = profileFieldUpdateDTO.field();
-                    if (fieldValue == null || fieldValue.isBlank()) {
+                    if (Emptiness.isBlank(profileFieldUpdateDTO.field())) {
                         userRepository.deletePhone(userId);
                     } else {
-                        userRepository.updatePhone(userId, fieldValue);
+                        userRepository.updatePhone(userId, profileFieldUpdateDTO.field());
                     }
                 }
                 default -> throw BusinessException.of(ErrorCode.VALIDATION_ERROR);
@@ -160,15 +162,16 @@ public class UserCommandService {
 
     @Transactional
     public void saveTopUp(BigDecimal amount, User user) {
-        if (amount == null || amount.signum() <= 0) {
-            throw BusinessException.of(ErrorCode.VALIDATION_ERROR);
-        }
+        Amounts.requirePositive(amount);
+
         User lockedUser = userRepository.findByIdForUpdate(user.getId())
                 .orElseThrow(() -> BusinessException.of(ErrorCode.USER_NOT_FOUND, "id=" + user.getId()));
+
         BigDecimal newBalance = lockedUser.getBalance().add(amount);
         if (newBalance.compareTo(maxBalance) > 0) {
             throw BusinessException.of(ErrorCode.VALIDATION_ERROR);
         }
+
         lockedUser.addMoney(amount);
         userRepository.save(lockedUser);
         user.setBalance(lockedUser.getBalance());

@@ -12,9 +12,8 @@ import org.springframework.stereotype.Repository;
 public interface PurchasedMovieRepository extends AbstractCatalogItemRepository<PurchasedMovie> {
 
     @Override
-    @Query(value = """
-            SELECT DISTINCT purchasedMovie FROM PurchasedMovie purchasedMovie
-            LEFT JOIN FETCH purchasedMovie.watchedHistory
+    @Query("""
+            SELECT purchasedMovie FROM PurchasedMovie purchasedMovie
             JOIN FETCH purchasedMovie.movie movie
             WHERE purchasedMovie.user.id = :userId
             AND (
@@ -23,16 +22,7 @@ public interface PurchasedMovieRepository extends AbstractCatalogItemRepository<
             )
             AND (:hasCursor = false OR purchasedMovie.id > :cursorId)
             ORDER BY purchasedMovie.id ASC
-            """,
-            countQuery = """
-                    SELECT COUNT(purchasedMovie) FROM PurchasedMovie purchasedMovie
-                    JOIN purchasedMovie.movie movie
-                    WHERE purchasedMovie.user.id = :userId
-                    AND (
-                        :query IS NULL
-                        OR TRANSLATE(LOWER(movie.title), 'ё', 'е') LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
-                    )
-                    """)
+            """)
     Slice<PurchasedMovie> fetchAscending(@Param("userId") Long userId,
                                          @Param("hasCursor") boolean hasCursor,
                                          @Param("cursorId") Long cursorId,
@@ -40,9 +30,8 @@ public interface PurchasedMovieRepository extends AbstractCatalogItemRepository<
                                          Pageable pageable);
 
     @Override
-    @Query(value = """
-            SELECT DISTINCT purchasedMovie FROM PurchasedMovie purchasedMovie
-            LEFT JOIN FETCH purchasedMovie.watchedHistory
+    @Query("""
+            SELECT purchasedMovie FROM PurchasedMovie purchasedMovie
             JOIN FETCH purchasedMovie.movie movie
             WHERE purchasedMovie.user.id = :userId
             AND (
@@ -51,16 +40,7 @@ public interface PurchasedMovieRepository extends AbstractCatalogItemRepository<
             )
             AND (:hasCursor = false OR purchasedMovie.id < :cursorId)
             ORDER BY purchasedMovie.id DESC
-            """,
-            countQuery = """
-                    SELECT COUNT(purchasedMovie) FROM PurchasedMovie purchasedMovie
-                    JOIN purchasedMovie.movie movie
-                    WHERE purchasedMovie.user.id = :userId
-                    AND (
-                        :query IS NULL
-                        OR TRANSLATE(LOWER(movie.title), 'ё', 'е') LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
-                    )
-                    """)
+            """)
     Slice<PurchasedMovie> fetchDescending(@Param("userId") Long userId,
                                           @Param("hasCursor") boolean hasCursor,
                                           @Param("cursorId") Long cursorId,

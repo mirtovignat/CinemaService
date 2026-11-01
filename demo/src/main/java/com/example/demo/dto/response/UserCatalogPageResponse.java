@@ -12,4 +12,16 @@ public record UserCatalogPageResponse<DTO>(
         List<String> genres,
         String query
 ) {
+    public static <DTO> UserCatalogPageResponse<DTO> of(
+            CursorPageResponse<DTO> cursorPageResponse,
+            UserSidebarViewDTO userSidebarViewDTO,
+            List<String> genres,
+            String query) {
+        return UserCatalogPageResponse.<DTO>builder()
+                .cursorPageResponse(cursorPageResponse)
+                .userSidebarViewDTO(userSidebarViewDTO)
+                .genres(genres)
+                .query(query)
+                .build();
+    }
 }

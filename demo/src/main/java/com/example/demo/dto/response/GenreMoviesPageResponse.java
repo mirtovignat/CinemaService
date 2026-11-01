@@ -11,4 +11,14 @@ public record GenreMoviesPageResponse(
         String genre,
         boolean isSearch
 ) {
+    public static GenreMoviesPageResponse of(
+            Page<MovieForUser<MovieCardViewDTO>> cardsPage,
+            String genre,
+            boolean isSearch) {
+        return GenreMoviesPageResponse.builder()
+                .cardsPage(cardsPage)
+                .genre(genre)
+                .isSearch(isSearch)
+                .build();
+    }
 }

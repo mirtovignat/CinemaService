@@ -20,7 +20,7 @@ public class MovieSortResolver {
     private static final Map<String, String> SORTABLE_FIELDS = Map.of(
             "price", "price",
             "duration", "duration",
-            "rating", "ratingSort",
+            "rating", "rating",
             "releaseDate", "releaseDate"
     );
 
@@ -42,6 +42,12 @@ public class MovieSortResolver {
         Sort.Direction direction = (SortDirection.from(pageRequestContext.sortDirection()) == SortDirection.ASC)
                 ? Sort.Direction.ASC
                 : Sort.Direction.DESC;
+
+        if ("rating".equals(field)) {
+            Sort.Order ratingOrder = new Sort.Order(direction, field, Sort.NullHandling.NULLS_LAST);
+            Sort.Order idOrder = new Sort.Order(Sort.Direction.ASC, "id");
+            return PageRequest.of(safePage, safeSize, Sort.by(ratingOrder, idOrder));
+        }
 
         return PageRequest.of(
                 safePage,

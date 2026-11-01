@@ -9,4 +9,11 @@ public record UpdateFieldResponse(
         UserForOwnerViewDTO userForOwnerViewDTO,
         SessionUser sessionUser
 ) {
+    public static UpdateFieldResponse of(UserForOwnerViewDTO userForOwnerViewDTO,
+                                         SessionUser sessionUser) {
+        return UpdateFieldResponse.builder()
+                .userForOwnerViewDTO(userForOwnerViewDTO)
+                .sessionUser(sessionUser)
+                .build();
+    }
 }

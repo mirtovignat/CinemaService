@@ -56,11 +56,7 @@ public class MovieController {
         if (bindingResult.hasErrors()) {
             MovieFilter effectiveFilter = movieFilterValidator.orEmpty(movieFilter);
             Page<MovieForUser<MovieCardViewDTO>> emptyPage = Page.empty();
-            MoviesPageResponse moviesPageResponse = MoviesPageResponse.builder()
-                    .cardsPage(emptyPage)
-                    .movieFilter(effectiveFilter)
-                    .isSearch(false)
-                    .build();
+            MoviesPageResponse moviesPageResponse = MoviesPageResponse.of(emptyPage, effectiveFilter, false);
             model.addAttribute("moviesPageResponse", moviesPageResponse);
             model.addAttribute("filterErrors", bindingResult.getAllErrors());
             return "catalog/index";
@@ -76,11 +72,7 @@ public class MovieController {
             return redirect;
         }
 
-        MoviesPageResponse moviesPageResponse = MoviesPageResponse.builder()
-                .cardsPage(moviePage)
-                .movieFilter(movieFilter)
-                .isSearch(hasActiveCriteria)
-                .build();
+        MoviesPageResponse moviesPageResponse = MoviesPageResponse.of(moviePage, movieFilter, hasActiveCriteria);
 
         model.addAttribute("moviesPageResponse", moviesPageResponse);
         return "catalog/index";
@@ -102,11 +94,7 @@ public class MovieController {
             return redirect;
         }
 
-        GenreMoviesPageResponse genreMoviesPageResponse = GenreMoviesPageResponse.builder()
-                .cardsPage(moviePage)
-                .genre(genre)
-                .isSearch(true)
-                .build();
+        GenreMoviesPageResponse genreMoviesPageResponse = GenreMoviesPageResponse.of(moviePage, genre, true);
 
         model.addAttribute("genreMoviesPageResponse", genreMoviesPageResponse);
         return "catalog/index";
@@ -138,7 +126,7 @@ public class MovieController {
             Model model
     ) {
         MovieForUser<MovieDetailsViewDTO> movieForUser = movieService.getCard(id, userId);
-        model.addAttribute("card", movieForUser);
+        model.addAttribute("movieForUser", movieForUser);
         return "catalog/show";
     }
 
@@ -151,7 +139,7 @@ public class MovieController {
 
     @GetMapping("/movies/suggestions")
     @ResponseBody
-    public ResponseEntity<List<MovieSearchDTO>> getSearchSuggestions(@RequestParam String query) {
+    public ResponseEntity<List<MovieSearchDTO>> getMovieSearchSuggestions(@RequestParam String query) {
         return ResponseEntity.ok(movieService.getMovieSearchDTO(query));
     }
 }

@@ -123,11 +123,7 @@ public class WatchedHistoryController {
                 ? messageUtils.getSuccess(SuccessCode.WATCHED)
                 : messageUtils.getSuccess(SuccessCode.HISTORY_DISABLED_WARNING);
 
-        return ResponseEntity.ok(WatchedMovieResponse.builder()
-                .saved(saveHistory)
-                .message(message)
-                .historyItemId(historyItemId)
-                .build());
+        return ResponseEntity.ok(WatchedMovieResponse.of(saveHistory, message, historyItemId));
     }
 
     @PostMapping("/clear")

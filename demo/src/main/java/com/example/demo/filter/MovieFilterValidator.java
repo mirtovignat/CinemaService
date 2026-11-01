@@ -2,9 +2,9 @@ package com.example.demo.filter;
 
 import com.example.demo.exception.BusinessException;
 import com.example.demo.exception.ErrorCode;
+import com.example.demo.util.text.SearchQueryNormalizer;
 import org.springframework.stereotype.Component;
 
-import java.util.Locale;
 import java.util.Optional;
 
 @Component
@@ -28,11 +28,7 @@ public class MovieFilterValidator {
     }
 
     public Optional<String> normalizeSearchQueryOptional(String rawSearchQuery) {
-        if (rawSearchQuery == null || rawSearchQuery.isBlank()) {
-            return Optional.empty();
-        }
-        String trimmed = rawSearchQuery.trim().toLowerCase(Locale.ROOT).replace('ё', 'е');
-        return trimmed.isBlank() ? Optional.empty() : Optional.of(trimmed);
+        return SearchQueryNormalizer.normalizeOptional(rawSearchQuery);
     }
 
     public boolean hasAnySearchCriteria(MovieFilter movieFilter, String title) {

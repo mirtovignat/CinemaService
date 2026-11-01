@@ -1,6 +1,9 @@
 package com.example.demo.dto.wallet;
 
+import com.example.demo.util.text.StringSanitizer;
+
 import java.math.BigDecimal;
+import java.util.Locale;
 
 public record WalletForOwnerViewDTO(
         String phone,
@@ -11,11 +14,8 @@ public record WalletForOwnerViewDTO(
         String username
 ) {
     public String getFirstUsernameLetter() {
-        String username = username();
-        if (username == null || username.isBlank()) {
-            return "U";
-        }
-        String firstChar = username.substring(0, username.offsetByCodePoints(0, 1));
-        return firstChar.toUpperCase(java.util.Locale.ROOT);
+        return StringSanitizer.trimToNull(username)
+                .map(usernamePart -> usernamePart.substring(0, usernamePart.offsetByCodePoints(0, 1)).toUpperCase(Locale.ROOT))
+                .orElse("U");
     }
 }

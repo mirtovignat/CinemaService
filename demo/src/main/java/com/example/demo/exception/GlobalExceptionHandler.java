@@ -8,6 +8,8 @@ import com.example.demo.dto.user.PasswordChangingDTO;
 import com.example.demo.dto.user.SessionUser;
 import com.example.demo.service.BadgeService;
 import com.example.demo.util.MessageUtils;
+import com.example.demo.util.url.UrlSafety;
+import com.example.demo.util.validation.Emptiness;
 import com.example.demo.web.security.CurrentUserProvider;
 import com.example.demo.web.util.RequestUtils;
 import jakarta.servlet.http.HttpServletRequest;
@@ -109,7 +111,7 @@ public class GlobalExceptionHandler {
         }
 
         addCommonAttributes(model);
-        model.addAttribute("status", 404);
+        model.addAttribute("movieUserStatus", 404);
         model.addAttribute("error", messageUtils.getError(ErrorCode.ENTITY_NOT_FOUND));
         model.addAttribute("message", messageUtils.getError(ErrorCode.ENTITY_NOT_FOUND));
         return "error";
@@ -130,7 +132,7 @@ public class GlobalExceptionHandler {
         }
 
         addCommonAttributes(model);
-        model.addAttribute("status", 500);
+        model.addAttribute("movieUserStatus", 500);
         model.addAttribute("error", errorMessage);
         model.addAttribute("message", errorMessage);
         return "error";
@@ -211,7 +213,7 @@ public class GlobalExceptionHandler {
 
     private String resolveFallbackLocalPath(HttpServletRequest httpServletRequest) {
         String refererHeader = httpServletRequest.getHeader("Referer");
-        if (refererHeader == null || refererHeader.isBlank()) {
+        if (Emptiness.isBlank(refererHeader)) {
             return "/";
         }
         String localPath = extractLocalPathFromReferer(refererHeader, httpServletRequest);
@@ -233,14 +235,11 @@ public class GlobalExceptionHandler {
                 return null;
             }
             String refererPath = refererUri.getRawPath();
-            if (refererPath == null
-                    || refererPath.isBlank()
-                    || !refererPath.startsWith("/")
-                    || refererPath.startsWith("//")) {
+            if (!UrlSafety.isSafeLocalPath(refererPath)) {
                 return null;
             }
             String refererQuery = refererUri.getRawQuery();
-            return (refererQuery == null || refererQuery.isBlank())
+            return Emptiness.isBlank(refererQuery)
                     ? refererPath
                     : refererPath + "?" + refererQuery;
         } catch (IllegalArgumentException illegalArgumentException) {

@@ -9,4 +9,17 @@ public record MovieUserStatus(
         boolean inCart,
         boolean inFavourites,
         ReviewViewDTO ownRating
-) {}
+) {
+    public static MovieUserStatus of(
+            boolean bought,
+            boolean inCart,
+            boolean inFavourites,
+            ReviewViewDTO ownRating) {
+        return MovieUserStatus.builder()
+                .bought(bought)
+                .inCart(inCart)
+                .inFavourites(inFavourites)
+                .ownRating(ownRating)
+                .build();
+    }
+}

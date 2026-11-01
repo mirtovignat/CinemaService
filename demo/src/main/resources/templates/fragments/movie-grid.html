@@ -16,7 +16,7 @@
              th:data-poster-url="${movie.movie.posterUrl}">
 
             <th:block th:if="${movie.movie.posterUrl != null and !movie.movie.posterUrl.isEmpty()}">
-                <a th:if="${sessionUser.authenticated and movie.status.bought}"
+                <a th:if="${sessionUser.authenticated and movie.movieUserStatus.bought}"
                    class="movie-poster-link"
                    href="javascript:void(0);"
                    data-action="watch-movie"
@@ -53,7 +53,7 @@
                     </div>
                 </a>
 
-                <a th:unless="${sessionUser.authenticated and movie.status.bought}"
+                <a th:unless="${sessionUser.authenticated and movie.movieUserStatus.bought}"
                    class="movie-poster-link"
                    th:href="@{/movies/{id}(id=${movie.movie.id})}">
                     <span class="poster-rating-badge js-rating-badge"
@@ -150,11 +150,11 @@
                 <div class="movie-actions">
                     <button type="button"
                             class="icon-btn favourite-btn"
-                            th:classappend="${movie.status.inFavourites} ? 'active' : ''"
+                            th:classappend="${movie.movieUserStatus.inFavourites} ? 'active' : ''"
                             data-action="toggle-favourite"
                             th:data-movie-id="${movie.movie.id}"
                             th:data-movie-title="${movie.movie.title}"
-                            th:data-state="${movie.status.inFavourites} ? 'remove' : 'add'"
+                            th:data-state="${movie.movieUserStatus.inFavourites} ? 'remove' : 'add'"
                             title="Избранное">
                         <th:block th:replace="~{fragments/icons :: icon-heart}"></th:block>
                     </button>
@@ -180,7 +180,7 @@
                 <div class="purchase-buttons">
                     <th:block th:if="${sessionUser.authenticated}">
                         <button type="button"
-                                th:if="${!movie.status.bought and !movie.status.inCart}"
+                                th:if="${!movie.movieUserStatus.bought and !movie.movieUserStatus.inCart}"
                                 class="cart-button to-cart-btn-details"
                                 data-action="add-to-cart"
                                 th:data-movie-id="${movie.movie.id}"
@@ -188,13 +188,13 @@
                                 th:data-movie-price="${movie.movie.price}">
                             В корзину
                         </button>
-                        <a th:if="${movie.status.inCart}"
+                        <a th:if="${movie.movieUserStatus.inCart}"
                            th:href="@{/cart(highlight=${movie.movie.id})}"
                            class="cart-button in-cart-btn-details">
                             В корзине → Перейти
                         </a>
                         <button type="button"
-                                th:if="${!movie.status.bought}"
+                                th:if="${!movie.movieUserStatus.bought}"
                                 class="buy-now-btn"
                                 data-action="buy-now"
                                 th:data-movie-id="${movie.movie.id}"
@@ -202,7 +202,7 @@
                                 th:data-movie-price="${movie.movie.price}">
                             Купить сейчас
                         </button>
-                        <a th:if="${movie.status.bought}"
+                        <a th:if="${movie.movieUserStatus.bought}"
                            th:href="@{/library(highlight=${movie.movie.id})}"
                            class="bought-btn">
                             Куплено → К коллекции

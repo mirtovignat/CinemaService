@@ -12,4 +12,14 @@ public record MoviesPageResponse(
         MovieFilter movieFilter,
         boolean isSearch
 ) {
+    public static MoviesPageResponse of(
+            Page<MovieForUser<MovieCardViewDTO>> cardsPage,
+            MovieFilter movieFilter,
+            boolean isSearch) {
+        return MoviesPageResponse.builder()
+                .cardsPage(cardsPage)
+                .movieFilter(movieFilter)
+                .isSearch(isSearch)
+                .build();
+    }
 }

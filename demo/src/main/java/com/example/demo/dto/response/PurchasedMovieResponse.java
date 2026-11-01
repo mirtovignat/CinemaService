@@ -8,4 +8,9 @@ import java.math.BigDecimal;
 public record PurchasedMovieResponse(
         BigDecimal newBalance
 ) {
+    public static PurchasedMovieResponse of(BigDecimal newBalance) {
+        return PurchasedMovieResponse.builder()
+                .newBalance(newBalance)
+                .build();
+    }
 }
