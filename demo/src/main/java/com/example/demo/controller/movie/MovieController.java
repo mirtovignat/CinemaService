@@ -28,6 +28,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -133,7 +134,7 @@ public class MovieController {
     @GetMapping("/movies/{id}/rating")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> getMovieRating(@PathVariable Long id) {
-        Double rating = movieService.getMovieRating(id);
+        BigDecimal rating = movieService.getMovieRating(id);
         return ResponseEntity.ok(Map.of("rating", rating != null ? rating : "-"));
     }
 

@@ -27,7 +27,6 @@ public class UserCommandService {
     private final UserRepository userRepository;
     private final CartItemRepository cartItemRepository;
     private final FavouriteMovieRepository favouriteMovieRepository;
-    private final RatedMovieRepository ratedMovieRepository;
     private final PurchasedMovieRepository purchasedMovieRepository;
     private final WatchHistoryItemRepository watchHistoryItemRepository;
     private final PasswordEncoder passwordEncoder;
@@ -48,7 +47,6 @@ public class UserCommandService {
         this.userRepository = userRepository;
         this.cartItemRepository = cartItemRepository;
         this.favouriteMovieRepository = favouriteMovieRepository;
-        this.ratedMovieRepository = ratedMovieRepository;
         this.purchasedMovieRepository = purchasedMovieRepository;
         this.watchHistoryItemRepository = watchHistoryItemRepository;
         this.passwordEncoder = passwordEncoder;
@@ -183,7 +181,6 @@ public class UserCommandService {
         favouriteMovieRepository.deleteAllByUserId(userId);
         cartItemRepository.deleteAllByUserId(userId);
         purchasedMovieRepository.deleteAllByUserId(userId);
-        ratedMovieRepository.softDeleteAllByUserId(userId);
         userRepository.softDeleteById(userId);
     }
 

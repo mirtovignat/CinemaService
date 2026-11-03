@@ -44,7 +44,7 @@ public class MovieSortResolver {
                 : Sort.Direction.DESC;
 
         if ("rating".equals(field)) {
-            Sort.Order ratingOrder = new Sort.Order(direction, field, Sort.NullHandling.NULLS_LAST);
+            Sort.Order ratingOrder = new Sort.Order(direction, field);
             Sort.Order idOrder = new Sort.Order(Sort.Direction.ASC, "id");
             return PageRequest.of(safePage, safeSize, Sort.by(ratingOrder, idOrder));
         }

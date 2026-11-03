@@ -14,7 +14,7 @@ public class MovieFilterValidator {
         validateRanges(movieFilter);
     }
 
-    public void validateRanges(MovieFilter movieFilter) {
+    private void validateRanges(MovieFilter movieFilter) {
         validateRange(movieFilter.priceFrom(), movieFilter.priceTo());
         validateRange(movieFilter.ratingFrom(), movieFilter.ratingTo());
         validateRange(movieFilter.durationFrom(), movieFilter.durationTo());

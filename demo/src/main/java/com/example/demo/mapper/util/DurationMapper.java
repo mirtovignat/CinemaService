@@ -1,10 +1,13 @@
 package com.example.demo.mapper.util;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.mapstruct.Named;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Component
 public class DurationMapper {
 
@@ -20,12 +23,10 @@ public class DurationMapper {
         return String.format("%d:%02d:%02d", hours, minutes, secs);
     }
 
-    @Named("durationToSeconds")
     public Long toSeconds(Duration duration) {
         return duration != null ? duration.getSeconds() : null;
     }
 
-    @Named("SecondsToDuration")
     public Duration toDuration(Long seconds) {
         return seconds != null ? Duration.ofSeconds(seconds) : null;
     }

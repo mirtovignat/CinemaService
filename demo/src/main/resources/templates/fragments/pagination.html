@@ -20,10 +20,14 @@
             (param.releaseDateFrom != null and param.releaseDateFrom[0] != '' ? '&releaseDateFrom=' + #uris.escapeQueryParam(param.releaseDateFrom[0]) : '') +
             (param.releaseDateTo != null and param.releaseDateTo[0] != '' ? '&releaseDateTo=' + #uris.escapeQueryParam(param.releaseDateTo[0]) : '') +
             (param.genres != null and param.genres.length > 0 ? '&genres=' + #uris.escapeQueryParam(#strings.listJoin(param.genres, ',')) : '') +
+            (param.genresExclude != null and param.genresExclude.length > 0 ? '&genresExclude=' + #uris.escapeQueryParam(#strings.listJoin(param.genresExclude, ',')) : '') +
             (param.directors != null and param.directors.length > 0 ? '&directors=' + #uris.escapeQueryParam(#strings.listJoin(param.directors, ',')) : '') +
+            (param.directorsExclude != null and param.directorsExclude.length > 0 ? '&directorsExclude=' + #uris.escapeQueryParam(#strings.listJoin(param.directorsExclude, ',')) : '') +
             (param.actors != null and param.actors.length > 0 ? '&actors=' + #uris.escapeQueryParam(#strings.listJoin(param.actors, ',')) : '') +
             (param.sortBy != null and param.sortBy[0] != '' ? '&sortBy=' + #uris.escapeQueryParam(param.sortBy[0]) : '') +
-            (param.sortDirection != null and param.sortDirection[0] != '' ? '&sortDirection=' + #uris.escapeQueryParam(param.sortDirection[0]) : '')
+            (param.sortDirection != null and param.sortDirection[0] != '' ? '&sortDirection=' + #uris.escapeQueryParam(param.sortDirection[0]) : '') +
+            (param.directorsAll != null and param.directorsAll[0] == 'true' ? '&directorsAll=true' : '') +
+            (param.genresAll != null and param.genresAll[0] == 'true' ? '&genresAll=true' : '')
         },
         baseUrl=${url + '?page='}
     ">

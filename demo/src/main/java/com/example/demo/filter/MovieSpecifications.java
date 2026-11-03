@@ -14,26 +14,40 @@ public class MovieSpecifications {
     private final MovieFilterValidator movieFilterValidator;
 
     public Specification<Movie> byFilter(MovieFilter movieFilter) {
-        MovieFilter notEmptyMovieFilter = movieFilterValidator.orEmpty(movieFilter);
+        MovieFilter validatedMovieFilter = movieFilterValidator.orEmpty(movieFilter);
+
+        boolean hasDirectorsExclude = validatedMovieFilter.directorsExclude() != null
+                && !validatedMovieFilter.directorsExclude().isEmpty();
+
+        Specification<Movie> directorSpecification = hasDirectorsExclude
+                ? SpecificationUtils.notNullAndNotIn("director", validatedMovieFilter.directorsExclude())
+                : SpecificationUtils.inIfNotEmpty("director", validatedMovieFilter.directors());
+
+        boolean hasGenresExclude = validatedMovieFilter.genresExclude() != null
+                && !validatedMovieFilter.genresExclude().isEmpty();
+
+        Specification<Movie> genreSpecification = hasGenresExclude
+                ? SpecificationUtils.notNullAndNotIn("genre", validatedMovieFilter.genresExclude())
+                : SpecificationUtils.inIfNotEmpty("genre", validatedMovieFilter.genres());
 
         return Specification.allOf(
-                SpecificationUtils.greaterThanOrEqualToIfNotNull("price", notEmptyMovieFilter.priceFrom()),
-                SpecificationUtils.lessThanOrEqualToIfNotNull("price", notEmptyMovieFilter.priceTo()),
-                SpecificationUtils.greaterThanOrEqualToIfNotNull("releaseDate", notEmptyMovieFilter.releaseDateFrom()),
-                SpecificationUtils.lessThanOrEqualToIfNotNull("releaseDate", notEmptyMovieFilter.releaseDateTo()),
+                SpecificationUtils.greaterThanOrEqualToIfNotNull("price", validatedMovieFilter.priceFrom()),
+                SpecificationUtils.lessThanOrEqualToIfNotNull("price", validatedMovieFilter.priceTo()),
+                SpecificationUtils.greaterThanOrEqualToIfNotNull("releaseDate", validatedMovieFilter.releaseDateFrom()),
+                SpecificationUtils.lessThanOrEqualToIfNotNull("releaseDate", validatedMovieFilter.releaseDateTo()),
                 SpecificationUtils.greaterThanOrEqualToIfNotNull(
                         "duration",
-                        durationMapper.toDuration(notEmptyMovieFilter.durationFrom())
+                        durationMapper.toDuration(validatedMovieFilter.durationFrom())
                 ),
                 SpecificationUtils.lessThanOrEqualToIfNotNull(
                         "duration",
-                        durationMapper.toDuration(notEmptyMovieFilter.durationTo())
+                        durationMapper.toDuration(validatedMovieFilter.durationTo())
                 ),
-                SpecificationUtils.greaterThanOrEqualToIfNotNull("rating", notEmptyMovieFilter.ratingFrom()),
-                SpecificationUtils.lessThanOrEqualToIfNotNull("rating", notEmptyMovieFilter.ratingTo()),
-                SpecificationUtils.inIfNotEmpty("genre", notEmptyMovieFilter.genres()),
-                SpecificationUtils.inIfNotEmpty("director", notEmptyMovieFilter.directors()),
-                SpecificationUtils.arrayContainsAny("actors", notEmptyMovieFilter.actors())
+                SpecificationUtils.greaterThanOrEqualToIfNotNull("rating", validatedMovieFilter.ratingFrom()),
+                SpecificationUtils.lessThanOrEqualToIfNotNull("rating", validatedMovieFilter.ratingTo()),
+                genreSpecification,
+                directorSpecification,
+                SpecificationUtils.arrayContainsAny("actors", validatedMovieFilter.actors())
         );
     }
 

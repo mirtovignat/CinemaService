@@ -2,9 +2,11 @@ package com.example.demo.service.movie;
 
 import com.example.demo.cursor.CursorPageRequest;
 import com.example.demo.cursor.CursorUtils;
+import com.example.demo.cursor.codec.CursorCodec;
 import com.example.demo.dto.movie.range.MovieRangesSnapshot;
 import com.example.demo.mapper.entity.MovieRangesSnapshotMapper;
 import com.example.demo.repository.entity.MovieRepository;
+import com.example.demo.util.text.LikeEscaper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -17,13 +19,16 @@ public class MovieFilterMetaService {
 
     private final MovieRepository movieRepository;
     private final MovieRangesSnapshotMapper movieRangesSnapshotMapper;
+    private final CursorCodec cursorCodec;
     private final int pageSize;
 
     public MovieFilterMetaService(MovieRepository movieRepository,
                                   MovieRangesSnapshotMapper movieRangesSnapshotMapper,
+                                  CursorCodec cursorCodec,
                                   @Value("${app.filters.page-size:50}") int pageSize) {
         this.movieRepository = movieRepository;
         this.movieRangesSnapshotMapper = movieRangesSnapshotMapper;
+        this.cursorCodec = cursorCodec;
         this.pageSize = pageSize;
     }
 
@@ -34,40 +39,30 @@ public class MovieFilterMetaService {
 
     @Transactional(readOnly = true)
     public Slice<String> searchDirectors(CursorPageRequest cursorPageRequest) {
-        List<String> rows = movieRepository.fetchDirectorsKeyset(
-                escapeLike(CursorUtils.safeQuery(cursorPageRequest)),
-                CursorUtils.hasCursor(cursorPageRequest),
-                escapeLike(CursorUtils.safeCursor(cursorPageRequest)),
-                pageSize + 1
-        );
+        String prefix = LikeEscaper.escape(CursorUtils.safeQuery(cursorPageRequest));
+        boolean hasCursor = CursorUtils.hasCursor(cursorPageRequest);
+        String cursor = hasCursor
+                ? LikeEscaper.escape(cursorCodec.decode(cursorPageRequest.cursor()).value())
+                : "";
 
+        List<String> rows = movieRepository.fetchDirectorsKeyset(prefix, hasCursor, cursor, pageSize + 1);
         return CursorUtils.buildLimitedSlice(rows, pageSize);
     }
 
     @Transactional(readOnly = true)
     public Slice<String> searchGenres(CursorPageRequest cursorPageRequest) {
-        List<String> rows = movieRepository.fetchGenresKeyset(
-                escapeLike(CursorUtils.safeQuery(cursorPageRequest)),
-                CursorUtils.hasCursor(cursorPageRequest),
-                escapeLike(CursorUtils.safeCursor(cursorPageRequest)),
-                pageSize + 1
-        );
+        String prefix = LikeEscaper.escape(CursorUtils.safeQuery(cursorPageRequest));
+        boolean hasCursor = CursorUtils.hasCursor(cursorPageRequest);
+        String cursor = hasCursor
+                ? LikeEscaper.escape(cursorCodec.decode(cursorPageRequest.cursor()).value())
+                : "";
 
+        List<String> rows = movieRepository.fetchGenresKeyset(prefix, hasCursor, cursor, pageSize + 1);
         return CursorUtils.buildLimitedSlice(rows, pageSize);
     }
 
     @Transactional(readOnly = true)
     public MovieRangesSnapshot getRanges() {
         return movieRangesSnapshotMapper.toSnapshot(movieRepository.findRanges());
-    }
-
-    private static String escapeLike(String value) {
-        if (value == null || value.isEmpty()) {
-            return "";
-        }
-        return value
-                .replace("\\", "\\\\")
-                .replace("%", "\\%")
-                .replace("_", "\\_");
     }
 }

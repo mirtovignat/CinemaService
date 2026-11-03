@@ -1,6 +1,5 @@
 package com.example.demo.dto.movie;
 
-import com.example.demo.dto.catalog.ReviewViewDTO;
 import lombok.Builder;
 
 import java.math.BigDecimal;
@@ -22,10 +21,6 @@ public record MovieDetailsViewDTO(
         Long ratingsCount,
         Integer ageRating,
         String currencyCode,
-        boolean bought,
-        boolean inCart,
-        boolean inFavourites,
-        ReviewViewDTO ownRating,
         List<String> actors
 ) {
 }

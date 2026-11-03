@@ -6,265 +6,200 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body class="auth-page auth-page--no-scroll">
-
 <div class="main-container">
     <div class="header">
-        <a href="/" class="logo-link">
-            <img src="/favicon.ico" alt="Logo" th:src="@{/favicon.ico}">
-            <span>CinemaService</span>
-        </a>
+        <div class="logo-link">
+            <a href="/" style="display: flex; align-items: center; gap: 8px; text-decoration: none;">
+                <img src="/logo.png" alt="" style="height: 36px; width: 36px; object-fit: cover; border-radius: 6px; pointer-events: none;">
+                <span style="font-family: 'Inter', sans-serif; font-size: 18px; font-weight: 600; color: white;">
+                    CinemaService
+                </span>
+            </a>
+        </div>
         <h1>Регистрация</h1>
     </div>
-
     <div class="form-container">
-        <form th:action="@{/register}"
-              th:object="${registerForm}"
-              method="post"
-              id="registerForm"
-              autocomplete="off">
-
+        <form th:action="@{/register}" th:object="${registerForm}" method="post" id="registerForm" autocomplete="off">
             <div class="form-grid">
-
-                <div class="flash-container"
-                     th:if="${successMessage} or ${errorMessage}">
-                    <div th:if="${successMessage}"
-                         class="flash-message success"
-                         th:text="${successMessage}"></div>
-                    <div th:if="${errorMessage}"
-                         class="flash-message error"
-                         th:text="${errorMessage}"></div>
+                <div class="flash-container" th:if="${successMessage} or ${errorMessage}">
+                    <div th:if="${successMessage}" class="flash-message success" th:text="${successMessage}"></div>
+                    <div th:if="${errorMessage}" class="flash-message error" th:text="${errorMessage}"></div>
                 </div>
-
-                <div class="form-group">
-                    <label for="surname">Фамилия</label>
-                    <div class="input-wrapper">
-                        <input type="text"
-                               th:field="*{surname}"
-                               id="surname"
-                               class="form-control"
-                               placeholder="Введите фамилию"
-                               autocomplete="off"
-                               th:classappend="${#fields.hasErrors('surname')} ? 'has-error' : ''"/>
-                        <button type="button" class="clear-input-btn" aria-label="Очистить поле" title="Очистить">
+                <div class="form-group"><label for="surname">Фамилия</label>
+                    <div class="input-wrapper"><input type="text" th:field="*{surname}" id="surname"
+                                                      class="form-control" placeholder="Введите фамилию"
+                                                      autocomplete="off"
+                                                      th:classappend="${#fields.hasErrors('surname')} ? 'has-error' : ''"/>
+                        <button type="button" class="clear-input-btn" aria-label="Очистить">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                                  stroke-linecap="round">
                                 <path d="M7 7l10 10M17 7L7 17"/>
                             </svg>
                         </button>
                     </div>
-                    <div id="surnameError" class="field-error"></div>
+                    <div id="surnameError" class="field-error"
+                         th:classappend="${#fields.hasErrors('surname')} ? 'show' : ''"
+                         th:text="${#fields.hasErrors('surname')} ? ${#fields.errors('surname')[0]} : ''"></div>
                 </div>
-
-                <div class="form-group">
-                    <label for="name">Имя</label>
-                    <div class="input-wrapper">
-                        <input type="text"
-                               th:field="*{name}"
-                               id="name"
-                               class="form-control"
-                               placeholder="Введите имя"
-                               autocomplete="off"
-                               th:classappend="${#fields.hasErrors('name')} ? 'has-error' : ''"/>
-                        <button type="button" class="clear-input-btn" aria-label="Очистить поле" title="Очистить">
+                <div class="form-group"><label for="name">Имя</label>
+                    <div class="input-wrapper"><input type="text" th:field="*{name}" id="name" class="form-control"
+                                                      placeholder="Введите имя" autocomplete="off"
+                                                      th:classappend="${#fields.hasErrors('name')} ? 'has-error' : ''"/>
+                        <button type="button" class="clear-input-btn" aria-label="Очистить">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                                  stroke-linecap="round">
                                 <path d="M7 7l10 10M17 7L7 17"/>
                             </svg>
                         </button>
                     </div>
-                    <div id="nameError" class="field-error"></div>
+                    <div id="nameError" class="field-error" th:classappend="${#fields.hasErrors('name')} ? 'show' : ''"
+                         th:text="${#fields.hasErrors('name')} ? ${#fields.errors('name')[0]} : ''"></div>
                 </div>
-
-                <div class="form-group">
-                    <label for="patronymic">Отчество <span class="label-optional">(опционально)</span></label>
-                    <div class="input-wrapper">
-                        <input type="text"
-                               th:field="*{patronymic}"
-                               id="patronymic"
-                               class="form-control"
-                               placeholder="Введите отчество"
-                               autocomplete="off"
-                               th:classappend="${#fields.hasErrors('patronymic')} ? 'has-error' : ''"/>
-                        <button type="button" class="clear-input-btn" aria-label="Очистить поле" title="Очистить">
+                <div class="form-group"><label for="patronymic">Отчество <span
+                        class="label-optional">(опционально)</span></label>
+                    <div class="input-wrapper"><input type="text" th:field="*{patronymic}" id="patronymic"
+                                                      class="form-control" placeholder="Введите отчество"
+                                                      autocomplete="off"
+                                                      th:classappend="${#fields.hasErrors('patronymic')} ? 'has-error' : ''"/>
+                        <button type="button" class="clear-input-btn" aria-label="Очистить">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                                  stroke-linecap="round">
                                 <path d="M7 7l10 10M17 7L7 17"/>
                             </svg>
                         </button>
                     </div>
-                    <div id="patronymicError" class="field-error"></div>
+                    <div id="patronymicError" class="field-error"
+                         th:classappend="${#fields.hasErrors('patronymic')} ? 'show' : ''"
+                         th:text="${#fields.hasErrors('patronymic')} ? ${#fields.errors('patronymic')[0]} : ''"></div>
                 </div>
-
-                <div class="form-group">
-                    <label for="sex">Пол</label>
-                    <select th:field="*{sex}"
-                            id="sex"
-                            class="form-control"
-                            th:classappend="${#fields.hasErrors('sex')} ? 'has-error' : ''">
-                        <option value="true">Мужской</option>
-                        <option value="false">Женский</option>
-                    </select>
-                    <div id="sexError" class="field-error"></div>
+                <div class="form-group"><label for="sex">Пол</label><select th:field="*{sex}" id="sex"
+                                                                            class="form-control"
+                                                                            th:classappend="${#fields.hasErrors('sex')} ? 'has-error' : ''">
+                    <option value="true">Мужской</option>
+                    <option value="false">Женский</option>
+                </select>
+                    <div id="sexError" class="field-error" th:classappend="${#fields.hasErrors('sex')} ? 'show' : ''"
+                         th:text="${#fields.hasErrors('sex')} ? ${#fields.errors('sex')[0]} : ''"></div>
                 </div>
-
-                <div class="form-group">
-                    <label for="birthDate">Дата рождения</label>
-                    <div class="input-wrapper date-input-wrapper">
-                        <input type="date"
-                               th:field="*{birthDate}"
-                               id="birthDate"
-                               class="form-control"
-                               autocomplete="off"
-                               th:classappend="${#fields.hasErrors('birthDate')} ? 'has-error' : ''"
-                               th:max="${#temporals.format(#temporals.createNow().minusYears(14), 'yyyy-MM-dd')}"/>
-                        <button type="button" class="clear-input-btn" aria-label="Очистить поле" title="Очистить">
+                <div class="form-group"><label for="birthDate">Дата рождения</label>
+                    <div class="input-wrapper date-input-wrapper"><input type="date" th:field="*{birthDate}"
+                                                                         id="birthDate" class="form-control"
+                                                                         autocomplete="off"
+                                                                         th:classappend="${#fields.hasErrors('birthDate')} ? 'has-error' : ''"
+                                                                         th:max="${#temporals.format(#temporals.createNow().minusYears(14), 'yyyy-MM-dd')}"/>
+                        <button type="button" class="clear-input-btn" aria-label="Очистить">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                                  stroke-linecap="round">
                                 <path d="M7 7l10 10M17 7L7 17"/>
                             </svg>
                         </button>
                     </div>
-                    <div id="birthDateError" class="field-error"></div>
+                    <div id="birthDateError" class="field-error"
+                         th:classappend="${#fields.hasErrors('birthDate')} ? 'show' : ''"
+                         th:text="${#fields.hasErrors('birthDate')} ? ${#fields.errors('birthDate')[0]} : ''"></div>
                 </div>
-
-                <div class="form-group">
-                    <label for="username">Username пользователя</label>
-                    <div class="input-wrapper">
-                        <input type="text"
-                               th:field="*{username}"
-                               id="username"
-                               class="form-control"
-                               placeholder="Введите username"
-                               autocomplete="off"
-                               th:classappend="${#fields.hasErrors('username')} ? 'has-error' : ''"/>
-                        <button type="button" class="clear-input-btn" aria-label="Очистить поле" title="Очистить">
+                <div class="form-group"><label for="username">Username пользователя</label>
+                    <div class="input-wrapper"><input type="text" th:field="*{username}" id="username"
+                                                      class="form-control" placeholder="Введите username"
+                                                      autocomplete="off"
+                                                      th:classappend="${#fields.hasErrors('username')} ? 'has-error' : ''"/>
+                        <button type="button" class="clear-input-btn" aria-label="Очистить">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                                  stroke-linecap="round">
                                 <path d="M7 7l10 10M17 7L7 17"/>
                             </svg>
                         </button>
                     </div>
-                    <div id="usernameError" class="field-error"></div>
+                    <div id="usernameError" class="field-error"
+                         th:classappend="${#fields.hasErrors('username')} ? 'show' : ''"
+                         th:text="${#fields.hasErrors('username')} ? ${#fields.errors('username')[0]} : ''"></div>
                 </div>
-
-                <div class="form-group">
-                    <label for="email">Электронная почта</label>
-                    <div class="input-wrapper">
-                        <input type="email"
-                               th:field="*{email}"
-                               id="email"
-                               class="form-control"
-                               placeholder="Введите email"
-                               autocomplete="off"
-                               th:classappend="${#fields.hasErrors('email')} ? 'has-error' : ''"/>
-                        <button type="button" class="clear-input-btn" aria-label="Очистить поле" title="Очистить">
+                <div class="form-group"><label for="email">Электронная почта</label>
+                    <div class="input-wrapper"><input type="email" th:field="*{email}" id="email" class="form-control"
+                                                      placeholder="Введите email" autocomplete="off"
+                                                      th:classappend="${#fields.hasErrors('email')} ? 'has-error' : ''"/>
+                        <button type="button" class="clear-input-btn" aria-label="Очистить">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                                  stroke-linecap="round">
                                 <path d="M7 7l10 10M17 7L7 17"/>
                             </svg>
                         </button>
                     </div>
-                    <div id="emailError" class="field-error"></div>
+                    <div id="emailError" class="field-error"
+                         th:classappend="${#fields.hasErrors('email')} ? 'show' : ''"
+                         th:text="${#fields.hasErrors('email')} ? ${#fields.errors('email')[0]} : ''"></div>
                 </div>
-
-                <div class="form-group">
-                    <label for="phone">Телефон <span class="label-optional">(опционально)</span></label>
-                    <div class="input-wrapper">
-                        <input type="tel"
-                               th:field="*{phone}"
-                               id="phone"
-                               class="form-control"
-                               placeholder="+X (XXX) XXX-XX-XX"
-                               inputmode="tel"
-                               autocomplete="off"
-                               data-phone-mask
-                               th:classappend="${#fields.hasErrors('phone')} ? 'has-error' : ''"/>
-                        <button type="button" class="clear-input-btn" aria-label="Очистить поле" title="Очистить">
+                <div class="form-group"><label for="phone">Телефон <span
+                        class="label-optional">(опционально)</span></label>
+                    <div class="input-wrapper"><input type="tel" th:field="*{phone}" id="phone" class="form-control"
+                                                      placeholder="+X (XXX) XXX-XX-XX" inputmode="tel"
+                                                      autocomplete="off" data-phone-mask
+                                                      th:classappend="${#fields.hasErrors('phone')} ? 'has-error' : ''"/>
+                        <button type="button" class="clear-input-btn" aria-label="Очистить">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                                  stroke-linecap="round">
                                 <path d="M7 7l10 10M17 7L7 17"/>
                             </svg>
                         </button>
                     </div>
-                    <div id="phoneError" class="field-error"></div>
+                    <div id="phoneError" class="field-error"
+                         th:classappend="${#fields.hasErrors('phone')} ? 'show' : ''"
+                         th:text="${#fields.hasErrors('phone')} ? ${#fields.errors('phone')[0]} : ''"></div>
                 </div>
-
-                <div class="form-group">
-                    <label for="rawPassword">Пароль (мин. 8 симв.)</label>
-                    <div class="input-wrapper">
-                        <input type="password"
-                               th:field="*{rawPassword}"
-                               id="rawPassword"
-                               class="form-control"
-                               placeholder="••••••••"
-                               autocomplete="new-password"
-                               th:classappend="${#fields.hasErrors('rawPassword')} ? 'has-error' : ''"/>
-                        <button type="button" class="clear-input-btn" aria-label="Очистить пароль" title="Очистить">
+                <div class="form-group"><label for="rawPassword">Пароль (мин. 8 симв.)</label>
+                    <div class="input-wrapper"><input type="password" th:field="*{rawPassword}" id="rawPassword"
+                                                      class="form-control" placeholder="••••••••"
+                                                      autocomplete="new-password"
+                                                      th:classappend="${#fields.hasErrors('rawPassword')} ? 'has-error' : ''"/>
+                        <button type="button" class="clear-input-btn" aria-label="Очистить">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                                  stroke-linecap="round">
                                 <path d="M7 7l10 10M17 7L7 17"/>
                             </svg>
                         </button>
                         <button type="button" class="toggle-password" data-target="rawPassword"
-                                aria-label="Показать пароль">
-                            <i class="fas fa-eye-slash"></i>
-                        </button>
+                                aria-label="Показать пароль"><i class="fas fa-eye-slash"></i></button>
                     </div>
-                    <div id="rawPasswordError" class="field-error"></div>
+                    <div id="rawPasswordError" class="field-error"
+                         th:classappend="${#fields.hasErrors('rawPassword')} ? 'show' : ''"
+                         th:text="${#fields.hasErrors('rawPassword')} ? ${#fields.errors('rawPassword')[0]} : ''"></div>
                 </div>
-
-                <div class="form-group">
-                    <label for="repeatRawPassword">Повторите пароль</label>
-                    <div class="input-wrapper">
-                        <input type="password"
-                               th:field="*{repeatRawPassword}"
-                               id="repeatRawPassword"
-                               class="form-control"
-                               placeholder="••••••••"
-                               autocomplete="new-password"
-                               th:classappend="${#fields.hasErrors('repeatRawPassword')} ? 'has-error' : ''"/>
-                        <button type="button" class="clear-input-btn" aria-label="Очистить пароль" title="Очистить">
+                <div class="form-group"><label for="repeatRawPassword">Повторите пароль</label>
+                    <div class="input-wrapper"><input type="password" th:field="*{repeatRawPassword}"
+                                                      id="repeatRawPassword" class="form-control" placeholder="••••••••"
+                                                      autocomplete="new-password"
+                                                      th:classappend="${#fields.hasErrors('repeatRawPassword')} ? 'has-error' : ''"/>
+                        <button type="button" class="clear-input-btn" aria-label="Очистить">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                                  stroke-linecap="round">
                                 <path d="M7 7l10 10M17 7L7 17"/>
                             </svg>
                         </button>
                         <button type="button" class="toggle-password" data-target="repeatRawPassword"
-                                aria-label="Показать пароль">
-                            <i class="fas fa-eye-slash"></i>
-                        </button>
+                                aria-label="Показать пароль"><i class="fas fa-eye-slash"></i></button>
                     </div>
-                    <div id="repeatRawPasswordError" class="field-error"></div>
+                    <div id="repeatRawPasswordError" class="field-error"
+                         th:classappend="${#fields.hasErrors('repeatRawPassword')} ? 'show' : ''"
+                         th:text="${#fields.hasErrors('repeatRawPassword')} ? ${#fields.errors('repeatRawPassword')[0]} : ''"></div>
                 </div>
-
                 <input type="hidden" th:field="*{currencyCode}" id="currencyCode" value="RUB"/>
-
                 <div class="footer-actions">
-                    <button type="submit" class="btn-submit" id="btnSubmit">
-                        Зарегистрироваться →
-                    </button>
-                    <div class="login-link">
-                        <span>Уже есть аккаунт?</span>
-                        <a th:href="@{/login}">Войти</a>
-                    </div>
+                    <button type="submit" class="btn-submit" id="btnSubmit">Зарегистрироваться →</button>
+                    <div class="login-link"><span>Уже есть аккаунт?</span><a th:href="@{/login}">Войти</a></div>
                 </div>
             </div>
         </form>
-
-        <div class="privacy-note">
-            <strong>Ваши данные защищены и используются только для работы CinemaService.</strong><br>
-            Мы не передаём персональные данные третьим лицам без законных оснований.
+        <div class="privacy-note"><strong>Ваши данные защищены и используются только для работы
+            CinemaService.</strong><br>Мы не передаём персональные данные третьим лицам без законных оснований.
             Пожалуйста, указывайте достоверные данные и не используйте чужие учётные записи.
         </div>
     </div>
 </div>
-
 <div class="page-footer">
     <th:block th:replace="~{fragments/footer :: footer}"></th:block>
 </div>
-
+<script th:src="@{/js/modules/validators.js}" defer></script>
 <script th:src="@{/js/pages/page-register.js}" defer></script>
 <script th:src="@{/js/main.js}" defer></script>
-
 </body>
 </html>

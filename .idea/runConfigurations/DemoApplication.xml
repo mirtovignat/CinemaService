@@ -1,10 +1,9 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="DemoApplication" type="Application" factoryName="Application">
     <envs>
-      <env name="SPRING_DATASOURCE_PASSWORD" value="buyfn2008" />
       <env name="MINIO_ACCESS_KEY" value="minioadmin" />
       <env name="MINIO_SECRET_KEY" value="minioadmin" />
-      <env name="TMDB_ACCESS_TOKEN" value="eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5NDdkOGM2NDVlMmVmMjY2MTI3Zjg4NjkyZmJkZTg2NyIsIm5iZiI6MTc4MjkyNjI4NC44MjgsInN1YiI6IjZhNDU0YmNjNDU3ZTM4NzYyYTdkMzgxMyIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.5KguqMCZAyXBRkMKroGOyPcpSDNoFsL_MQfpA04Efac" />
+      <env name="SPRING_DATASOURCE_PASSWORD" value="buyfn2008" />
     </envs>
     <option name="MAIN_CLASS_NAME" value="com.example.demo.DemoApplication" />
     <module name="demo" />

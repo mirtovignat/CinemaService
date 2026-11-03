@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 @Getter
@@ -73,7 +74,7 @@ public class MinIOConfig {
 
     private String buildPolicy(String bucketName) throws IOException {
         String template;
-        try (var inputStream = publicReadPolicy.getInputStream()) {
+        try (InputStream inputStream = publicReadPolicy.getInputStream()) {
             template = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
         }
         return template.replace("__BUCKET__", bucketName);

@@ -4,10 +4,9 @@ import com.example.demo.dto.catalog.RatedMovieFormDTO;
 import com.example.demo.dto.catalog.RatedMovieViewDTO;
 import com.example.demo.dto.catalog.ReviewViewDTO;
 import com.example.demo.mapper.entity.RatedMapper;
+import com.example.demo.repository.entity.MovieRepository;
 import com.example.demo.repository.entity.RatedMovieRepository;
-import com.example.demo.service.movie.MovieService;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,16 +21,19 @@ public class RatedQueryService {
 
     private final RatedMovieRepository ratedMovieRepository;
     private final RatedMapper ratedMapper;
-    private final MovieService movieService;
+    private final ReviewViewAssembler reviewViewAssembler;
+    private final MovieRepository movieRepository;
     private final int ratingsToLimit;
 
     public RatedQueryService(RatedMovieRepository ratedMovieRepository,
                              RatedMapper ratedMapper,
-                             @Lazy MovieService movieService,
+                             ReviewViewAssembler reviewViewAssembler,
+                             MovieRepository movieRepository,
                              @Value("${app.rating.top-limit:4}") int ratingsToLimit) {
         this.ratedMovieRepository = ratedMovieRepository;
         this.ratedMapper = ratedMapper;
-        this.movieService = movieService;
+        this.reviewViewAssembler = reviewViewAssembler;
+        this.movieRepository = movieRepository;
         this.ratingsToLimit = ratingsToLimit;
     }
 
@@ -49,7 +51,7 @@ public class RatedQueryService {
     }
 
     public BigDecimal getMovieRating(Long movieId) {
-        return movieService.getMovie(movieId).getRating();
+        return movieRepository.findRatingById(movieId).orElse(null);
     }
 
     public String getNormalizedRating(BigDecimal rating) {
@@ -71,7 +73,7 @@ public class RatedQueryService {
 
     public Map<Long, ReviewViewDTO> getOwnRatings(Long userId) {
         return ratedMovieRepository.findAllActiveByUserId(userId).stream()
-                .map(ratedMovie -> ratedMapper.toReviewViewWithOwn(ratedMovie, userId))
+                .map(ratedMovie -> reviewViewAssembler.assemble(ratedMovie, userId))
                 .collect(Collectors.toMap(
                         ReviewViewDTO::movieId,
                         Function.identity(),
@@ -87,7 +89,7 @@ public class RatedQueryService {
         }
         Set<Long> requestedIds = new LinkedHashSet<>(movieIds);
         return ratedMovieRepository.findAllByUserIdAndMovieIdIn(userId, requestedIds).stream()
-                .map(ratedMovie -> ratedMapper.toReviewViewWithOwn(ratedMovie, userId))
+                .map(ratedMovie -> reviewViewAssembler.assemble(ratedMovie, userId))
                 .collect(Collectors.toMap(
                         ReviewViewDTO::movieId,
                         Function.identity(),
@@ -101,7 +103,7 @@ public class RatedQueryService {
             return null;
         }
         return ratedMovieRepository.findOwnReview(movieId, userId)
-                .map(ratedMovie -> ratedMapper.toReviewViewWithOwn(ratedMovie, userId))
+                .map(ratedMovie -> reviewViewAssembler.assemble(ratedMovie, userId))
                 .orElse(null);
     }
 }

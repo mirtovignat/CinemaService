@@ -183,9 +183,7 @@
             if (noPoster) noPoster.style.display = 'none';
         } else {
             if (posterImg) posterImg.style.display = 'none';
-            if (noPoster) {
-                noPoster.style.display = 'flex';
-            }
+            if (noPoster) noPoster.style.display = 'flex';
         }
 
         var watchBtn = item.querySelector('.watch-btn-neon');
@@ -349,7 +347,7 @@
     }
 
     function watchMovie(button) {
-        if (!isAuthenticated()) {
+        if (typeof isAuthenticated === 'function' && !isAuthenticated()) {
             showFlashMessage('Авторизуйтесь!', 'error');
             return Promise.resolve();
         }
@@ -641,7 +639,6 @@
     window.openClearHistoryModal = openClearHistoryModal;
     window.closeClearHistoryModal = closeClearHistoryModal;
     window.confirmClearHistory = confirmClearHistory;
-    window.refreshHistoryFromServer = function () {};
 
     if (window.Actions && typeof window.Actions.ready === 'function') {
         window.Actions.ready(registerWatchActions);

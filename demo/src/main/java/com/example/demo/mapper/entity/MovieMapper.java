@@ -22,10 +22,6 @@ public interface MovieMapper {
             source = "duration",
             qualifiedByName = "durationToString")
     @Mapping(target = "currencyCode", ignore = true)
-    @Mapping(target = "bought", ignore = true)
-    @Mapping(target = "inCart", ignore = true)
-    @Mapping(target = "inFavourites", ignore = true)
-    @Mapping(target = "ownRating", ignore = true)
     MovieDetailsViewDTO toDetails(Movie movie);
 
     MovieSearchDTO toMovieSearch(Movie movie);

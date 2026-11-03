@@ -54,23 +54,37 @@
         clearAllErrors();
         var hasErrors = false;
 
+        // Фамилия
         var surnameElement = document.getElementById('surname');
         var surname = surnameElement ? surnameElement.value.trim() : '';
-        var surnameValidation = Validators.name(surname, 'фамилию');
-        if (!surnameValidation.ok) { showError('surname', 'surnameError', surnameValidation.error); hasErrors = true; }
-
-        var nameElement = document.getElementById('name');
-        var name = nameElement ? nameElement.value.trim() : '';
-        var nameValidation = Validators.name(name, 'имя');
-        if (!nameValidation.ok) { showError('name', 'nameError', nameValidation.error); hasErrors = true; }
-
-        var patronymicElement = document.getElementById('patronymic');
-        var patronymic = patronymicElement ? patronymicElement.value.trim() : '';
-        if (patronymic && !/^[А-Яа-яЁёA-Za-z\-]+$/.test(patronymic)) {
-            showError('patronymic', 'patronymicError', 'Только буквы и дефис');
+        if (!surname) {
+            showError('surname', 'surnameError', 'Введите фамилию');
+            hasErrors = true;
+        } else if (!/^[А-ЯЁ][а-яё]+(?:-[А-ЯЁ][а-яё]+)?$/.test(surname)) {
+            showError('surname', 'surnameError', 'Неверный формат фамилии (только русские буквы, с заглавной)');
             hasErrors = true;
         }
 
+        // Имя
+        var nameElement = document.getElementById('name');
+        var name = nameElement ? nameElement.value.trim() : '';
+        if (!name) {
+            showError('name', 'nameError', 'Введите имя');
+            hasErrors = true;
+        } else if (!/^[А-ЯЁ][а-яё]+(-[А-ЯЁ][а-яё]+)?$/.test(name)) {
+            showError('name', 'nameError', 'Неверный формат имени (только русские буквы, с заглавной)');
+            hasErrors = true;
+        }
+
+        // Отчество
+        var patronymicElement = document.getElementById('patronymic');
+        var patronymic = patronymicElement ? patronymicElement.value.trim() : '';
+        if (patronymic && !/^(|[А-ЯЁ][а-яё]{3,29}(вич|вна|ич|на))$/.test(patronymic)) {
+            showError('patronymic', 'patronymicError', 'Неверный формат отчества (на -вич, -вна, -ич, -на)');
+            hasErrors = true;
+        }
+
+        // Пол
         var sexElement = document.getElementById('sex');
         var sex = sexElement ? sexElement.value : '';
         if (sex !== 'true' && sex !== 'false') {
@@ -78,31 +92,74 @@
             hasErrors = true;
         }
 
+        // Дата рождения
         var birthDateElement = document.getElementById('birthDate');
         var birthDate = birthDateElement ? birthDateElement.value : '';
-        var birthDateValidation = Validators.birthDate(birthDate, 14, 120);
-        if (!birthDateValidation.ok) { showError('birthDate', 'birthDateError', birthDateValidation.error); hasErrors = true; }
+        if (!birthDate) {
+            showError('birthDate', 'birthDateError', 'Укажите дату рождения');
+            hasErrors = true;
+        } else {
+            var birthDateValidation = Validators.birthDate(birthDate, 14, 120);
+            if (!birthDateValidation.ok) {
+                showError('birthDate', 'birthDateError', birthDateValidation.error);
+                hasErrors = true;
+            }
+        }
 
+        // Username
         var usernameElement = document.getElementById('username');
         var username = usernameElement ? usernameElement.value.trim() : '';
-        var usernameValidation = Validators.username(username);
-        if (!usernameValidation.ok) { showError('username', 'usernameError', usernameValidation.error); hasErrors = true; }
+        if (!username) {
+            showError('username', 'usernameError', 'Введите username');
+            hasErrors = true;
+        } else {
+            var usernameValidation = Validators.username(username);
+            if (!usernameValidation.ok) {
+                showError('username', 'usernameError', usernameValidation.error);
+                hasErrors = true;
+            }
+        }
 
+        // Email
         var emailElement = document.getElementById('email');
         var email = emailElement ? emailElement.value.trim() : '';
-        var emailValidation = Validators.email(email);
-        if (!emailValidation.ok) { showError('email', 'emailError', emailValidation.error); hasErrors = true; }
+        if (!email) {
+            showError('email', 'emailError', 'Введите email');
+            hasErrors = true;
+        } else {
+            var emailValidation = Validators.email(email);
+            if (!emailValidation.ok) {
+                showError('email', 'emailError', emailValidation.error);
+                hasErrors = true;
+            }
+        }
 
+        // Телефон
         var phoneElement = document.getElementById('phone');
         var phone = phoneElement ? phoneElement.value.trim() : '';
-        var phoneValidation = Validators.phone(phone);
-        if (!phoneValidation.ok) { showError('phone', 'phoneError', phoneValidation.error); hasErrors = true; }
+        if (phone) {
+            var phoneValidation = Validators.phone(phone);
+            if (!phoneValidation.ok) {
+                showError('phone', 'phoneError', phoneValidation.error);
+                hasErrors = true;
+            }
+        }
 
+        // Пароль
         var rawPasswordElement = document.getElementById('rawPassword');
         var rawPassword = rawPasswordElement ? rawPasswordElement.value : '';
-        var rawPasswordValidation = Validators.password(rawPassword, 8);
-        if (!rawPasswordValidation.ok) { showError('rawPassword', 'rawPasswordError', rawPasswordValidation.error); hasErrors = true; }
+        if (!rawPassword) {
+            showError('rawPassword', 'rawPasswordError', 'Введите пароль');
+            hasErrors = true;
+        } else {
+            var rawPasswordValidation = Validators.password(rawPassword, 8);
+            if (!rawPasswordValidation.ok) {
+                showError('rawPassword', 'rawPasswordError', rawPasswordValidation.error);
+                hasErrors = true;
+            }
+        }
 
+        // Повтор пароля
         var repeatPasswordElement = document.getElementById('repeatRawPassword');
         var repeatPassword = repeatPasswordElement ? repeatPasswordElement.value : '';
         if (!repeatPassword) {
@@ -159,6 +216,32 @@
                 }
             });
         }
+    }
+
+    function bindEnterKeyNavigation() {
+        var order = ['surname', 'name', 'patronymic', 'sex', 'birthDate', 'username', 'email', 'phone', 'rawPassword', 'repeatRawPassword'];
+
+        order.forEach(function(id, index) {
+            var el = document.getElementById(id);
+            if (!el) return;
+
+            el.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+
+                    if (index < order.length - 1) {
+                        var nextId = order[index + 1];
+                        var nextEl = document.getElementById(nextId);
+                        if (nextEl) {
+                            nextEl.focus();
+                            if (nextEl.tagName === 'INPUT') {
+                                try { nextEl.select(); } catch(err) {}
+                            }
+                        }
+                    }
+                }
+            });
+        });
     }
 
     function initClearButtons() {
@@ -231,12 +314,17 @@
         var registerForm = document.getElementById('registerForm');
         if (!registerForm) return;
 
-        clearRegisterFields();
+        var hasServerErrors = document.querySelector('.field-error.show') !== null;
+        if (!hasServerErrors) {
+            clearRegisterFields();
+        }
+
         initClearButtons();
         if (typeof window.autoInitPhoneMasks === 'function') {
             window.autoInitPhoneMasks(document);
         }
         bindLiveValidation();
+        bindEnterKeyNavigation();
         bindSubmit();
         autoHideFlash();
     }

@@ -21,7 +21,7 @@ public class NavigationHistoryInterceptor implements HandlerInterceptor {
     );
 
     private static final Set<String> EXCLUDED_EXACT = Set.of(
-            "/favicon.ico", "/error", BACK_PATH
+            "/logo.png", "/error", BACK_PATH
     );
 
     @Override

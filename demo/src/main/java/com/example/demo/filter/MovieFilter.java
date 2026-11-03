@@ -39,7 +39,9 @@ public record MovieFilter(
         BigDecimal ratingTo,
 
         List<String> genres,
+        List<String> genresExclude,
         List<String> directors,
+        List<String> directorsExclude,
         List<String> actors
 ) {
 
@@ -53,7 +55,9 @@ public record MovieFilter(
                 (ratingFrom != null) ||
                 (ratingTo != null) ||
                 (genres != null && !genres.isEmpty()) ||
+                (genresExclude != null && !genresExclude.isEmpty()) ||
                 (directors != null && !directors.isEmpty()) ||
+                (directorsExclude != null && !directorsExclude.isEmpty()) ||
                 (actors != null && !actors.isEmpty());
     }
 }

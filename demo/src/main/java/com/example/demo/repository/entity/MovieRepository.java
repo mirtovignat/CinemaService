@@ -73,7 +73,7 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
             FROM Movie movie
             WHERE movie.id = :id
             """)
-    Optional<Double> findRatingById(@Param("id") Long id);
+    Optional<BigDecimal> findRatingById(@Param("id") Long id);
 
     @Query("""
             SELECT movie

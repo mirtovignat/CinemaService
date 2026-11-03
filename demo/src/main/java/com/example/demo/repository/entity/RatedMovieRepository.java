@@ -25,7 +25,7 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
             AND ratedMovie.deletableState.deleted = false
             AND (
                 :query IS NULL
-                OR TRANSLATE(LOWER(ratedMovie.movie.title), 'ё', 'е') LIKE CONCAT(CAST(:query AS string), '%')
+                OR TRANSLATE(LOWER(ratedMovie.movie.title), 'ё', 'е') LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
             )
             AND (:hasCursor = false OR ratedMovie.id > :cursorId)
             ORDER BY ratedMovie.id ASC
@@ -44,7 +44,7 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
             AND ratedMovie.deletableState.deleted = false
             AND (
                 :query IS NULL
-                OR TRANSLATE(LOWER(ratedMovie.movie.title), 'ё', 'е') LIKE CONCAT(CAST(:query AS string), '%')
+                OR TRANSLATE(LOWER(ratedMovie.movie.title), 'ё', 'е') LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
             )
             AND (:hasCursor = false OR ratedMovie.id < :cursorId)
             ORDER BY ratedMovie.id DESC
@@ -60,7 +60,7 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
             SELECT DISTINCT ratedMovie.movie.title FROM RatedMovie ratedMovie
             WHERE ratedMovie.user.id = :userId
             AND ratedMovie.deletableState.deleted = false
-            AND TRANSLATE(LOWER(ratedMovie.movie.title), 'ё', 'е') LIKE CONCAT(CAST(:prefix AS string), '%')
+            AND TRANSLATE(LOWER(ratedMovie.movie.title), 'ё', 'е') LIKE CONCAT(CAST(:prefix AS string), '%') ESCAPE '\\'
             ORDER BY ratedMovie.movie.title ASC
             """)
     List<String> findTitlesStartingWith(@Param("userId") Long userId,
@@ -83,14 +83,14 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
                                             Pageable pageable);
 
     @Query("""
-            SELECT ratedMovie FROM RatedMovie ratedMovie
-            JOIN FETCH ratedMovie.user
-            WHERE ratedMovie.movie.id = :movieId
-            AND ratedMovie.deletableState.deleted = false
-            AND (:viewerUserId IS NULL OR ratedMovie.user.id <> :viewerUserId)
-            AND (:hasCursor = false OR ratedMovie.id < :cursorId)
-            ORDER BY ratedMovie.id DESC
-            """)
+        SELECT ratedMovie FROM RatedMovie ratedMovie
+        JOIN FETCH ratedMovie.user
+        WHERE ratedMovie.movie.id = :movieId
+        AND ratedMovie.deletableState.deleted = false
+        AND (:viewerUserId IS NULL OR ratedMovie.user.id <> :viewerUserId)
+        AND (:hasCursor = false OR ratedMovie.id < :cursorId)
+        ORDER BY ratedMovie.id DESC
+        """)
     Slice<RatedMovie> fetchReviewsDescending(@Param("movieId") Long movieId,
                                              @Param("viewerUserId") Long viewerUserId,
                                              @Param("hasCursor") boolean hasCursor,

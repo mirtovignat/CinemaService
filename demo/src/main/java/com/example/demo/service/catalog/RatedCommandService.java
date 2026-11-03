@@ -9,10 +9,14 @@ import com.example.demo.model.entity.RatedMovie;
 import com.example.demo.model.entity.User;
 import com.example.demo.repository.entity.MovieRepository;
 import com.example.demo.repository.entity.RatedMovieRepository;
+import com.example.demo.repository.projection.MovieRatingStatsProjection;
 import com.example.demo.service.user.UserQueryService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 @AllArgsConstructor
 @Service
@@ -41,14 +45,28 @@ public class RatedCommandService {
         ratedMovie.getDeletableState().setDeleted(false);
 
         ratedMovieRepository.saveAndFlush(ratedMovie);
+        recalculateMovieRating(movie);
     }
 
     @Transactional
     public void deleteRating(Long movieId, Long userId) {
-        movieRepository.findByIdOrThrow(movieId);
+        Movie movie = movieRepository.findByIdOrThrow(movieId);
         int affected = ratedMovieRepository.softDeleteByMovieIdAndUserId(movieId, userId);
         if (affected == 0) {
             throw BusinessException.of(ErrorCode.ENTITY_NOT_FOUND);
         }
+        recalculateMovieRating(movie);
+    }
+
+    private void recalculateMovieRating(Movie movie) {
+        MovieRatingStatsProjection movieRatingStatsProjection =
+                ratedMovieRepository.calculateRatingStats(movie.getId());
+
+        BigDecimal averageRating = movieRatingStatsProjection != null ? movieRatingStatsProjection.getAvgRating() : null;
+        Long total = movieRatingStatsProjection != null ? movieRatingStatsProjection.getTotalCount() : null;
+
+        movie.setRating(averageRating != null ? averageRating.setScale(2, RoundingMode.HALF_UP) : null);
+        movie.setRatingsCount(total != null ? total.intValue() : 0);
+        movieRepository.save(movie);
     }
 }

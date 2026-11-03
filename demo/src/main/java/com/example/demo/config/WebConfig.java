@@ -35,7 +35,7 @@ public class WebConfig implements WebMvcConfigurer {
                         "/rated/**", "/watched/**"
                 )
                 .excludePathPatterns(
-                        "/css/**", "/js/**", "/images/**", "/favicon.ico",
+                        "/css/**", "/js/**", "/images/**", "/logo.png", "/logo.png",
                         "/cart/count", "/favourites/count",
                         "/rated/count/**", "/rated/rating/**",
                         "/rated/*/reviews/more",
@@ -48,7 +48,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .addPathPatterns("/**")
                 .excludePathPatterns(
                         "/css/**", "/js/**", "/images/**", "/webjars/**",
-                        "/favicon.ico", "/error", "/api/**", "/back"
+                        "/logo.png", "/logo.png", "/error", "/api/**", "/back"
                 );
     }
 

@@ -10,14 +10,10 @@
         releaseDateMax: null
     };
 
-    var MAX_SELECTED_PER_DROPDOWN = 200;
-
     var AJAX_HEADERS = {
         'Accept': 'application/json',
         'X-Requested-With': 'XMLHttpRequest'
     };
-
-    var LIMITS_READY = false;
 
     function formatPriceValue(value) {
         var numberValue = Number(value);
@@ -42,20 +38,12 @@
     function applyPriceLimitsToUi() {
         var priceFromInput = document.getElementById('priceFrom');
         var priceToInput = document.getElementById('priceTo');
-
         if (priceFromInput) {
             priceFromInput.setAttribute('placeholder', 'Мин. ' + formatPriceValue(FILTER_LIMITS.priceMin) + ' ₽');
         }
         if (priceToInput) {
             priceToInput.setAttribute('placeholder', 'Макс. ' + formatPriceValue(FILTER_LIMITS.priceMax) + ' ₽');
         }
-
-        document.querySelectorAll(
-            '.stepper-btn[data-stepper-target="priceFrom"], .stepper-btn[data-stepper-target="priceTo"]'
-        ).forEach(function (button) {
-            button.setAttribute('data-stepper-min', String(FILTER_LIMITS.priceMin));
-            button.setAttribute('data-stepper-max', String(FILTER_LIMITS.priceMax));
-        });
     }
 
     function applyDurationLimitsToUi() {
@@ -77,7 +65,6 @@
     function applyReleaseDateLimitsToUi() {
         var releaseDateFromInput = document.getElementById('releaseDateFrom');
         var releaseDateToInput = document.getElementById('releaseDateTo');
-
         if (releaseDateFromInput) {
             if (FILTER_LIMITS.releaseDateMin) releaseDateFromInput.setAttribute('min', FILTER_LIMITS.releaseDateMin);
             if (FILTER_LIMITS.releaseDateMax) releaseDateFromInput.setAttribute('max', FILTER_LIMITS.releaseDateMax);
@@ -86,30 +73,6 @@
             if (FILTER_LIMITS.releaseDateMin) releaseDateToInput.setAttribute('min', FILTER_LIMITS.releaseDateMin);
             if (FILTER_LIMITS.releaseDateMax) releaseDateToInput.setAttribute('max', FILTER_LIMITS.releaseDateMax);
         }
-    }
-
-    function enforceCheckboxLimit(dropdownElementId, maxSelectedCount, labelText) {
-        var dropdownElement = document.getElementById(dropdownElementId);
-        if (!dropdownElement) return;
-
-        dropdownElement.addEventListener('change', function (changeEvent) {
-            var targetElement = changeEvent.target;
-            if (!targetElement || targetElement.type !== 'checkbox') return;
-            if (targetElement.name !== 'directors' && targetElement.name !== 'genres') return;
-
-            var allCheckboxes = dropdownElement.querySelectorAll('input[name="' + targetElement.name + '"]');
-            var checkedCheckboxes = dropdownElement.querySelectorAll('input[name="' + targetElement.name + '"]:checked');
-
-            var allChecked = allCheckboxes.length > 0 && checkedCheckboxes.length === allCheckboxes.length;
-            if (allChecked) return;
-
-            if (checkedCheckboxes.length > maxSelectedCount) {
-                targetElement.checked = false;
-                if (typeof showFlashMessage === 'function') {
-                    showFlashMessage('Можно выбрать не более ' + maxSelectedCount + ' значений в «' + labelText + '»', 'warning');
-                }
-            }
-        });
     }
 
     function validateSearchQuery() {
@@ -127,30 +90,30 @@
     }
 
     function closeAllAccordions() {
-        document.querySelectorAll('.accordion-group.active').forEach(function (accordionGroupElement) {
-            accordionGroupElement.classList.remove('active');
+        document.querySelectorAll('.accordion-group.active').forEach(function (el) {
+            el.classList.remove('active');
         });
-        document.querySelectorAll('.accordion-dropdown.active').forEach(function (accordionDropdownElement) {
-            accordionDropdownElement.classList.remove('active');
+        document.querySelectorAll('.accordion-dropdown.active').forEach(function (el) {
+            el.classList.remove('active');
         });
     }
 
     function toggleFiltersModal(shouldShow) {
-        var filtersModalOverlay = document.getElementById('filtersModalOverlay');
-        if (!filtersModalOverlay) return;
+        var overlay = document.getElementById('filtersModalOverlay');
+        if (!overlay) return;
 
         if (typeof shouldShow === 'boolean') {
             if (shouldShow) {
-                filtersModalOverlay.classList.add('show');
+                overlay.classList.add('show');
                 document.body.style.overflow = 'hidden';
             } else {
-                filtersModalOverlay.classList.remove('show');
+                overlay.classList.remove('show');
                 document.body.style.overflow = '';
                 closeAllAccordions();
             }
         } else {
-            filtersModalOverlay.classList.toggle('show');
-            if (filtersModalOverlay.classList.contains('show')) {
+            overlay.classList.toggle('show');
+            if (overlay.classList.contains('show')) {
                 document.body.style.overflow = 'hidden';
             } else {
                 document.body.style.overflow = '';
@@ -159,70 +122,64 @@
         }
     }
 
-    function handleOverlayClick(clickEvent) {
-        if (clickEvent.target && clickEvent.target.id === 'filtersModalOverlay') {
-            toggleFiltersModal(false);
-        }
-    }
-
     function initFilterAccordions() {
-        document.querySelectorAll('.accordion-trigger').forEach(function (accordionTriggerElement) {
-            if (accordionTriggerElement.dataset.accordionBound === '1') return;
-            accordionTriggerElement.dataset.accordionBound = '1';
-            accordionTriggerElement.addEventListener('click', function (clickEvent) {
-                clickEvent.preventDefault();
-                clickEvent.stopPropagation();
-                var targetElementId = accordionTriggerElement.getAttribute('data-target');
-                if (!targetElementId) return;
-                var accordionDropdownElement = document.getElementById(targetElementId);
-                if (!accordionDropdownElement) return;
-                var accordionGroupElement = accordionTriggerElement.closest('.accordion-group');
-                if (!accordionGroupElement) return;
-                var willOpen = !accordionGroupElement.classList.contains('active');
-                accordionGroupElement.classList.toggle('active', willOpen);
-                accordionDropdownElement.classList.toggle('active', willOpen);
+        document.querySelectorAll('.accordion-trigger').forEach(function (trigger) {
+            if (trigger.dataset.accordionBound === '1') return;
+            trigger.dataset.accordionBound = '1';
+            trigger.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var targetId = trigger.getAttribute('data-target');
+                if (!targetId) return;
+                var dropdown = document.getElementById(targetId);
+                if (!dropdown) return;
+                var group = trigger.closest('.accordion-group');
+                if (!group) return;
+                var willOpen = !group.classList.contains('active');
+                group.classList.toggle('active', willOpen);
+                dropdown.classList.toggle('active', willOpen);
             });
         });
     }
 
     function initFilterClearButtons() {
-        document.querySelectorAll('.filter-clear-btn').forEach(function (clearButtonElement) {
-            if (clearButtonElement.dataset.clearBound === '1') return;
-            clearButtonElement.dataset.clearBound = '1';
-            var targetElementId = clearButtonElement.getAttribute('data-clear-target');
-            if (!targetElementId) return;
-            var targetInputElement = document.getElementById(targetElementId);
-            if (!targetInputElement) return;
-            var wrapperElement = clearButtonElement.closest('.filter-input-with-clear');
+        document.querySelectorAll('.filter-clear-btn').forEach(function (clearBtn) {
+            if (clearBtn.dataset.clearBound === '1') return;
+            clearBtn.dataset.clearBound = '1';
+            var targetId = clearBtn.getAttribute('data-clear-target');
+            if (!targetId) return;
+            var targetInput = document.getElementById(targetId);
+            if (!targetInput) return;
+            var wrapper = clearBtn.closest('.filter-input-with-clear');
 
             function syncHasValueClass() {
-                if (!wrapperElement) return;
-                wrapperElement.classList.toggle('has-value', targetInputElement.value !== '');
+                if (!wrapper) return;
+                wrapper.classList.toggle('has-value', targetInput.value !== '');
             }
 
-            clearButtonElement.addEventListener('click', function (clickEvent) {
-                clickEvent.preventDefault();
-                clickEvent.stopPropagation();
-                targetInputElement.value = '';
-                targetInputElement.dispatchEvent(new Event('input', { bubbles: true }));
-                targetInputElement.dispatchEvent(new Event('change', { bubbles: true }));
+            clearBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                targetInput.value = '';
+                targetInput.dispatchEvent(new Event('input', { bubbles: true }));
+                targetInput.dispatchEvent(new Event('change', { bubbles: true }));
                 syncHasValueClass();
-                targetInputElement.focus();
+                targetInput.focus();
             });
 
-            targetInputElement.addEventListener('input', syncHasValueClass);
-            targetInputElement.addEventListener('change', syncHasValueClass);
+            targetInput.addEventListener('input', syncHasValueClass);
+            targetInput.addEventListener('change', syncHasValueClass);
             syncHasValueClass();
         });
     }
 
     function extractSurname(fullNameValue) {
-        var trimmedFullName = String(fullNameValue || '').trim();
-        if (!trimmedFullName) return '';
-        var firstSpaceIndex = trimmedFullName.indexOf(' ');
-        if (firstSpaceIndex === -1) return trimmedFullName;
-        var remainingPart = trimmedFullName.substring(firstSpaceIndex + 1).trim();
-        return remainingPart || trimmedFullName;
+        var trimmed = String(fullNameValue || '').trim();
+        if (!trimmed) return '';
+        var idx = trimmed.indexOf(' ');
+        if (idx === -1) return trimmed;
+        var rest = trimmed.substring(idx + 1).trim();
+        return rest || trimmed;
     }
 
     function normalizeForSort(value) {
@@ -232,71 +189,79 @@
     }
 
     function displayDirectorName(fullNameValue) {
-        var trimmedFullName = String(fullNameValue || '').trim();
-        if (!trimmedFullName) return '';
-        var firstSpaceIndex = trimmedFullName.indexOf(' ');
-        if (firstSpaceIndex === -1) return trimmedFullName;
-        var firstNamePart = trimmedFullName.substring(0, firstSpaceIndex).trim();
-        var remainingPart = trimmedFullName.substring(firstSpaceIndex + 1).trim();
-        if (!remainingPart) return trimmedFullName;
-        return remainingPart + ' ' + firstNamePart;
+        var trimmed = String(fullNameValue || '').trim();
+        if (!trimmed) return '';
+        var idx = trimmed.indexOf(' ');
+        if (idx === -1) return trimmed;
+        var firstPart = trimmed.substring(0, idx).trim();
+        var rest = trimmed.substring(idx + 1).trim();
+        if (!rest) return trimmed;
+        return rest + ' ' + firstPart;
     }
 
-    function sortDirectorsBySurname(directorList) {
-        return directorList.slice().sort(function (leftDirector, rightDirector) {
-            var leftSurname = normalizeForSort(extractSurname(leftDirector));
-            var rightSurname = normalizeForSort(extractSurname(rightDirector));
-            if (leftSurname !== rightSurname) return leftSurname.localeCompare(rightSurname, 'ru-RU');
-            return normalizeForSort(leftDirector).localeCompare(normalizeForSort(rightDirector), 'ru-RU');
+    function sortDirectorsBySurname(list) {
+        return list.slice().sort(function (a, b) {
+            var sa = normalizeForSort(extractSurname(a));
+            var sb = normalizeForSort(extractSurname(b));
+            if (sa !== sb) return sa.localeCompare(sb, 'ru-RU');
+            return normalizeForSort(a).localeCompare(normalizeForSort(b), 'ru-RU');
         });
     }
 
-    function sortGenresAlphabetically(genreList) {
-        return genreList.slice().sort(function (leftGenre, rightGenre) {
-            return normalizeForSort(leftGenre).localeCompare(normalizeForSort(rightGenre), 'ru-RU');
+    function sortGenresAlphabetically(list) {
+        return list.slice().sort(function (a, b) {
+            return normalizeForSort(a).localeCompare(normalizeForSort(b), 'ru-RU');
         });
     }
 
     function buildAccordionCheckbox(checkboxName, checkboxValue, displayText) {
-        var labelElement = document.createElement('label');
-        labelElement.className = 'accordion-item';
-        var inputElement = document.createElement('input');
-        inputElement.type = 'checkbox';
-        inputElement.name = checkboxName;
-        inputElement.className = 'accordion-checkbox';
-        inputElement.value = checkboxValue;
-        var spanElement = document.createElement('span');
-        spanElement.textContent = displayText != null ? displayText : checkboxValue;
-        labelElement.appendChild(inputElement);
-        labelElement.appendChild(spanElement);
-        return labelElement;
+        var label = document.createElement('label');
+        label.className = 'accordion-item';
+        var input = document.createElement('input');
+        input.type = 'checkbox';
+        input.name = checkboxName;
+        input.className = 'accordion-checkbox';
+        input.value = checkboxValue;
+        var span = document.createElement('span');
+        span.textContent = displayText != null ? displayText : checkboxValue;
+        label.appendChild(input);
+        label.appendChild(span);
+        return label;
     }
 
-    function appendCheckboxesToAccordion(dropdownElement, checkboxName, itemsList, displayFunction) {
-        var accordionListElement = dropdownElement.querySelector('[data-accordion-list]');
-        if (!accordionListElement) return;
+    function appendCheckboxesToAccordion(dropdown, checkboxName, items, displayFn) {
+        var list = dropdown.querySelector('[data-accordion-list]');
+        if (!list) return;
 
-        (itemsList || []).forEach(function (itemValue) {
-            var displayValue = displayFunction ? displayFunction(itemValue) : itemValue;
-            accordionListElement.appendChild(buildAccordionCheckbox(checkboxName, itemValue, displayValue));
+        var existing = new Set();
+        list.querySelectorAll('input[name="' + checkboxName + '"]').forEach(function (chk) {
+            existing.add(chk.value);
         });
 
-        var selectedAttributeValue = dropdownElement.getAttribute('data-selected');
-        if (selectedAttributeValue && selectedAttributeValue.trim() !== '') {
-            var selectedValues = selectedAttributeValue.split(',').map(function (s) { return s.trim(); });
-            accordionListElement.querySelectorAll('input[name="' + checkboxName + '"]').forEach(function (chk) {
+        (items || []).forEach(function (itemValue) {
+            if (existing.has(itemValue)) return;
+            var displayValue = displayFn ? displayFn(itemValue) : itemValue;
+            list.appendChild(buildAccordionCheckbox(checkboxName, itemValue, displayValue));
+            existing.add(itemValue);
+        });
+
+        var selectedAttr = dropdown.getAttribute('data-selected');
+        if (selectedAttr && selectedAttr.trim() !== '') {
+            var selectedValues = selectedAttr.split(',').map(function (s) { return s.trim(); });
+            list.querySelectorAll('input[name="' + checkboxName + '"]').forEach(function (chk) {
                 if (selectedValues.indexOf(chk.value) !== -1) chk.checked = true;
             });
         }
     }
 
-    function setupInfiniteList(dropdownId, checkboxName, endpoint, displayFunction) {
-        var dropdownElement = document.getElementById(dropdownId);
-        if (!dropdownElement) return;
+    function setupInfiniteList(dropdownId, checkboxName, endpoint, displayFn) {
+        var dropdown = document.getElementById(dropdownId);
+        if (!dropdown) return;
 
-        var accordionListElement = dropdownElement.querySelector('[data-accordion-list]');
-        var emptyElement = dropdownElement.querySelector('[data-accordion-empty]');
-        if (!accordionListElement) return;
+        var list = dropdown.querySelector('[data-accordion-list]');
+        var emptyEl = dropdown.querySelector('[data-accordion-empty]');
+        if (!list) return;
+        if (list.querySelector('.infinite-scroll-sentinel')) return;
 
         var isLoading = false;
         var hasMore = true;
@@ -308,11 +273,11 @@
         sentinel.style.width = '100%';
         sentinel.style.pointerEvents = 'none';
         sentinel.className = 'infinite-scroll-sentinel';
-        accordionListElement.after(sentinel);
+        list.after(sentinel);
 
         var observer = new IntersectionObserver(function (entries) {
             if (entries[0].isIntersecting) loadData();
-        }, { root: dropdownElement, rootMargin: '50px' });
+        }, { root: dropdown, rootMargin: '50px' });
         observer.observe(sentinel);
 
         function loadData() {
@@ -333,18 +298,18 @@
                     hasMore = !!data.hasMore;
                     nextCursor = data.nextCursor || null;
 
-                    var displayData = checkboxName === 'directors'
+                    var sorted = checkboxName === 'directors'
                         ? sortDirectorsBySurname(items)
                         : sortGenresAlphabetically(items);
 
-                    appendCheckboxesToAccordion(dropdownElement, checkboxName, displayData, displayFunction);
+                    appendCheckboxesToAccordion(dropdown, checkboxName, sorted, displayFn);
                     sentinel.textContent = '';
 
                     if (!hasMore) observer.unobserve(sentinel);
 
-                    if (emptyElement) {
-                        var hasVisibleItems = accordionListElement.querySelectorAll('.accordion-item').length > 0;
-                        emptyElement.classList.toggle('show', !hasVisibleItems && currentQuery.trim() !== '');
+                    if (emptyEl) {
+                        var hasItems = list.querySelectorAll('.accordion-item').length > 0;
+                        emptyEl.classList.toggle('show', !hasItems && currentQuery.trim() !== '');
                     }
                 })
                 .catch(function () {
@@ -355,7 +320,7 @@
                 });
         }
 
-        var searchInput = dropdownElement.querySelector('[data-accordion-search-input]');
+        var searchInput = dropdown.querySelector('[data-accordion-search-input]');
         if (searchInput) {
             var debounceTimer = null;
             searchInput.addEventListener('input', function () {
@@ -364,12 +329,9 @@
                     currentQuery = searchInput.value;
                     nextCursor = null;
                     hasMore = true;
-                    accordionListElement.innerHTML = '';
+                    list.innerHTML = '';
+                    list.after(sentinel);
                     observer.observe(sentinel);
-
-                    if (window.__selectAllState && window.__selectAllState[dropdownId]) {
-                        window.__selectAllState[dropdownId]();
-                    }
                     loadData();
                 }, 300);
             });
@@ -382,7 +344,7 @@
         return fetch('/filters/meta', { headers: AJAX_HEADERS })
             .then(function (response) { return response.ok ? response.json() : null; })
             .then(function (meta) {
-                if (!meta) { LIMITS_READY = true; return; }
+                if (!meta) return;
 
                 if (meta.movieRangesSnapshot) {
                     var ranges = meta.movieRangesSnapshot;
@@ -400,73 +362,53 @@
                     }
                 }
 
-                LIMITS_READY = true;
                 applyPriceLimitsToUi();
                 applyDurationLimitsToUi();
                 applyReleaseDateLimitsToUi();
-
-                if (meta.genres && meta.genres.length > 0) {
-                    var genresDropdown = document.getElementById('genresDropdown');
-                    if (genresDropdown) {
-                        appendCheckboxesToAccordion(genresDropdown, 'genres', sortGenresAlphabetically(meta.genres), null);
-                    }
-                }
-
-                if (meta.directors && meta.directors.length > 0) {
-                    var directorsDropdown = document.getElementById('directorsDropdown');
-                    if (directorsDropdown) {
-                        appendCheckboxesToAccordion(directorsDropdown, 'directors', sortDirectorsBySurname(meta.directors), displayDirectorName);
-                    }
-                }
             })
-            .catch(function () { LIMITS_READY = true; });
+            .catch(function () {});
     }
 
     function calculateRangeMinutes() {
-        function readIntValue(elementId) {
-            var element = document.getElementById(elementId);
-            return element ? (parseInt(element.value, 10) || 0) : 0;
+        function readInt(id) {
+            var el = document.getElementById(id);
+            return el ? (parseInt(el.value, 10) || 0) : 0;
         }
 
-        var fromHoursValue = readIntValue('durationFromHours');
-        var fromMinutesValue = readIntValue('durationFromMinutes');
-        var fromSecondsValue = readIntValue('durationFromSeconds');
-        var toHoursValue = readIntValue('durationToHours');
-        var toMinutesValue = readIntValue('durationToMinutes');
-        var toSecondsValue = readIntValue('durationToSeconds');
+        var fh = readInt('durationFromHours');
+        var fm = readInt('durationFromMinutes');
+        var fs = readInt('durationFromSeconds');
+        var th = readInt('durationToHours');
+        var tm = readInt('durationToMinutes');
+        var ts = readInt('durationToSeconds');
 
-        var totalFromSeconds = (fromHoursValue * 3600) + (fromMinutesValue * 60) + fromSecondsValue;
-        var totalToSeconds = (toHoursValue * 3600) + (toMinutesValue * 60) + toSecondsValue;
+        var fromSeconds = fh * 3600 + fm * 60 + fs;
+        var toSeconds = th * 3600 + tm * 60 + ts;
 
-        var minDurationElement = document.getElementById('minDuration');
-        var maxDurationElement = document.getElementById('maxDuration');
-
-        if (minDurationElement) minDurationElement.value = totalFromSeconds > 0 ? totalFromSeconds : '';
-        if (maxDurationElement) maxDurationElement.value = totalToSeconds > 0 ? totalToSeconds : '';
-    }
-
-    function normalizeDurationFilters() {
-        calculateRangeMinutes();
+        var minEl = document.getElementById('minDuration');
+        var maxEl = document.getElementById('maxDuration');
+        if (minEl) minEl.value = fromSeconds > 0 ? fromSeconds : '';
+        if (maxEl) maxEl.value = toSeconds > 0 ? toSeconds : '';
     }
 
     function clearFilterFieldErrors() {
-        document.querySelectorAll('.filter-group.has-error').forEach(function (groupEl) {
-            groupEl.classList.remove('has-error');
+        document.querySelectorAll('.filter-group.has-error').forEach(function (el) {
+            el.classList.remove('has-error');
         });
-        document.querySelectorAll('.filter-field-error').forEach(function (errEl) {
-            errEl.remove();
+        document.querySelectorAll('.filter-field-error').forEach(function (el) {
+            el.remove();
         });
-        document.querySelectorAll('.filter-input, .accordion-trigger').forEach(function (inputElement) {
-            inputElement.style.borderColor = '';
-            inputElement.style.boxShadow = '';
+        document.querySelectorAll('.filter-input, .accordion-trigger').forEach(function (el) {
+            el.style.borderColor = '';
+            el.style.boxShadow = '';
         });
         document.querySelectorAll('.filter-input-with-clear.has-error, .amount-input-with-stepper.has-error').forEach(function (el) {
             el.classList.remove('has-error');
         });
-        var ratingFilterErrorElement = document.getElementById('ratingFilterError');
-        if (ratingFilterErrorElement) {
-            ratingFilterErrorElement.style.display = 'none';
-            ratingFilterErrorElement.innerText = '';
+        var ratingError = document.getElementById('ratingFilterError');
+        if (ratingError) {
+            ratingError.style.display = 'none';
+            ratingError.innerText = '';
         }
     }
 
@@ -477,29 +419,23 @@
                       || inputElement.parentNode;
         if (!wrapper) return;
 
-        var groupElement = inputElement.closest('.filter-group');
-        if (groupElement) groupElement.classList.add('has-error');
+        var group = inputElement.closest('.filter-group');
+        if (group) group.classList.add('has-error');
 
         var inputId = inputElement.id || ('auto-' + Math.random().toString(36).slice(2));
-        var errorElement = wrapper.querySelector('.filter-field-error[data-error-for="' + inputId + '"]');
-        if (!errorElement) {
-            errorElement = document.createElement('div');
-            errorElement.className = 'filter-field-error';
-            errorElement.setAttribute('data-error-for', inputId);
-            wrapper.appendChild(errorElement);
+        var errorEl = wrapper.querySelector('.filter-field-error[data-error-for="' + inputId + '"]');
+        if (!errorEl) {
+            errorEl = document.createElement('div');
+            errorEl.className = 'filter-field-error';
+            errorEl.setAttribute('data-error-for', inputId);
+            wrapper.appendChild(errorEl);
         }
 
-        errorElement.textContent = errorMessage;
-        errorElement.title = errorMessage;
-        errorElement.style.display = '';
+        errorEl.textContent = errorMessage;
+        errorEl.title = errorMessage;
+        errorEl.style.display = '';
 
         if (wrapper.classList) wrapper.classList.add('has-error');
-    }
-
-    function getCheckboxState(checkboxName) {
-        var allCheckboxes = document.querySelectorAll('input[name="' + checkboxName + '"]');
-        var checkedCheckboxes = document.querySelectorAll('input[name="' + checkboxName + '"]:checked');
-        return { total: allCheckboxes.length, checked: checkedCheckboxes.length };
     }
 
     function validateDateRange(fromValue, toValue) {
@@ -512,7 +448,7 @@
 
     function validateFilter() {
         clearFilterFieldErrors();
-        normalizeDurationFilters();
+        calculateRangeMinutes();
 
         var hasError = false;
 
@@ -586,10 +522,10 @@
         var releaseDateFromValue = releaseDateFromInput ? releaseDateFromInput.value : '';
         var releaseDateToValue = releaseDateToInput ? releaseDateToInput.value : '';
 
-        var dateRangeValidationResult = validateDateRange(releaseDateFromValue, releaseDateToValue);
-        if (!dateRangeValidationResult.ok) {
-            var targetDateInput = dateRangeValidationResult.field === 'to' ? releaseDateToInput : releaseDateFromInput;
-            showFilterFieldError(targetDateInput, dateRangeValidationResult.error);
+        var dateRange = validateDateRange(releaseDateFromValue, releaseDateToValue);
+        if (!dateRange.ok) {
+            var target = dateRange.field === 'to' ? releaseDateToInput : releaseDateFromInput;
+            showFilterFieldError(target, dateRange.error);
             hasError = true;
         } else {
             var fromDateError = '';
@@ -617,235 +553,221 @@
             }
         }
 
-        var fromHoursValue = parseInt((document.getElementById('durationFromHours') || {}).value || '0', 10);
-        var fromMinutesValue = parseInt((document.getElementById('durationFromMinutes') || {}).value || '0', 10);
-        var fromSecondsValue = parseInt((document.getElementById('durationFromSeconds') || {}).value || '0', 10);
-        var toHoursValue = parseInt((document.getElementById('durationToHours') || {}).value || '0', 10);
-        var toMinutesValue = parseInt((document.getElementById('durationToMinutes') || {}).value || '0', 10);
-        var toSecondsValue = parseInt((document.getElementById('durationToSeconds') || {}).value || '0', 10);
-        var totalFromSeconds = fromHoursValue * 3600 + fromMinutesValue * 60 + fromSecondsValue;
-        var totalToSeconds = toHoursValue * 3600 + toMinutesValue * 60 + toSecondsValue;
+        var fromHours = parseInt((document.getElementById('durationFromHours') || {}).value || '0', 10);
+        var fromMinutes = parseInt((document.getElementById('durationFromMinutes') || {}).value || '0', 10);
+        var fromSeconds = parseInt((document.getElementById('durationFromSeconds') || {}).value || '0', 10);
+        var toHours = parseInt((document.getElementById('durationToHours') || {}).value || '0', 10);
+        var toMinutes = parseInt((document.getElementById('durationToMinutes') || {}).value || '0', 10);
+        var toSeconds = parseInt((document.getElementById('durationToSeconds') || {}).value || '0', 10);
+        var totalFrom = fromHours * 3600 + fromMinutes * 60 + fromSeconds;
+        var totalTo = toHours * 3600 + toMinutes * 60 + toSeconds;
 
-        var durationFromHoursElement = document.getElementById('durationFromHours');
-        var durationFromMinutesElement = document.getElementById('durationFromMinutes');
-        var durationFromSecondsElement = document.getElementById('durationFromSeconds');
-        var durationToHoursElement = document.getElementById('durationToHours');
-        var durationToMinutesElement = document.getElementById('durationToMinutes');
-        var durationToSecondsElement = document.getElementById('durationToSeconds');
+        var durationFromHoursEl = document.getElementById('durationFromHours');
+        var durationFromMinutesEl = document.getElementById('durationFromMinutes');
+        var durationFromSecondsEl = document.getElementById('durationFromSeconds');
+        var durationToHoursEl = document.getElementById('durationToHours');
+        var durationToMinutesEl = document.getElementById('durationToMinutes');
+        var durationToSecondsEl = document.getElementById('durationToSeconds');
 
-        var maxDurationValues = splitDuration(FILTER_LIMITS.durationMax);
+        var maxDur = splitDuration(FILTER_LIMITS.durationMax);
         var durationErrorText =
             'Минимальная длительность — ' + formatDurationHuman(FILTER_LIMITS.durationMin) + ', ' +
             'максимальная — ' + formatDurationHuman(FILTER_LIMITS.durationMax) + '.';
 
-        var fromAllZero = fromHoursValue === 0 && fromMinutesValue === 0 && fromSecondsValue === 0 &&
-            (durationFromHoursElement.value !== '' || durationFromMinutesElement.value !== '' || durationFromSecondsElement.value !== '');
+        var fromAllZero = fromHours === 0 && fromMinutes === 0 && fromSeconds === 0 &&
+            (durationFromHoursEl.value !== '' || durationFromMinutesEl.value !== '' || durationFromSecondsEl.value !== '');
+        var toAllZero = toHours === 0 && toMinutes === 0 && toSeconds === 0 &&
+            (durationToHoursEl.value !== '' || durationToMinutesEl.value !== '' || durationToSecondsEl.value !== '');
 
-        var toAllZero = toHoursValue === 0 && toMinutesValue === 0 && toSecondsValue === 0 &&
-            (durationToHoursElement.value !== '' || durationToMinutesElement.value !== '' || durationToSecondsElement.value !== '');
-
-        if (fromAllZero || fromHoursValue > maxDurationValues.h || fromMinutesValue > 59 || fromSecondsValue > 59) {
-            showFilterFieldError(durationFromHoursElement, durationErrorText);
+        if (fromAllZero || fromHours > maxDur.h || fromMinutes > 59 || fromSeconds > 59) {
+            showFilterFieldError(durationFromHoursEl, durationErrorText);
             hasError = true;
         }
 
-        if (toAllZero || toHoursValue > maxDurationValues.h || toMinutesValue > 59 || toSecondsValue > 59) {
-            showFilterFieldError(durationToHoursElement, durationErrorText);
+        if (toAllZero || toHours > maxDur.h || toMinutes > 59 || toSeconds > 59) {
+            showFilterFieldError(durationToHoursEl, durationErrorText);
             hasError = true;
         }
 
-        if (totalToSeconds > 0 && totalToSeconds < FILTER_LIMITS.durationMin) {
-            showFilterFieldError(
-                durationToHoursElement,
-                'Длительность «до» должна быть не менее ' + formatDurationHuman(FILTER_LIMITS.durationMin)
-            );
+        if (totalTo > 0 && totalTo < FILTER_LIMITS.durationMin) {
+            showFilterFieldError(durationToHoursEl,
+                'Длительность «до» должна быть не менее ' + formatDurationHuman(FILTER_LIMITS.durationMin));
             hasError = true;
         }
 
-        if (totalFromSeconds > 0 && totalToSeconds > 0 && totalFromSeconds > totalToSeconds) {
-            showFilterFieldError(
-                durationFromHoursElement,
-                'Длительность «от» не может быть больше длительности «до»'
-            );
+        if (totalFrom > 0 && totalTo > 0 && totalFrom > totalTo) {
+            showFilterFieldError(durationFromHoursEl,
+                'Длительность «от» не может быть больше длительности «до»');
             hasError = true;
         }
 
         return !hasError;
     }
 
-    function stepFilterValue(inputElementId, deltaValue, minValue, maxValue, decimalPlaces) {
-        var inputElement = document.getElementById(inputElementId);
-        if (!inputElement) return;
-        var currentValue = parseFloat(inputElement.value.replace(',', '.'));
-        if (isNaN(currentValue)) currentValue = 0;
-        var nextValue = currentValue + deltaValue;
-        var decimalFactor = Math.pow(10, decimalPlaces);
-        nextValue = Math.round(nextValue * decimalFactor) / decimalFactor;
-        if (minValue !== null && nextValue < minValue) nextValue = minValue;
-        if (maxValue !== null && nextValue > maxValue) nextValue = maxValue;
-        inputElement.value = nextValue.toFixed(decimalPlaces);
-        inputElement.dispatchEvent(new Event('input', { bubbles: true }));
+    function stepFilterValue(inputId, delta, minValue, maxValue, decimals) {
+        var input = document.getElementById(inputId);
+        if (!input) return;
+        var current = parseFloat(input.value.replace(',', '.'));
+        if (isNaN(current)) current = 0;
+        var next = current + delta;
+        var factor = Math.pow(10, decimals);
+        next = Math.round(next * factor) / factor;
+        if (minValue !== null && next < minValue) next = minValue;
+        if (maxValue !== null && next > maxValue) next = maxValue;
+        input.value = next.toFixed(decimals);
+        input.dispatchEvent(new Event('input', { bubbles: true }));
     }
 
     var filterSteppers = {};
 
-    function startSteppingFilter(inputElementId, deltaValue, minValue, maxValue, decimalPlaces, buttonElement) {
-        if (!filterSteppers[inputElementId]) {
-            filterSteppers[inputElementId] = createStepper({
+    function startSteppingFilter(inputId, delta, minValue, maxValue, decimals, buttonElement) {
+        if (!filterSteppers[inputId]) {
+            filterSteppers[inputId] = createStepper({
                 onStep: function (stepDelta) {
-                    stepFilterValue(inputElementId, stepDelta, minValue, maxValue, decimalPlaces);
+                    stepFilterValue(inputId, stepDelta, minValue, maxValue, decimals);
                 }
             });
         }
-        filterSteppers[inputElementId].start(deltaValue, buttonElement);
+        filterSteppers[inputId].start(delta, buttonElement);
     }
 
     function stopSteppingFilter(buttonElement) {
-        Object.keys(filterSteppers).forEach(function (inputElementId) {
-            filterSteppers[inputElementId].stop(buttonElement);
+        Object.keys(filterSteppers).forEach(function (inputId) {
+            filterSteppers[inputId].stop(buttonElement);
         });
         if (buttonElement) buttonElement.classList.remove('holding');
     }
 
-    function setupSelectAllCheckbox(dropdownElementId, checkboxName) {
-        var dropdownElement = document.getElementById(dropdownElementId);
-        if (!dropdownElement) return;
+    function setupSelectAllCheckbox(dropdownId, checkboxName) {
+        var dropdown = document.getElementById(dropdownId);
+        if (!dropdown) return;
 
-        var existingSelectAllElement = dropdownElement.querySelector('.accordion-select-all');
-        if (existingSelectAllElement) existingSelectAllElement.remove();
+        var existing = dropdown.querySelector('.accordion-select-all');
+        if (existing) existing.remove();
 
-        var wrapperElement = document.createElement('label');
-        wrapperElement.className = 'accordion-select-all';
+        var wrapper = document.createElement('label');
+        wrapper.className = 'accordion-select-all';
 
         var selectAllCheckbox = document.createElement('input');
         selectAllCheckbox.type = 'checkbox';
         selectAllCheckbox.className = 'accordion-checkbox';
 
-        var labelElement = document.createElement('span');
-        labelElement.textContent = 'Выбрать всё';
+        var labelText = document.createElement('span');
+        labelText.textContent = 'Выбрать всё';
 
-        wrapperElement.appendChild(selectAllCheckbox);
-        wrapperElement.appendChild(labelElement);
+        wrapper.appendChild(selectAllCheckbox);
+        wrapper.appendChild(labelText);
 
         function getVisibleItems() {
             return Array.prototype.slice.call(
-                dropdownElement.querySelectorAll('.accordion-item:not(.is-hidden)')
+                dropdown.querySelectorAll('.accordion-item:not(.is-hidden)')
             );
         }
 
         function getVisibleCheckboxes() {
             return getVisibleItems()
-                .map(function (itemElement) {
-                    return itemElement.querySelector('input[name="' + checkboxName + '"]');
+                .map(function (item) {
+                    return item.querySelector('input[name="' + checkboxName + '"]');
                 })
                 .filter(Boolean);
         }
 
         function updateState() {
-            var visibleCheckboxes = getVisibleCheckboxes();
-            if (visibleCheckboxes.length === 0) {
+            var visible = getVisibleCheckboxes();
+            if (visible.length === 0) {
                 selectAllCheckbox.checked = false;
                 selectAllCheckbox.indeterminate = false;
                 return;
             }
-            var checkedCount = visibleCheckboxes.filter(function (checkboxElement) {
-                return checkboxElement.checked;
-            }).length;
-            var allChecked = checkedCount === visibleCheckboxes.length;
-            selectAllCheckbox.checked = allChecked;
-            selectAllCheckbox.indeterminate = false;
+            var checkedCount = visible.filter(function (cb) { return cb.checked; }).length;
+            selectAllCheckbox.checked = checkedCount === visible.length;
+            selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < visible.length;
         }
 
-        wrapperElement.addEventListener('click', function (clickEvent) {
-            clickEvent.preventDefault();
+        wrapper.addEventListener('click', function (e) {
+            e.preventDefault();
+            var visible = getVisibleCheckboxes();
+            if (visible.length === 0) return;
 
-            var visibleCheckboxes = getVisibleCheckboxes();
-            if (visibleCheckboxes.length === 0) return;
+            var checkedCount = visible.filter(function (cb) { return cb.checked; }).length;
+            var allChecked = checkedCount === visible.length;
 
-            var checkedCount = visibleCheckboxes.filter(function (checkboxElement) {
-                return checkboxElement.checked;
-            }).length;
-            var allChecked = checkedCount === visibleCheckboxes.length;
-
-            visibleCheckboxes.forEach(function (checkboxElement) {
-                checkboxElement.checked = !allChecked;
-            });
-
+            visible.forEach(function (cb) { cb.checked = !allChecked; });
             updateState();
         });
 
-        dropdownElement.addEventListener('change', function (changeEvent) {
-            if (changeEvent.target && changeEvent.target.name === checkboxName) {
+        dropdown.addEventListener('change', function (e) {
+            if (e.target && e.target.name === checkboxName) {
                 updateState();
             }
         });
 
-        var accordionListElement = dropdownElement.querySelector('[data-accordion-list]');
-        if (accordionListElement) {
-            accordionListElement.insertBefore(wrapperElement, accordionListElement.firstChild);
+        var list = dropdown.querySelector('[data-accordion-list]');
+        if (list) {
+            list.insertBefore(wrapper, list.firstChild);
         } else {
-            dropdownElement.insertBefore(wrapperElement, dropdownElement.firstChild);
+            dropdown.insertBefore(wrapper, dropdown.firstChild);
         }
 
         updateState();
 
         window.__selectAllState = window.__selectAllState || {};
-        window.__selectAllState[dropdownElementId] = updateState;
+        window.__selectAllState[dropdownId] = updateState;
     }
 
     function resetFiltersForm() {
-        var filterFormElement = document.getElementById('filterForm');
-        if (!filterFormElement) return;
+        var form = document.getElementById('filterForm');
+        if (!form) return;
 
-        filterFormElement.querySelectorAll('input[type="text"]').forEach(function (inputElement) {
-            inputElement.value = '';
-            inputElement.style.borderColor = '';
-            inputElement.style.boxShadow = '';
+        form.querySelectorAll('input[type="text"]').forEach(function (el) {
+            el.value = '';
+            el.style.borderColor = '';
+            el.style.boxShadow = '';
         });
 
-        filterFormElement.querySelectorAll('input[type="date"]').forEach(function (inputElement) {
-            inputElement.value = '';
-            inputElement.style.borderColor = '';
-            inputElement.style.boxShadow = '';
+        form.querySelectorAll('input[type="date"]').forEach(function (el) {
+            el.value = '';
+            el.style.borderColor = '';
+            el.style.boxShadow = '';
         });
 
-        filterFormElement.querySelectorAll('input[type="checkbox"]').forEach(function (checkboxElement) {
-            checkboxElement.checked = false;
-            checkboxElement.indeterminate = false;
-            checkboxElement.disabled = false;
+        form.querySelectorAll('input[type="checkbox"]').forEach(function (cb) {
+            cb.checked = false;
+            cb.indeterminate = false;
+            cb.disabled = false;
         });
 
-        var minDurationElement = document.getElementById('minDuration');
-        var maxDurationElement = document.getElementById('maxDuration');
-        if (minDurationElement) minDurationElement.value = '';
-        if (maxDurationElement) maxDurationElement.value = '';
+        var minEl = document.getElementById('minDuration');
+        var maxEl = document.getElementById('maxDuration');
+        if (minEl) minEl.value = '';
+        if (maxEl) maxEl.value = '';
 
         clearFilterFieldErrors();
         closeAllAccordions();
 
-        document.querySelectorAll('.filter-input-with-clear.has-value').forEach(function (element) {
-            element.classList.remove('has-value');
+        document.querySelectorAll('.filter-input-with-clear.has-value').forEach(function (el) {
+            el.classList.remove('has-value');
         });
 
-        document.querySelectorAll('.accordion-search.has-value').forEach(function (element) {
-            element.classList.remove('has-value');
+        document.querySelectorAll('.accordion-search.has-value').forEach(function (el) {
+            el.classList.remove('has-value');
         });
 
-        document.querySelectorAll('[data-accordion-search-input]').forEach(function (inputElement) {
-            inputElement.value = '';
+        document.querySelectorAll('[data-accordion-search-input]').forEach(function (el) {
+            el.value = '';
         });
 
-        document.querySelectorAll('[data-accordion-list] .accordion-item.is-hidden').forEach(function (itemElement) {
-            itemElement.classList.remove('is-hidden');
+        document.querySelectorAll('[data-accordion-list] .accordion-item.is-hidden').forEach(function (el) {
+            el.classList.remove('is-hidden');
         });
 
-        document.querySelectorAll('[data-accordion-empty]').forEach(function (emptyElement) {
-            emptyElement.classList.remove('show');
+        document.querySelectorAll('[data-accordion-empty]').forEach(function (el) {
+            el.classList.remove('show');
         });
 
         if (window.__selectAllState) {
-            Object.keys(window.__selectAllState).forEach(function (dropdownElementId) {
-                try { window.__selectAllState[dropdownElementId](); } catch (stateError) {}
+            Object.keys(window.__selectAllState).forEach(function (dropdownId) {
+                try { window.__selectAllState[dropdownId](); } catch (e) {}
             });
         }
 
@@ -876,20 +798,53 @@
             setupInfiniteList('genresDropdown', 'genres', '/filters/genres/search', null);
             setupSelectAllCheckbox('directorsDropdown', 'directors');
             setupSelectAllCheckbox('genresDropdown', 'genres');
-            enforceCheckboxLimit('directorsDropdown', MAX_SELECTED_PER_DROPDOWN, 'Режиссёры');
-            enforceCheckboxLimit('genresDropdown', MAX_SELECTED_PER_DROPDOWN, 'Жанры');
         });
     }
 
     function getCheckedValues(name) {
+        var seen = new Set();
         var result = [];
         document.querySelectorAll('#filterForm input[type="checkbox"][name="' + name + '"]:checked')
-            .forEach(function (cb) { result.push(cb.value); });
+            .forEach(function (cb) {
+                if (seen.has(cb.value)) return;
+                seen.add(cb.value);
+                result.push(cb.value);
+            });
         return result;
     }
 
-    function getAllCheckboxCount(name) {
-        return document.querySelectorAll('#filterForm input[type="checkbox"][name="' + name + '"]').length;
+    function getAllCheckboxValues(name) {
+        var seen = new Set();
+        var result = [];
+        document.querySelectorAll('#filterForm input[type="checkbox"][name="' + name + '"]')
+            .forEach(function (cb) {
+                if (seen.has(cb.value)) return;
+                seen.add(cb.value);
+                result.push(cb.value);
+            });
+        return result;
+    }
+
+    function pickFilterList(name) {
+        var checked = getCheckedValues(name);
+        if (checked.length === 0) return null;
+
+        var all = getAllCheckboxValues(name);
+        if (all.length === 0) return null;
+
+        // Если выбрано больше половины — отправляем EXCLUDE
+        if (checked.length > all.length / 2) {
+            var checkedSet = new Set(checked);
+            var excluded = all.filter(function (v) { return !checkedSet.has(v); });
+            if (excluded.length === 0) {
+                // Выбраны абсолютно все — фильтр не нужен, показываем всё
+                return null;
+            }
+            return { mode: 'exclude', values: excluded };
+        }
+
+        // Иначе — INCLUDE
+        return { mode: 'include', values: checked };
     }
 
     function collectMeaningfulFilters() {
@@ -940,16 +895,22 @@
             result.durationTo = durTo;
         }
 
-        var genres = getCheckedValues('genres');
-        var allGenres = getAllCheckboxCount('genres');
-        if (genres.length > 0 && (allGenres === 0 || genres.length < allGenres)) {
-            result.genres = genres;
+        var genrePick = pickFilterList('genres');
+        if (genrePick) {
+            if (genrePick.mode === 'include') {
+                result.genres = genrePick.values;
+            } else if (genrePick.mode === 'exclude') {
+                result.genresExclude = genrePick.values;
+            }
         }
 
-        var directors = getCheckedValues('directors');
-        var allDirectors = getAllCheckboxCount('directors');
-        if (directors.length > 0 && (allDirectors === 0 || directors.length < allDirectors)) {
-            result.directors = directors;
+        var directorPick = pickFilterList('directors');
+        if (directorPick) {
+            if (directorPick.mode === 'include') {
+                result.directors = directorPick.values;
+            } else if (directorPick.mode === 'exclude') {
+                result.directorsExclude = directorPick.values;
+            }
         }
 
         var actorsInput = document.getElementById('actorsInput');
@@ -975,149 +936,17 @@
         Object.keys(filters).forEach(function (key) {
             var v = filters[key];
             if (Array.isArray(v)) {
-                v.forEach(function (item) { params.append(key, item); });
+                var seen = new Set();
+                v.forEach(function (item) {
+                    if (seen.has(item)) return;
+                    seen.add(item);
+                    params.append(key, item);
+                });
             } else {
                 params.set(key, v);
             }
         });
         return params.toString();
-    }
-
-    function attachFiltersAsHiddenInputsTo(targetForm) {
-        if (!targetForm) return;
-        targetForm.querySelectorAll('[data-from-filters="1"]').forEach(function (el) { el.remove(); });
-
-        var filterFormElement = document.getElementById('filterForm');
-        if (!filterFormElement) return;
-
-        filterFormElement.querySelectorAll('input, select, textarea').forEach(function (sourceEl) {
-            if (!sourceEl.name) return;
-
-            if (sourceEl.type === 'checkbox' || sourceEl.type === 'radio') {
-                if (!sourceEl.checked) return;
-                var hiddenCheckbox = document.createElement('input');
-                hiddenCheckbox.type = 'hidden';
-                hiddenCheckbox.name = sourceEl.name;
-                hiddenCheckbox.value = sourceEl.value;
-                hiddenCheckbox.setAttribute('data-from-filters', '1');
-                targetForm.appendChild(hiddenCheckbox);
-                return;
-            }
-
-            if (sourceEl.id === 'actorsInput') {
-                var actorsVal = (sourceEl.value || '').trim();
-                if (actorsVal !== '') {
-                    var actorsArr = actorsVal.split(/[,;]+/).map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 0; });
-                    actorsArr.forEach(function (actorName) {
-                        var hiddenActor = document.createElement('input');
-                        hiddenActor.type = 'hidden';
-                        hiddenActor.name = 'actors';
-                        hiddenActor.value = actorName;
-                        hiddenActor.setAttribute('data-from-filters', '1');
-                        targetForm.appendChild(hiddenActor);
-                    });
-                }
-                return;
-            }
-
-            var value = (sourceEl.value || '').trim();
-            if (value === '') return;
-
-            var hiddenInput = document.createElement('input');
-            hiddenInput.type = 'hidden';
-            hiddenInput.name = sourceEl.name;
-            hiddenInput.value = value;
-            hiddenInput.setAttribute('data-from-filters', '1');
-            targetForm.appendChild(hiddenInput);
-        });
-    }
-
-    function removeEmptyFormFields(targetForm) {
-        if (!targetForm) return;
-        targetForm.querySelectorAll('input, select, textarea').forEach(function (field) {
-            if (!field.name) return;
-            if (field.type === 'submit' || field.type === 'button' || field.type === 'reset') return;
-            if (field.type === 'checkbox' || field.type === 'radio') {
-                if (!field.checked) field.remove();
-                return;
-            }
-            if ((field.value || '').trim() === '') {
-                field.remove();
-            }
-        });
-    }
-
-    function isFilterMeaningful() {
-        var filterFormElement = document.getElementById('filterForm');
-        if (!filterFormElement) return false;
-
-        var currentSortSelection = getCurrentSortSelection();
-        if (currentSortSelection) return true;
-
-        var priceFromInput = document.getElementById('priceFrom');
-        var priceToInput = document.getElementById('priceTo');
-        var ratingFromInput = document.getElementById('ratingFrom');
-        var ratingToInput = document.getElementById('ratingTo');
-        var releaseDateFromInput = document.getElementById('releaseDateFrom');
-        var releaseDateToInput = document.getElementById('releaseDateTo');
-
-        function parseNum(el) {
-            if (!el) return null;
-            var raw = (el.value || '').trim();
-            if (raw === '') return null;
-            var n = parseFloat(raw.replace(',', '.'));
-            return isNaN(n) ? null : n;
-        }
-
-        function parseDate(el) {
-            if (!el) return null;
-            var raw = (el.value || '').trim();
-            return raw === '' ? null : raw;
-        }
-
-        var priceFrom = parseNum(priceFromInput);
-        var priceTo = parseNum(priceToInput);
-        var ratingFrom = parseNum(ratingFromInput);
-        var ratingTo = parseNum(ratingToInput);
-        var releaseDateFrom = parseDate(releaseDateFromInput);
-        var releaseDateTo = parseDate(releaseDateToInput);
-
-        if (priceFrom !== null && priceFrom > FILTER_LIMITS.priceMin) return true;
-        if (priceTo !== null && priceTo < FILTER_LIMITS.priceMax) return true;
-
-        if (ratingFrom !== null && ratingFrom > 0.1) return true;
-        if (ratingTo !== null && ratingTo < 10) return true;
-
-        var fromHours = parseInt((document.getElementById('durationFromHours') || {}).value || '0', 10) || 0;
-        var fromMinutes = parseInt((document.getElementById('durationFromMinutes') || {}).value || '0', 10) || 0;
-        var fromSeconds = parseInt((document.getElementById('durationFromSeconds') || {}).value || '0', 10) || 0;
-        var toHours = parseInt((document.getElementById('durationToHours') || {}).value || '0', 10) || 0;
-        var toMinutes = parseInt((document.getElementById('durationToMinutes') || {}).value || '0', 10) || 0;
-        var toSeconds = parseInt((document.getElementById('durationToSeconds') || {}).value || '0', 10) || 0;
-
-        var fromTotalSeconds = fromHours * 3600 + fromMinutes * 60 + fromSeconds;
-        var toTotalSeconds = toHours * 3600 + toMinutes * 60 + toSeconds;
-
-        if (fromTotalSeconds > FILTER_LIMITS.durationMin) return true;
-        if (toTotalSeconds > 0 && toTotalSeconds < FILTER_LIMITS.durationMax) return true;
-
-        if (releaseDateFrom !== null && !FILTER_LIMITS.releaseDateMin) return true;
-        if (releaseDateFrom !== null && FILTER_LIMITS.releaseDateMin && releaseDateFrom > FILTER_LIMITS.releaseDateMin) return true;
-        if (releaseDateTo !== null && !FILTER_LIMITS.releaseDateMax) return true;
-        if (releaseDateTo !== null && FILTER_LIMITS.releaseDateMax && releaseDateTo < FILTER_LIMITS.releaseDateMax) return true;
-
-        var genresState = getCheckboxState('genres');
-        if (genresState.checked > 0) return true;
-
-        var directorsState = getCheckboxState('directors');
-        if (directorsState.checked > 0) return true;
-
-        var actorsInput = document.getElementById('actorsInput');
-        if (actorsInput && actorsInput.value.trim() !== '') {
-            return true;
-        }
-
-        return false;
     }
 
     function submitCombinedSearch() {
@@ -1159,10 +988,10 @@
     }
 
     function getFocusableFilterFields() {
-        var filterFormElement = document.getElementById('filterForm');
-        if (!filterFormElement) return [];
+        var form = document.getElementById('filterForm');
+        if (!form) return [];
         return Array.prototype.slice.call(
-            filterFormElement.querySelectorAll(
+            form.querySelectorAll(
                 'input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled]), .accordion-trigger, .sort-filter-btn'
             )
         ).filter(function (el) {
@@ -1175,13 +1004,13 @@
     function focusNextFilterField(currentEl) {
         var fields = getFocusableFilterFields();
         if (fields.length === 0) return false;
-        var currentIndex = fields.indexOf(currentEl);
-        var nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % fields.length;
-        var nextEl = fields[nextIndex];
+        var idx = fields.indexOf(currentEl);
+        var nextIdx = idx === -1 ? 0 : (idx + 1) % fields.length;
+        var nextEl = fields[nextIdx];
         if (nextEl) {
-            try { nextEl.focus(); } catch (focusError) {}
+            try { nextEl.focus(); } catch (e) {}
             if (nextEl.tagName === 'INPUT' && (nextEl.type === 'text' || nextEl.type === 'date')) {
-                try { nextEl.select(); } catch (selectError) {}
+                try { nextEl.select(); } catch (e) {}
             }
             return true;
         }
@@ -1196,18 +1025,17 @@
     }
 
     function initFilterEnterKeyHandler() {
-        var filtersModalOverlay = document.getElementById('filtersModalOverlay');
-        if (!filtersModalOverlay) return;
-        if (filtersModalOverlay.dataset.enterBound === '1') return;
-        filtersModalOverlay.dataset.enterBound = '1';
+        var overlay = document.getElementById('filtersModalOverlay');
+        if (!overlay) return;
+        if (overlay.dataset.enterBound === '1') return;
+        overlay.dataset.enterBound = '1';
 
-        filtersModalOverlay.addEventListener('keydown', function (e) {
+        overlay.addEventListener('keydown', function (e) {
             if (e.key !== 'Enter') return;
             if (e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) return;
 
             var active = document.activeElement;
-            var insideModal = filtersModalOverlay.contains(active);
-
+            var insideModal = overlay.contains(active);
             if (!insideModal) return;
 
             if (isFilterInputElement(active)) {
@@ -1244,16 +1072,16 @@
         if (searchString.charAt(0) === '?') searchString = searchString.substring(1);
         if (!searchString) return null;
 
-        var searchParts = searchString.split('&');
+        var parts = searchString.split('&');
         var sortByValue = null;
         var sortDirectionValue = null;
 
-        for (var partIndex = 0; partIndex < searchParts.length; partIndex++) {
-            var keyValuePair = searchParts[partIndex].split('=');
-            var parameterName = decodeURIComponent(keyValuePair[0] || '');
-            var parameterValue = decodeURIComponent(keyValuePair[1] || '');
-            if (parameterName === 'sortBy') sortByValue = parameterValue;
-            if (parameterName === 'sortDirection') sortDirectionValue = parameterValue.toUpperCase();
+        for (var i = 0; i < parts.length; i++) {
+            var kv = parts[i].split('=');
+            var name = decodeURIComponent(kv[0] || '');
+            var value = decodeURIComponent(kv[1] || '');
+            if (name === 'sortBy') sortByValue = value;
+            if (name === 'sortDirection') sortDirectionValue = value.toUpperCase();
         }
 
         if (!sortByValue || !sortDirectionValue) return null;
@@ -1267,32 +1095,32 @@
     }
 
     function updateSortButtons(sortState) {
-        var sortButtons = document.querySelectorAll('.sort-filter-btn');
-        for (var buttonIndex = 0; buttonIndex < sortButtons.length; buttonIndex++) {
-            var sortButton = sortButtons[buttonIndex];
-            var sortKey = sortButton.getAttribute('data-sort-key');
-            var sortDirection = sortButton.getAttribute('data-sort-dir').toUpperCase();
+        var buttons = document.querySelectorAll('.sort-filter-btn');
+        for (var i = 0; i < buttons.length; i++) {
+            var btn = buttons[i];
+            var sortKey = btn.getAttribute('data-sort-key');
+            var sortDirection = btn.getAttribute('data-sort-dir').toUpperCase();
             if (sortState && sortState.key === sortKey && sortState.dir.toUpperCase() === sortDirection) {
-                sortButton.classList.add('active');
+                btn.classList.add('active');
             } else {
-                sortButton.classList.remove('active');
+                btn.classList.remove('active');
             }
         }
     }
 
     function syncHiddenSortFields(sortState) {
-        var sortByHiddenField = getHiddenSortField('sortBy');
-        var sortDirectionHiddenField = getHiddenSortField('sortDirection');
-        if (sortByHiddenField) sortByHiddenField.value = sortState ? sortState.key : '';
-        if (sortDirectionHiddenField) sortDirectionHiddenField.value = sortState ? sortState.dir.toUpperCase() : '';
+        var sortByField = getHiddenSortField('sortBy');
+        var sortDirectionField = getHiddenSortField('sortDirection');
+        if (sortByField) sortByField.value = sortState ? sortState.key : '';
+        if (sortDirectionField) sortDirectionField.value = sortState ? sortState.dir.toUpperCase() : '';
     }
 
     function getCurrentSortSelection() {
-        var sortByHiddenField = getHiddenSortField('sortBy');
-        var sortDirectionHiddenField = getHiddenSortField('sortDirection');
-        if (!sortByHiddenField || !sortDirectionHiddenField) return null;
-        var sortKey = (sortByHiddenField.value || '').trim();
-        var sortDirection = (sortDirectionHiddenField.value || '').trim().toUpperCase();
+        var sortByField = getHiddenSortField('sortBy');
+        var sortDirectionField = getHiddenSortField('sortDirection');
+        if (!sortByField || !sortDirectionField) return null;
+        var sortKey = (sortByField.value || '').trim();
+        var sortDirection = (sortDirectionField.value || '').trim().toUpperCase();
         if (!sortKey || !sortDirection) return null;
         if (sortDirection !== 'ASC' && sortDirection !== 'DESC') return null;
         return { key: sortKey, dir: sortDirection };
@@ -1306,26 +1134,24 @@
         updateSortButtons(urlSortState);
         syncHiddenSortFields(urlSortState);
 
-        document.addEventListener('click', function (clickEvent) {
-            var targetElement = clickEvent.target;
-            while (targetElement && targetElement !== document) {
-                if (targetElement.classList && targetElement.classList.contains('sort-filter-btn')) break;
-                targetElement = targetElement.parentNode;
+        document.addEventListener('click', function (e) {
+            var target = e.target;
+            while (target && target !== document) {
+                if (target.classList && target.classList.contains('sort-filter-btn')) break;
+                target = target.parentNode;
             }
-            if (!targetElement || targetElement === document) return;
+            if (!target || target === document) return;
 
-            clickEvent.preventDefault();
+            e.preventDefault();
 
-            var sortKey = targetElement.getAttribute('data-sort-key');
-            var sortDirection = targetElement.getAttribute('data-sort-dir').toUpperCase();
+            var sortKey = target.getAttribute('data-sort-key');
+            var sortDirection = target.getAttribute('data-sort-dir').toUpperCase();
             if (!sortKey || !sortDirection) return;
 
-            var currentSortSelection = getCurrentSortSelection();
-            var isSameSelection = currentSortSelection
-                && currentSortSelection.key === sortKey
-                && currentSortSelection.dir === sortDirection;
+            var current = getCurrentSortSelection();
+            var isSame = current && current.key === sortKey && current.dir === sortDirection;
 
-            if (isSameSelection) {
+            if (isSame) {
                 updateSortButtons(null);
                 syncHiddenSortFields(null);
             } else {
@@ -1428,15 +1254,15 @@
     }
 
     function initAll() {
-        try { initFilterSort(); } catch (sortInitError) { console.error('[filters] sort init failed', sortInitError); }
-        try { initFilterMasks(); } catch (masksInitError) { console.error('[filters] masks init failed', masksInitError); }
-        try { initFilterAccordions(); } catch (accordionsInitError) { console.error('[filters] accordions init failed', accordionsInitError); }
-        try { initFilterClearButtons(); } catch (clearButtonsInitError) { console.error('[filters] clear buttons init failed', clearButtonsInitError); }
-        try { initFiltersApplyButton(); } catch (applyInitError) { console.error('[filters] apply init failed', applyInitError); }
-        try { initOverlayAndClose(); } catch (overlayInitError) { console.error('[filters] overlay init failed', overlayInitError); }
-        try { initStepperButtons(); } catch (stepperInitError) { console.error('[filters] stepper init failed', stepperInitError); }
-        try { initFilterEnterKeyHandler(); } catch (enterInitError) { console.error('[filters] enter init failed', enterInitError); }
-        try { bindWheelPassthrough(); } catch (wheelInitError) { console.error('[filters] wheel init failed', wheelInitError); }
+        try { initFilterSort(); } catch (e) { console.error('[filters] sort init failed', e); }
+        try { initFilterMasks(); } catch (e) { console.error('[filters] masks init failed', e); }
+        try { initFilterAccordions(); } catch (e) { console.error('[filters] accordions init failed', e); }
+        try { initFilterClearButtons(); } catch (e) { console.error('[filters] clear buttons init failed', e); }
+        try { initFiltersApplyButton(); } catch (e) { console.error('[filters] apply init failed', e); }
+        try { initOverlayAndClose(); } catch (e) { console.error('[filters] overlay init failed', e); }
+        try { initStepperButtons(); } catch (e) { console.error('[filters] stepper init failed', e); }
+        try { initFilterEnterKeyHandler(); } catch (e) { console.error('[filters] enter init failed', e); }
+        try { bindWheelPassthrough(); } catch (e) { console.error('[filters] wheel init failed', e); }
     }
 
     if (document.readyState === 'loading') {
@@ -1447,9 +1273,8 @@
 
     window.validateSearchQuery = validateSearchQuery;
     window.toggleFiltersModal = toggleFiltersModal;
-    window.handleOverlayClick = handleOverlayClick;
     window.calculateRangeMinutes = calculateRangeMinutes;
-    window.normalizeDurationFilters = normalizeDurationFilters;
+    window.normalizeDurationFilters = calculateRangeMinutes;
     window.validateFilter = validateFilter;
     window.stepFilterValue = stepFilterValue;
     window.startSteppingFilter = startSteppingFilter;
@@ -1457,9 +1282,6 @@
     window.setupSelectAllCheckbox = setupSelectAllCheckbox;
     window.resetFiltersForm = resetFiltersForm;
     window.applyFiltersFromModal = applyFiltersFromModal;
-    window.attachFiltersAsHiddenInputsTo = attachFiltersAsHiddenInputsTo;
-    window.removeEmptyFormFields = removeEmptyFormFields;
-    window.isFilterMeaningful = isFilterMeaningful;
     window.submitCombinedSearch = submitCombinedSearch;
     window.focusNextFilterField = focusNextFilterField;
     window.initFilterMasks = initFilterMasks;

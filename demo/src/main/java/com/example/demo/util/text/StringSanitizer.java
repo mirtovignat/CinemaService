@@ -20,7 +20,4 @@ public final class StringSanitizer {
         return rawValue == null ? "" : rawValue.trim();
     }
 
-    public static String trimOrFallback(String rawValue, String fallbackValue) {
-        return trimToNull(rawValue).orElse(fallbackValue);
-    }
 }

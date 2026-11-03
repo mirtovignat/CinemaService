@@ -5,117 +5,80 @@
 </head>
 <body>
 <header th:fragment="header" class="site-header">
-
     <div class="logo-link">
-        <a href="/favicon.ico" target="_blank" title="Открыть favicon">
-            <img src="/favicon.ico" alt="Favicon">
+        <a href="/" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
+            <img src="/logo.png" alt="" style="height: 36px; width: 36px; object-fit: cover; border-radius: 6px;">
+            <span style="font-family: 'Inter', sans-serif; font-size: 18px; font-weight: 600; color: white; letter-spacing: 0.2px;">
+                CinemaService
+            </span>
         </a>
-        <a href="/">CinemaService</a>
     </div>
 
     <div class="search-container">
         <form id="headerSearchForm" action="/" method="get" class="search-form">
             <div class="search-input-wrapper" id="headerSearchWrapper">
-                <span class="search-icon">
-                    <th:block th:replace="~{fragments/icons :: icon-search}"></th:block>
-                </span>
-                <button type="button"
-                        class="filters-inline-btn"
-                        id="headerFiltersBtn"
-                        aria-label="Фильтры (включая поиск по актёрам)"
-                        title="Фильтры (включая поиск по актёрам)">
+                <span class="search-icon"><th:block th:replace="~{fragments/icons :: icon-search}"></th:block></span>
+                <button type="button" class="filters-inline-btn" id="headerFiltersBtn" aria-label="Фильтры"
+                        title="Фильтры">
                     <th:block th:replace="~{fragments/icons :: icon-filter}"></th:block>
                 </button>
                 <label for="headerSearchInput" class="visually-hidden">Поиск фильмов</label>
-                <input type="text" id="headerSearchInput" autocomplete="off"
-                       placeholder="Поиск фильмов..." maxlength="100"
+                <input type="text" id="headerSearchInput" autocomplete="off" placeholder="Поиск фильмов..."
+                       maxlength="100"
                        th:value="${param.title != null and !#strings.isEmpty(param.title[0]) ? param.title[0] : ''}">
-
-                <button type="button"
-                        class="header-search-clear"
-                        id="headerSearchClear"
-                        aria-label="Очистить поиск"
+                <button type="button" class="header-search-clear" id="headerSearchClear" aria-label="Очистить поиск"
                         title="Очистить">
-                    <svg xmlns="http://www.w3.org/2000/svg"
-                         viewBox="0 0 24 24"
-                         fill="none"
-                         stroke="currentColor"
-                         stroke-width="1.8"
-                         stroke-linecap="round"
-                         aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
                         <path d="M7 7l10 10M17 7L7 17"/>
                     </svg>
                 </button>
-
-                <span id="headerAutocompleteOverlay"
-                      class="search-autocomplete-overlay"
-                      aria-hidden="true">
-                    <span class="typed" id="headerAutocompleteTyped"></span>
-                    <span class="hint" id="headerAutocompleteHint"></span>
-                </span>
-
+                <span id="headerAutocompleteOverlay" class="search-autocomplete-overlay" aria-hidden="true"><span
+                        class="typed" id="headerAutocompleteTyped"></span><span class="hint"
+                                                                                id="headerAutocompleteHint"></span></span>
                 <div id="headerSuggestions" class="header-suggestions"></div>
             </div>
         </form>
-        <button type="button" class="search-btn search-btn-outside" id="headerSearchSubmitBtn">
-            Найти
-        </button>
+        <button type="button" class="search-btn search-btn-outside" id="headerSearchSubmitBtn">Найти</button>
     </div>
 
     <div class="header-actions">
-        <button type="button" class="action-button favourites-btn" id="headerFavouritesBtn"
-                title="Избранное">
+        <button type="button" class="action-button favourites-btn" id="headerFavouritesBtn" title="Избранное">
             <th:block th:replace="~{fragments/icons :: icon-heart}"></th:block>
             <span id="favourites-count" class="count-badge"
                   th:text="${badges != null and badges.favouritesCount != null ? badges.favouritesCount : 0}"
                   th:style="${(badges == null or badges.favouritesCount == null or badges.favouritesCount == 0)} ? 'display: none;' : ''">0</span>
         </button>
-
         <button type="button" class="action-button cart-btn" id="headerCartBtn" title="Корзина">
             <th:block th:replace="~{fragments/icons :: icon-cart}"></th:block>
             <span id="cart-count" class="count-badge"
                   th:text="${badges != null and badges.cartCount != null ? badges.cartCount : 0}"
                   th:style="${(badges == null or badges.cartCount == null or badges.cartCount == 0)} ? 'display: none;' : ''">0</span>
         </button>
-
         <div th:if="${sessionUser.authenticated}" class="user-menu" id="userMenu">
             <div class="user-menu-toggle" id="userMenuToggle" data-action="toggle-user-menu">
-                <div class="user-avatar-letter"
-                     th:text="${sessionUser.getFirstUsernameLetter()}"></div>
-                <span class="toggle-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg"
-                         viewBox="0 0 24 24"
-                         fill="none"
-                         stroke="currentColor"
-                         stroke-width="2"
-                         stroke-linecap="round"
-                         stroke-linejoin="round"
-                         aria-hidden="true">
-                        <path d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
-                    </svg>
-                </span>
+                <div class="user-avatar-letter" th:text="${sessionUser.getFirstUsernameLetter()}"></div>
+                <span class="toggle-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                               stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                               stroke-linejoin="round" aria-hidden="true"><path
+                        d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg></span>
             </div>
             <div class="user-dropdown">
                 <div class="user-dropdown-header">
                     <div class="user-dropdown-avatar">
-                        <div class="user-avatar-letter"
-                             th:text="${sessionUser.getFirstUsernameLetter()}"></div>
+                        <div class="user-avatar-letter" th:text="${sessionUser.getFirstUsernameLetter()}"></div>
                     </div>
                     <div class="user-dropdown-info">
-                        <div class="user-dropdown-name">
-                            <span th:text="${sessionUser.username()}"></span>
-                        </div>
+                        <div class="user-dropdown-name"><span th:text="${sessionUser.username()}"></span></div>
                     </div>
                 </div>
                 <div class="user-dropdown-divider"></div>
                 <a th:href="@{/personal-account}" class="user-dropdown-item">
                     <th:block th:replace="~{fragments/icons :: icon-user}"></th:block>
-                    Личный кабинет
-                </a>
+                    Личный кабинет</a>
                 <a th:href="@{/settings/change/pwd}" class="user-dropdown-item">
                     <th:block th:replace="~{fragments/icons :: icon-settings}"></th:block>
-                    Настройки
-                </a>
+                    Настройки</a>
                 <div class="user-dropdown-divider"></div>
                 <form th:action="@{/logout}" method="post" style="margin:0;">
                     <button type="submit" class="user-dropdown-logout">
@@ -126,29 +89,17 @@
                 <div class="user-dropdown-divider"></div>
                 <div class="account-switcher" id="accountSwitcher"></div>
                 <div class="user-dropdown-divider"></div>
-                <div class="user-dropdown-add-account" id="userMenuAddAccount">
-                    <span>Добавить аккаунт</span>
-                </div>
+                <div class="user-dropdown-add-account" id="userMenuAddAccount"><span>Добавить аккаунт</span></div>
             </div>
         </div>
-
         <a th:unless="${sessionUser.authenticated}" th:href="@{/login}" class="login-button">
             <th:block th:replace="~{fragments/icons :: icon-user}"></th:block>
-            Войти
-        </a>
+            Войти</a>
     </div>
-
-    <input type="hidden" id="currentUserId"
-           th:value="${sessionUser.authenticated ? sessionUser.id() : ''}">
-
-    <div th:if="${sessionUser.authenticated}"
-         id="currentUserData"
-         th:data-username="${sessionUser.username()}"
+    <input type="hidden" id="currentUserId" th:value="${sessionUser.authenticated ? sessionUser.id() : ''}">
+    <div th:if="${sessionUser.authenticated}" id="currentUserData" th:data-username="${sessionUser.username()}"
          style="display:none;"></div>
-
     <th:block th:replace="~{fragments/filters-modal :: filtersModal}"></th:block>
-
 </header>
-
 </body>
 </html>
