@@ -23,9 +23,6 @@ public class MinIOConfig {
     @Value("${minio.endpoint}")
     private String endpoint;
 
-    @Value("${minio.external-endpoint:${minio.endpoint}}")
-    private String externalEndpoint;
-
     @Value("${minio.access-key}")
     private String accessKey;
 

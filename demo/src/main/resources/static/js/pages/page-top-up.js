@@ -361,6 +361,24 @@
         });
     }
 
+    function syncFromField() {
+        var fromInput = document.querySelector('#topUpForm input[name="from"]');
+        if (!fromInput) return;
+        if (fromInput.value) return;
+        var ref = document.referrer;
+        if (!ref) return;
+        try {
+            var refUrl = new URL(ref);
+            if (refUrl.origin !== window.location.origin) return;
+            var path = refUrl.pathname;
+            if (!path || path.charAt(0) !== '/') return;
+            if (path.charAt(1) === '/' || path.charAt(1) === '\\') return;
+            if (path === '/wallet/top-up') return;
+            var query = refUrl.search || '';
+            fromInput.value = path + query;
+        } catch (error) {}
+    }
+
     function initTopUp() {
         var amountInput = document.getElementById('amount');
         var userDataElement = document.getElementById('userData');
@@ -376,6 +394,7 @@
         var topUpForm = document.getElementById('topUpForm');
 
         applyAmountFromStorage();
+        syncFromField();
 
         if (topUpForm && window.FormGuard) {
             window.FormGuard.register('topUp', function () { return topUpForm; });

@@ -28,11 +28,7 @@ public class MovieFilterController {
     @GetMapping("/meta")
     public ResponseEntity<MovieFilterMetaResponse> meta() {
         MovieRangesSnapshot snapshot = movieFilterMetaService.getRanges();
-        CursorPageRequest initialRequest = CursorPageRequest.builder().build();
-
         return ResponseEntity.ok(MovieFilterMetaResponse.builder()
-                .genres(movieFilterMetaService.getAllGenres())
-                .directors(movieFilterMetaService.searchDirectors(initialRequest).getContent())
                 .movieRangesSnapshot(snapshot)
                 .build());
     }

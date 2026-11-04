@@ -9,11 +9,11 @@ import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.dto.response.CursorPageResponse;
 import com.example.demo.dto.response.ReviewsPageResponse;
 import com.example.demo.exception.SuccessCode;
+import com.example.demo.model.entity.Movie;
 import com.example.demo.service.catalog.RatedCommandService;
 import com.example.demo.service.catalog.RatedQueryService;
 import com.example.demo.service.cursor.ReviewCursorService;
 import com.example.demo.service.movie.MovieService;
-import com.example.demo.service.user.UserQueryService;
 import com.example.demo.util.MessageUtils;
 import com.example.demo.web.resolver.CurrentUserId;
 import com.example.demo.web.resolver.ReviewSortResolver;
@@ -38,7 +38,6 @@ public class RatedController {
     private final RatedCommandService ratedCommandService;
     private final RatedQueryService ratedQueryService;
     private final ReviewCursorService reviewCursorService;
-    private final UserQueryService userQueryService;
     private final MovieService movieService;
     private final MessageUtils messageUtils;
     private final ReviewSortResolver reviewSortResolver;
@@ -57,7 +56,10 @@ public class RatedController {
                              Model model) {
 
         SortDirection resolvedSortDirection = reviewSortResolver.resolveAndPersist(
-                reviewsQueryDTO, sortCookie, httpServletResponse);
+                reviewsQueryDTO,
+                sortCookie,
+                httpServletResponse
+        );
 
         CursorPageResponse<ReviewViewDTO> cursorPageResponse =
                 reviewCursorService.page(
@@ -69,14 +71,15 @@ public class RatedController {
                                 .viewerId(userId)
                                 .build());
 
+        Movie movie = movieService.getMovie(id);
+
         ReviewsPageResponse reviewsPageResponse = ReviewsPageResponse.builder()
                 .cursorPageResponse(cursorPageResponse)
                 .reviewViewDTO(userId != null ? ratedQueryService.getRating(id, userId) : null)
                 .movieId(id)
-                .movieTitle(movieService.getMovie(id).getTitle())
-                .avgRating(ratedQueryService.getMovieRating(id))
+                .movieTitle(movie.getTitle())
+                .avgRating(movie.getRating())
                 .totalReviews(ratedQueryService.getReviewsCountForMovie(id))
-                .currentUsername(userId != null ? userQueryService.getUsername(userId) : null)
                 .build();
 
         model.addAttribute("reviewsPageResponse", reviewsPageResponse);

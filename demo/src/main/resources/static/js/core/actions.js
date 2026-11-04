@@ -44,22 +44,6 @@
         window.location.href = '/movies/' + encodeURIComponent(movieId);
     }
 
-    var ACTION_BUTTONS_SELECTOR = [
-        'button[data-action="add-to-cart"]',
-        'button[data-action="buy-now"]',
-        'button[data-action="toggle-favourite"]',
-        'button[data-action="show-rating"]',
-        'button[data-action="confirm-remove-from-cart"]',
-        'button[data-action="remove-from-favourites"]',
-        'button[data-action="bulk-buy"]',
-        'button[data-action="clear-cart"]',
-        'button[data-action="single-buy"]',
-        'button[data-action="clear-favourites"]',
-        'button[data-action="toggle-history-dropdown"]',
-        'button[data-action="delete-history-item"]',
-        'button[data-action="open-clear-history-modal"]'
-    ].join(', ');
-
     function findWatchTarget(e) {
         return e.target.closest(
             '.watch-btn-neon, ' +
@@ -78,37 +62,35 @@
             return;
         }
 
-        var card = e.target.closest('.movie-card, .library-card, .history-item, .cart-card, .favourites-card');
-        if (card) {
-            var movieId = card.getAttribute('data-movie-id');
-            var posterUrl = getPosterUrl(card);
-            if (movieId && !posterUrl) {
-                if (e.target.closest(ACTION_BUTTONS_SELECTOR)) {
-                    return;
-                }
-                if (e.target.closest('a[href]')) {
-                    return;
-                }
+        var actionEl = e.target.closest && e.target.closest('[data-action]');
+        if (actionEl) {
+            var actionName = actionEl.getAttribute('data-action');
+            if (!actionName) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            var isSubmit = actionEl.tagName === 'BUTTON' && actionEl.getAttribute('type') === 'submit';
+            var handled = run(actionName, actionEl, e);
+
+            if (!handled && actionEl.tagName === 'A' && actionEl.getAttribute('href') === '#') {
                 e.preventDefault();
-                e.stopPropagation();
-                redirectToMovie(movieId);
-                return;
             }
+            return;
         }
 
-        var el = e.target.closest && e.target.closest('[data-action]');
-        if (!el) return;
-        var action = el.getAttribute('data-action');
-        if (!action) return;
+        var card = e.target.closest('.movie-card, .library-card, .history-item, .cart-card, .favourites-card');
+        if (!card) return;
 
-        var isSubmit = el.tagName === 'BUTTON' && el.getAttribute('type') === 'submit';
-        var handled = run(action, el, e);
+        var movieId = card.getAttribute('data-movie-id');
+        var posterUrl = getPosterUrl(card);
+        if (!movieId || posterUrl) return;
 
-        if (handled && el.tagName === 'BUTTON' && !isSubmit) {
-            e.preventDefault();
-        } else if (!handled && el.tagName === 'A' && el.getAttribute('href') === '#') {
-            e.preventDefault();
-        }
+        if (e.target.closest('a[href]')) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+        redirectToMovie(movieId);
     }
 
     function handleKeydown(e) {

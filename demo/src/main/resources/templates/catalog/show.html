@@ -222,7 +222,7 @@
 
                     <div class="rating-block-bottom"
                          th:if="${movieForUser.movie.rating != null}">
-                        <span class="rating-label-bottom">Средний рейтинг:</span>
+                        <span class="rating-label-bottom">Ср. рейтинг:</span>
                         <span class="rating-value-bottom js-rating-badge-max"
                               th:data-movie-id="${movieForUser.movie.id}"
                               th:text="'★ ' + ${#numbers.formatDecimal(movieForUser.movie.rating, 1, 1)} + ' / 10'">★ 7,7 / 10</span>

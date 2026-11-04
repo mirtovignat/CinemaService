@@ -4,7 +4,7 @@ import com.example.demo.cursor.CursorPageRequest;
 import com.example.demo.cursor.CursorUtils;
 import com.example.demo.cursor.codec.CursorCodec;
 import com.example.demo.dto.movie.range.MovieRangesSnapshot;
-import com.example.demo.mapper.entity.MovieRangesSnapshotMapper;
+import com.example.demo.mapper.util.MovieRangesSnapshotMapper;
 import com.example.demo.repository.entity.MovieRepository;
 import com.example.demo.util.text.LikeEscaper;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,7 +39,7 @@ public class MovieFilterMetaService {
 
     @Transactional(readOnly = true)
     public Slice<String> searchDirectors(CursorPageRequest cursorPageRequest) {
-        String prefix = LikeEscaper.escape(CursorUtils.safeQuery(cursorPageRequest));
+        String prefix = CursorUtils.normalizeQuery(cursorPageRequest.query());
         boolean hasCursor = CursorUtils.hasCursor(cursorPageRequest);
         String cursor = hasCursor
                 ? LikeEscaper.escape(cursorCodec.decode(cursorPageRequest.cursor()).value())
@@ -51,7 +51,7 @@ public class MovieFilterMetaService {
 
     @Transactional(readOnly = true)
     public Slice<String> searchGenres(CursorPageRequest cursorPageRequest) {
-        String prefix = LikeEscaper.escape(CursorUtils.safeQuery(cursorPageRequest));
+        String prefix = CursorUtils.normalizeQuery(cursorPageRequest.query());
         boolean hasCursor = CursorUtils.hasCursor(cursorPageRequest);
         String cursor = hasCursor
                 ? LikeEscaper.escape(cursorCodec.decode(cursorPageRequest.cursor()).value())

@@ -5,7 +5,6 @@ import com.example.demo.dto.user.SessionUser;
 import com.example.demo.exception.BusinessException;
 import com.example.demo.exception.ErrorCode;
 import com.example.demo.mapper.entity.UserMapper;
-import com.example.demo.model.base.DeletableState;
 import com.example.demo.model.entity.User;
 import com.example.demo.repository.entity.UserRepository;
 import com.example.demo.util.PhoneNormalizer;
@@ -13,8 +12,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.math.BigDecimal;
 
 @Service
 @AllArgsConstructor
@@ -41,8 +38,8 @@ public class AuthorizeService {
     }
 
     public void validateUniqueness(String username, String email, String normalizedPhone) {
-        if (userRepository.existsByUsername(username)) {
-            throw BusinessException.of(ErrorCode.ALREADY_REGISTERED);
+        if (userRepository.existsByUsernameIgnoreCase(username)) {
+            throw BusinessException.of(ErrorCode.USERNAME_TAKEN);
         }
         if (userRepository.existsByEmail(email)) {
             throw BusinessException.of(ErrorCode.ALREADY_REGISTERED);
@@ -66,8 +63,6 @@ public class AuthorizeService {
         User preparedUser = userMapper.fromRegisterForm(registerFormDTO);
         preparedUser.setPasswordHash(passwordEncoder.encode(registerFormDTO.rawPassword()));
         preparedUser.setPhone(phoneNormalizer.normalize(registerFormDTO.phone()));
-        preparedUser.setBalance(BigDecimal.ZERO);
-        preparedUser.setDeletableState(DeletableState.builder().build());
         return preparedUser;
     }
 }

@@ -7,19 +7,14 @@ import com.example.demo.dto.wallet.WalletForOwnerViewDTO;
 import com.example.demo.mapper.util.AgeMapper;
 import com.example.demo.mapper.util.NameMapper;
 import com.example.demo.model.entity.User;
-import com.example.demo.util.PhoneNormalizer;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 
 @Mapper(componentModel = "spring",
         imports = {NameMapper.class, AgeMapper.class})
 public abstract class UserMapper {
-
-    @Autowired
-    protected PhoneNormalizer phoneNormalizer;
 
     @Mapping(target = "surname",    expression = "java(NameMapper.extractSurname(user.getFullName()))")
     @Mapping(target = "name",       expression = "java(NameMapper.extractName(user.getFullName()))")
@@ -36,8 +31,7 @@ public abstract class UserMapper {
     @Mapping(target = "deletableState", ignore = true)
     @Mapping(target = "passwordHash", ignore = true)
     @Mapping(target = "fullName", expression = "java(NameMapper.toFullName(registerFormDTO.surname(), registerFormDTO.name(), registerFormDTO.patronymic()))")
-    @Mapping(target = "phone", expression = "java(phoneNormalizer.normalize(registerFormDTO.phone()))")
-    @Mapping(target = "balance", ignore = true)
+    @Mapping(target = "balance", constant = "0")
     @Mapping(target = "purchases", ignore = true)
     @Mapping(target = "favourites", ignore = true)
     @Mapping(target = "ratings", ignore = true)

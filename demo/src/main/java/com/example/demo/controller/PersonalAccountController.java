@@ -10,7 +10,6 @@ import com.example.demo.dto.user.SessionUser;
 import com.example.demo.dto.user.UserForOwnerViewDTO;
 import com.example.demo.exception.SuccessCode;
 import com.example.demo.model.entity.User;
-import com.example.demo.service.movie.MovieFilterMetaService;
 import com.example.demo.service.user.UserCommandService;
 import com.example.demo.service.user.UserQueryService;
 import com.example.demo.util.MessageUtils;
@@ -30,8 +29,6 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.List;
-
 @Controller
 @AllArgsConstructor
 public class PersonalAccountController {
@@ -39,7 +36,6 @@ public class PersonalAccountController {
     private final UserCommandService userCommandService;
     private final UserQueryService userQueryService;
     private final MessageUtils messageUtils;
-    private final MovieFilterMetaService movieFilterMetaService;
     private final SessionAuthenticator sessionAuthenticator;
     private final ApiResponseFactory apiResponseFactory;
 
@@ -48,7 +44,6 @@ public class PersonalAccountController {
         User user = userQueryService.getUser(userId);
         PersonalAccountResponse personalAccountResponse = userQueryService.buildUserPage(user);
         model.addAttribute("personalAccountResponse", personalAccountResponse);
-        model.addAttribute("genres", movieFilterMetaService.getAllGenres());
         return "account/personal-account";
     }
 
@@ -56,9 +51,7 @@ public class PersonalAccountController {
     public String editProfile(@CurrentUserId Long userId, Model model) {
         User user = userQueryService.getUser(userId);
         PersonalAccountResponse personalAccountResponse = userQueryService.buildUserPage(user);
-        List<String> genres = movieFilterMetaService.getAllGenres();
         model.addAttribute("personalAccountResponse", personalAccountResponse);
-        model.addAttribute("genres", genres);
         return "account/profile";
     }
 
@@ -116,9 +109,17 @@ public class PersonalAccountController {
         if (bindingResult.hasErrors()) {
             return "account/change-password";
         }
+
+        String successMessage = messageUtils.getSuccess(SuccessCode.PASSWORD_HAS_BEEN_CHANGED);
+
+        if (passwordChangingDTO.isCoincidence()) {
+            redirectAttributes.addFlashAttribute("successMessage", successMessage);
+            return "redirect:/";
+        }
+
         String newPasswordHash = userCommandService.prepareAndValidatePassword(passwordChangingDTO, userId);
         userCommandService.updatePassword(newPasswordHash, userId);
-        String successMessage = messageUtils.getSuccess(SuccessCode.PASSWORD_HAS_BEEN_CHANGED);
+
         redirectAttributes.addFlashAttribute("successMessage", successMessage);
 
         String targetPath = NavigationUtils.resolvePreviousPage(httpSession, "/personal-account");

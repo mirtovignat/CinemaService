@@ -57,6 +57,7 @@
         <div class="middle-section">
             <form th:action="@{/wallet/top-up}" th:object="${topUpFormDTO}" method="post" novalidate id="topUpForm"
                   style="display:flex; flex-direction:column; gap:12px; height:auto; justify-content:flex-start;">
+                <input type="hidden" name="from" th:value="${param.from}"/>
 
                 <div th:if="${successMessage}" class="flash-success" th:text="${successMessage}">Баланс успешно
                     пополнен!

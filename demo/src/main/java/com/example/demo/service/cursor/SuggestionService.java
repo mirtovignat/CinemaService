@@ -1,8 +1,10 @@
 package com.example.demo.service.cursor;
 
+import com.example.demo.util.text.SearchQueryNormalizer;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiFunction;
 
 @Service
@@ -12,16 +14,15 @@ public class SuggestionService {
             Long userId,
             String query,
             BiFunction<Long, String, List<T>> fetcher) {
-        if (userId == null || query == null || query.isBlank()) {
+        if (userId == null) {
             return List.of();
         }
 
-        String normalized = query.trim().toLowerCase().replace('ё', 'е');
-
-        if (normalized.isBlank()) {
+        Optional<String> normalizedQuery = SearchQueryNormalizer.normalizeOptional(query);
+        if (normalizedQuery.isEmpty()) {
             return List.of();
         }
 
-        return fetcher.apply(userId, normalized);
+        return fetcher.apply(userId, normalizedQuery.get());
     }
 }

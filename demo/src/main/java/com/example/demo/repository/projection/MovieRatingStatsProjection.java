@@ -4,5 +4,6 @@ import java.math.BigDecimal;
 
 public interface MovieRatingStatsProjection {
     BigDecimal getAvgRating();
+
     Long getTotalCount();
 }

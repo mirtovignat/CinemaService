@@ -28,9 +28,7 @@ public record PasswordChangingDTO(
         }
     }
 
-    public void isCoincidence() {
-        if (Objects.equals(currentPassword(), rawPassword())) {
-            throw BusinessException.of(ErrorCode.DATA_COINCIDENCE);
-        }
+    public boolean isCoincidence() {
+        return Objects.equals(currentPassword(), rawPassword());
     }
 }

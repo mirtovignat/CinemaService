@@ -21,7 +21,8 @@ public class CacheControlInterceptor implements HandlerInterceptor {
                 || uri.startsWith("/images/")
                 || uri.startsWith("/webjars/")
                 || uri.equals("/logo.png")
-                || uri.equals("/logo.png")) {
+                || uri.equals("/favicon.png")
+                || uri.equals("/favicon.ico")) {
             return true;
         }
 

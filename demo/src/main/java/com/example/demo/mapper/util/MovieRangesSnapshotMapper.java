@@ -1,8 +1,7 @@
-package com.example.demo.mapper.entity;
+package com.example.demo.mapper.util;
 
 import com.example.demo.dto.movie.range.MovieRangesSnapshot;
 import com.example.demo.dto.movie.range.Range;
-import com.example.demo.mapper.util.DurationMapper;
 import com.example.demo.repository.projection.MovieRangeProjection;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;

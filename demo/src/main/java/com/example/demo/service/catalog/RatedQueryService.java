@@ -9,10 +9,11 @@ import com.example.demo.repository.entity.RatedMovieRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -55,7 +56,7 @@ public class RatedQueryService {
     }
 
     public String getNormalizedRating(BigDecimal rating) {
-        return rating != null ? rating.toString() : "-";
+        return rating != null ? rating.toPlainString() : "-";
     }
 
     public Long getReviewsCountForMovie(Long movieId) {
@@ -73,22 +74,6 @@ public class RatedQueryService {
 
     public Map<Long, ReviewViewDTO> getOwnRatings(Long userId) {
         return ratedMovieRepository.findAllActiveByUserId(userId).stream()
-                .map(ratedMovie -> reviewViewAssembler.assemble(ratedMovie, userId))
-                .collect(Collectors.toMap(
-                        ReviewViewDTO::movieId,
-                        Function.identity(),
-                        (existing, replacement) -> existing,
-                        LinkedHashMap::new
-                ));
-    }
-
-    @Transactional(readOnly = true)
-    public Map<Long, ReviewViewDTO> getOwnRatingsForMovies(Collection<Long> movieIds, Long userId) {
-        if (movieIds == null || movieIds.isEmpty() || userId == null) {
-            return Map.of();
-        }
-        Set<Long> requestedIds = new LinkedHashSet<>(movieIds);
-        return ratedMovieRepository.findAllByUserIdAndMovieIdIn(userId, requestedIds).stream()
                 .map(ratedMovie -> reviewViewAssembler.assemble(ratedMovie, userId))
                 .collect(Collectors.toMap(
                         ReviewViewDTO::movieId,

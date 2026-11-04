@@ -71,7 +71,7 @@ public class GlobalExceptionHandler {
         String errorMessage = messageUtils.getError(errorCode, businessException.getArgs());
         HttpStatus httpStatus = mapErrorCodeToHttpStatus(errorCode);
         return buildErrorResponse(httpServletRequest, model, redirectAttributes,
-                errorCode, errorMessage, httpStatus, null);
+                errorCode, errorMessage, httpStatus);
     }
 
     @ExceptionHandler(IllegalStateException.class)
@@ -82,7 +82,7 @@ public class GlobalExceptionHandler {
         String errorMessage = messageUtils.getError(errorCode);
         HttpStatus httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
         return buildErrorResponse(httpServletRequest, model, redirectAttributes,
-                errorCode, errorMessage, httpStatus, null);
+                errorCode, errorMessage, httpStatus);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -161,7 +161,7 @@ public class GlobalExceptionHandler {
         }
 
         return buildErrorResponse(httpServletRequest, model, redirectAttributes,
-                ErrorCode.VALIDATION_ERROR, validationMessage, HttpStatus.BAD_REQUEST, null);
+                ErrorCode.VALIDATION_ERROR, validationMessage, HttpStatus.BAD_REQUEST);
     }
 
     private String resolveFirstFieldErrorMessage(BindingResult bindingResult) {
@@ -176,11 +176,10 @@ public class GlobalExceptionHandler {
                                       RedirectAttributes redirectAttributes,
                                       ErrorCode errorCode,
                                       String errorMessage,
-                                      HttpStatus httpStatus,
-                                      Object data) {
+                                      HttpStatus httpStatus) {
         if (RequestUtils.isAjaxRequest(httpServletRequest)) {
             return ResponseEntity.status(httpStatus)
-                    .body(ApiResponse.errorWithDto(errorCode, errorMessage, data));
+                    .body(ApiResponse.error(errorCode, errorMessage));
         }
 
         String formViewName = resolveFormViewName(httpServletRequest);
@@ -273,7 +272,7 @@ public class GlobalExceptionHandler {
             case USER_NOT_FOUND, ENTITY_NOT_FOUND -> HttpStatus.NOT_FOUND;
             case PASSWORD_INVALID, NOT_AUTHORIZED -> HttpStatus.UNAUTHORIZED;
             case INSUFFICIENT_FUNDS -> HttpStatus.PAYMENT_REQUIRED;
-            case ALREADY_REGISTERED, ALREADY_TAKEN, DATA_COINCIDENCE -> HttpStatus.CONFLICT;
+            case ALREADY_REGISTERED, ALREADY_TAKEN, USERNAME_TAKEN, DATA_COINCIDENCE -> HttpStatus.CONFLICT;
             default -> HttpStatus.BAD_REQUEST;
         };
     }

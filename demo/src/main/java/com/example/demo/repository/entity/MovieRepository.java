@@ -76,21 +76,6 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
     Optional<BigDecimal> findRatingById(@Param("id") Long id);
 
     @Query("""
-            SELECT movie
-            FROM Movie movie
-            WHERE (:excludedIds IS NULL OR movie.id NOT IN :excludedIds)
-            AND movie.title IS NOT NULL
-            AND movie.title <> ''
-            AND movie.posterUrl IS NOT NULL
-            AND movie.posterUrl <> ''
-            ORDER BY movie.rating DESC NULLS LAST, movie.id ASC
-            """)
-    Slice<Movie> findRecommendedMoviesSlice(
-            @Param("excludedIds") List<Long> excludedIds,
-            Pageable pageable
-    );
-
-    @Query("""
             SELECT
                 MIN(movie.duration)    AS minDuration,
                 MAX(movie.duration)    AS maxDuration,

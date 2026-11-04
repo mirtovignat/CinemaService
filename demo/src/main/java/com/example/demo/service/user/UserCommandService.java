@@ -7,7 +7,10 @@ import com.example.demo.exception.BusinessException;
 import com.example.demo.exception.ErrorCode;
 import com.example.demo.model.entity.User;
 import com.example.demo.repository.base.WatchHistoryItemRepository;
-import com.example.demo.repository.entity.*;
+import com.example.demo.repository.entity.CartItemRepository;
+import com.example.demo.repository.entity.FavouriteMovieRepository;
+import com.example.demo.repository.entity.PurchasedMovieRepository;
+import com.example.demo.repository.entity.UserRepository;
 import com.example.demo.util.PhoneNormalizer;
 import com.example.demo.util.text.StringSanitizer;
 import com.example.demo.util.validation.Amounts;
@@ -37,7 +40,6 @@ public class UserCommandService {
                               UserRepository userRepository,
                               CartItemRepository cartItemRepository,
                               FavouriteMovieRepository favouriteMovieRepository,
-                              RatedMovieRepository ratedMovieRepository,
                               PurchasedMovieRepository purchasedMovieRepository,
                               WatchHistoryItemRepository watchHistoryItemRepository,
                               PasswordEncoder passwordEncoder,
@@ -54,8 +56,7 @@ public class UserCommandService {
         this.maxBalance = maxBalance;
     }
 
-    public ProfileFieldUpdateDTO prepareAndValidateField(ProfileFieldUpdateDTO profileFieldUpdateDTO,
-                                                         Long userId) {
+    public ProfileFieldUpdateDTO prepareAndValidateField(ProfileFieldUpdateDTO profileFieldUpdateDTO, Long userId) {
         User user = userQueryService.getUser(userId);
         String field = StringSanitizer.trimOrEmpty(profileFieldUpdateDTO.field());
         Identifier identifier = profileFieldUpdateDTO.identifier();
@@ -66,12 +67,9 @@ public class UserCommandService {
                     throw BusinessException.of(ErrorCode.DATA_COINCIDENCE);
                 }
                 if (userRepository.existsByUsername(field)) {
-                    throw BusinessException.of(ErrorCode.ALREADY_TAKEN);
+                    throw BusinessException.of(ErrorCode.USERNAME_TAKEN);
                 }
-                return ProfileFieldUpdateDTO.builder()
-                        .identifier(identifier)
-                        .field(field)
-                        .build();
+                return ProfileFieldUpdateDTO.builder().identifier(identifier).field(field).build();
             }
             case EMAIL -> {
                 if (field.equals(user.getEmail())) {
@@ -80,10 +78,7 @@ public class UserCommandService {
                 if (userRepository.existsByEmail(field)) {
                     throw BusinessException.of(ErrorCode.ALREADY_TAKEN);
                 }
-                return ProfileFieldUpdateDTO.builder()
-                        .identifier(identifier)
-                        .field(field)
-                        .build();
+                return ProfileFieldUpdateDTO.builder().identifier(identifier).field(field).build();
             }
             case PHONE -> {
                 String currentPhone = StringSanitizer.trimOrEmpty(user.getPhone());
@@ -92,9 +87,7 @@ public class UserCommandService {
                     if (currentPhone.isEmpty()) {
                         throw BusinessException.of(ErrorCode.DATA_COINCIDENCE);
                     }
-                    return ProfileFieldUpdateDTO.builder()
-                            .identifier(identifier)
-                            .build();
+                    return ProfileFieldUpdateDTO.builder().identifier(identifier).build();
                 }
 
                 String normalizedPhone = phoneNormalizer.normalize(field);
@@ -107,10 +100,7 @@ public class UserCommandService {
                 if (userRepository.existsByPhone(normalizedPhone)) {
                     throw BusinessException.of(ErrorCode.ALREADY_TAKEN);
                 }
-                return ProfileFieldUpdateDTO.builder()
-                        .identifier(identifier)
-                        .field(normalizedPhone)
-                        .build();
+                return ProfileFieldUpdateDTO.builder().identifier(identifier).field(normalizedPhone).build();
             }
             default -> throw BusinessException.of(ErrorCode.VALIDATION_ERROR);
         }
@@ -148,7 +138,6 @@ public class UserCommandService {
             throw BusinessException.of(ErrorCode.PASSWORD_INVALID);
         }
         passwordChangingDTO.isMismatch();
-        passwordChangingDTO.isCoincidence();
     }
 
     @Transactional

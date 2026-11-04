@@ -6,6 +6,7 @@ import com.example.demo.filter.MovieSearchHelper;
 import com.example.demo.mapper.entity.MovieMapper;
 import com.example.demo.model.entity.Movie;
 import com.example.demo.repository.entity.MovieRepository;
+import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
+@AllArgsConstructor
 @Service
 public class MovieService {
 
@@ -22,16 +24,6 @@ public class MovieService {
     private final MovieMapper movieMapper;
     private final MovieUserStatusBatchLoader movieUserStatusBatchLoader;
     private final MovieSearchHelper movieSearchHelper;
-
-    public MovieService(MovieRepository movieRepository,
-                        MovieMapper movieMapper,
-                        MovieUserStatusBatchLoader movieUserStatusBatchLoader,
-                        MovieSearchHelper movieSearchHelper) {
-        this.movieRepository = movieRepository;
-        this.movieMapper = movieMapper;
-        this.movieUserStatusBatchLoader = movieUserStatusBatchLoader;
-        this.movieSearchHelper = movieSearchHelper;
-    }
 
     @Transactional(readOnly = true)
     public Page<MovieForUser<MovieCardViewDTO>> getMovies(MovieFilter movieFilter,

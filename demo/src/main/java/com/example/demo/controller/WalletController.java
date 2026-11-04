@@ -10,6 +10,7 @@ import com.example.demo.service.user.UserQueryService;
 import com.example.demo.util.MessageUtils;
 import com.example.demo.web.resolver.CurrentUserId;
 import com.example.demo.web.security.SessionAuthenticator;
+import com.example.demo.web.util.NavigationUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -51,6 +52,7 @@ public class WalletController {
     @PostMapping("/top-up")
     public String topUp(@Valid @ModelAttribute("topUpFormDTO") TopUpFormDTO topUpFormDTO,
                         BindingResult bindingResult,
+                        @RequestParam(value = "from", required = false) String from,
                         SessionUser sessionUser,
                         HttpServletRequest httpServletRequest,
                         HttpServletResponse httpServletResponse,
@@ -71,6 +73,8 @@ public class WalletController {
         );
         String message = messageUtils.getSuccess(SuccessCode.TOPPED_UP);
         redirectAttributes.addFlashAttribute("successMessage", message);
-        return "redirect:/personal-account";
+
+        String targetPath = NavigationUtils.isSafeLocalPath(from) ? from : "/personal-account";
+        return "redirect:" + targetPath;
     }
 }

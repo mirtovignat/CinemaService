@@ -1,9 +1,7 @@
 package com.example.demo.service.movie;
 
 import com.example.demo.dto.base.UserStatus;
-import com.example.demo.dto.catalog.ReviewViewDTO;
 import com.example.demo.dto.movie.MovieUserStatus;
-import com.example.demo.service.catalog.RatedQueryService;
 import com.example.demo.service.linked_collection.UserStatusResolver;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -18,7 +16,6 @@ import java.util.Map;
 public class MovieUserStatusBatchLoader {
 
     private final UserStatusResolver userStatusResolver;
-    private final RatedQueryService ratedQueryService;
 
     @Transactional(readOnly = true)
     public Map<Long, MovieUserStatus> loadForMovies(List<Long> movieIds, Long userId) {
@@ -27,7 +24,6 @@ public class MovieUserStatusBatchLoader {
         }
 
         Map<Long, UserStatus> statuses = userStatusResolver.loadAllUserStatuses(userId, movieIds);
-        Map<Long, ReviewViewDTO> ownRatings = ratedQueryService.getOwnRatingsForMovies(movieIds, userId);
 
         Map<Long, MovieUserStatus> result = new HashMap<>(movieIds.size());
         for (Long movieId : movieIds) {
@@ -36,7 +32,7 @@ public class MovieUserStatusBatchLoader {
             boolean isInCart = !isBought && userStatus.inCart();
             result.put(
                     movieId,
-                    MovieUserStatus.of(isBought, isInCart, userStatus.inFavourites(), ownRatings.get(movieId))
+                    MovieUserStatus.of(isBought, isInCart, userStatus.inFavourites())
             );
         }
         return result;

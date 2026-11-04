@@ -4,31 +4,45 @@ import com.example.demo.dto.badges.BadgeCountsDTO;
 import com.example.demo.dto.user.SessionUser;
 import com.example.demo.service.BadgeService;
 import com.example.demo.web.security.CurrentUserProvider;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.ControllerAdvice;
-import org.springframework.web.bind.annotation.ModelAttribute;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.ModelAndView;
 
-@ControllerAdvice
+@Component
 @AllArgsConstructor
-public class SessionUserAdvice {
+public class SessionUserAdvice implements HandlerInterceptor {
 
     private final BadgeService badgeService;
     private final CurrentUserProvider currentUserProvider;
 
-    @ModelAttribute
-    public void addCommonAttributes(Model model) {
+    @Override
+    public void postHandle(@NotNull HttpServletRequest httpServletRequest,
+                           @NotNull HttpServletResponse httpServletResponse,
+                           @NotNull Object handler,
+                           ModelAndView modelAndView) {
+        if (modelAndView == null) {
+            return;
+        }
         SessionUser sessionUser = currentUserProvider.getSessionUser();
         if (sessionUser == null) {
             sessionUser = SessionUser.ANONYMOUS;
         }
-        model.addAttribute("sessionUser", sessionUser);
+        modelAndView.addObject("sessionUser", sessionUser);
+
+        String currentUri = httpServletRequest.getRequestURI();
+        if (httpServletRequest.getQueryString() != null) {
+            currentUri += "?" + httpServletRequest.getQueryString();
+        }
+        modelAndView.addObject("currentUri", currentUri);
 
         if (!sessionUser.isAuthenticated()) {
-            model.addAttribute("badges", BadgeCountsDTO.builder()
-                    .build());
+            modelAndView.addObject("badges", BadgeCountsDTO.builder().build());
             return;
         }
-        model.addAttribute("badges", badgeService.getBadgeCounts(sessionUser.id()));
+        modelAndView.addObject("badges", badgeService.getBadgeCounts(sessionUser.id()));
     }
 }

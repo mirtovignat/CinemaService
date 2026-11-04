@@ -61,7 +61,12 @@
                             <div class="detail-group fio-readonly">
                                 <span class="detail-label">Отчество</span>
                                 <div class="detail-value">
-                                    <span th:text="${personalAccountResponse.userForOwnerViewDTO.patronymic}"></span>
+                                <span th:if="${personalAccountResponse.userForOwnerViewDTO.patronymic != null and !#strings.isEmpty(personalAccountResponse.userForOwnerViewDTO.patronymic)}"
+                                      th:text="${personalAccountResponse.userForOwnerViewDTO.patronymic}"></span>
+                                    <span th:if="${personalAccountResponse.userForOwnerViewDTO.patronymic == null or #strings.isEmpty(personalAccountResponse.userForOwnerViewDTO.patronymic)}"
+                                          style="font-style: italic; color: #64748b;">
+                                    Не указано
+                                </span>
                                 </div>
                             </div>
 

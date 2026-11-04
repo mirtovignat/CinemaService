@@ -36,8 +36,8 @@ public abstract class AbstractCatalogPageController<DTO> {
     public String getPage(@ModelAttribute CursorPageRequest cursorPageRequest,
                           @CurrentUserId Long userId,
                           Model model) {
-        UserCatalogPageResponse<DTO> pageResponse = buildPageResponse(cursorPageRequest, userId);
-        model.addAttribute(pageAttributeName, pageResponse);
+        UserCatalogPageResponse<DTO> userCatalogPageResponse = buildPageResponse(cursorPageRequest, userId);
+        model.addAttribute(pageAttributeName, userCatalogPageResponse);
         return viewName;
     }
 

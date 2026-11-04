@@ -7,11 +7,13 @@
     var newError = document.getElementById('newPwdError');
     var repeatError = document.getElementById('repeatError');
 
+    // Очищаем старые ошибки при попытке сабмита
     form.addEventListener('submit', function () {
         if (newError) newError.style.display = 'none';
         if (repeatError) repeatError.style.display = 'none';
     });
 
+    // Логика кнопок "очистить" в полях ввода
     document.querySelectorAll('.input-wrapper').forEach(function (wrapper) {
         var input = wrapper.querySelector('input');
         var clearBtn = wrapper.querySelector('.clear-input-btn');

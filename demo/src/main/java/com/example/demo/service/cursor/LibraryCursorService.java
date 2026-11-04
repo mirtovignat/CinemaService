@@ -13,7 +13,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class LibraryCursorService extends AbstractUserCursorService<PurchasedMovie, LibrarianMovieViewDTO> implements SuggestableCursorService {
+public class LibraryCursorService extends AbstractUserCursorService<PurchasedMovie, LibrarianMovieViewDTO>
+        implements SuggestableCursorService {
 
     private final PurchasedMovieRepository purchasedMovieRepository;
 

@@ -21,11 +21,11 @@ public class ApiResponseFactory {
                 .build());
     }
 
-    public <DTO> ResponseEntity<ApiResponse<DTO>> ok(SuccessCode successCode, DTO data) {
+    public <DTO> ResponseEntity<ApiResponse<DTO>> ok(SuccessCode successCode, DTO dto) {
         return ResponseEntity.ok(ApiResponse.<DTO>builder()
                 .code(successCode.name())
                 .message(messageUtils.getSuccess(successCode))
-                .data(data)
+                .data(dto)
                 .build());
     }
 }

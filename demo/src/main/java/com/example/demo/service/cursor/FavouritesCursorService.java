@@ -14,7 +14,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class FavouritesCursorService extends AbstractUserCursorService<FavouriteMovie, FavouriteMovieViewDTO> implements SuggestableCursorService {
+public class FavouritesCursorService extends AbstractUserCursorService<FavouriteMovie, FavouriteMovieViewDTO>
+        implements SuggestableCursorService {
 
     private final FavouriteMovieRepository favouriteMovieRepository;
 

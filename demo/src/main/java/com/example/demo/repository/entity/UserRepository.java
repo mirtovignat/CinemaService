@@ -36,16 +36,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Modifying
     @Query("""
             UPDATE User user
-            SET user.deletableState.deleted = true,
-                user.username = CONCAT('deleted_', user.id),
-                user.email = CASE
-                    WHEN user.email IS NULL THEN NULL
-                    ELSE CONCAT('deleted_', user.id, '_', user.email)
-                END,
-                user.phone = CASE
-                    WHEN user.phone IS NULL THEN NULL
-                    ELSE CONCAT('deleted_', user.id, '_', user.phone)
-                END
+            SET user.deletableState.deleted = true
             WHERE user.id = :userId
             """)
     void softDeleteById(@Param("userId") Long userId);
@@ -102,6 +93,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
             AND user.deletableState.deleted = false
             """)
     boolean existsByUsername(@Param("username") String username);
+
+    @Query("""
+            SELECT COUNT(user) > 0
+            FROM User user
+            WHERE LOWER(user.username) = LOWER(:username)
+            AND user.deletableState.deleted = false
+            """)
+    boolean existsByUsernameIgnoreCase(@Param("username") String username);
 
     @Modifying
     @Query("""

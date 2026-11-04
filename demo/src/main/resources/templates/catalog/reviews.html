@@ -86,7 +86,7 @@
                             </div>
                             <span class="review-username">
                                 <span class="username-text" th:text="${reviewsPageResponse.reviewViewDTO.username}">Пользователь</span>
-                                <span th:if="${reviewsPageResponse.reviewViewDTO.deleted}" class="deleted-badge">Удалённый аккаунт</span>
+                                <span th:if="${reviewsPageResponse.reviewViewDTO.deleted}" class="deleted-badge">(Удалённый аккаунт)</span>
                             </span>
                             <span class="own-badge">Ваш отзыв</span>
                         </div>
@@ -142,7 +142,7 @@
                             </div>
                             <span class="review-username">
                                 <span class="username-text" th:text="${review.username}">Пользователь</span>
-                                <span th:if="${review.deleted}" class="deleted-badge">Удалённый аккаунт</span>
+                                <span th:if="${review.deleted}" class="deleted-badge">(Удалённый аккаунт)</span>
                             </span>
                         </div>
                         <div class="review-meta">
@@ -203,7 +203,7 @@
                 <div class="avatar"></div>
                 <span class="review-username">
                     <span class="username-text"></span>
-                    <span class="deleted-badge" style="display: none;">Удалённый аккаунт</span>
+                    <span class="deleted-badge" style="display: none;">(Удалённый аккаунт)</span>
                 </span>
             </div>
             <div class="review-meta">
@@ -225,7 +225,7 @@
                 <div class="avatar"></div>
                 <span class="review-username">
                     <span class="username-text"></span>
-                    <span class="deleted-badge" style="display: none;">Удалённый аккаунт</span>
+                    <span class="deleted-badge" style="display: none;">(Удалённый аккаунт)</span>
                 </span>
                 <span class="own-badge">Ваш отзыв</span>
             </div>

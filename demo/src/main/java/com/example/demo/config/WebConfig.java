@@ -1,5 +1,6 @@
 package com.example.demo.config;
 
+import com.example.demo.web.SessionUserAdvice;
 import com.example.demo.web.interceptor.CacheControlInterceptor;
 import com.example.demo.web.interceptor.NavigationHistoryInterceptor;
 import com.example.demo.web.resolver.CurrentUserIdArgumentResolver;
@@ -18,11 +19,20 @@ public class WebConfig implements WebMvcConfigurer {
 
     private final CacheControlInterceptor cacheControlInterceptor;
     private final NavigationHistoryInterceptor navigationHistoryInterceptor;
+    private final SessionUserAdvice sessionUserAdvice;
     private final SessionUserArgumentResolver sessionUserArgumentResolver;
     private final CurrentUserIdArgumentResolver currentUserIdArgumentResolver;
 
     @Override
     public void addInterceptors(InterceptorRegistry interceptorRegistry) {
+        interceptorRegistry.addInterceptor(sessionUserAdvice)
+                .addPathPatterns("/**")
+                .excludePathPatterns(
+                        "/css/**", "/js/**", "/images/**", "/webjars/**",
+                        "/logo.png", "/favicon.png", "/favicon.ico",
+                        "/error", "/api/**", "/back"
+                );
+
         interceptorRegistry.addInterceptor(cacheControlInterceptor)
                 .addPathPatterns(
                         "/", "/login",
@@ -35,7 +45,7 @@ public class WebConfig implements WebMvcConfigurer {
                         "/rated/**", "/watched/**"
                 )
                 .excludePathPatterns(
-                        "/css/**", "/js/**", "/images/**", "/logo.png", "/logo.png",
+                        "/css/**", "/js/**", "/images/**", "/logo.png",
                         "/cart/count", "/favourites/count",
                         "/rated/count/**", "/rated/rating/**",
                         "/rated/*/reviews/more",
@@ -48,7 +58,8 @@ public class WebConfig implements WebMvcConfigurer {
                 .addPathPatterns("/**")
                 .excludePathPatterns(
                         "/css/**", "/js/**", "/images/**", "/webjars/**",
-                        "/logo.png", "/logo.png", "/error", "/api/**", "/back"
+                        "/logo.png", "/favicon.png", "/favicon.ico",
+                        "/error", "/api/**", "/back"
                 );
     }
 

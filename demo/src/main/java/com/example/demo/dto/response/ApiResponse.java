@@ -10,11 +10,11 @@ public record ApiResponse<DTO>(
         String code,
         DTO data
 ) {
-    public static <DTO> ApiResponse<DTO> success(SuccessCode successCode, String message, DTO data) {
+    public static <DTO> ApiResponse<DTO> success(SuccessCode successCode, String message, DTO dto) {
         return ApiResponse.<DTO>builder()
                 .code(successCode.name())
                 .message(message)
-                .data(data)
+                .data(dto)
                 .build();
     }
 
@@ -23,14 +23,6 @@ public record ApiResponse<DTO>(
                 .code(errorCode.name())
                 .message(message)
                 .data(null)
-                .build();
-    }
-
-    public static <DTO> ApiResponse<DTO> errorWithDto(ErrorCode errorCode, String message, DTO dto) {
-        return ApiResponse.<DTO>builder()
-                .code(errorCode.name())
-                .message(message)
-                .data(dto)
                 .build();
     }
 }

@@ -14,7 +14,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class CartCursorService extends AbstractUserCursorService<CartItem, CartItemViewDTO> implements SuggestableCursorService {
+public class CartCursorService extends AbstractUserCursorService<CartItem, CartItemViewDTO>
+        implements SuggestableCursorService {
 
     private final CartItemRepository cartItemRepository;
 

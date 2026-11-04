@@ -33,8 +33,7 @@ public class ValidEmailDomainValidator implements ConstraintValidator<ValidEmail
         if (index <= 0 || index == email.length() - 1) {
             return null;
         }
-        return email
-                .substring(index + 1)
+        return email.substring(index + 1)
                 .toLowerCase(Locale.ROOT);
     }
 
