@@ -4,6 +4,7 @@ import com.example.demo.dto.movie.MovieSearchDTO;
 import com.example.demo.mapper.entity.MovieMapper;
 import com.example.demo.model.entity.Movie;
 import com.example.demo.repository.entity.MovieRepository;
+import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +17,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+@AllArgsConstructor
 @Component
 public class MovieSearchHelper {
 
@@ -23,16 +25,6 @@ public class MovieSearchHelper {
     private final MovieSpecifications movieSpecifications;
     private final MovieMapper movieMapper;
     private final MovieFilterValidator movieFilterValidator;
-
-    public MovieSearchHelper(MovieRepository movieRepository,
-                             MovieSpecifications movieSpecifications,
-                             MovieMapper movieMapper,
-                             MovieFilterValidator movieFilterValidator) {
-        this.movieRepository = movieRepository;
-        this.movieSpecifications = movieSpecifications;
-        this.movieMapper = movieMapper;
-        this.movieFilterValidator = movieFilterValidator;
-    }
 
     @Transactional(readOnly = true)
     public Page<Movie> findMovies(MovieFilter movieFilter,

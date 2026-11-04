@@ -17,5 +17,4 @@ public class DurationConverter implements AttributeConverter<Duration, Long> {
     public Duration convertToEntityAttribute(Long durationInDatabase) {
         return durationInDatabase == null ? null : Duration.ofSeconds(durationInDatabase);
     }
-
 }

@@ -2,12 +2,9 @@ package com.example.demo.util.validation;
 
 import com.example.demo.exception.BusinessException;
 import com.example.demo.exception.ErrorCode;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class Amounts {
 
     public static void requirePositive(BigDecimal amount, ErrorCode errorCode) {

@@ -4,8 +4,6 @@ import com.example.demo.util.text.LikeEscaper;
 import com.example.demo.util.text.SearchQueryNormalizer;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.CollectionUtils;
 
@@ -13,7 +11,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+
 public final class SpecificationUtils {
 
     private static final int IN_CLAUSE_CHUNK_SIZE = 500;
@@ -123,22 +121,6 @@ public final class SpecificationUtils {
             }
             return criteriaBuilder.or(predicates.toArray(new Predicate[0]));
         };
-    }
-
-    public static <Entity, Value> Specification<Entity> notInIfNotEmpty(
-            String fieldName,
-            Collection<Value> values
-    ) {
-        if (CollectionUtils.isEmpty(values)) {
-            return unrestricted();
-        }
-        List<Value> list = new ArrayList<>(values);
-        if (list.size() <= IN_CLAUSE_CHUNK_SIZE) {
-            return (root, criteriaQuery, criteriaBuilder) ->
-                    criteriaBuilder.not(root.get(fieldName).in(list));
-        }
-        return (root, criteriaQuery, criteriaBuilder) ->
-                criteriaBuilder.not(criteriaBuilder.or(chunkPredicates(root, fieldName, list)));
     }
 
     public static <Entity> Specification<Entity> notNullAndNotIn(

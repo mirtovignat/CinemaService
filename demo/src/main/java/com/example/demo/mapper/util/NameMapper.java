@@ -1,10 +1,10 @@
 package com.example.demo.mapper.util;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+
+
 import org.mapstruct.Named;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+
 public final class NameMapper {
 
     @Named("toFullName")

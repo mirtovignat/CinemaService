@@ -1,9 +1,5 @@
 package com.example.demo.util.text;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class LikeEscaper {
 
     public static String escape(String value) {

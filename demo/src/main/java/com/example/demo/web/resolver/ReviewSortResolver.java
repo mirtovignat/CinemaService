@@ -45,8 +45,12 @@ public class ReviewSortResolver {
     }
 
     private static String pickNonBlank(String sort, String sortDirection) {
-        if (isExplicit(sort)) return sort;
-        if (isExplicit(sortDirection)) return sortDirection;
+        if (isExplicit(sort)) {
+            return sort;
+        }
+        if (isExplicit(sortDirection)) {
+            return sortDirection;
+        }
         return null;
     }
 

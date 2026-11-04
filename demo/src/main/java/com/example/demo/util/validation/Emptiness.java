@@ -1,12 +1,8 @@
 package com.example.demo.util.validation;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-
 import java.util.Collection;
 import java.util.Map;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class Emptiness {
 
     public static boolean isBlank(String value) {

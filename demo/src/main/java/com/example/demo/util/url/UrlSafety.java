@@ -1,12 +1,8 @@
 package com.example.demo.util.url;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class UrlSafety {
 
     public static boolean isSafeLocalPath(String path) {

@@ -33,51 +33,51 @@
     ">
 
         <th:block th:if="${currentPage > 0}">
-            <a th:href="${baseUrl + (currentPage - 1) + queryString}" class="page-nav">
+            <a th:href="${baseUrl + currentPage + queryString}" class="page-nav">
                 <th:block th:replace="~{fragments/icons :: icon-chevron-left}"></th:block>
             </a>
         </th:block>
 
         <th:block th:if="${totalPages <= 7}">
-            <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+            <th:block th:each="i : ${#numbers.sequence(1, totalPages)}">
                 <a th:href="${baseUrl + i + queryString}"
                    class="page-nav"
-                   th:classappend="${i == currentPage} ? 'active' : ''"
-                   th:text="${i + 1}"></a>
+                   th:classappend="${i == currentPage + 1} ? 'active' : ''"
+                   th:text="${i}"></a>
             </th:block>
         </th:block>
 
         <th:block th:unless="${totalPages <= 7}">
 
-            <a th:href="${baseUrl + '0' + queryString}"
+            <a th:href="${baseUrl + '1' + queryString}"
                class="page-nav"
                th:classappend="${currentPage == 0} ? 'active' : ''">1</a>
 
-            <span th:if="${currentPage >= 4}" class="page-dots">…</span>
+            <span th:if="${currentPage + 1 > 4}" class="page-dots">…</span>
 
             <th:block th:with="
-                startPage=${currentPage <= 3 ? 1 : (currentPage >= totalPages - 4 ? totalPages - 5 : currentPage - 1)},
-                endPage=${currentPage <= 3 ? 5 : (currentPage >= totalPages - 4 ? totalPages - 2 : currentPage + 1)}
+                startPage=${currentPage + 1 <= 3 ? 2 : (currentPage + 1 >= totalPages - 3 ? totalPages - 4 : currentPage)},
+                endPage=${currentPage + 1 <= 3 ? 5 : (currentPage + 1 >= totalPages - 3 ? totalPages - 1 : currentPage + 2)}
             ">
                 <th:block th:each="i : ${#numbers.sequence(startPage, endPage)}">
-                    <a th:if="${i > 0 and i < totalPages - 1}"
+                    <a th:if="${i > 1 and i < totalPages}"
                        th:href="${baseUrl + i + queryString}"
                        class="page-nav"
-                       th:classappend="${i == currentPage} ? 'active' : ''"
-                       th:text="${i + 1}"></a>
+                       th:classappend="${i == currentPage + 1} ? 'active' : ''"
+                       th:text="${i}"></a>
                 </th:block>
             </th:block>
 
-            <span th:if="${currentPage < totalPages - 4}" class="page-dots">…</span>
+            <span th:if="${currentPage + 1 < totalPages - 3}" class="page-dots">…</span>
 
-            <a th:href="${baseUrl + (totalPages - 1) + queryString}"
+            <a th:href="${baseUrl + totalPages + queryString}"
                class="page-nav"
                th:classappend="${currentPage == totalPages - 1} ? 'active' : ''"
                th:text="${totalPages}"></a>
         </th:block>
 
         <th:block th:if="${currentPage < totalPages - 1}">
-            <a th:href="${baseUrl + (currentPage + 1) + queryString}" class="page-nav">
+            <a th:href="${baseUrl + (currentPage + 2) + queryString}" class="page-nav">
                 <th:block th:replace="~{fragments/icons :: icon-chevron-right}"></th:block>
             </a>
         </th:block>

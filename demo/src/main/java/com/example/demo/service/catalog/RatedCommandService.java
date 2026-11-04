@@ -58,7 +58,6 @@ public class RatedCommandService {
 
     @Transactional
     public void deleteRating(Long movieId, Long userId) {
-        Movie movie = movieRepository.findByIdOrThrow(movieId);
         RatedMovie ratedMovie = ratedMovieRepository
                 .findByMovieIdAndUserIdForUpdate(movieId, userId)
                 .orElseThrow(() -> BusinessException.of(ErrorCode.ENTITY_NOT_FOUND));

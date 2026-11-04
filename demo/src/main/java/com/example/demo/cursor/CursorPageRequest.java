@@ -11,7 +11,11 @@ public record CursorPageRequest(
     public CursorPageRequest {
         if (query != null) {
             String trimmed = query.trim();
-            query = trimmed.isEmpty() ? null : trimmed;
+            if (trimmed.isEmpty()) {
+                query = null;
+            } else {
+                query = trimmed;
+            }
         }
     }
 

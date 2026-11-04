@@ -14,7 +14,10 @@ public record PageRequestContext(
     public static final int MAX_PAGE_SIZE = 100;
 
     public int getSafePage() {
-        return page != null ? Math.max(page, 0) : 0;
+        if (page == null || page < 1) {
+            return 0;
+        }
+        return page - 1;
     }
 
     public int getSafeSize(int defaultSize) {

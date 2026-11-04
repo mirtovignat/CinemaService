@@ -1,13 +1,13 @@
 package com.example.demo.mapper.util;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+
+
 import org.mapstruct.Named;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+
 @Component
 public class DurationMapper {
 

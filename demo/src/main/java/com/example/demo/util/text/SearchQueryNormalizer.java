@@ -1,12 +1,8 @@
 package com.example.demo.util.text;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-
 import java.util.Locale;
 import java.util.Optional;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class SearchQueryNormalizer {
 
     public static boolean isMeaningful(String rawValue) {

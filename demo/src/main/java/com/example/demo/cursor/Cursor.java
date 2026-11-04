@@ -8,7 +8,7 @@ public record Cursor(
 ) {
     public Cursor {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("Cursor.value must not be blank");
+            throw new IllegalArgumentException("Cursor.value (значение курсора) не должно быть пустым");
         }
     }
 }
