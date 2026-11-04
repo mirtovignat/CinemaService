@@ -123,30 +123,24 @@ public class RatedController {
     }
 
     @GetMapping("/form/{movieId}")
-    @ResponseBody
     public ResponseEntity<RatedMovieFormDTO> getMyReviewForm(@PathVariable Long movieId,
                                                              @CurrentUserId Long userId) {
         return ResponseEntity.ok(ratedQueryService.getPreFilledForm(movieId, userId));
     }
 
     @PostMapping("/add")
-    @ResponseBody
     public ResponseEntity<ApiResponse<Void>> addRating(@Valid @ModelAttribute RatedMovieFormDTO ratedMovieFormDTO,
                                                        @CurrentUserId Long userId) {
-        ratedCommandService.addOrUpdateRating(ratedMovieFormDTO.id(), userId, ratedMovieFormDTO);
-        return apiResponseFactory.ok(SuccessCode.REVIEW_HAS_BEEN_SAVED);
+        return saveRating(ratedMovieFormDTO, userId, SuccessCode.REVIEW_HAS_BEEN_SAVED);
     }
 
     @PostMapping("/edit")
-    @ResponseBody
     public ResponseEntity<ApiResponse<Void>> editRating(@Valid @ModelAttribute RatedMovieFormDTO ratedMovieFormDTO,
                                                         @CurrentUserId Long userId) {
-        ratedCommandService.addOrUpdateRating(ratedMovieFormDTO.id(), userId, ratedMovieFormDTO);
-        return apiResponseFactory.ok(SuccessCode.REVIEW_HAS_BEEN_UPDATED);
+        return saveRating(ratedMovieFormDTO, userId, SuccessCode.REVIEW_HAS_BEEN_UPDATED);
     }
 
     @PostMapping("/remove/{id}")
-    @ResponseBody
     public ResponseEntity<ApiResponse<Void>> removeRating(@PathVariable("id") Long movieId,
                                                           @CurrentUserId Long userId) {
         ratedCommandService.deleteRating(movieId, userId);
@@ -154,8 +148,14 @@ public class RatedController {
     }
 
     @GetMapping("/count/{movieId}")
-    @ResponseBody
     public ResponseEntity<Long> getReviewsCount(@PathVariable Long movieId) {
         return ResponseEntity.ok(ratedQueryService.getReviewsCountForMovie(movieId));
+    }
+
+    private ResponseEntity<ApiResponse<Void>> saveRating(RatedMovieFormDTO ratedMovieFormDTO,
+                                                         Long userId,
+                                                         SuccessCode successCode) {
+        ratedCommandService.addOrUpdateRating(ratedMovieFormDTO.id(), userId, ratedMovieFormDTO);
+        return apiResponseFactory.ok(successCode);
     }
 }

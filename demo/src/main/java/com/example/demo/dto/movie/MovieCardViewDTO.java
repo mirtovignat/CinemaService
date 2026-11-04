@@ -16,7 +16,6 @@ public record MovieCardViewDTO(
         LocalDate releaseDate,
         String director,
         String formattedDuration,
-        String description,
         Long ratingsCount,
         Integer ageRating,
         String currencyCode

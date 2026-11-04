@@ -21,7 +21,6 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -80,15 +79,6 @@ public class GlobalExceptionHandler {
         HttpStatus httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
         return buildErrorResponse(httpServletRequest, model, redirectAttributes,
                 errorCode, errorMessage, httpStatus);
-    }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public Object handleMethodArgumentNotValidException(MethodArgumentNotValidException methodArgumentNotValidException,
-                                                        HttpServletRequest httpServletRequest,
-                                                        Model model,
-                                                        RedirectAttributes redirectAttributes) {
-        return handleBindingResult(methodArgumentNotValidException.getBindingResult(),
-                httpServletRequest, model, redirectAttributes);
     }
 
     @ExceptionHandler(BindException.class)

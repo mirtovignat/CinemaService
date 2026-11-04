@@ -99,7 +99,6 @@
     <input type="hidden" id="currentUserId" th:value="${sessionUser.authenticated ? sessionUser.id() : ''}">
     <div th:if="${sessionUser.authenticated}" id="currentUserData" th:data-username="${sessionUser.username()}"
          style="display:none;"></div>
-    <th:block th:replace="~{fragments/filters-modal :: filtersModal}"></th:block>
 </header>
 </body>
 </html>

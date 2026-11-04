@@ -74,7 +74,7 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
               AND LOWER(TRANSLATE(director, 'ёЁ', 'еЕ')) LIKE LOWER(CONCAT(:prefix, '%')) ESCAPE '\\'
               AND (
                   :hasCursor = false
-                  OR LOWER(TRANSLATE(director, 'ёЁ', 'еЕ')) > LOWER(:cursor)
+                  OR LOWER(TRANSLATE(director, 'ёЁ', 'еЕ')) > LOWER(TRANSLATE(:cursor, 'ёЁ', 'еЕ'))
               )
             GROUP BY director
             ORDER BY LOWER(TRANSLATE(director, 'ёЁ', 'еЕ')) ASC
@@ -116,7 +116,7 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
             SELECT genre
             FROM movies
             WHERE LOWER(TRANSLATE(genre, 'ёЁ', 'еЕ')) LIKE LOWER(CONCAT(:prefix, '%')) ESCAPE '\\'
-              AND (:hasCursor = false OR LOWER(TRANSLATE(genre, 'ёЁ', 'еЕ')) > LOWER(:cursor))
+              AND (:hasCursor = false OR LOWER(TRANSLATE(genre, 'ёЁ', 'еЕ')) > LOWER(TRANSLATE(:cursor, 'ёЁ', 'еЕ')))
             GROUP BY genre
             ORDER BY LOWER(TRANSLATE(genre, 'ёЁ', 'еЕ')) ASC
             LIMIT :limit
@@ -128,11 +128,7 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
             @Param("limit") int limit
     );
 
-    @Query("""
-            SELECT movie FROM Movie movie
-            WHERE movie.genre = :genre
-            """)
-    Page<Movie> findAllByGenre(Pageable pageable, @Param("genre") String genre);
+    Page<Movie> findByGenre(String genre, Pageable pageable);
 
     @Query(value = """
         SELECT DISTINCT movie_id FROM (

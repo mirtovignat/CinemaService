@@ -39,10 +39,10 @@
         var priceFromInput = document.getElementById('priceFrom');
         var priceToInput = document.getElementById('priceTo');
         if (priceFromInput) {
-            priceFromInput.setAttribute('placeholder', 'Мин. ' + formatPriceValue(FILTER_LIMITS.priceMin) + ' ₽');
+            priceFromInput.setAttribute('placeholder', 'Мин. на сайте: ' + formatPriceValue(FILTER_LIMITS.priceMin) + ' ₽');
         }
         if (priceToInput) {
-            priceToInput.setAttribute('placeholder', 'Макс. ' + formatPriceValue(FILTER_LIMITS.priceMax) + ' ₽');
+            priceToInput.setAttribute('placeholder', 'Макс. на сайте: ' + formatPriceValue(FILTER_LIMITS.priceMax) + ' ₽');
         }
     }
 
@@ -681,7 +681,8 @@
             }
             var checkedCount = visible.filter(function (cb) { return cb.checked; }).length;
             selectAllCheckbox.checked = checkedCount === visible.length;
-            selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < visible.length;
+
+            selectAllCheckbox.indeterminate = false;
         }
 
         wrapper.addEventListener('click', function (e) {

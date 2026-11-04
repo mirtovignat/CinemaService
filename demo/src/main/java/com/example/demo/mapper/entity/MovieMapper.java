@@ -14,7 +14,6 @@ public interface MovieMapper {
     @Mapping(target = "formattedDuration",
             source = "movie.duration",
             qualifiedByName = "durationToString")
-    @Mapping(target = "description", ignore = true)
     @Mapping(target = "currencyCode", ignore = true)
     @Mapping(target = "ratingsCount", source = "ratingsCount")
     MovieCardViewDTO toCard(Movie movie, long ratingsCount);

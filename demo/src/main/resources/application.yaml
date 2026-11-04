@@ -69,7 +69,8 @@ app:
   wallet:
     max-balance: 100000.00
   suggestions:
-    limit: 10
+    catalog-limit: 10
+    dropdown-limit: 10
   pagination:
     default-size: 35
     genre-default-size: 15

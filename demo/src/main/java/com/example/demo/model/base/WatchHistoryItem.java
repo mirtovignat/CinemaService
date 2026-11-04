@@ -19,6 +19,9 @@ import java.time.LocalDateTime;
 @Table(name = "watch_history")
 public class WatchHistoryItem extends IdentifiableEntity {
 
+    @Column(name = "user_id", insertable = false, updatable = false)
+    private Long userId;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumns({
             @JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false),
@@ -30,9 +33,13 @@ public class WatchHistoryItem extends IdentifiableEntity {
     private LocalDateTime watchedAt;
 
     public static WatchHistoryItem of(PurchasedMovie purchasedMovie, LocalDateTime watchedAt) {
-        return WatchHistoryItem.builder()
+        WatchHistoryItem watchHistoryItem = WatchHistoryItem.builder()
                 .purchasedMovie(purchasedMovie)
                 .watchedAt(watchedAt)
                 .build();
+        if (purchasedMovie != null && purchasedMovie.getUser() != null) {
+            watchHistoryItem.setUserId(purchasedMovie.getUser().getId());
+        }
+        return watchHistoryItem;
     }
 }

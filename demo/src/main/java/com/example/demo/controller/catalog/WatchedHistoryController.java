@@ -89,11 +89,11 @@ public class WatchedHistoryController {
         return suggestionService.suggest(
                 userId,
                 cursorPageRequest.query(),
-                (uId, normalizedQuery) -> watchedHistoryCursorService
+                (uId, normalizedQuery, limit) -> watchedHistoryCursorService
                         .findGroupedWatchedSuggestionsStartingWith(
                                 uId,
                                 normalizedQuery,
-                                PageRequest.of(0, 10)
+                                PageRequest.of(0, limit)
                         )
                         .stream()
                         .map(projection -> WatchedSuggestionDTO.builder()

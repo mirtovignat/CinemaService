@@ -27,8 +27,4 @@ public record PasswordChangingDTO(
             throw BusinessException.of(ErrorCode.PASSWORDS_MISMATCH);
         }
     }
-
-    public boolean isCoincidence() {
-        return Objects.equals(currentPassword(), rawPassword());
-    }
 }

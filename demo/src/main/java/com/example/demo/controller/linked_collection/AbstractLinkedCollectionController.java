@@ -72,11 +72,8 @@ public abstract class AbstractLinkedCollectionController<DTO, Response> {
 
     @GetMapping("/count")
     @ResponseBody
-    public Long count(@CurrentUserId(required = false)
+    public Long count(@CurrentUserId
                       Long userId) {
-        if (userId == null) {
-            return 0L;
-        }
         return collectionService.getCount(userId);
     }
 
@@ -126,10 +123,10 @@ public abstract class AbstractLinkedCollectionController<DTO, Response> {
         return suggestionService.suggest(
                 userId,
                 cursorPageRequest.query(),
-                (currentUserId, normalizedQuery) -> suggestableCursorService.findTitlesStartingWith(
+                (currentUserId, normalizedQuery, limit) -> suggestableCursorService.findTitlesStartingWith(
                         currentUserId,
                         normalizedQuery,
-                        PageRequest.of(0, 10)
+                        PageRequest.of(0, limit)
                 )
         );
     }

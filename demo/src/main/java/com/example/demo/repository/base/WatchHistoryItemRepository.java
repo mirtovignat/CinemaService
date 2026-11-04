@@ -19,7 +19,7 @@ public interface WatchHistoryItemRepository extends JpaRepository<WatchHistoryIt
     @Modifying
     @Query("""
             DELETE FROM WatchHistoryItem watchHistoryItem
-            WHERE watchHistoryItem.purchasedMovie.user.id = :userId
+            WHERE watchHistoryItem.userId = :userId
             """)
     void deleteAllByUserId(@Param("userId") Long userId);
 
@@ -27,7 +27,7 @@ public interface WatchHistoryItemRepository extends JpaRepository<WatchHistoryIt
             SELECT watchHistoryItem
             FROM WatchHistoryItem watchHistoryItem
             WHERE watchHistoryItem.id = :itemId
-            AND watchHistoryItem.purchasedMovie.user.id = :userId
+            AND watchHistoryItem.userId = :userId
             """)
     Optional<WatchHistoryItem> findByIdAndUserId(@Param("itemId") Long itemId,
                                                  @Param("userId") Long userId);
@@ -37,11 +37,8 @@ public interface WatchHistoryItemRepository extends JpaRepository<WatchHistoryIt
             FROM WatchHistoryItem watchHistoryItem
             JOIN FETCH watchHistoryItem.purchasedMovie purchasedMovie
             JOIN FETCH purchasedMovie.movie
-            WHERE purchasedMovie.user.id = :userId
-            AND (
-                :query IS NULL
-                OR LOWER(TRANSLATE(purchasedMovie.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
-            )
+            WHERE watchHistoryItem.userId = :userId
+            AND LOWER(TRANSLATE(purchasedMovie.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
             AND (:hasCursor = false OR watchHistoryItem.id > :cursorId)
             ORDER BY watchHistoryItem.id ASC
             """)
@@ -56,11 +53,8 @@ public interface WatchHistoryItemRepository extends JpaRepository<WatchHistoryIt
             FROM WatchHistoryItem watchHistoryItem
             JOIN FETCH watchHistoryItem.purchasedMovie purchasedMovie
             JOIN FETCH purchasedMovie.movie
-            WHERE purchasedMovie.user.id = :userId
-            AND (
-                :query IS NULL
-                OR LOWER(TRANSLATE(purchasedMovie.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
-            )
+            WHERE watchHistoryItem.userId = :userId
+            AND LOWER(TRANSLATE(purchasedMovie.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
             AND (:hasCursor = false OR watchHistoryItem.id < :cursorId)
             ORDER BY watchHistoryItem.id DESC
             """)
@@ -77,7 +71,7 @@ public interface WatchHistoryItemRepository extends JpaRepository<WatchHistoryIt
                    MAX(watchHistoryItem.watchedAt) AS lastWatchedAt
             FROM WatchHistoryItem watchHistoryItem
             JOIN watchHistoryItem.purchasedMovie purchasedMovie
-            WHERE purchasedMovie.user.id = :userId
+            WHERE watchHistoryItem.userId = :userId
             AND LOWER(TRANSLATE(purchasedMovie.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:prefix AS string), '%') ESCAPE '\\'
             GROUP BY purchasedMovie.movie.id, purchasedMovie.movie.title
             ORDER BY MAX(watchHistoryItem.watchedAt) DESC, purchasedMovie.movie.id ASC

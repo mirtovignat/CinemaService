@@ -36,13 +36,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Modifying
     @Query("""
             UPDATE User user
-            SET user.deletableState.deleted = true
+            SET user.deletableState.deleted = true,
+                user.email = null,
+                user.phone = null
             WHERE user.id = :userId
             """)
     void softDeleteById(@Param("userId") Long userId);
 
     default User findByIdOrThrow(Long id) {
         return findById(id)
+                .filter(user -> !user.getDeletableState().isDeleted())
                 .orElseThrow(() -> BusinessException.of(ErrorCode.USER_NOT_FOUND, "id=" + id));
     }
 
@@ -98,7 +101,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
             SELECT COUNT(user) > 0
             FROM User user
             WHERE LOWER(user.username) = LOWER(:username)
-            AND user.deletableState.deleted = false
             """)
     boolean existsByUsernameIgnoreCase(@Param("username") String username);
 

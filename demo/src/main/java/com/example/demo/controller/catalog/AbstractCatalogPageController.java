@@ -82,8 +82,10 @@ public abstract class AbstractCatalogPageController<DTO> {
         return suggestionService.suggest(
                 userId,
                 cursorPageRequest.query(),
-                (currentUserId, normalizedQuery) -> suggestableCursorService.findTitlesStartingWith(
-                        currentUserId, normalizedQuery, PageRequest.of(0, 10)
+                (currentUserId, normalizedQuery, limit) -> suggestableCursorService.findTitlesStartingWith(
+                        currentUserId,
+                        normalizedQuery,
+                        PageRequest.of(0, limit)
                 )
         );
     }

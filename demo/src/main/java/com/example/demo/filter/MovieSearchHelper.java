@@ -4,7 +4,6 @@ import com.example.demo.dto.movie.MovieSearchDTO;
 import com.example.demo.mapper.entity.MovieMapper;
 import com.example.demo.model.entity.Movie;
 import com.example.demo.repository.entity.MovieRepository;
-import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,15 +17,22 @@ import java.util.List;
 import java.util.Optional;
 
 @Component
-@AllArgsConstructor
 public class MovieSearchHelper {
-
-    private static final int SUGGESTIONS_LIMIT = 10;
 
     private final MovieRepository movieRepository;
     private final MovieSpecifications movieSpecifications;
     private final MovieMapper movieMapper;
     private final MovieFilterValidator movieFilterValidator;
+
+    public MovieSearchHelper(MovieRepository movieRepository,
+                             MovieSpecifications movieSpecifications,
+                             MovieMapper movieMapper,
+                             MovieFilterValidator movieFilterValidator) {
+        this.movieRepository = movieRepository;
+        this.movieSpecifications = movieSpecifications;
+        this.movieMapper = movieMapper;
+        this.movieFilterValidator = movieFilterValidator;
+    }
 
     @Transactional(readOnly = true)
     public Page<Movie> findMovies(MovieFilter movieFilter,
@@ -45,7 +51,7 @@ public class MovieSearchHelper {
     }
 
     @Transactional(readOnly = true)
-    public List<MovieSearchDTO> getSuggestions(String searchQuery) {
+    public List<MovieSearchDTO> getSuggestions(String searchQuery, int limit) {
         Optional<String> sanitized = movieFilterValidator.normalizeSearchQueryOptional(searchQuery);
         if (sanitized.isEmpty()) {
             return Collections.emptyList();
@@ -59,7 +65,7 @@ public class MovieSearchHelper {
                         specification,
                         PageRequest.of(
                                 0,
-                                SUGGESTIONS_LIMIT,
+                                limit,
                                 Sort.by(Sort.Direction.ASC, "title", "id")
                         )
                 )

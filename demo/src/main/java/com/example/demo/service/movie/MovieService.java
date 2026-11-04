@@ -6,7 +6,7 @@ import com.example.demo.filter.MovieSearchHelper;
 import com.example.demo.mapper.entity.MovieMapper;
 import com.example.demo.model.entity.Movie;
 import com.example.demo.repository.entity.MovieRepository;
-import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -16,7 +16,6 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
-@AllArgsConstructor
 @Service
 public class MovieService {
 
@@ -25,6 +24,21 @@ public class MovieService {
     private final MovieUserStatusBatchLoader movieUserStatusBatchLoader;
     private final MovieSearchHelper movieSearchHelper;
     private final MovieReviewCountService movieReviewCountService;
+    private final int suggestionsLimit;
+
+    public MovieService(MovieRepository movieRepository,
+                        MovieMapper movieMapper,
+                        MovieUserStatusBatchLoader movieUserStatusBatchLoader,
+                        MovieSearchHelper movieSearchHelper,
+                        MovieReviewCountService movieReviewCountService,
+                        @Value("${app.suggestions.catalog-limit:10}") int suggestionsLimit) {
+        this.movieRepository = movieRepository;
+        this.movieMapper = movieMapper;
+        this.movieUserStatusBatchLoader = movieUserStatusBatchLoader;
+        this.movieSearchHelper = movieSearchHelper;
+        this.movieReviewCountService = movieReviewCountService;
+        this.suggestionsLimit = suggestionsLimit;
+    }
 
     @Transactional(readOnly = true)
     public Page<MovieForUser<MovieCardViewDTO>> getMovies(MovieFilter movieFilter,
@@ -39,7 +53,7 @@ public class MovieService {
     public Page<MovieForUser<MovieCardViewDTO>> getMoviesByGenre(String genre,
                                                                  Pageable pageable,
                                                                  Long userId) {
-        Page<Movie> moviePage = movieRepository.findAllByGenre(pageable, genre);
+        Page<Movie> moviePage = movieRepository.findByGenre(genre, pageable);
         return enrichWithStatuses(moviePage, userId);
     }
 
@@ -68,7 +82,7 @@ public class MovieService {
 
     @Transactional(readOnly = true)
     public List<MovieSearchDTO> getMovieSearchDTO(String movieSearchQuery) {
-        return movieSearchHelper.getSuggestions(movieSearchQuery);
+        return movieSearchHelper.getSuggestions(movieSearchQuery, suggestionsLimit);
     }
 
     @Transactional(readOnly = true)

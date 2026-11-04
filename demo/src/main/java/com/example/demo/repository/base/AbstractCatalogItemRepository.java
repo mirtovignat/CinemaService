@@ -75,16 +75,13 @@ public interface AbstractCatalogItemRepository<Entity extends AbstractCatalogIte
                                                 @Param("movieIds") Collection<Long> movieIds);
 
     @Query("""
-            SELECT item FROM #{#entityName} item
-            JOIN FETCH item.movie
-            WHERE item.user.id = :userId
-            AND (
-                :query IS NULL
-                OR LOWER(TRANSLATE(item.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
-            )
-            AND (:hasCursor = false OR item.id > :cursorId)
-            ORDER BY item.id ASC
-            """)
+        SELECT item FROM #{#entityName} item
+        JOIN FETCH item.movie
+        WHERE item.user.id = :userId
+        AND LOWER(TRANSLATE(item.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
+        AND (:hasCursor = false OR item.id > :cursorId)
+        ORDER BY item.id ASC
+        """)
     Slice<Entity> fetchAscending(@Param("userId") Long userId,
                                  @Param("hasCursor") boolean hasCursor,
                                  @Param("cursorId") Long cursorId,
@@ -92,16 +89,13 @@ public interface AbstractCatalogItemRepository<Entity extends AbstractCatalogIte
                                  Pageable pageable);
 
     @Query("""
-            SELECT item FROM #{#entityName} item
-            JOIN FETCH item.movie
-            WHERE item.user.id = :userId
-            AND (
-                :query IS NULL
-                OR LOWER(TRANSLATE(item.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
-            )
-            AND (:hasCursor = false OR item.id < :cursorId)
-            ORDER BY item.id DESC
-            """)
+        SELECT item FROM #{#entityName} item
+        JOIN FETCH item.movie
+        WHERE item.user.id = :userId
+        AND LOWER(TRANSLATE(item.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
+        AND (:hasCursor = false OR item.id < :cursorId)
+        ORDER BY item.id DESC
+        """)
     Slice<Entity> fetchDescending(@Param("userId") Long userId,
                                   @Param("hasCursor") boolean hasCursor,
                                   @Param("cursorId") Long cursorId,

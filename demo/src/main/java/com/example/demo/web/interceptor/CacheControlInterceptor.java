@@ -14,18 +14,6 @@ public class CacheControlInterceptor implements HandlerInterceptor {
     public boolean preHandle(@NotNull HttpServletRequest httpServletRequest,
                              @NotNull HttpServletResponse httpServletResponse,
                              @NotNull Object handler) {
-        String uri = httpServletRequest.getRequestURI();
-
-        if (uri.startsWith("/js/")
-                || uri.startsWith("/css/")
-                || uri.startsWith("/images/")
-                || uri.startsWith("/webjars/")
-                || uri.equals("/logo.png")
-                || uri.equals("/favicon.png")
-                || uri.equals("/favicon.ico")) {
-            return true;
-        }
-
         NoCacheHeaders.apply(httpServletResponse);
         return true;
     }
