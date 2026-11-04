@@ -41,9 +41,6 @@ public class SecurityConfig {
             "/rated/*/reviews",
             "/rated/*/reviews/more",
             "/rated/count/**",
-            "/rated/rating/**",
-            "/movies/*/rating",
-            "/movies/suggestions",
             "/recommendations"
     };
 

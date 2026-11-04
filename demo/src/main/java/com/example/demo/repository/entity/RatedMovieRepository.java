@@ -18,42 +18,6 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
 
     @Override
     @Query("""
-            SELECT ratedMovie FROM RatedMovie ratedMovie
-            JOIN FETCH ratedMovie.movie
-            WHERE ratedMovie.user.id = :userId
-            AND (
-                :query IS NULL
-                OR LOWER(TRANSLATE(ratedMovie.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
-            )
-            AND (:hasCursor = false OR ratedMovie.id > :cursorId)
-            ORDER BY ratedMovie.id ASC
-            """)
-    Slice<RatedMovie> fetchAscending(@Param("userId") Long userId,
-                                     @Param("hasCursor") boolean hasCursor,
-                                     @Param("cursorId") Long cursorId,
-                                     @Param("query") String query,
-                                     Pageable pageable);
-
-    @Override
-    @Query("""
-            SELECT ratedMovie FROM RatedMovie ratedMovie
-            JOIN FETCH ratedMovie.movie
-            WHERE ratedMovie.user.id = :userId
-            AND (
-                :query IS NULL
-                OR LOWER(TRANSLATE(ratedMovie.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
-            )
-            AND (:hasCursor = false OR ratedMovie.id < :cursorId)
-            ORDER BY ratedMovie.id DESC
-            """)
-    Slice<RatedMovie> fetchDescending(@Param("userId") Long userId,
-                                      @Param("hasCursor") boolean hasCursor,
-                                      @Param("cursorId") Long cursorId,
-                                      @Param("query") String query,
-                                      Pageable pageable);
-
-    @Override
-    @Query("""
             SELECT DISTINCT ratedMovie.movie.title FROM RatedMovie ratedMovie
             WHERE ratedMovie.user.id = :userId
             AND LOWER(TRANSLATE(ratedMovie.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:prefix AS string), '%') ESCAPE '\\'
@@ -136,17 +100,6 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
             """)
     Optional<RatedMovie> findByMovieIdAndUserId(@Param("movieId") Long movieId,
                                                 @Param("userId") Long userId);
-
-    @Query("""
-            SELECT ratedMovie
-            FROM RatedMovie ratedMovie
-            JOIN FETCH ratedMovie.movie
-            JOIN FETCH ratedMovie.user
-            WHERE ratedMovie.movie.id = :movieId
-            AND ratedMovie.user.id = :userId
-            """)
-    Optional<RatedMovie> findOwnReview(@Param("movieId") Long movieId,
-                                       @Param("userId") Long userId);
 
     @Query("""
             SELECT COUNT(ratedMovie)

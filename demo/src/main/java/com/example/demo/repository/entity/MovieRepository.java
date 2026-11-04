@@ -14,6 +14,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -70,13 +71,13 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
             SELECT director
             FROM movies
             WHERE director IS NOT NULL
-              AND LOWER(director) LIKE LOWER(CONCAT(:prefix, '%')) ESCAPE '\\'
+              AND LOWER(TRANSLATE(director, 'ёЁ', 'еЕ')) LIKE LOWER(CONCAT(:prefix, '%')) ESCAPE '\\'
               AND (
                   :hasCursor = false
-                  OR LOWER(director) > LOWER(:cursor)
+                  OR LOWER(TRANSLATE(director, 'ёЁ', 'еЕ')) > LOWER(:cursor)
               )
             GROUP BY director
-            ORDER BY LOWER(director) ASC
+            ORDER BY LOWER(TRANSLATE(director, 'ёЁ', 'еЕ')) ASC
             LIMIT :limit
             """, nativeQuery = true)
     List<String> fetchDirectorsKeyset(
@@ -104,7 +105,7 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
             ORDER BY movie.rating DESC NULLS LAST, movie.id ASC
             """)
     Slice<Movie> findRecommendedMoviesSliceKeyset(
-            @Param("excludedIds") List<Long> excludedIds,
+            @Param("excludedIds") Collection<Long> excludedIds,
             @Param("hasCursor") boolean hasCursor,
             @Param("cursorRating") BigDecimal cursorRating,
             @Param("cursorId") Long cursorId,
@@ -114,10 +115,10 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
     @Query(value = """
             SELECT genre
             FROM movies
-            WHERE LOWER(genre) LIKE LOWER(CONCAT(:prefix, '%')) ESCAPE '\\'
-              AND (:hasCursor = false OR LOWER(genre) > LOWER(:cursor))
+            WHERE LOWER(TRANSLATE(genre, 'ёЁ', 'еЕ')) LIKE LOWER(CONCAT(:prefix, '%')) ESCAPE '\\'
+              AND (:hasCursor = false OR LOWER(TRANSLATE(genre, 'ёЁ', 'еЕ')) > LOWER(:cursor))
             GROUP BY genre
-            ORDER BY LOWER(genre) ASC
+            ORDER BY LOWER(TRANSLATE(genre, 'ёЁ', 'еЕ')) ASC
             LIMIT :limit
             """, nativeQuery = true)
     List<String> fetchGenresKeyset(
@@ -132,4 +133,17 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
             WHERE movie.genre = :genre
             """)
     Page<Movie> findAllByGenre(Pageable pageable, @Param("genre") String genre);
+
+    @Query(value = """
+        SELECT DISTINCT movie_id FROM (
+            SELECT movie_id FROM cart_items WHERE user_id = :userId
+            UNION ALL
+            SELECT movie_id FROM favourite_movies WHERE user_id = :userId
+            UNION ALL
+            SELECT movie_id FROM purchased_movies WHERE user_id = :userId
+            UNION ALL
+            SELECT movie_id FROM rated_movies WHERE user_id = :userId
+        ) AS all_ids
+        """, nativeQuery = true)
+    List<Long> findExcludedMovieIdsByUserId(@Param("userId") Long userId);
 }

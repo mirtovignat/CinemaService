@@ -30,21 +30,25 @@ public class WatchedHistoryService {
                 .findByMovieIdAndUserId(movieId, userId)
                 .orElseThrow(() -> BusinessException.of(ErrorCode.MOVIE_NOT_PURCHASED, movieId));
 
-        int previousSize = purchasedMovie.getWatchedHistory().size();
+        List<WatchHistoryItem> history = purchasedMovie.getWatchedHistory();
+        int previousSize = history.size();
         purchasedMovie.addWatchHistory(LocalDateTime.now(ZoneOffset.UTC));
         purchasedMovieRepository.saveAndFlush(purchasedMovie);
 
-        if (purchasedMovie.getWatchedHistory().size() > previousSize) {
-            return purchasedMovie.getWatchedHistory()
-                    .get(purchasedMovie.getWatchedHistory().size() - 1)
-                    .getId();
+        if (history.size() > previousSize) {
+            return history.get(history.size() - 1).getId();
         }
         return null;
     }
 
-    @Transactional
-    public boolean ensurePurchased(Long movieId, Long userId) {
-        return purchasedMovieRepository.findByMovieIdAndUserId(movieId, userId).isPresent();
+    @Transactional(readOnly = true)
+    public void ensurePurchased(Long movieId, Long userId) {
+        boolean purchased = purchasedMovieRepository
+                .findByMovieIdAndUserId(movieId, userId)
+                .isPresent();
+        if (!purchased) {
+            throw BusinessException.of(ErrorCode.MOVIE_NOT_PURCHASED, movieId);
+        }
     }
 
     @Transactional

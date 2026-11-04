@@ -222,8 +222,6 @@
                 editButton.dataset.reviewText = review.reviewText;
             }
         }
-
-        // При редактировании мы НЕ трогаем дату, оставляем как было на карточке.
     }
 
     function setTopAddReviewButtonVisible(isVisible) {
@@ -392,7 +390,7 @@
             }
 
             return Promise.all([
-                fetch('/rated/rating/' + encodeURIComponent(targetMovieId) + '?_=' + Date.now(), {
+                fetch('/movies/' + encodeURIComponent(targetMovieId) + '/rating?_=' + Date.now(), {
                     headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
                     redirect: 'manual',
                     credentials: 'same-origin'

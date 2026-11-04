@@ -28,9 +28,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.math.BigDecimal;
-import java.util.Map;
-
 @AllArgsConstructor
 @Controller
 @RequestMapping("/rated")
@@ -154,13 +151,6 @@ public class RatedController {
                                                           @CurrentUserId Long userId) {
         ratedCommandService.deleteRating(movieId, userId);
         return apiResponseFactory.ok(SuccessCode.REVIEW_HAS_BEEN_DELETED);
-    }
-
-    @GetMapping("/rating/{id}")
-    @ResponseBody
-    public ResponseEntity<Map<String, Object>> getMovieRating(@PathVariable("id") Long movieId) {
-        BigDecimal movieRating = ratedQueryService.getMovieRating(movieId);
-        return ResponseEntity.ok(Map.of("rating", ratedQueryService.getNormalizedRating(movieRating)));
     }
 
     @GetMapping("/count/{movieId}")

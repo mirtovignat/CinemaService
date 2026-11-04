@@ -65,24 +65,6 @@ public class MovieFilterFacade {
             Function<Pageable, Page<MovieForUser<MovieCardViewDTO>>> fetchFunction) {
 
         Pageable pageable = movieSortResolver.resolve(pageRequestContext, defaultSize);
-
-        Page<MovieForUser<MovieCardViewDTO>> result = fetchFunction.apply(pageable);
-
-        int totalPages = result.getTotalPages();
-        int requestedPage = pageable.getPageNumber();
-
-        if (totalPages <= 0 || requestedPage < totalPages) {
-            return result;
-        }
-
-        PageRequestContext lastPageRequestContext = PageRequestContext.builder()
-                .sortBy(pageRequestContext.sortBy())
-                .sortDirection(pageRequestContext.sortDirection())
-                .page(totalPages - 1)
-                .size(pageable.getPageSize())
-                .build();
-
-        Pageable lastPageable = movieSortResolver.resolve(lastPageRequestContext, defaultSize);
-        return fetchFunction.apply(lastPageable);
+        return fetchFunction.apply(pageable);
     }
 }

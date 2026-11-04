@@ -29,7 +29,6 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -115,7 +114,7 @@ public class MovieController {
                 null,
                 RecommendationCursorContext.builder()
                         .userId(userId)
-                        .excludedMovieIds(excludedMovieIds.isEmpty() ? null : new ArrayList<>(excludedMovieIds))
+                        .excludedMovieIds(excludedMovieIds.isEmpty() ? null : excludedMovieIds)
                         .build()
         );
     }

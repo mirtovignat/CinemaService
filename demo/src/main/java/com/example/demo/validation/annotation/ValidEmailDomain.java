@@ -1,6 +1,6 @@
 package com.example.demo.validation.annotation;
 
-import com.example.demo.validation.validator.ValidEmailDomainValidator;
+import com.example.demo.validation.validator.EmailDomainPatternValidator;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
@@ -9,13 +9,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-
 @Target({
         ElementType.FIELD,
         ElementType.PARAMETER
 })
 @Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = ValidEmailDomainValidator.class)
+@Constraint(validatedBy = EmailDomainPatternValidator.class)
 public @interface ValidEmailDomain {
 
     String message() default "Данный @email не существует";

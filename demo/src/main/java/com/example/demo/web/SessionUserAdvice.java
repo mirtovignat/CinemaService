@@ -1,6 +1,5 @@
 package com.example.demo.web;
 
-import com.example.demo.dto.badges.BadgeCountsDTO;
 import com.example.demo.dto.user.SessionUser;
 import com.example.demo.web.security.CurrentUserProvider;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,7 +35,5 @@ public class SessionUserAdvice implements HandlerInterceptor {
             currentUri += "?" + httpServletRequest.getQueryString();
         }
         modelAndView.addObject("currentUri", currentUri);
-
-        modelAndView.addObject("badges", BadgeCountsDTO.builder().build());
     }
 }

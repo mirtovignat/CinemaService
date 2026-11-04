@@ -4,13 +4,11 @@ import com.example.demo.dto.catalog.RatedMovieFormDTO;
 import com.example.demo.dto.catalog.RatedMovieViewDTO;
 import com.example.demo.dto.catalog.ReviewViewDTO;
 import com.example.demo.mapper.entity.RatedMapper;
-import com.example.demo.repository.entity.MovieRepository;
 import com.example.demo.repository.entity.RatedMovieRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -19,18 +17,15 @@ public class RatedQueryService {
     private final RatedMovieRepository ratedMovieRepository;
     private final RatedMapper ratedMapper;
     private final ReviewViewAssembler reviewViewAssembler;
-    private final MovieRepository movieRepository;
     private final int ratingsToLimit;
 
     public RatedQueryService(RatedMovieRepository ratedMovieRepository,
                              RatedMapper ratedMapper,
                              ReviewViewAssembler reviewViewAssembler,
-                             MovieRepository movieRepository,
                              @Value("${app.rating.top-limit:4}") int ratingsToLimit) {
         this.ratedMovieRepository = ratedMovieRepository;
         this.ratedMapper = ratedMapper;
         this.reviewViewAssembler = reviewViewAssembler;
-        this.movieRepository = movieRepository;
         this.ratingsToLimit = ratingsToLimit;
     }
 
@@ -45,14 +40,6 @@ public class RatedQueryService {
                 .orElse(RatedMovieFormDTO.builder()
                         .id(movieId)
                         .build());
-    }
-
-    public BigDecimal getMovieRating(Long movieId) {
-        return movieRepository.findRatingById(movieId).orElse(null);
-    }
-
-    public String getNormalizedRating(BigDecimal rating) {
-        return rating != null ? rating.toPlainString() : "-";
     }
 
     public Long getReviewsCountForMovie(Long movieId) {
@@ -72,7 +59,7 @@ public class RatedQueryService {
         if (userId == null || movieId == null) {
             return null;
         }
-        return ratedMovieRepository.findOwnReview(movieId, userId)
+        return ratedMovieRepository.findByMovieIdAndUserId(movieId, userId)
                 .map(ratedMovie -> reviewViewAssembler.assemble(ratedMovie, userId))
                 .orElse(null);
     }

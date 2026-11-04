@@ -2,11 +2,11 @@ package com.example.demo.cursor.context;
 
 import lombok.Builder;
 
-import java.util.List;
+import java.util.Collection;
 
 @Builder
 public record RecommendationCursorContext(
         Long userId,
-        List<Long> excludedMovieIds
+        Collection<Long> excludedMovieIds
 ) {
 }

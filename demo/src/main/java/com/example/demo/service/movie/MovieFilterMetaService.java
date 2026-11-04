@@ -43,7 +43,6 @@ public class MovieFilterMetaService {
         String cursor = hasCursor
                 ? cursorCodec.decode(cursorPageRequest.cursor()).value()
                 : "";
-
         List<String> rows = movieRepository.fetchDirectorsKeyset(prefix, hasCursor, cursor, pageSize + 1);
         return CursorUtils.buildLimitedSlice(rows, pageSize);
     }
@@ -55,7 +54,6 @@ public class MovieFilterMetaService {
         String cursor = hasCursor
                 ? cursorCodec.decode(cursorPageRequest.cursor()).value()
                 : "";
-
         List<String> rows = movieRepository.fetchGenresKeyset(prefix, hasCursor, cursor, pageSize + 1);
         return CursorUtils.buildLimitedSlice(rows, pageSize);
     }

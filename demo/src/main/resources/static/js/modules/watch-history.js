@@ -606,13 +606,11 @@
         window.Actions.register('close-clear-history-modal', function () { closeClearHistoryModal(); return true; });
         window.Actions.register('confirm-clear-history', function () { confirmClearHistory(); return true; });
         window.Actions.register('close-delete-item-modal', function () { closeDeleteItemModal(); return true; });
+        window.Actions.register('confirm-delete-history-item', function () { confirmDeleteHistoryItem(); return true; });
     }
 
     function initWatchHistory() {
         initSaveHistoryToggle();
-
-        var confirmBtn = document.getElementById('confirmDeleteItemBtn');
-        if (confirmBtn) confirmBtn.addEventListener('click', confirmDeleteHistoryItem);
 
         document.addEventListener('click', function (e) {
             if (!e.target.closest('.history-item-actions')) closeAllDropdowns();

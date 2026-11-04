@@ -9,7 +9,7 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 
 @Component
-public class ValidEmailDomainValidator implements ConstraintValidator<ValidEmailDomain, String> {
+public class EmailDomainPatternValidator implements ConstraintValidator<ValidEmailDomain, String> {
 
     private static final Pattern DOMAIN_PATTERN = Pattern.compile(
             "^(?=.{1,253}$)(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\\.(?!-)[A-Za-z0-9-]{1,63}(?<!-))+$"

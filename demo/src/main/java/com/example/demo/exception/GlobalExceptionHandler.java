@@ -2,11 +2,9 @@ package com.example.demo.exception;
 
 import com.example.demo.dto.authorize.LoginFormDTO;
 import com.example.demo.dto.authorize.RegisterFormDTO;
-import com.example.demo.dto.badges.BadgeCountsDTO;
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.dto.user.PasswordChangingDTO;
 import com.example.demo.dto.user.SessionUser;
-import com.example.demo.service.BadgeService;
 import com.example.demo.util.MessageUtils;
 import com.example.demo.util.url.UrlSafety;
 import com.example.demo.util.validation.Emptiness;
@@ -45,7 +43,6 @@ public class GlobalExceptionHandler {
 
     private final MessageUtils messageUtils;
     private final CurrentUserProvider currentUserProvider;
-    private final BadgeService badgeService;
 
     @ExceptionHandler(ClientAbortException.class)
     public void handleClientAbortException(ClientAbortException clientAbortException) {
@@ -111,9 +108,10 @@ public class GlobalExceptionHandler {
         }
 
         addCommonAttributes(model);
-        model.addAttribute("movieUserStatus", 404);
-        model.addAttribute("error", messageUtils.getError(ErrorCode.ENTITY_NOT_FOUND));
-        model.addAttribute("message", messageUtils.getError(ErrorCode.ENTITY_NOT_FOUND));
+        model.addAttribute("status", 404);
+        String errorMessage = messageUtils.getError(ErrorCode.ENTITY_NOT_FOUND);
+        model.addAttribute("error", errorMessage);
+        model.addAttribute("message", errorMessage);
         return "error";
     }
 
@@ -132,7 +130,7 @@ public class GlobalExceptionHandler {
         }
 
         addCommonAttributes(model);
-        model.addAttribute("movieUserStatus", 500);
+        model.addAttribute("status", 500);
         model.addAttribute("error", errorMessage);
         model.addAttribute("message", errorMessage);
         return "error";
@@ -202,7 +200,6 @@ public class GlobalExceptionHandler {
             sessionUser = SessionUser.ANONYMOUS;
         }
         model.addAttribute("sessionUser", sessionUser);
-        model.addAttribute("badges", BadgeCountsDTO.builder().build());
     }
 
     private String resolveFallbackLocalPath(HttpServletRequest httpServletRequest) {

@@ -112,11 +112,6 @@ public class PersonalAccountController {
 
         String successMessage = messageUtils.getSuccess(SuccessCode.PASSWORD_HAS_BEEN_CHANGED);
 
-        if (passwordChangingDTO.isCoincidence()) {
-            redirectAttributes.addFlashAttribute("successMessage", successMessage);
-            return "redirect:/";
-        }
-
         String newPasswordHash = userCommandService.prepareAndValidatePassword(passwordChangingDTO, userId);
         userCommandService.updatePassword(newPasswordHash, userId);
 

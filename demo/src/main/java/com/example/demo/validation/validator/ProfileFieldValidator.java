@@ -17,14 +17,14 @@ public class ProfileFieldValidator
 
     private static final String FIELD_PROPERTY = "field";
 
-    private final ValidEmailDomainValidator emailDomainValidator;
+    private final EmailDomainPatternValidator emailDomainValidator;
     private final PhoneNormalizer phoneNormalizer;
     private final Pattern emailPattern;
     private final Pattern usernamePattern;
     private final int usernameMinLength;
     private final int usernameMaxLength;
 
-    public ProfileFieldValidator(ValidEmailDomainValidator emailDomainValidator,
+    public ProfileFieldValidator(EmailDomainPatternValidator emailDomainValidator,
                                  PhoneNormalizer phoneNormalizer,
                                  @Value("${app.validation.username.min-length:3}") int usernameMinLength,
                                  @Value("${app.validation.username.max-length:30}") int usernameMaxLength,

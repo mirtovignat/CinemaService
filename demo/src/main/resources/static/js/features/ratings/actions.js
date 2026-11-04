@@ -73,7 +73,7 @@
     }
 
     function fetchAvg(movieId) {
-        return fetch('/rated/rating/' + encodeURIComponent(movieId) + '?_=' + Date.now(), {
+        return fetch('/movies/' + encodeURIComponent(movieId) + '/rating?_=' + Date.now(), {
             headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
         })
         .then(function (r) { return r.ok ? r.json() : null; })

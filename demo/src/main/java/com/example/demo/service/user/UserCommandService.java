@@ -161,7 +161,6 @@ public class UserCommandService {
 
         lockedUser.addMoney(amount);
         userRepository.save(lockedUser);
-        user.setBalance(lockedUser.getBalance());
     }
 
     @Transactional
