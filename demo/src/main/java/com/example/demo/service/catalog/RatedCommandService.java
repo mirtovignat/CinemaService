@@ -9,14 +9,12 @@ import com.example.demo.model.entity.RatedMovie;
 import com.example.demo.model.entity.User;
 import com.example.demo.repository.entity.MovieRepository;
 import com.example.demo.repository.entity.RatedMovieRepository;
-import com.example.demo.repository.projection.MovieRatingStatsProjection;
 import com.example.demo.service.user.UserQueryService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 
 @AllArgsConstructor
 @Service
@@ -32,20 +30,28 @@ public class RatedCommandService {
         Movie movie = movieRepository.findByIdOrThrow(movieId);
 
         RatedMovie ratedMovie = ratedMovieRepository
-                .findByMovieIdAndUserIdIncludingDeleted(movieId, userId)
+                .findByMovieIdAndUserId(movieId, userId)
                 .orElse(null);
 
-        boolean isNew = ratedMovie == null;
-        if (isNew) {
+        BigDecimal newRating = ratedMovieFormDTO.rating();
+
+        if (ratedMovie == null) {
             ratedMovie = AbstractCatalogItem.init(RatedMovie.builder().build(), user, movie);
+            ratedMovie.setRatingValue(newRating);
+            ratedMovie.setReview(ratedMovieFormDTO.review());
+
+            ratedMovieRepository.saveAndFlush(ratedMovie);
+            movieRepository.applyRatingDelta(movieId, newRating, 1L);
+        } else {
+            BigDecimal delta = newRating.subtract(ratedMovie.getRatingValue());
+            ratedMovie.setRatingValue(newRating);
+            ratedMovie.setReview(ratedMovieFormDTO.review());
+
+            ratedMovieRepository.saveAndFlush(ratedMovie);
+            if (delta.signum() != 0) {
+                movieRepository.applyRatingDelta(movieId, delta, 0L);
+            }
         }
-
-        ratedMovie.setRatingValue(ratedMovieFormDTO.rating());
-        ratedMovie.setReview(ratedMovieFormDTO.review());
-        ratedMovie.getDeletableState().setDeleted(false);
-
-        ratedMovieRepository.saveAndFlush(ratedMovie);
-        recalculateMovieRating(movie);
     }
 
     @Transactional
@@ -53,22 +59,10 @@ public class RatedCommandService {
         Movie movie = movieRepository.findByIdOrThrow(movieId);
         RatedMovie ratedMovie = ratedMovieRepository.findByMovieIdAndUserId(movieId, userId)
                 .orElseThrow(() -> BusinessException.of(ErrorCode.ENTITY_NOT_FOUND));
+
+        BigDecimal oldRating = ratedMovie.getRatingValue();
+
         ratedMovieRepository.delete(ratedMovie);
-        recalculateMovieRating(movie);
-    }
-
-    private void recalculateMovieRating(Movie movie) {
-        MovieRatingStatsProjection movieRatingStatsProjection =
-                ratedMovieRepository.calculateRatingStats(movie.getId());
-
-        BigDecimal averageRating = movieRatingStatsProjection != null
-                ? movieRatingStatsProjection.getAvgRating()
-                : null;
-
-        movie.setRating(averageRating != null
-                ? averageRating.setScale(2, RoundingMode.HALF_UP)
-                : null);
-
-        movieRepository.save(movie);
+        movieRepository.applyRatingDelta(movieId, oldRating.negate(), -1L);
     }
 }

@@ -20,7 +20,6 @@ public class ReviewViewAssembler {
             return null;
         }
         User author = ratedMovie.getUser();
-        boolean authorDeleted = isAuthorDeleted(author);
 
         return ReviewViewDTO.builder()
                 .movieId(ratedMovie.getMovie() != null ? ratedMovie.getMovie().getId() : null)
@@ -29,14 +28,7 @@ public class ReviewViewAssembler {
                 .reviewText(ratedMovie.getReview())
                 .addedAt(dateTimeMapper.toUtcIso(ratedMovie.getAddedAt()))
                 .own(author != null && author.getId().equals(viewerId))
-                .deleted(authorDeleted)
+                .deleted(author != null && author.getDeletableState().isDeleted())
                 .build();
-    }
-
-    private boolean isAuthorDeleted(User author) {
-        if (author == null) {
-            return true;
-        }
-        return author.getDeletableState().isDeleted();
     }
 }

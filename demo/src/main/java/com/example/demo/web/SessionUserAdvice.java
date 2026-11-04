@@ -2,7 +2,6 @@ package com.example.demo.web;
 
 import com.example.demo.dto.badges.BadgeCountsDTO;
 import com.example.demo.dto.user.SessionUser;
-import com.example.demo.service.BadgeService;
 import com.example.demo.web.security.CurrentUserProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -16,7 +15,6 @@ import org.springframework.web.servlet.ModelAndView;
 @AllArgsConstructor
 public class SessionUserAdvice implements HandlerInterceptor {
 
-    private final BadgeService badgeService;
     private final CurrentUserProvider currentUserProvider;
 
     @Override
@@ -39,10 +37,6 @@ public class SessionUserAdvice implements HandlerInterceptor {
         }
         modelAndView.addObject("currentUri", currentUri);
 
-        if (!sessionUser.isAuthenticated()) {
-            modelAndView.addObject("badges", BadgeCountsDTO.builder().build());
-            return;
-        }
-        modelAndView.addObject("badges", badgeService.getBadgeCounts(sessionUser.id()));
+        modelAndView.addObject("badges", BadgeCountsDTO.builder().build());
     }
 }

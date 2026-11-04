@@ -53,6 +53,14 @@ public class Movie extends IdentifiableEntity {
     @Column(name = "rating", precision = 4, scale = 2)
     private BigDecimal rating;
 
+    @Builder.Default
+    @Column(name = "rating_sum", nullable = false, precision = 14, scale = 2)
+    private BigDecimal ratingSum = BigDecimal.ZERO;
+
+    @Builder.Default
+    @Column(name = "rating_count", nullable = false)
+    private Long ratingCount = 0L;
+
     @Column(name = "description", columnDefinition = "text")
     private String description;
 

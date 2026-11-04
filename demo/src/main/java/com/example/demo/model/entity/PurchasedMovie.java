@@ -18,8 +18,7 @@ import java.util.List;
 @AllArgsConstructor
 @SuperBuilder
 @Entity
-@Table(name = "purchased_movies",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "movie_id"}))
+@Table(name = "purchased_movies")
 public class PurchasedMovie extends AbstractCatalogItem {
 
     @Column(name = "price_snapshot", nullable = false)

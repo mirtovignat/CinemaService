@@ -4,20 +4,19 @@ import com.example.demo.validation.annotation.ValidEmailDomain;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.springframework.stereotype.Component;
-import org.xbill.DNS.Record;
-import org.xbill.DNS.*;
 
-import java.time.Duration;
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 @Component
 public class ValidEmailDomainValidator implements ConstraintValidator<ValidEmailDomain, String> {
 
+    private static final Pattern DOMAIN_PATTERN = Pattern.compile(
+            "^(?=.{1,253}$)(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\\.(?!-)[A-Za-z0-9-]{1,63}(?<!-))+$"
+    );
+
     @Override
-    public boolean isValid(
-            String email,
-            ConstraintValidatorContext constraintValidatorContext
-    ) {
+    public boolean isValid(String email, ConstraintValidatorContext constraintValidatorContext) {
         if (email == null || email.isBlank()) {
             return true;
         }
@@ -25,7 +24,7 @@ public class ValidEmailDomainValidator implements ConstraintValidator<ValidEmail
         if (domain == null) {
             return false;
         }
-        return hasMailRecord(domain);
+        return DOMAIN_PATTERN.matcher(domain).matches();
     }
 
     private String getDomain(String email) {
@@ -33,20 +32,6 @@ public class ValidEmailDomainValidator implements ConstraintValidator<ValidEmail
         if (index <= 0 || index == email.length() - 1) {
             return null;
         }
-        return email.substring(index + 1)
-                .toLowerCase(Locale.ROOT);
-    }
-
-    public boolean hasMailRecord(String domain) {
-        try {
-            Resolver resolver = new SimpleResolver();
-            resolver.setTimeout(Duration.ofSeconds(5));
-            Lookup mxLookup = new Lookup(domain, Type.MX);
-            mxLookup.setResolver(resolver);
-            Record[] mxRecords = mxLookup.run();
-            return mxRecords != null && mxRecords.length > 0;
-        } catch (Exception exception) {
-            return false;
-        }
+        return email.substring(index + 1).toLowerCase(Locale.ROOT);
     }
 }

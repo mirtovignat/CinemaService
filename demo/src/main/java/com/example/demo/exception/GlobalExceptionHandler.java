@@ -202,12 +202,7 @@ public class GlobalExceptionHandler {
             sessionUser = SessionUser.ANONYMOUS;
         }
         model.addAttribute("sessionUser", sessionUser);
-
-        if (!sessionUser.isAuthenticated()) {
-            model.addAttribute("badges", BadgeCountsDTO.builder().build());
-            return;
-        }
-        model.addAttribute("badges", badgeService.getBadgeCounts(sessionUser.id()));
+        model.addAttribute("badges", BadgeCountsDTO.builder().build());
     }
 
     private String resolveFallbackLocalPath(HttpServletRequest httpServletRequest) {

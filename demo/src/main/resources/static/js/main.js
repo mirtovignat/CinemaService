@@ -12,6 +12,11 @@
                 sessionStorage.removeItem('flashMessage');
             } catch (e) {}
         }
+
+        if (typeof isAuthenticated === 'function' && isAuthenticated()
+                && typeof UI !== 'undefined' && typeof UI.refreshBadges === 'function') {
+            UI.refreshBadges();
+        }
     });
 
     function refreshCounts() {

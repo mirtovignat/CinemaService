@@ -418,21 +418,34 @@
         ratingInput.dispatchEvent(new Event('input', { bubbles: true }));
     }
 
-    var ratingStepper = null;
+    var ratingHoldTimeout = null;
+    var ratingHoldInterval = null;
 
-    function startStepping(delta, button) {
-        if (!ratingStepper && typeof createStepper === 'function') {
-            ratingStepper = createStepper({
-                onStep: function (stepDelta) { stepRating(stepDelta); },
-                startDelay: 250,
-                repeatDelay: 80
-            });
+    function startHold(delta, btn, event) {
+        if (event) {
+            if (event.button !== 0 && event.pointerType === 'mouse') return;
+            if (btn.setPointerCapture && event.pointerId) {
+                btn.setPointerCapture(event.pointerId);
+            }
         }
-        if (ratingStepper) ratingStepper.start(delta, button);
+
+        stepRating(delta);
+
+        clearTimeout(ratingHoldTimeout);
+        clearInterval(ratingHoldInterval);
+
+        ratingHoldTimeout = setTimeout(function () {
+            ratingHoldInterval = setInterval(function () {
+                stepRating(delta);
+            }, 80);
+        }, 250);
     }
 
-    function stopStepping(button) {
-        if (ratingStepper) ratingStepper.stop(button);
+    function stopHold() {
+        clearTimeout(ratingHoldTimeout);
+        clearInterval(ratingHoldInterval);
+        ratingHoldTimeout = null;
+        ratingHoldInterval = null;
     }
 
     function onRatingModalKeydown(event) {
@@ -517,10 +530,45 @@
         syncCommentTools();
     }
 
+    function initRatingSteppers() {
+        var modal = document.getElementById('ratingModal');
+        if (!modal) return;
+
+        var upBtn = modal.querySelector('.stepper-btn.up');
+        var downBtn = modal.querySelector('.stepper-btn.down');
+
+        if (upBtn && upBtn.dataset.holdBound !== '1') {
+            upBtn.dataset.holdBound = '1';
+            upBtn.addEventListener('pointerdown', function (e) {
+                e.preventDefault();
+                startHold(0.1, this, e);
+            });
+            upBtn.addEventListener('pointerup', stopHold);
+            upBtn.addEventListener('pointercancel', stopHold);
+            upBtn.addEventListener('pointerleave', stopHold);
+        }
+
+        if (downBtn && downBtn.dataset.holdBound !== '1') {
+            downBtn.dataset.holdBound = '1';
+            downBtn.addEventListener('pointerdown', function (e) {
+                e.preventDefault();
+                startHold(-0.1, this, e);
+            });
+            downBtn.addEventListener('pointerup', stopHold);
+            downBtn.addEventListener('pointercancel', stopHold);
+            downBtn.addEventListener('pointerleave', stopHold);
+        }
+    }
+
     function init() {
         initCommentTools();
+        initRatingSteppers();
+
         document.addEventListener('keydown', onRatingModalKeydown);
         document.addEventListener('keydown', onDeleteModalKeydown);
+
+        document.addEventListener('pointerup', stopHold);
+        document.addEventListener('pointercancel', stopHold);
     }
 
     window.showRatingModal = showRatingModal;
@@ -530,8 +578,6 @@
     window.hideConfirmDeleteModal = hideConfirmDeleteModal;
     window.executeDelete = executeDelete;
     window.stepRating = stepRating;
-    window.startStepping = startStepping;
-    window.stopStepping = stopStepping;
 
     function registerRatingActions() {
         if (!window.Actions) return;
@@ -555,16 +601,6 @@
 
         window.Actions.register('execute-delete', function () {
             executeDelete();
-            return true;
-        });
-
-        window.Actions.register('rating-step-up', function () {
-            stepRating(0.1);
-            return true;
-        });
-
-        window.Actions.register('rating-step-down', function () {
-            stepRating(-0.1);
             return true;
         });
     }

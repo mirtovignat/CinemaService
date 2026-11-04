@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -22,6 +23,48 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
         return findById(id)
                 .orElseThrow(() -> BusinessException.of(ErrorCode.ENTITY_NOT_FOUND));
     }
+
+    @Modifying
+    @Query("""
+            UPDATE Movie movie
+            SET movie.ratingSum = movie.ratingSum + :deltaSum,
+                movie.ratingCount = movie.ratingCount + :deltaCount,
+                movie.rating = CASE
+                    WHEN (movie.ratingCount + :deltaCount) > 0
+                        THEN ROUND((movie.ratingSum + :deltaSum) / (movie.ratingCount + :deltaCount), 2)
+                    ELSE NULL
+                END
+            WHERE movie.id = :movieId
+            """)
+    int applyRatingDelta(@Param("movieId") Long movieId,
+                         @Param("deltaSum") BigDecimal deltaSum,
+                         @Param("deltaCount") long deltaCount);
+
+    @Query("""
+            SELECT movie.rating
+            FROM Movie movie
+            WHERE movie.id = :id
+            """)
+    Optional<BigDecimal> findRatingById(@Param("id") Long id);
+
+    @Query("""
+            SELECT
+                MIN(movie.duration)    AS minDuration,
+                MAX(movie.duration)    AS maxDuration,
+                MIN(movie.price)       AS minPrice,
+                MAX(movie.price)       AS maxPrice,
+                MIN(movie.releaseDate) AS minReleaseDate,
+                MAX(movie.releaseDate) AS maxReleaseDate
+            FROM Movie movie
+            """)
+    MovieRangeProjection findRanges();
+
+    @Query("""
+            SELECT DISTINCT movie.genre
+            FROM Movie movie
+            ORDER BY movie.genre ASC
+            """)
+    List<String> findAllDistinctGenres();
 
     @Query(value = """
             SELECT director
@@ -67,32 +110,6 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
             @Param("cursorId") Long cursorId,
             Pageable pageable
     );
-
-    @Query("""
-            SELECT movie.rating
-            FROM Movie movie
-            WHERE movie.id = :id
-            """)
-    Optional<BigDecimal> findRatingById(@Param("id") Long id);
-
-    @Query("""
-            SELECT
-                MIN(movie.duration)    AS minDuration,
-                MAX(movie.duration)    AS maxDuration,
-                MIN(movie.price)       AS minPrice,
-                MAX(movie.price)       AS maxPrice,
-                MIN(movie.releaseDate) AS minReleaseDate,
-                MAX(movie.releaseDate) AS maxReleaseDate
-            FROM Movie movie
-            """)
-    MovieRangeProjection findRanges();
-
-    @Query("""
-            SELECT DISTINCT movie.genre
-            FROM Movie movie
-            ORDER BY movie.genre ASC
-            """)
-    List<String> findAllDistinctGenres();
 
     @Query(value = """
             SELECT genre

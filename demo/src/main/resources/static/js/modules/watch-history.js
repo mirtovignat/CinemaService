@@ -342,8 +342,8 @@
         };
     }
 
-    function redirectToDetails(movieId) {
-        window.location.href = '/movies/' + encodeURIComponent(movieId);
+    function openPoster(posterUrl) {
+        window.location.href = posterUrl;
     }
 
     function watchMovie(button) {
@@ -355,11 +355,9 @@
         var ctx = resolveWatchContext(button);
         if (!ctx.movieId) return Promise.resolve();
 
-        var hasPosterAttr = !!ctx.posterUrl;
         var broken = isPosterImageBroken(ctx.posterContainer);
-
-        if (!hasPosterAttr || broken) {
-            redirectToDetails(ctx.movieId);
+        if (!ctx.posterUrl || broken) {
+            window.location.href = '/movies/' + encodeURIComponent(ctx.movieId);
             return Promise.resolve();
         }
 
@@ -413,7 +411,7 @@
                 newItem.setAttribute('data-history-id', String(data.historyItemId));
             }
 
-            window.location.href = ctx.posterUrl;
+            openPoster(ctx.posterUrl);
 
             return data;
         })
@@ -446,7 +444,7 @@
         var watchBtn = container.querySelector('.watch-btn-neon');
         if (!watchBtn) {
             var movieId = container.getAttribute('data-movie-id');
-            if (movieId) redirectToDetails(movieId);
+            if (movieId) window.location.href = '/movies/' + encodeURIComponent(movieId);
             return;
         }
         watchMovie(watchBtn);

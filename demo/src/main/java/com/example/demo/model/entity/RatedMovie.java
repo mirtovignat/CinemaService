@@ -1,11 +1,15 @@
 package com.example.demo.model.entity;
 
 import com.example.demo.model.base.AbstractCatalogItem;
-import com.example.demo.model.base.DeletableState;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
@@ -16,15 +20,8 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "rated_movies",
-        uniqueConstraints = @UniqueConstraint(columnNames = {
-                "user_id", "movie_id"
-        }))
+@Table(name = "rated_movies")
 public class RatedMovie extends AbstractCatalogItem {
-
-    @Embedded
-    @Builder.Default
-    private DeletableState deletableState = DeletableState.builder().build();
 
     @Column(name = "review", length = 350)
     private String review;
