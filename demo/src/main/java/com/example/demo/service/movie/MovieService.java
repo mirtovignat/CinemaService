@@ -24,6 +24,7 @@ public class MovieService {
     private final MovieMapper movieMapper;
     private final MovieUserStatusBatchLoader movieUserStatusBatchLoader;
     private final MovieSearchHelper movieSearchHelper;
+    private final MovieReviewCountService movieReviewCountService;
 
     @Transactional(readOnly = true)
     public Page<MovieForUser<MovieCardViewDTO>> getMovies(MovieFilter movieFilter,
@@ -45,11 +46,15 @@ public class MovieService {
     @Transactional(readOnly = true)
     public MovieForUser<MovieDetailsViewDTO> getCard(Long movieId, Long userId) {
         Movie movie = movieRepository.findByIdOrThrow(movieId);
-        MovieDetailsViewDTO movieDetailsViewDTO = movieMapper.toDetails(movie);
+        long ratingsCount = movieReviewCountService.countForMovie(movieId);
+
+        MovieDetailsViewDTO movieDetailsViewDTO = movieMapper.toDetails(movie, ratingsCount);
+
         MovieUserStatus movieUserStatus = (userId != null)
                 ? movieUserStatusBatchLoader.loadForMovies(List.of(movieId), userId)
                 .getOrDefault(movieId, MovieUserStatus.builder().build())
                 : MovieUserStatus.builder().build();
+
         return MovieForUser.<MovieDetailsViewDTO>builder()
                 .movie(movieDetailsViewDTO)
                 .movieUserStatus(movieUserStatus)
@@ -68,23 +73,30 @@ public class MovieService {
 
     @Transactional(readOnly = true)
     public Page<MovieForUser<MovieCardViewDTO>> enrichWithStatuses(Page<Movie> moviePage, Long userId) {
-        if (moviePage.isEmpty()) return Page.empty(moviePage.getPageable());
-        if (userId != null) {
-            List<Long> ids = moviePage.getContent().stream().map(Movie::getId).toList();
-            Map<Long, MovieUserStatus> statuses = movieUserStatusBatchLoader.loadForMovies(ids, userId);
-            return moviePage.map(m -> buildMovieForUser(m, statuses.getOrDefault(m.getId(), MovieUserStatus.builder().build())));
+        if (moviePage.isEmpty()) {
+            return Page.empty(moviePage.getPageable());
         }
-        return moviePage.map(m -> buildMovieForUser(m, MovieUserStatus.builder().build()));
+
+        List<Long> movieIds = moviePage.getContent().stream().map(Movie::getId).toList();
+        Map<Long, Long> reviewCountsByMovieId = movieReviewCountService.countsByMovieIds(movieIds);
+
+        if (userId != null) {
+            Map<Long, MovieUserStatus> movieUserStatusesByMovieId =
+                    movieUserStatusBatchLoader.loadForMovies(movieIds, userId);
+            return moviePage.map(movie -> MovieForUser.<MovieCardViewDTO>builder()
+                    .movie(movieMapper.toCard(movie, reviewCountsByMovieId.getOrDefault(movie.getId(), 0L)))
+                    .movieUserStatus(movieUserStatusesByMovieId.getOrDefault(
+                            movie.getId(), MovieUserStatus.builder().build()))
+                    .build());
+        }
+
+        return moviePage.map(movie -> MovieForUser.<MovieCardViewDTO>builder()
+                .movie(movieMapper.toCard(movie, reviewCountsByMovieId.getOrDefault(movie.getId(), 0L)))
+                .movieUserStatus(MovieUserStatus.builder().build())
+                .build());
     }
 
     public Movie getMovie(Long movieId) {
         return movieRepository.findByIdOrThrow(movieId);
-    }
-
-    private MovieForUser<MovieCardViewDTO> buildMovieForUser(Movie movie, MovieUserStatus movieUserStatus) {
-        return MovieForUser.<MovieCardViewDTO>builder()
-                .movie(movieMapper.toCard(movie))
-                .movieUserStatus(movieUserStatus)
-                .build();
     }
 }

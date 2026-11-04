@@ -33,7 +33,7 @@ public class RecommendationCursorService
                 pageSize,
                 movie -> recommendationKeyCodec.encode(movie.getRating(), movie.getId()),
                 movies -> movies.stream()
-                        .map(movieMapper::toCard)
+                        .map(movie -> movieMapper.toCard(movie, 0L))
                         .toList()
         );
 
@@ -46,20 +46,20 @@ public class RecommendationCursorService
                                       SortDirection sortDirection,
                                       String query,
                                       PageRequest pageRequest,
-                                      RecommendationCursorContext ctx) {
+                                      RecommendationCursorContext recommendationCursorContext) {
 
         boolean hasCursor = cursorValue != null;
 
         BigDecimal cursorRating = null;
         Long cursorIdentifier = null;
         if (hasCursor) {
-            RecommendationCursorKey key = recommendationKeyCodec.decode(cursorValue);
-            cursorRating = key.rating();
-            cursorIdentifier = key.identifier();
+            RecommendationCursorKey recommendationCursorKey = recommendationKeyCodec.decode(cursorValue);
+            cursorRating = recommendationCursorKey.rating();
+            cursorIdentifier = recommendationCursorKey.identifier();
         }
 
         return movieRepository.findRecommendedMoviesSliceKeyset(
-                ctx.excludedMovieIds(),
+                recommendationCursorContext.excludedMovieIds(),
                 hasCursor,
                 cursorRating,
                 cursorIdentifier,

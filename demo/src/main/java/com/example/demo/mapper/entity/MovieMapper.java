@@ -12,17 +12,19 @@ import org.mapstruct.Mapping;
 public interface MovieMapper {
 
     @Mapping(target = "formattedDuration",
-            source = "duration",
+            source = "movie.duration",
             qualifiedByName = "durationToString")
     @Mapping(target = "description", ignore = true)
     @Mapping(target = "currencyCode", ignore = true)
-    MovieCardViewDTO toCard(Movie movie);
+    @Mapping(target = "ratingsCount", source = "ratingsCount")
+    MovieCardViewDTO toCard(Movie movie, long ratingsCount);
 
     @Mapping(target = "formattedDuration",
-            source = "duration",
+            source = "movie.duration",
             qualifiedByName = "durationToString")
     @Mapping(target = "currencyCode", ignore = true)
-    MovieDetailsViewDTO toDetails(Movie movie);
+    @Mapping(target = "ratingsCount", source = "ratingsCount")
+    MovieDetailsViewDTO toDetails(Movie movie, long ratingsCount);
 
     MovieSearchDTO toMovieSearch(Movie movie);
 }

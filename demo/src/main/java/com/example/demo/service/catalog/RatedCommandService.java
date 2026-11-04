@@ -27,7 +27,7 @@ public class RatedCommandService {
     private final MovieRepository movieRepository;
 
     @Transactional
-    public void addOrUpdateRating(Long movieId, Long userId, RatedMovieFormDTO dto) {
+    public void addOrUpdateRating(Long movieId, Long userId, RatedMovieFormDTO ratedMovieFormDTO) {
         User user = userQueryService.getUser(userId);
         Movie movie = movieRepository.findByIdOrThrow(movieId);
 
@@ -40,8 +40,8 @@ public class RatedCommandService {
             ratedMovie = AbstractCatalogItem.init(RatedMovie.builder().build(), user, movie);
         }
 
-        ratedMovie.setRatingValue(dto.rating());
-        ratedMovie.setReview(dto.review());
+        ratedMovie.setRatingValue(ratedMovieFormDTO.rating());
+        ratedMovie.setReview(ratedMovieFormDTO.review());
         ratedMovie.getDeletableState().setDeleted(false);
 
         ratedMovieRepository.saveAndFlush(ratedMovie);
@@ -62,11 +62,14 @@ public class RatedCommandService {
         MovieRatingStatsProjection movieRatingStatsProjection =
                 ratedMovieRepository.calculateRatingStats(movie.getId());
 
-        BigDecimal averageRating = movieRatingStatsProjection != null ? movieRatingStatsProjection.getAvgRating() : null;
-        Long total = movieRatingStatsProjection != null ? movieRatingStatsProjection.getTotalCount() : null;
+        BigDecimal averageRating = movieRatingStatsProjection != null
+                ? movieRatingStatsProjection.getAvgRating()
+                : null;
 
-        movie.setRating(averageRating != null ? averageRating.setScale(2, RoundingMode.HALF_UP) : null);
-        movie.setRatingsCount(total != null ? total.intValue() : 0);
+        movie.setRating(averageRating != null
+                ? averageRating.setScale(2, RoundingMode.HALF_UP)
+                : null);
+
         movieRepository.save(movie);
     }
 }

@@ -3,6 +3,7 @@ package com.example.demo.repository.entity;
 import com.example.demo.model.entity.RatedMovie;
 import com.example.demo.repository.base.AbstractCatalogItemRepository;
 import com.example.demo.repository.projection.MovieRatingStatsProjection;
+import com.example.demo.repository.projection.MovieReviewCountProjection;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.Modifying;
@@ -10,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -178,6 +180,17 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
             AND ratedMovie.deletableState.deleted = false
             """)
     Long countByMovieId(@Param("movieId") Long movieId);
+
+    @Query("""
+            SELECT
+                ratedMovie.movie.id AS movieId,
+                COUNT(ratedMovie)  AS total
+            FROM RatedMovie ratedMovie
+            WHERE ratedMovie.movie.id IN :movieIds
+            AND ratedMovie.deletableState.deleted = false
+            GROUP BY ratedMovie.movie.id
+            """)
+    List<MovieReviewCountProjection> countByMovieIds(@Param("movieIds") Collection<Long> movieIds);
 
     @Query("""
             SELECT
