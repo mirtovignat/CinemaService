@@ -12,6 +12,7 @@ import com.example.demo.exception.SuccessCode;
 import com.example.demo.model.entity.Movie;
 import com.example.demo.service.catalog.RatedCommandService;
 import com.example.demo.service.catalog.RatedQueryService;
+import com.example.demo.service.catalog.RatingAction;
 import com.example.demo.service.cursor.ReviewCursorService;
 import com.example.demo.service.movie.MovieService;
 import com.example.demo.util.MessageUtils;
@@ -131,13 +132,13 @@ public class RatedController {
     @PostMapping("/add")
     public ResponseEntity<ApiResponse<Void>> addRating(@Valid @ModelAttribute RatedMovieFormDTO ratedMovieFormDTO,
                                                        @CurrentUserId Long userId) {
-        return saveRating(ratedMovieFormDTO, userId, SuccessCode.REVIEW_HAS_BEEN_SAVED);
+        return saveRating(ratedMovieFormDTO, userId);
     }
 
     @PostMapping("/edit")
     public ResponseEntity<ApiResponse<Void>> editRating(@Valid @ModelAttribute RatedMovieFormDTO ratedMovieFormDTO,
                                                         @CurrentUserId Long userId) {
-        return saveRating(ratedMovieFormDTO, userId, SuccessCode.REVIEW_HAS_BEEN_UPDATED);
+        return saveRating(ratedMovieFormDTO, userId);
     }
 
     @PostMapping("/remove/{id}")
@@ -153,9 +154,12 @@ public class RatedController {
     }
 
     private ResponseEntity<ApiResponse<Void>> saveRating(RatedMovieFormDTO ratedMovieFormDTO,
-                                                         Long userId,
-                                                         SuccessCode successCode) {
-        ratedCommandService.addOrUpdateRating(ratedMovieFormDTO.id(), userId, ratedMovieFormDTO);
+                                                         Long userId) {
+        RatingAction action = ratedCommandService.addOrUpdateRating(
+                ratedMovieFormDTO.id(), userId, ratedMovieFormDTO);
+        SuccessCode successCode = (action == RatingAction.CREATED)
+                ? SuccessCode.REVIEW_HAS_BEEN_SAVED
+                : SuccessCode.REVIEW_HAS_BEEN_UPDATED;
         return apiResponseFactory.ok(successCode);
     }
 }

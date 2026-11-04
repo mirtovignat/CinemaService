@@ -3,6 +3,9 @@ package com.example.demo.util.url;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class UrlSafety {
 
@@ -13,10 +16,31 @@ public final class UrlSafety {
         if (!path.startsWith("/")) {
             return false;
         }
-        if (path.startsWith("//")) {
+        String decoded;
+        try {
+            decoded = URLDecoder.decode(path, StandardCharsets.UTF_8);
+        } catch (IllegalArgumentException illegalArgumentException) {
             return false;
         }
-        return !path.startsWith("/\\");
+        if (!decoded.startsWith("/")) {
+            return false;
+        }
+        if (decoded.startsWith("//")) {
+            return false;
+        }
+        if (decoded.startsWith("/\\")) {
+            return false;
+        }
+        if (decoded.indexOf('\\') != -1) {
+            return false;
+        }
+        for (int index = 0; index < decoded.length(); index++) {
+            char currentCharacter = decoded.charAt(index);
+            if (currentCharacter < 0x20 || currentCharacter == 0x7f) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public static String resolveFallbackLocalPath(String path, String fallbackPath) {

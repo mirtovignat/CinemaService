@@ -40,13 +40,9 @@ public class UserQueryService {
         return PersonalAccountResponse.builder()
                 .userForOwnerViewDTO(userMapper.toOwnerView(user))
                 .userSidebarViewDTO(userMapper.toSidebarView(user))
-                .topThreeRatedMovies(ratedQueryService.getTopNRatedMovies(userId))
+                .topRatedMovies(ratedQueryService.getTopNRatedMovies(userId))
                 .genres(movieFilterMetaService.getAllGenres())
                 .build();
-    }
-
-    public BigDecimal getBalance(Long userId) {
-        return getUser(userId).getBalance();
     }
 
     public User getUser(Long userId) {

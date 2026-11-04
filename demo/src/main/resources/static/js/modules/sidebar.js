@@ -49,10 +49,6 @@
             return;
         }
 
-        if (window.AccountSwitcher && typeof window.AccountSwitcher.removeCurrent === 'function') {
-            window.AccountSwitcher.removeCurrent();
-        }
-
         var confirmButton = document.querySelector('#deleteAccountModal .modal-delete');
         if (confirmButton) {
             confirmButton.disabled = true;

@@ -4,7 +4,7 @@ import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.dto.response.PurchasedMovieResponse;
 import com.example.demo.dto.user.SessionUser;
 import com.example.demo.exception.SuccessCode;
-import com.example.demo.service.catalog.PurchasedCommandService;
+import com.example.demo.service.catalog.PurchasedService;
 import com.example.demo.web.security.SessionAuthenticator;
 import com.example.demo.web.util.ApiResponseFactory;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,7 +23,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class PurchasedController {
 
-    private final PurchasedCommandService purchasedCommandService;
+    private final PurchasedService purchasedService;
     private final SessionAuthenticator sessionAuthenticator;
     private final ApiResponseFactory apiResponseFactory;
 
@@ -32,7 +32,7 @@ public class PurchasedController {
             SessionUser sessionUser,
             HttpServletRequest httpServletRequest,
             HttpServletResponse httpServletResponse) {
-        BigDecimal newBalance = purchasedCommandService.purchaseBulk(sessionUser.id());
+        BigDecimal newBalance = purchasedService.purchaseBulk(sessionUser.id());
         return respond(sessionUser, newBalance, httpServletRequest, httpServletResponse);
     }
 
@@ -42,7 +42,7 @@ public class PurchasedController {
             SessionUser sessionUser,
             HttpServletRequest httpServletRequest,
             HttpServletResponse httpServletResponse) {
-        BigDecimal newBalance = purchasedCommandService.purchase(
+        BigDecimal newBalance = purchasedService.purchase(
                 id,
                 sessionUser.id()
         );

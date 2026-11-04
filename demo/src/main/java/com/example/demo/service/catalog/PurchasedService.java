@@ -11,25 +11,23 @@ import com.example.demo.repository.entity.MovieRepository;
 import com.example.demo.repository.entity.PurchasedMovieRepository;
 import com.example.demo.repository.entity.UserRepository;
 import com.example.demo.service.linked_collection.CartService;
-import com.example.demo.service.user.UserQueryService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
 @AllArgsConstructor
 @Service
-public class PurchasedCommandService {
+public class PurchasedService {
 
     private final CartService cartService;
     private final MovieRepository movieRepository;
     private final UserRepository userRepository;
     private final PurchasedMovieRepository purchasedMovieRepository;
-    private final UserQueryService userQueryService;
-    private final PurchasedQueryService purchasedQueryService;
 
     @Transactional
     public BigDecimal purchase(Long movieId, Long userId) {
@@ -53,7 +51,8 @@ public class PurchasedCommandService {
         User user = userRepository.findByIdForUpdate(userId)
                 .orElseThrow(() -> BusinessException.of(ErrorCode.USER_NOT_FOUND, "id=" + userId));
 
-        Set<Long> alreadyPurchasedMovieIds = purchasedQueryService.getPurchasedMovieIds(userId);
+        Set<Long> alreadyPurchasedMovieIds = new LinkedHashSet<>(
+                purchasedMovieRepository.findMovieIdsByUserId(userId));
         List<Long> movieIdsToBuy = requestedMovieIds.stream()
                 .filter(movieId -> !alreadyPurchasedMovieIds.contains(movieId))
                 .distinct()
@@ -61,7 +60,7 @@ public class PurchasedCommandService {
 
         if (movieIdsToBuy.isEmpty()) {
             clearCartFor(requestedMovieIds, userId, isSinglePurchase);
-            return user.getBalance();
+            throw BusinessException.of(ErrorCode.EMPTY_CART);
         }
 
         List<Movie> moviesToBuy = movieRepository.findAllById(movieIdsToBuy);

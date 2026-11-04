@@ -66,7 +66,7 @@ public class UserCommandService {
                 if (field.equals(user.getUsername())) {
                     throw BusinessException.of(ErrorCode.DATA_COINCIDENCE);
                 }
-                if (userRepository.existsByUsername(field)) {
+                if (userRepository.existsByUsernameIgnoreCase(field)) {
                     throw BusinessException.of(ErrorCode.USERNAME_TAKEN);
                 }
                 return ProfileFieldUpdateDTO.builder().identifier(identifier).field(field).build();
@@ -148,11 +148,11 @@ public class UserCommandService {
     }
 
     @Transactional
-    public void saveTopUp(BigDecimal amount, User user) {
+    public BigDecimal saveTopUp(BigDecimal amount, Long userId) {
         Amounts.requirePositive(amount);
 
-        User lockedUser = userRepository.findByIdForUpdate(user.getId())
-                .orElseThrow(() -> BusinessException.of(ErrorCode.USER_NOT_FOUND, "id=" + user.getId()));
+        User lockedUser = userRepository.findByIdForUpdate(userId)
+                .orElseThrow(() -> BusinessException.of(ErrorCode.USER_NOT_FOUND, "id=" + userId));
 
         BigDecimal newBalance = lockedUser.getBalance().add(amount);
         if (newBalance.compareTo(maxBalance) > 0) {
@@ -161,6 +161,7 @@ public class UserCommandService {
 
         lockedUser.addMoney(amount);
         userRepository.save(lockedUser);
+        return lockedUser.getBalance();
     }
 
     @Transactional

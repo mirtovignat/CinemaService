@@ -25,12 +25,12 @@ public class RatedCommandService {
     private final MovieRepository movieRepository;
 
     @Transactional
-    public void addOrUpdateRating(Long movieId, Long userId, RatedMovieFormDTO ratedMovieFormDTO) {
+    public RatingAction addOrUpdateRating(Long movieId, Long userId, RatedMovieFormDTO ratedMovieFormDTO) {
         User user = userQueryService.getUser(userId);
         Movie movie = movieRepository.findByIdOrThrow(movieId);
 
         RatedMovie ratedMovie = ratedMovieRepository
-                .findByMovieIdAndUserId(movieId, userId)
+                .findByMovieIdAndUserIdForUpdate(movieId, userId)
                 .orElse(null);
 
         BigDecimal newRating = ratedMovieFormDTO.rating();
@@ -42,22 +42,25 @@ public class RatedCommandService {
 
             ratedMovieRepository.saveAndFlush(ratedMovie);
             movieRepository.applyRatingDelta(movieId, newRating, 1L);
-        } else {
-            BigDecimal delta = newRating.subtract(ratedMovie.getRatingValue());
-            ratedMovie.setRatingValue(newRating);
-            ratedMovie.setReview(ratedMovieFormDTO.review());
-
-            ratedMovieRepository.saveAndFlush(ratedMovie);
-            if (delta.signum() != 0) {
-                movieRepository.applyRatingDelta(movieId, delta, 0L);
-            }
+            return RatingAction.CREATED;
         }
+
+        BigDecimal delta = newRating.subtract(ratedMovie.getRatingValue());
+        ratedMovie.setRatingValue(newRating);
+        ratedMovie.setReview(ratedMovieFormDTO.review());
+
+        ratedMovieRepository.saveAndFlush(ratedMovie);
+        if (delta.signum() != 0) {
+            movieRepository.applyRatingDelta(movieId, delta, 0L);
+        }
+        return RatingAction.UPDATED;
     }
 
     @Transactional
     public void deleteRating(Long movieId, Long userId) {
         Movie movie = movieRepository.findByIdOrThrow(movieId);
-        RatedMovie ratedMovie = ratedMovieRepository.findByMovieIdAndUserId(movieId, userId)
+        RatedMovie ratedMovie = ratedMovieRepository
+                .findByMovieIdAndUserIdForUpdate(movieId, userId)
                 .orElseThrow(() -> BusinessException.of(ErrorCode.ENTITY_NOT_FOUND));
 
         BigDecimal oldRating = ratedMovie.getRatingValue();

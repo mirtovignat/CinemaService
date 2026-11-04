@@ -9,7 +9,8 @@
 <div class="login-container">
     <div class="logo-link" style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
         <a href="/" style="display: flex; align-items: center; gap: 8px; text-decoration: none;">
-            <img src="/logo.png" alt="" style="height: 40px; width: 40px; object-fit: cover; border-radius: 6px; pointer-events: none;">
+            <img src="/logo.png" alt=""
+                 style="height: 40px; width: 40px; object-fit: cover; border-radius: 6px; pointer-events: none;">
             <span style="font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 600; color: white;">
                 CinemaService
             </span>
@@ -26,21 +27,39 @@
     <form th:action="@{/login}" method="post" id="loginForm" autocomplete="on">
         <label for="username">Username, email или телефон</label>
         <div class="input-container">
-            <input id="username" name="username" type="text" placeholder="Введите username, email или телефон" autocomplete="username" th:value="${loginForm != null and loginForm.username != null ? loginForm.username : ''}" required/>
-            <button type="button" class="clear-input-btn" aria-label="Очистить" title="Очистить"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
+            <input id="username" name="username" type="text" placeholder="Введите username, email или телефон"
+                   autocomplete="username"
+                   th:value="${loginForm != null and loginForm.username != null ? loginForm.username : ''}" required/>
+            <button type="button" class="clear-input-btn" aria-label="Очистить" title="Очистить">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                    <path d="M7 7l10 10M17 7L7 17"/>
+                </svg>
+            </button>
         </div>
         <label for="password">Пароль</label>
         <div class="input-container">
-            <input id="password" name="password" type="password" placeholder="••••••••" autocomplete="current-password" required minlength="8"/>
-            <button type="button" class="clear-input-btn" aria-label="Очистить" title="Очистить"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
-            <button type="button" id="loginTogglePasswordBtn" data-action="toggle-login-password" class="toggle-password-btn" aria-label="Показать пароль"><i id="loginPasswordToggleIcon" class="fas fa-eye-slash"></i></button>
+            <input id="password" name="password" type="password" placeholder="••••••••" autocomplete="current-password"
+                   required minlength="8"/>
+            <button type="button" class="clear-input-btn" aria-label="Очистить" title="Очистить">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                    <path d="M7 7l10 10M17 7L7 17"/>
+                </svg>
+            </button>
+            <button type="button" id="loginTogglePasswordBtn" data-target="password"
+                    class="toggle-password-btn toggle-password" aria-label="Показать пароль"><i
+                    id="loginPasswordToggleIcon" class="fas fa-eye-slash"></i></button>
         </div>
         <button type="submit">Войти</button>
     </form>
     <div class="login-footer"><a th:href="@{/register}">Создать аккаунт</a></div>
-    <div class="privacy-note"><strong>Ваши данные остаются конфиденциальными.</strong><br>Мы используем их только для входа в CinemaService и не передаём третьим лицам без законных оснований. Используя сервис, вы соглашаетесь с правилами обработки данных.</div>
+    <div class="privacy-note"><strong>Ваши данные остаются конфиденциальными.</strong><br>Мы используем их только для
+        входа в CinemaService и не передаём третьим лицам без законных оснований. Используя сервис, вы соглашаетесь с
+        правилами обработки данных.
+    </div>
 </div>
-<div class="page-footer"><th:block th:replace="~{fragments/footer :: footer}"></th:block></div>
+<div class="page-footer">
+    <th:block th:replace="~{fragments/footer :: footer}"></th:block>
+</div>
 <script th:src="@{/js/pages/page-login.js}" defer></script>
 <script th:src="@{/js/main.js}" defer></script>
 </body>

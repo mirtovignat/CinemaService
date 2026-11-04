@@ -27,13 +27,8 @@ public class MovieUserStatusBatchLoader {
 
         Map<Long, MovieUserStatus> result = new HashMap<>(movieIds.size());
         for (Long movieId : movieIds) {
-            UserStatus userStatus = statuses.getOrDefault(movieId, UserStatus.builder().build());
-            boolean isBought = userStatus.bought();
-            boolean isInCart = !isBought && userStatus.inCart();
-            result.put(
-                    movieId,
-                    MovieUserStatus.of(isBought, isInCart, userStatus.inFavourites())
-            );
+            UserStatus userStatus = statuses.getOrDefault(movieId, UserStatus.EMPTY);
+            result.put(movieId, MovieUserStatus.from(userStatus));
         }
         return result;
     }

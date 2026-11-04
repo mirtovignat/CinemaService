@@ -8,4 +8,5 @@ public record UserStatus(
         boolean inFavourites,
         boolean bought
 ) {
+    public static final UserStatus EMPTY = UserStatus.builder().build();
 }

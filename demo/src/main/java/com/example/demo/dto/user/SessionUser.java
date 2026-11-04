@@ -27,7 +27,9 @@ public record SessionUser(
 
     public String getFirstUsernameLetter() {
         return StringSanitizer.trimToNull(username)
-                .map(usernamePart -> usernamePart.substring(0, 1).toUpperCase(Locale.ROOT))
+                .map(usernamePart -> usernamePart
+                        .substring(0, usernamePart.offsetByCodePoints(0, 1))
+                        .toUpperCase(Locale.ROOT))
                 .orElse("U");
     }
 

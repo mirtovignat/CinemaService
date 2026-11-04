@@ -30,15 +30,16 @@ public class PurchasedMovie extends AbstractCatalogItem {
             cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WatchHistoryItem> watchedHistory = new ArrayList<>();
 
-    public void addWatchHistory(LocalDateTime time) {
+    public WatchHistoryItem addWatchHistory(LocalDateTime time) {
         if (getUser() != null && !getUser().isSaveHistory()) {
-            return;
+            return null;
         }
-        watchedHistory.add(WatchHistoryItem.of(this, time));
+        WatchHistoryItem item = WatchHistoryItem.of(this, time);
+        watchedHistory.add(item);
+        return item;
     }
 
     public void clearHistory() {
         this.watchedHistory.clear();
     }
-
 }

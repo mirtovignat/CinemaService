@@ -31,7 +31,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
             WHERE user.id = :userId
             AND user.deletableState.deleted = false
             """)
-    boolean findSaveHistoryById(@Param("userId") Long userId);
+    Optional<Boolean> findSaveHistoryById(@Param("userId") Long userId);
 
     @Modifying
     @Query("""
@@ -92,14 +92,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("""
             SELECT COUNT(user) > 0
             FROM User user
-            WHERE user.username = :username
-            AND user.deletableState.deleted = false
-            """)
-    boolean existsByUsername(@Param("username") String username);
-
-    @Query("""
-            SELECT COUNT(user) > 0
-            FROM User user
             WHERE LOWER(user.username) = LOWER(:username)
             """)
     boolean existsByUsernameIgnoreCase(@Param("username") String username);
@@ -138,5 +130,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
             WHERE user.id = :userId
             AND user.deletableState.deleted = false
             """)
-    void deletePhone(Long userId);
+    void deletePhone(@Param("userId") Long userId);
 }

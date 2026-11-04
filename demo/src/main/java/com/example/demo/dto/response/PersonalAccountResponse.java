@@ -11,7 +11,7 @@ import java.util.List;
 public record PersonalAccountResponse(
         UserForOwnerViewDTO userForOwnerViewDTO,
         UserSidebarViewDTO userSidebarViewDTO,
-        List<RatedMovieViewDTO> topThreeRatedMovies,
+        List<RatedMovieViewDTO> topRatedMovies,
         List<String> genres
 ) {
 }

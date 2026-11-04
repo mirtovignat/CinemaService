@@ -4,7 +4,6 @@ import com.example.demo.dto.user.SessionUser;
 import com.example.demo.dto.wallet.TopUpFormDTO;
 import com.example.demo.dto.wallet.WalletForOwnerViewDTO;
 import com.example.demo.exception.SuccessCode;
-import com.example.demo.model.entity.User;
 import com.example.demo.service.user.UserCommandService;
 import com.example.demo.service.user.UserQueryService;
 import com.example.demo.util.MessageUtils;
@@ -63,9 +62,7 @@ public class WalletController {
             model.addAttribute("wallet", userQueryService.getWalletForOwner(userId));
             return "account/top-up";
         }
-        User user = userQueryService.getUser(userId);
-        userCommandService.saveTopUp(topUpFormDTO.amount(), user);
-        BigDecimal newBalance = userQueryService.getBalance(userId);
+        BigDecimal newBalance = userCommandService.saveTopUp(topUpFormDTO.amount(), userId);
         sessionAuthenticator.updateSessionUser(
                 sessionUser.withBalance(newBalance),
                 httpServletRequest,

@@ -66,8 +66,8 @@ public class MovieService {
 
         MovieUserStatus movieUserStatus = (userId != null)
                 ? movieUserStatusBatchLoader.loadForMovies(List.of(movieId), userId)
-                .getOrDefault(movieId, MovieUserStatus.builder().build())
-                : MovieUserStatus.builder().build();
+                .getOrDefault(movieId, MovieUserStatus.EMPTY)
+                : MovieUserStatus.EMPTY;
 
         return MovieForUser.<MovieDetailsViewDTO>builder()
                 .movie(movieDetailsViewDTO)
@@ -93,20 +93,13 @@ public class MovieService {
 
         List<Long> movieIds = moviePage.getContent().stream().map(Movie::getId).toList();
         Map<Long, Long> reviewCountsByMovieId = movieReviewCountService.countsByMovieIds(movieIds);
-
-        if (userId != null) {
-            Map<Long, MovieUserStatus> movieUserStatusesByMovieId =
-                    movieUserStatusBatchLoader.loadForMovies(movieIds, userId);
-            return moviePage.map(movie -> MovieForUser.<MovieCardViewDTO>builder()
-                    .movie(movieMapper.toCard(movie, reviewCountsByMovieId.getOrDefault(movie.getId(), 0L)))
-                    .movieUserStatus(movieUserStatusesByMovieId.getOrDefault(
-                            movie.getId(), MovieUserStatus.builder().build()))
-                    .build());
-        }
+        Map<Long, MovieUserStatus> movieUserStatusesByMovieId = (userId != null)
+                ? movieUserStatusBatchLoader.loadForMovies(movieIds, userId)
+                : Map.of();
 
         return moviePage.map(movie -> MovieForUser.<MovieCardViewDTO>builder()
                 .movie(movieMapper.toCard(movie, reviewCountsByMovieId.getOrDefault(movie.getId(), 0L)))
-                .movieUserStatus(MovieUserStatus.builder().build())
+                .movieUserStatus(movieUserStatusesByMovieId.getOrDefault(movie.getId(), MovieUserStatus.EMPTY))
                 .build());
     }
 

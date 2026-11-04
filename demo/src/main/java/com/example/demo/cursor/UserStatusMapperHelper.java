@@ -36,10 +36,7 @@ public class UserStatusMapperHelper {
         return items.stream()
                 .map(item -> {
                     Long movieId = item.getMovie().getId();
-                    UserStatus userStatus = userStatuses.getOrDefault(
-                            movieId,
-                            UserStatus.builder().build()
-                    );
+                    UserStatus userStatus = userStatuses.getOrDefault(movieId, UserStatus.EMPTY);
                     return mapper.apply(item, userStatus);
                 })
                 .toList();

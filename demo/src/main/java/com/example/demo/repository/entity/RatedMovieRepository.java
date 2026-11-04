@@ -3,8 +3,10 @@ package com.example.demo.repository.entity;
 import com.example.demo.model.entity.RatedMovie;
 import com.example.demo.repository.base.AbstractCatalogItemRepository;
 import com.example.demo.repository.projection.MovieReviewCountProjection;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -30,6 +32,7 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
     @Query("""
             SELECT ratedMovie FROM RatedMovie ratedMovie
             JOIN FETCH ratedMovie.user
+            JOIN FETCH ratedMovie.movie
             WHERE ratedMovie.movie.id = :movieId
             AND (:viewerUserId IS NULL OR ratedMovie.user.id <> :viewerUserId)
             AND (:hasCursor = false OR ratedMovie.id > :cursorId)
@@ -44,6 +47,7 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
     @Query("""
             SELECT ratedMovie FROM RatedMovie ratedMovie
             JOIN FETCH ratedMovie.user
+            JOIN FETCH ratedMovie.movie
             WHERE ratedMovie.movie.id = :movieId
             AND (:viewerUserId IS NULL OR ratedMovie.user.id <> :viewerUserId)
             AND (:hasCursor = false OR ratedMovie.id < :cursorId)
@@ -101,6 +105,18 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
     Optional<RatedMovie> findByMovieIdAndUserId(@Param("movieId") Long movieId,
                                                 @Param("userId") Long userId);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT ratedMovie
+            FROM RatedMovie ratedMovie
+            JOIN FETCH ratedMovie.movie
+            JOIN FETCH ratedMovie.user
+            WHERE ratedMovie.movie.id = :movieId
+            AND ratedMovie.user.id = :userId
+            """)
+    Optional<RatedMovie> findByMovieIdAndUserIdForUpdate(@Param("movieId") Long movieId,
+                                                         @Param("userId") Long userId);
+
     @Query("""
             SELECT COUNT(ratedMovie)
             FROM RatedMovie ratedMovie
@@ -124,7 +140,6 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
             WHERE ratedMovie.user.id = :userId
             ORDER BY ratedMovie.ratingValue DESC
             """)
-    List<RatedMovie> findTopNByUserIdOrderByRatingValueDesc(
-            @Param("userId") Long userId,
-            Pageable pageable);
+    List<RatedMovie> findTopNByUserIdOrderByRatingValueDesc(@Param("userId") Long userId,
+                                                            Pageable pageable);
 }
