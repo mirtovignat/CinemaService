@@ -17,6 +17,7 @@ import com.example.demo.service.movie.MovieService;
 import com.example.demo.util.MessageUtils;
 import com.example.demo.web.resolver.CurrentUserId;
 import com.example.demo.web.resolver.ReviewSortResolver;
+import com.example.demo.web.security.CurrentUserProvider;
 import com.example.demo.web.util.ApiResponseFactory;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -42,6 +43,7 @@ public class RatedController {
     private final MessageUtils messageUtils;
     private final ReviewSortResolver reviewSortResolver;
     private final ApiResponseFactory apiResponseFactory;
+    private final CurrentUserProvider currentUserProvider;
 
     @GetMapping("/{id}/reviews")
     public String getReviews(@PathVariable Long id,
@@ -73,6 +75,10 @@ public class RatedController {
 
         Movie movie = movieService.getMovie(id);
 
+        String currentUsername = userId != null
+                ? currentUserProvider.getSessionUser().username()
+                : null;
+
         ReviewsPageResponse reviewsPageResponse = ReviewsPageResponse.builder()
                 .cursorPageResponse(cursorPageResponse)
                 .reviewViewDTO(userId != null ? ratedQueryService.getRating(id, userId) : null)
@@ -80,6 +86,7 @@ public class RatedController {
                 .movieTitle(movie.getTitle())
                 .avgRating(movie.getRating())
                 .totalReviews(ratedQueryService.getReviewsCountForMovie(id))
+                .currentUsername(currentUsername)
                 .build();
 
         model.addAttribute("reviewsPageResponse", reviewsPageResponse);

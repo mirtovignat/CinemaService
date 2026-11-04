@@ -80,7 +80,7 @@ public interface AbstractCatalogItemRepository<Entity extends AbstractCatalogIte
             WHERE item.user.id = :userId
             AND (
                 :query IS NULL
-                OR TRANSLATE(LOWER(item.movie.title), 'ё', 'е') LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
+                OR LOWER(TRANSLATE(item.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
             )
             AND (:hasCursor = false OR item.id > :cursorId)
             ORDER BY item.id ASC
@@ -97,7 +97,7 @@ public interface AbstractCatalogItemRepository<Entity extends AbstractCatalogIte
             WHERE item.user.id = :userId
             AND (
                 :query IS NULL
-                OR TRANSLATE(LOWER(item.movie.title), 'ё', 'е') LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
+                OR LOWER(TRANSLATE(item.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
             )
             AND (:hasCursor = false OR item.id < :cursorId)
             ORDER BY item.id DESC
@@ -111,7 +111,7 @@ public interface AbstractCatalogItemRepository<Entity extends AbstractCatalogIte
     @Query("""
             SELECT item.movie.title FROM #{#entityName} item
             WHERE item.user.id = :userId
-            AND TRANSLATE(LOWER(item.movie.title), 'ё', 'е') LIKE CONCAT(CAST(:prefix AS string), '%') ESCAPE '\\'
+            AND LOWER(TRANSLATE(item.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:prefix AS string), '%') ESCAPE '\\'
             ORDER BY item.movie.title ASC
             """)
     List<String> findTitlesStartingWith(@Param("userId") Long userId,

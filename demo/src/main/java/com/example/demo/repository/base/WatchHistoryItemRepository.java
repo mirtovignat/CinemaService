@@ -40,7 +40,7 @@ public interface WatchHistoryItemRepository extends JpaRepository<WatchHistoryIt
             WHERE purchasedMovie.user.id = :userId
             AND (
                 :query IS NULL
-                OR TRANSLATE(LOWER(purchasedMovie.movie.title), 'ё', 'е') LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
+                OR LOWER(TRANSLATE(purchasedMovie.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
             )
             AND (:hasCursor = false OR watchHistoryItem.id > :cursorId)
             ORDER BY watchHistoryItem.id ASC
@@ -59,7 +59,7 @@ public interface WatchHistoryItemRepository extends JpaRepository<WatchHistoryIt
             WHERE purchasedMovie.user.id = :userId
             AND (
                 :query IS NULL
-                OR TRANSLATE(LOWER(purchasedMovie.movie.title), 'ё', 'е') LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
+                OR LOWER(TRANSLATE(purchasedMovie.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
             )
             AND (:hasCursor = false OR watchHistoryItem.id < :cursorId)
             ORDER BY watchHistoryItem.id DESC
@@ -78,7 +78,7 @@ public interface WatchHistoryItemRepository extends JpaRepository<WatchHistoryIt
             FROM WatchHistoryItem watchHistoryItem
             JOIN watchHistoryItem.purchasedMovie purchasedMovie
             WHERE purchasedMovie.user.id = :userId
-            AND TRANSLATE(LOWER(purchasedMovie.movie.title), 'ё', 'е') LIKE CONCAT(CAST(:prefix AS string), '%') ESCAPE '\\'
+            AND LOWER(TRANSLATE(purchasedMovie.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:prefix AS string), '%') ESCAPE '\\'
             GROUP BY purchasedMovie.movie.id, purchasedMovie.movie.title
             ORDER BY MAX(watchHistoryItem.watchedAt) DESC, purchasedMovie.movie.id ASC
             """)

@@ -18,7 +18,7 @@ public interface PurchasedMovieRepository extends AbstractCatalogItemRepository<
             WHERE purchasedMovie.user.id = :userId
             AND (
                 :query IS NULL
-                OR TRANSLATE(LOWER(movie.title), 'ё', 'е') LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
+                OR LOWER(TRANSLATE(movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
             )
             AND (:hasCursor = false OR purchasedMovie.id > :cursorId)
             ORDER BY purchasedMovie.id ASC
@@ -36,7 +36,7 @@ public interface PurchasedMovieRepository extends AbstractCatalogItemRepository<
             WHERE purchasedMovie.user.id = :userId
             AND (
                 :query IS NULL
-                OR TRANSLATE(LOWER(movie.title), 'ё', 'е') LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
+                OR LOWER(TRANSLATE(movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
             )
             AND (:hasCursor = false OR purchasedMovie.id < :cursorId)
             ORDER BY purchasedMovie.id DESC

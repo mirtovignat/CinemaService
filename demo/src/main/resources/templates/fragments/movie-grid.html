@@ -33,11 +33,18 @@
                          class="movie-poster-img"
                          data-poster-img
                          src=""/>
+
+                    <span class="poster-duration poster-premiere"
+                          th:if="${movie.movie.releaseDate != null and movie.movie.releaseDate.isAfter(#temporals.createNow().toLocalDate().plusDays(0))}">
+                        Премьера
+                    </span>
+
                     <span class="poster-duration"
-                          th:if="${movie.movie.formattedDuration != null and !movie.movie.formattedDuration.isEmpty()}">
+                          th:if="${(movie.movie.releaseDate == null or !movie.movie.releaseDate.isAfter(#temporals.createNow().toLocalDate().plusDays(0))) and movie.movie.formattedDuration != null and !movie.movie.formattedDuration.isEmpty()}">
                         <th:block th:replace="~{fragments/icons :: icon-clock}"></th:block>
                         <span th:text="${movie.movie.formattedDuration}">1:40:00</span>
                     </span>
+
                     <div class="poster-overlay">
                         <button type="button"
                                 class="watch-btn-neon watch-btn-neon--md"
@@ -66,8 +73,14 @@
                          class="movie-poster-img"
                          data-poster-img
                          src=""/>
+
+                    <span class="poster-duration poster-premiere"
+                          th:if="${movie.movie.releaseDate != null and movie.movie.releaseDate.isAfter(#temporals.createNow().toLocalDate().plusDays(0))}">
+                        Премьера
+                    </span>
+
                     <span class="poster-duration"
-                          th:if="${movie.movie.formattedDuration != null and !movie.movie.formattedDuration.isEmpty()}">
+                          th:if="${(movie.movie.releaseDate == null or !movie.movie.releaseDate.isAfter(#temporals.createNow().toLocalDate().plusDays(0))) and movie.movie.formattedDuration != null and !movie.movie.formattedDuration.isEmpty()}">
                         <th:block th:replace="~{fragments/icons :: icon-clock}"></th:block>
                         <span th:text="${movie.movie.formattedDuration}">1:40:00</span>
                     </span>
@@ -99,6 +112,17 @@
                     <div class="poster-placeholder-text">Нет постера</div>
                     <div class="poster-placeholder-sub">Изображение недоступно</div>
                 </div>
+
+                <span class="poster-duration poster-premiere"
+                      th:if="${movie.movie.releaseDate != null and movie.movie.releaseDate.isAfter(#temporals.createNow().toLocalDate().plusDays(0))}">
+                    Премьера
+                </span>
+
+                <span class="poster-duration"
+                      th:if="${(movie.movie.releaseDate == null or !movie.movie.releaseDate.isAfter(#temporals.createNow().toLocalDate().plusDays(0))) and movie.movie.formattedDuration != null and !movie.movie.formattedDuration.isEmpty()}">
+                    <th:block th:replace="~{fragments/icons :: icon-clock}"></th:block>
+                    <span th:text="${movie.movie.formattedDuration}">1:40:00</span>
+                </span>
             </div>
 
             <div class="movie-card-content">

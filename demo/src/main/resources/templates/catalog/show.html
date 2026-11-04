@@ -63,6 +63,17 @@
                     <div class="poster-placeholder-sub">Изображение недоступно</div>
                 </div>
 
+                <span class="poster-duration poster-premiere"
+                      th:if="${movieForUser.movie.releaseDate != null and movieForUser.movie.releaseDate.isAfter(#temporals.createNow().toLocalDate().plusDays(0))}">
+                    Премьера
+                </span>
+
+                <span class="poster-duration"
+                      th:if="${(movieForUser.movie.releaseDate == null or !movieForUser.movie.releaseDate.isAfter(#temporals.createNow().toLocalDate().plusDays(0))) and movieForUser.movie.formattedDuration != null and !movieForUser.movie.formattedDuration.isEmpty()}">
+                    <th:block th:replace="~{fragments/icons :: icon-clock}"></th:block>
+                    <span th:text="${movieForUser.movie.formattedDuration}">1:40:00</span>
+                </span>
+
                 <div class="poster-overlay">
                     <button class="watch-btn-neon"
                             type="button"
@@ -103,6 +114,17 @@
                     <div class="poster-placeholder-text">Нет постера</div>
                     <div class="poster-placeholder-sub">Изображение недоступно</div>
                 </div>
+
+                <span class="poster-duration poster-premiere"
+                      th:if="${movieForUser.movie.releaseDate != null and movieForUser.movie.releaseDate.isAfter(#temporals.createNow().toLocalDate().plusDays(0))}">
+                    Премьера
+                </span>
+
+                <span class="poster-duration"
+                      th:if="${(movieForUser.movie.releaseDate == null or !movieForUser.movie.releaseDate.isAfter(#temporals.createNow().toLocalDate().plusDays(0))) and movieForUser.movie.formattedDuration != null and !movieForUser.movie.formattedDuration.isEmpty()}">
+                    <th:block th:replace="~{fragments/icons :: icon-clock}"></th:block>
+                    <span th:text="${movieForUser.movie.formattedDuration}">1:40:00</span>
+                </span>
             </div>
         </div>
 
@@ -176,7 +198,7 @@
                 </div>
 
                 <div class="info-item"
-                     th:if="${movieForUser.movie.formattedDuration != null}">
+                     th:if="${movieForUser.movie.formattedDuration != null and !movieForUser.movie.formattedDuration.isEmpty()}">
                     <div class="info-label">Длительность</div>
                     <div class="info-value"
                          th:text="${movieForUser.movie.formattedDuration}">

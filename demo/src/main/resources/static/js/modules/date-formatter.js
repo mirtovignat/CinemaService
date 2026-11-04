@@ -6,20 +6,82 @@
         'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
     ];
 
+    var WEEKDAYS_PREPOSITIONAL = [
+        'В воскресенье',
+        'В понедельник',
+        'Во вторник',
+        'В среду',
+        'В четверг',
+        'В пятницу',
+        'В субботу'
+    ];
+
     function pad2(n) {
         return String(n).padStart(2, '0');
     }
 
-    function formatDateTime(raw) {
-        if (!raw) return '';
-        var d = new Date(raw);
-        if (isNaN(d.getTime())) return '';
+    function parseServerDate(raw) {
+        if (raw === null || raw === undefined) return null;
+        var s = String(raw).trim();
+        if (!s) return null;
 
-        var datePart = d.getDate() + ' ' + MONTHS_GENITIVE[d.getMonth()];
-        if (d.getFullYear() !== new Date().getFullYear()) {
-            datePart += ' ' + d.getFullYear();
+        var hasZone = /[zZ]$/.test(s) || /[+-]\d{2}:?\d{2}$/.test(s);
+        var candidate = hasZone ? s : (s.replace(' ', 'T') + 'Z');
+
+        var d = new Date(candidate);
+        return isNaN(d.getTime()) ? null : d;
+    }
+
+    function startOfDay(d) {
+        var x = new Date(d);
+        x.setHours(0, 0, 0, 0);
+        return x;
+    }
+
+    function dayDiff(a, b) {
+        return Math.round(
+            (startOfDay(a).getTime() - startOfDay(b).getTime()) / 86400000
+        );
+    }
+
+    function buildTimeSuffix(d) {
+        return 'в ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+    }
+
+    function buildAbsoluteDate(d, now) {
+        var day = d.getDate();
+        var month = MONTHS_GENITIVE[d.getMonth()];
+
+        if (d.getFullYear() !== now.getFullYear()) {
+            return day + ' ' + month + ' ' + d.getFullYear() + ' г. ' + buildTimeSuffix(d);
         }
-        return datePart + ', ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+        return day + ' ' + month + ' ' + buildTimeSuffix(d);
+    }
+
+    function formatDateTime(raw) {
+        var d = parseServerDate(raw);
+        if (!d) return '';
+
+        var now = new Date();
+        var diffMs = now.getTime() - d.getTime();
+        if (diffMs < 0) diffMs = 0;
+
+        var diffSeconds = Math.floor(diffMs / 1000);
+        var diffMinutes = Math.floor(diffSeconds / 60);
+        var days = dayDiff(now, d);
+
+        if (diffSeconds < 1) return 'Только что';
+        if (diffSeconds < 60) return diffSeconds + ' сек. назад';
+        if (diffMinutes < 60) return diffMinutes + ' мин. назад';
+        if (days === 0) return Math.floor(diffMinutes / 60) + ' ч. назад';
+        if (days === 1) return 'Вчера ' + buildTimeSuffix(d);
+        if (days === 2) return 'Позавчера ' + buildTimeSuffix(d);
+        if (days >= 3 && days <= 6) {
+            return WEEKDAYS_PREPOSITIONAL[d.getDay()] + ' ' + buildTimeSuffix(d);
+        }
+        if (days === 7) return 'Неделю назад ' + buildTimeSuffix(d);
+
+        return buildAbsoluteDate(d, now);
     }
 
     function applyStatusesFromSession() {
@@ -60,5 +122,6 @@
     }
 
     window.formatDateTime = formatDateTime;
+    window.parseServerDate = parseServerDate;
     window.applyStatusesFromSession = applyStatusesFromSession;
 })();

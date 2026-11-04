@@ -708,6 +708,16 @@ main.catalog-wrapper:has(.empty-message) .catalog-header-icon svg {
     stroke: currentColor;
 }
 
+.poster-duration.poster-premiere {
+    background: rgba(245, 158, 11, 0.9);
+    border-color: #fbbf24;
+    color: #000;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.65rem;
+}
+
 main.catalog-wrapper .empty-message {
     margin: 0.5rem auto 0;
 }

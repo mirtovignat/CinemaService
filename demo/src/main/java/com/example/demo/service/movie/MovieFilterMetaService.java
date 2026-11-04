@@ -6,7 +6,6 @@ import com.example.demo.cursor.codec.CursorCodec;
 import com.example.demo.dto.movie.range.MovieRangesSnapshot;
 import com.example.demo.mapper.util.MovieRangesSnapshotMapper;
 import com.example.demo.repository.entity.MovieRepository;
-import com.example.demo.util.text.LikeEscaper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -42,7 +41,7 @@ public class MovieFilterMetaService {
         String prefix = CursorUtils.normalizeQuery(cursorPageRequest.query());
         boolean hasCursor = CursorUtils.hasCursor(cursorPageRequest);
         String cursor = hasCursor
-                ? LikeEscaper.escape(cursorCodec.decode(cursorPageRequest.cursor()).value())
+                ? cursorCodec.decode(cursorPageRequest.cursor()).value()
                 : "";
 
         List<String> rows = movieRepository.fetchDirectorsKeyset(prefix, hasCursor, cursor, pageSize + 1);
@@ -54,7 +53,7 @@ public class MovieFilterMetaService {
         String prefix = CursorUtils.normalizeQuery(cursorPageRequest.query());
         boolean hasCursor = CursorUtils.hasCursor(cursorPageRequest);
         String cursor = hasCursor
-                ? LikeEscaper.escape(cursorCodec.decode(cursorPageRequest.cursor()).value())
+                ? cursorCodec.decode(cursorPageRequest.cursor()).value()
                 : "";
 
         List<String> rows = movieRepository.fetchGenresKeyset(prefix, hasCursor, cursor, pageSize + 1);

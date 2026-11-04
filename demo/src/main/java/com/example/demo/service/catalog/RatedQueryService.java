@@ -11,11 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 public class RatedQueryService {
@@ -70,17 +66,6 @@ public class RatedQueryService {
                 ).stream()
                 .map(ratedMapper::toOwnerView)
                 .toList();
-    }
-
-    public Map<Long, ReviewViewDTO> getOwnRatings(Long userId) {
-        return ratedMovieRepository.findAllActiveByUserId(userId).stream()
-                .map(ratedMovie -> reviewViewAssembler.assemble(ratedMovie, userId))
-                .collect(Collectors.toMap(
-                        ReviewViewDTO::movieId,
-                        Function.identity(),
-                        (existing, replacement) -> existing,
-                        LinkedHashMap::new
-                ));
     }
 
     public ReviewViewDTO getRating(Long movieId, Long userId) {

@@ -97,9 +97,6 @@
         var isDeleted = review.deleted === true;
         var avatarLetter = username.trim().charAt(0).toUpperCase() || 'U';
         var ratingText = formatRating(review.ratingValue);
-        var dateText = isNew
-            ? 'Только что'
-            : (review.addedAt ? window.formatDateTime(review.addedAt) : '');
 
         var avatarElement = reviewCard.querySelector('.avatar');
         if (avatarElement) {
@@ -133,8 +130,14 @@
 
         var dateElement = reviewCard.querySelector('.review-date');
         if (dateElement) {
-            dateElement.textContent = dateText;
-            dateElement.style.display = dateText ? '' : 'none';
+            if (isNew || !review.addedAt) {
+                dateElement.textContent = 'Только что';
+                dateElement.style.display = '';
+            } else {
+                dateElement.setAttribute('data-date', review.addedAt);
+                dateElement.textContent = window.formatDateTime ? window.formatDateTime(review.addedAt) : '';
+                dateElement.style.display = '';
+            }
         }
 
         var textElement = reviewCard.querySelector('.review-text, .is-muted');
@@ -220,11 +223,7 @@
             }
         }
 
-        var dateElement = reviewCard.querySelector('.review-date');
-        if (dateElement) {
-            dateElement.textContent = 'Только что';
-            dateElement.style.display = '';
-        }
+        // При редактировании мы НЕ трогаем дату, оставляем как было на карточке.
     }
 
     function setTopAddReviewButtonVisible(isVisible) {
@@ -267,7 +266,9 @@
     function formatReviewDates() {
         document.querySelectorAll('.js-review-date[data-date]').forEach(function (dateElement) {
             var rawDate = dateElement.getAttribute('data-date');
-            if (rawDate && window.formatDateTime) {
+            if (!rawDate) return;
+            if (dateElement.closest('[data-just-added="true"]')) return;
+            if (typeof window.formatDateTime === 'function') {
                 dateElement.textContent = window.formatDateTime(rawDate);
             }
         });
@@ -569,7 +570,7 @@
     var disabledUntil = 0;
     var retryTimer = null;
 
-    reviewsBody.addEventListener('scroll', function() {
+    reviewsBody.addEventListener('scroll', function () {
         if (isLoading || !hasMore) return;
 
         if (reviewsBody.scrollHeight - reviewsBody.scrollTop - reviewsBody.clientHeight < 300) {

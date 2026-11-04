@@ -282,13 +282,14 @@
         var ratingContext = window.ratingContext;
         var movieTitle = window._ratingModalMovieTitle || '';
         var hadOwnRating = mode === 'edit';
+        var isNewReview = !hadOwnRating;
 
         if (ratingContext && typeof ratingContext.onOptimistic === 'function') {
             var optimisticReview = buildOptimisticReview(ratingValue, trimmedReview);
             optimisticReview.movieTitle = movieTitle;
-            optimisticReview.isNew = !hadOwnRating;
+            optimisticReview.isNew = isNewReview;
             optimisticReview.ratingValue = ratingValue;
-            ratingContext.onOptimistic(movieId, optimisticReview);
+            ratingContext.onOptimistic(movieId, optimisticReview, isNewReview);
         }
 
         hideRatingModal();

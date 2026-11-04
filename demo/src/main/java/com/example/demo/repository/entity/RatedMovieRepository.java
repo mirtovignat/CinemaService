@@ -26,7 +26,7 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
             AND ratedMovie.deletableState.deleted = false
             AND (
                 :query IS NULL
-                OR TRANSLATE(LOWER(ratedMovie.movie.title), 'ё', 'е') LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
+                OR LOWER(TRANSLATE(ratedMovie.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
             )
             AND (:hasCursor = false OR ratedMovie.id > :cursorId)
             ORDER BY ratedMovie.id ASC
@@ -45,7 +45,7 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
             AND ratedMovie.deletableState.deleted = false
             AND (
                 :query IS NULL
-                OR TRANSLATE(LOWER(ratedMovie.movie.title), 'ё', 'е') LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
+                OR LOWER(TRANSLATE(ratedMovie.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
             )
             AND (:hasCursor = false OR ratedMovie.id < :cursorId)
             ORDER BY ratedMovie.id DESC
@@ -61,7 +61,7 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
             SELECT DISTINCT ratedMovie.movie.title FROM RatedMovie ratedMovie
             WHERE ratedMovie.user.id = :userId
             AND ratedMovie.deletableState.deleted = false
-            AND TRANSLATE(LOWER(ratedMovie.movie.title), 'ё', 'е') LIKE CONCAT(CAST(:prefix AS string), '%') ESCAPE '\\'
+            AND LOWER(TRANSLATE(ratedMovie.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:prefix AS string), '%') ESCAPE '\\'
             ORDER BY ratedMovie.movie.title ASC
             """)
     List<String> findTitlesStartingWith(@Param("userId") Long userId,
@@ -223,14 +223,4 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
     List<RatedMovie> findTopNByUserIdOrderByRatingValueDesc(
             @Param("userId") Long userId,
             Pageable pageable);
-
-    @Query("""
-            SELECT ratedMovie FROM RatedMovie ratedMovie
-            JOIN FETCH ratedMovie.movie
-            JOIN FETCH ratedMovie.user
-            WHERE ratedMovie.user.id = :userId
-            AND ratedMovie.deletableState.deleted = false
-            ORDER BY ratedMovie.id DESC
-            """)
-    List<RatedMovie> findAllActiveByUserId(@Param("userId") Long userId);
 }

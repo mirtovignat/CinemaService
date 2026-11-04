@@ -51,10 +51,9 @@ public class RatedCommandService {
     @Transactional
     public void deleteRating(Long movieId, Long userId) {
         Movie movie = movieRepository.findByIdOrThrow(movieId);
-        int affected = ratedMovieRepository.softDeleteByMovieIdAndUserId(movieId, userId);
-        if (affected == 0) {
-            throw BusinessException.of(ErrorCode.ENTITY_NOT_FOUND);
-        }
+        RatedMovie ratedMovie = ratedMovieRepository.findByMovieIdAndUserId(movieId, userId)
+                .orElseThrow(() -> BusinessException.of(ErrorCode.ENTITY_NOT_FOUND));
+        ratedMovieRepository.delete(ratedMovie);
         recalculateMovieRating(movie);
     }
 
