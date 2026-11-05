@@ -1,7 +1,7 @@
 package com.example.demo.controller.catalog;
 
-import com.example.demo.cursor.CursorPageRequest;
 import com.example.demo.cursor.context.UserCursorContext;
+import com.example.demo.dto.request.CursorPageRequest;
 import com.example.demo.dto.response.CursorPageResponse;
 import com.example.demo.dto.response.UserCatalogPageResponse;
 import com.example.demo.dto.user.UserSidebarViewDTO;
@@ -45,8 +45,10 @@ public abstract class AbstractCatalogPageController<DTO> {
         CursorPageResponse<DTO> cursorPageResponse = cursorPageService.page(
                 cursorPageRequest.cursor(),
                 cursorPageRequest.direction(),
-                cursorPageRequest.query(),
-                UserCursorContext.builder().userId(userId).build()
+                cursorPageRequest.searchQuery(),
+                UserCursorContext.builder()
+                        .userId(userId)
+                        .build()
         );
 
         UserSidebarViewDTO userSidebarViewDTO = userMapper.toSidebarView(userQueryService.getUser(userId));
@@ -56,7 +58,7 @@ public abstract class AbstractCatalogPageController<DTO> {
                 cursorPageResponse,
                 userSidebarViewDTO,
                 genres,
-                cursorPageRequest.query()
+                cursorPageRequest.searchQuery()
         );
     }
 
@@ -67,8 +69,10 @@ public abstract class AbstractCatalogPageController<DTO> {
         return cursorPageService.page(
                 cursorPageRequest.cursor(),
                 cursorPageRequest.direction(),
-                cursorPageRequest.query(),
-                UserCursorContext.builder().userId(userId).build()
+                cursorPageRequest.searchQuery(),
+                UserCursorContext.builder()
+                        .userId(userId)
+                        .build()
         );
     }
 
@@ -81,7 +85,7 @@ public abstract class AbstractCatalogPageController<DTO> {
         }
         return suggestionService.suggest(
                 userId,
-                cursorPageRequest.query(),
+                cursorPageRequest.searchQuery(),
                 (currentUserId, normalizedQuery, limit) -> suggestableCursorService.findTitlesStartingWith(
                         currentUserId,
                         normalizedQuery,

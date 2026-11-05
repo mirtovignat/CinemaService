@@ -36,6 +36,9 @@ public class MovieFilterValidator {
     }
 
     public MovieFilter orEmpty(MovieFilter movieFilter) {
-        return movieFilter != null ? movieFilter : MovieFilter.builder().build();
+        if (movieFilter != null) {
+            return movieFilter;
+        }
+        return MovieFilter.builder().build();
     }
 }

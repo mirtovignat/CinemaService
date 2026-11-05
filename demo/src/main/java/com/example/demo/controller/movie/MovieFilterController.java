@@ -1,10 +1,10 @@
 package com.example.demo.controller.movie;
 
 import com.example.demo.cursor.Cursor;
-import com.example.demo.cursor.CursorPageRequest;
 import com.example.demo.cursor.codec.CursorCodec;
 import com.example.demo.dto.movie.range.MovieFilterMetaResponse;
 import com.example.demo.dto.movie.range.MovieRangesSnapshot;
+import com.example.demo.dto.request.CursorPageRequest;
 import com.example.demo.dto.response.CursorPageResponse;
 import com.example.demo.service.movie.MovieFilterMetaService;
 import lombok.AllArgsConstructor;
@@ -61,7 +61,7 @@ public class MovieFilterController {
                 .items(items)
                 .hasMore(hasMore)
                 .nextCursor(nextCursor)
-                .sort("asc")
+                .sortDirection("asc")
                 .build();
     }
 }

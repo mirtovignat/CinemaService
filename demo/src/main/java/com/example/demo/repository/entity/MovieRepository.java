@@ -37,7 +37,7 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
                 END
             WHERE movie.id = :movieId
             """)
-    int applyRatingDelta(@Param("movieId") Long movieId,
+    void applyRatingDelta(@Param("movieId") Long movieId,
                          @Param("deltaSum") BigDecimal deltaSum,
                          @Param("deltaCount") long deltaCount);
 

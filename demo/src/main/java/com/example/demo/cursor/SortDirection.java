@@ -4,11 +4,14 @@ public enum SortDirection {
     ASC,
     DESC;
 
-    public static SortDirection from(String raw) {
-        if (raw == null || raw.isBlank()) {
+    public static SortDirection from(String cursor) {
+        if (cursor == null || cursor.isBlank()) {
             return DESC;
         }
-        return "ASC".equalsIgnoreCase(raw) ? ASC : DESC;
+        if ("ASC".equalsIgnoreCase(cursor)) {
+            return ASC;
+        }
+        return DESC;
     }
 
     public String lowercase() {

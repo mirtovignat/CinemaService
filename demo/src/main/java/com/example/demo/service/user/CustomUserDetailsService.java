@@ -28,9 +28,10 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .or(() -> userRepository.findByEmail(login))
                 .or(() -> {
                     String normalizedPhone = phoneNormalizer.normalize(login);
-                    return normalizedPhone != null
-                            ? userRepository.findByPhone(normalizedPhone)
-                            : Optional.empty();
+                    if (normalizedPhone != null) {
+                        return userRepository.findByPhone(normalizedPhone);
+                    }
+                    return Optional.empty();
                 })
                 .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден: " + login));
         return AppUserDetails.builder()

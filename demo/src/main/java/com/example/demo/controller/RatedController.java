@@ -73,13 +73,23 @@ public class RatedController {
 
         Movie movie = movieService.getMovie(id);
 
-        String currentUsername = userId != null
-                ? currentUserProvider.getSessionUser().username()
-                : null;
+        String currentUsername;
+        if (userId != null) {
+            currentUsername = currentUserProvider.getSessionUser().username();
+        } else {
+            currentUsername = null;
+        }
+
+        ReviewViewDTO ownReview;
+        if (userId != null) {
+            ownReview = ratedQueryService.getRating(id, userId);
+        } else {
+            ownReview = null;
+        }
 
         ReviewsPageResponse reviewsPageResponse = ReviewsPageResponse.builder()
                 .cursorPageResponse(cursorPageResponse)
-                .reviewViewDTO(userId != null ? ratedQueryService.getRating(id, userId) : null)
+                .reviewViewDTO(ownReview)
                 .movieId(id)
                 .movieTitle(movie.getTitle())
                 .avgRating(movie.getRating())
@@ -157,9 +167,12 @@ public class RatedController {
                                                          Long userId) {
         RatingAction action = ratedCommandService.addOrUpdateRating(
                 ratedMovieFormDTO.id(), userId, ratedMovieFormDTO);
-        SuccessCode successCode = (action == RatingAction.CREATED)
-                ? SuccessCode.REVIEW_HAS_BEEN_SAVED
-                : SuccessCode.REVIEW_HAS_BEEN_UPDATED;
+        SuccessCode successCode;
+        if (action == RatingAction.CREATED) {
+            successCode = SuccessCode.REVIEW_HAS_BEEN_SAVED;
+        } else {
+            successCode = SuccessCode.REVIEW_HAS_BEEN_UPDATED;
+        }
         return apiResponseFactory.ok(successCode);
     }
 }

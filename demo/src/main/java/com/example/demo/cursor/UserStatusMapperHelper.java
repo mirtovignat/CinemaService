@@ -1,6 +1,6 @@
 package com.example.demo.cursor;
 
-import com.example.demo.dto.base.UserStatus;
+import com.example.demo.dto.UserStatus;
 import com.example.demo.model.base.AbstractCatalogItem;
 import com.example.demo.service.linked_collection.UserStatusResolver;
 import lombok.AllArgsConstructor;

@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 
 @Builder
 public record RecommendationCursorKey(
-        BigDecimal rating,
-        Long identifier
+        BigDecimal movieRating,
+        Long movieId
 ) {
 }

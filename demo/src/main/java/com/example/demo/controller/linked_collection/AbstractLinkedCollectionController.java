@@ -1,7 +1,7 @@
 package com.example.demo.controller.linked_collection;
 
-import com.example.demo.cursor.CursorPageRequest;
 import com.example.demo.cursor.context.UserCursorContext;
+import com.example.demo.dto.request.CursorPageRequest;
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.dto.response.CollectionCountResponse;
 import com.example.demo.dto.response.CursorPageResponse;
@@ -44,12 +44,12 @@ public abstract class AbstractLinkedCollectionController<DTO, Response> {
         CursorPageResponse<DTO> cursorPageResponse = cursorPageService.page(
                 cursorPageRequest.cursor(),
                 cursorPageRequest.direction(),
-                cursorPageRequest.query(),
+                cursorPageRequest.searchQuery(),
                 UserCursorContext.builder()
                         .userId(userId)
                         .build()
         );
-        return buildResponse(cursorPageResponse, userId, cursorPageRequest.query());
+        return buildResponse(cursorPageResponse, userId, cursorPageRequest.searchQuery());
     }
 
     protected abstract Response buildResponse(CursorPageResponse<DTO> cursorPageResponse,
@@ -65,7 +65,7 @@ public abstract class AbstractLinkedCollectionController<DTO, Response> {
         return cursorPageService.page(
                 cursorPageRequest.cursor(),
                 cursorPageRequest.direction(),
-                cursorPageRequest.query(),
+                cursorPageRequest.searchQuery(),
                 UserCursorContext.builder().userId(userId).build()
         );
     }
@@ -122,7 +122,7 @@ public abstract class AbstractLinkedCollectionController<DTO, Response> {
         }
         return suggestionService.suggest(
                 userId,
-                cursorPageRequest.query(),
+                cursorPageRequest.searchQuery(),
                 (currentUserId, normalizedQuery, limit) -> suggestableCursorService.findTitlesStartingWith(
                         currentUserId,
                         normalizedQuery,

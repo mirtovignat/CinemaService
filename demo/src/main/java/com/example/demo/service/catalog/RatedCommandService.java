@@ -36,7 +36,11 @@ public class RatedCommandService {
         BigDecimal newRating = ratedMovieFormDTO.rating();
 
         if (ratedMovie == null) {
-            ratedMovie = AbstractCatalogItem.init(RatedMovie.builder().build(), user, movie);
+            ratedMovie = AbstractCatalogItem.init(
+                    RatedMovie.builder().build(),
+                    user,
+                    movie
+            );
             ratedMovie.setRatingValue(newRating);
             ratedMovie.setReview(ratedMovieFormDTO.review());
 
@@ -45,13 +49,13 @@ public class RatedCommandService {
             return RatingAction.CREATED;
         }
 
-        BigDecimal delta = newRating.subtract(ratedMovie.getRatingValue());
+        BigDecimal deltaRating = newRating.subtract(ratedMovie.getRatingValue());
         ratedMovie.setRatingValue(newRating);
         ratedMovie.setReview(ratedMovieFormDTO.review());
 
         ratedMovieRepository.saveAndFlush(ratedMovie);
-        if (delta.signum() != 0) {
-            movieRepository.applyRatingDelta(movieId, delta, 0L);
+        if (deltaRating.signum() != 0) {
+            movieRepository.applyRatingDelta(movieId, deltaRating, 0L);
         }
         return RatingAction.UPDATED;
     }

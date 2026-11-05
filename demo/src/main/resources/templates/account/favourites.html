@@ -49,7 +49,7 @@
              data-cursor-template="favouriteCardTemplate"
              th:attr="data-cursor-next=${favouritesPageResponse.cursorPageResponse().nextCursor()},
                       data-cursor-has-more=${favouritesPageResponse.cursorPageResponse().hasMore()},
-                      data-cursor-sort=${favouritesPageResponse.cursorPageResponse().sort()},
+                      data-cursor-sort=${favouritesPageResponse.cursorPageResponse().sortDirection()},
                       data-cursor-query=${favouritesPageResponse.query()}">
 
             <div th:each="movie : ${favouritesPageResponse.cursorPageResponse().items()}"

@@ -17,7 +17,7 @@
 
     function getUrlSort() {
         var params = new URLSearchParams(window.location.search);
-        var sortParam = (params.get('sort') || '').toUpperCase();
+        var sortParam = (params.get('sortDirection') || '').toUpperCase();
         return (sortParam === 'ASC' || sortParam === 'DESC') ? sortParam : null;
     }
 
@@ -55,15 +55,7 @@
 
     function buildUrl(order) {
         var url = new URL(window.location.href);
-        var path = window.location.pathname;
-
-        if (path.indexOf('/rated/') === 0 && path.indexOf('/reviews') !== -1) {
-            url.searchParams.set('sortDirection', order.toUpperCase());
-            url.searchParams.delete('sort');
-        } else {
-            url.searchParams.set('sort', order.toUpperCase());
-        }
-
+        url.searchParams.set('sortDirection', order.toUpperCase());
         url.searchParams.delete('cursor');
         return url.toString();
     }

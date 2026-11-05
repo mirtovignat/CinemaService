@@ -1,9 +1,9 @@
 package com.example.demo.controller.catalog;
 
-import com.example.demo.cursor.CursorPageRequest;
 import com.example.demo.cursor.context.UserCursorContext;
 import com.example.demo.dto.catalog.LibrarianMovieViewDTO;
 import com.example.demo.dto.catalog.WatchedSuggestionDTO;
+import com.example.demo.dto.request.CursorPageRequest;
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.dto.response.CursorPageResponse;
 import com.example.demo.dto.response.WatchedMovieResponse;
@@ -49,7 +49,7 @@ public class WatchedHistoryController {
         CursorPageResponse<LibrarianMovieViewDTO> cursorPageResponse = watchedHistoryCursorService.page(
                 cursorPageRequest.cursor(),
                 cursorPageRequest.direction(),
-                cursorPageRequest.query(),
+                cursorPageRequest.searchQuery(),
                 UserCursorContext.builder()
                         .userId(userId)
                         .build()
@@ -59,7 +59,7 @@ public class WatchedHistoryController {
                 .cursorPageResponse(cursorPageResponse)
                 .userSidebarViewDTO(userMapper.toSidebarView(userQueryService.getUser(userId)))
                 .genres(movieFilterMetaService.getAllGenres())
-                .query(cursorPageRequest.query())
+                .query(cursorPageRequest.searchQuery())
                 .highlightHistoryId(highlightHistoryId)
                 .saveHistory(watchedHistoryService.isHistorySaved(userId))
                 .build();
@@ -75,7 +75,7 @@ public class WatchedHistoryController {
         return watchedHistoryCursorService.page(
                 cursorPageRequest.cursor(),
                 cursorPageRequest.direction(),
-                cursorPageRequest.query(),
+                cursorPageRequest.searchQuery(),
                 UserCursorContext.builder()
                         .userId(userId)
                         .build()
@@ -88,7 +88,7 @@ public class WatchedHistoryController {
                                                   @CurrentUserId(required = false) Long userId) {
         return suggestionService.suggest(
                 userId,
-                cursorPageRequest.query(),
+                cursorPageRequest.searchQuery(),
                 (uId, normalizedQuery, limit) -> watchedHistoryCursorService
                         .findGroupedWatchedSuggestionsStartingWith(
                                 uId,
@@ -111,17 +111,23 @@ public class WatchedHistoryController {
                                                       @CurrentUserId Long userId) {
         boolean saveHistory = watchedHistoryService.isHistorySaved(userId);
 
-        // Если история выключена, нам всё равно нужно проверить, куплен ли фильм.
-        // Если включена - watch() сам проверит это и выбросит ошибку.
         if (!saveHistory) {
             watchedHistoryService.ensurePurchased(id, userId);
         }
 
-        Long historyItemId = saveHistory ? watchedHistoryService.watch(id, userId) : null;
+        Long historyItemId;
+        if (saveHistory) {
+            historyItemId = watchedHistoryService.watch(id, userId);
+        } else {
+            historyItemId = null;
+        }
 
-        String message = saveHistory
-                ? messageUtils.getSuccess(SuccessCode.WATCHED)
-                : messageUtils.getSuccess(SuccessCode.HISTORY_DISABLED_WARNING);
+        String message;
+        if (saveHistory) {
+            message = messageUtils.getSuccess(SuccessCode.WATCHED);
+        } else {
+            message = messageUtils.getSuccess(SuccessCode.HISTORY_DISABLED_WARNING);
+        }
 
         return ResponseEntity.ok(WatchedMovieResponse.of(saveHistory, message, historyItemId));
     }
@@ -146,7 +152,12 @@ public class WatchedHistoryController {
     public ResponseEntity<ApiResponse<Void>> setWatchedHistory(@RequestParam boolean save,
                                                                @CurrentUserId Long userId) {
         watchedHistoryService.setWatchedHistory(userId, save);
-        SuccessCode successCode = save ? SuccessCode.HISTORY_ENABLED : SuccessCode.HISTORY_DISABLED;
+        SuccessCode successCode;
+        if (save) {
+            successCode = SuccessCode.HISTORY_ENABLED;
+        } else {
+            successCode = SuccessCode.HISTORY_DISABLED;
+        }
         return apiResponseFactory.ok(successCode);
     }
 }

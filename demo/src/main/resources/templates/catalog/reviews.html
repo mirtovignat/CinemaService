@@ -182,7 +182,7 @@
             <div id="loadMoreWrapper" class="reviews-load-more"
                  th:if="${reviewsPageResponse.cursorPageResponse.hasMore()}"
                  th:attr="data-movie-id=${reviewsPageResponse.movieId},
-                          data-sort=${reviewsPageResponse.cursorPageResponse.sort()},
+                          data-sort=${reviewsPageResponse.cursorPageResponse.sortDirection()},
                           data-cursor=${reviewsPageResponse.cursorPageResponse.nextCursor()},
                           data-has-more=${reviewsPageResponse.cursorPageResponse.hasMore()}">
                 <div class="reviews-spinner-wrapper" id="reviewsSpinnerWrapper" style="display:none;">

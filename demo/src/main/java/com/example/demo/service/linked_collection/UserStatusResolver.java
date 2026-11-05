@@ -1,6 +1,6 @@
 package com.example.demo.service.linked_collection;
 
-import com.example.demo.dto.base.UserStatus;
+import com.example.demo.dto.UserStatus;
 import com.example.demo.repository.entity.CartItemRepository;
 import com.example.demo.repository.entity.FavouriteMovieRepository;
 import com.example.demo.repository.entity.PurchasedMovieRepository;

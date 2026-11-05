@@ -13,23 +13,23 @@ import java.util.Base64;
 public class CursorCodec {
 
     public String encode(@NonNull Cursor cursor) {
-        byte[] raw = cursor.value()
+        byte[] encodedBytes = cursor.value()
                 .getBytes(StandardCharsets.UTF_8);
         return Base64.getUrlEncoder()
                 .withoutPadding()
-                .encodeToString(raw);
+                .encodeToString(encodedBytes);
     }
 
-    public Cursor decode(@NonNull String rawCursor) {
-        byte[] raw;
+    public Cursor decode(@NonNull String cursorValue) {
+        byte[] valueBytes;
         try {
-            raw = Base64.getUrlDecoder()
-                    .decode(rawCursor);
+            valueBytes = Base64.getUrlDecoder()
+                    .decode(cursorValue);
         } catch (IllegalArgumentException illegalArgumentException) {
             throw BusinessException.of(ErrorCode.INVALID_CURSOR);
         }
 
-        String value = new String(raw, StandardCharsets.UTF_8);
+        String value = new String(valueBytes, StandardCharsets.UTF_8);
 
         if (value.isBlank()) {
             throw BusinessException.of(ErrorCode.INVALID_CURSOR);

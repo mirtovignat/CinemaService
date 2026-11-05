@@ -12,7 +12,6 @@ import com.example.demo.web.security.CurrentUserProvider;
 import com.example.demo.web.util.RequestUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,7 +28,6 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 import java.net.URI;
 import java.util.Map;
 
-@Slf4j
 @ControllerAdvice
 @AllArgsConstructor
 public class GlobalExceptionHandler {
@@ -106,12 +104,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public Object handleGenericException(Exception exception,
-                                         HttpServletRequest httpServletRequest,
+    public Object handleGenericException(HttpServletRequest httpServletRequest,
                                          Model model) {
-        log.error("Необработанное исключение на URI: {}",
-                httpServletRequest.getRequestURI(), exception);
-
         String errorMessage = messageUtils.getError(ErrorCode.INTERNAL_ERROR);
 
         if (RequestUtils.isAjaxRequest(httpServletRequest)) {
@@ -198,7 +192,10 @@ public class GlobalExceptionHandler {
             return "/";
         }
         String localPath = extractLocalPathFromReferer(refererHeader, httpServletRequest);
-        return localPath != null ? localPath : "/";
+        if (localPath != null) {
+            return localPath;
+        }
+        return "/";
     }
 
     private String extractLocalPathFromReferer(String refererHeader,
@@ -220,9 +217,10 @@ public class GlobalExceptionHandler {
                 return null;
             }
             String refererQuery = refererUri.getRawQuery();
-            return Emptiness.isBlank(refererQuery)
-                    ? refererPath
-                    : refererPath + "?" + refererQuery;
+            if (Emptiness.isBlank(refererQuery)) {
+                return refererPath;
+            }
+            return refererPath + "?" + refererQuery;
         } catch (IllegalArgumentException illegalArgumentException) {
             return null;
         }

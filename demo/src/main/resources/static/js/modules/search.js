@@ -222,7 +222,7 @@
         var onRememberQuery = config.onRememberQuery || null;
         var suggestionRowClass = config.suggestionRowClass || 'suggestion-item';
         var suggestionTitleClass = config.suggestionTitleClass || 'suggestion-title';
-        var queryParamName = config.queryParamName || 'title';
+        var queryParamName = config.queryParamName || 'searchQuery';
         var activeClass = 'is-active';
         var isMovieSearch = config.isMovieSearch || false;
 
@@ -663,7 +663,7 @@
             wrapper: wrapper,
             clear: document.querySelector('[data-catalog-search-clear]'),
             suggestionsBox: document.querySelector('[data-catalog-search-suggestions]'),
-            queryParamName: 'query',
+            queryParamName: 'searchQuery',
             isMovieSearch: false,
             getSuggestionsUrl: function (query) {
                 var endpoint = detectCatalogSuggestionsEndpoint();
@@ -686,7 +686,7 @@
         if (!engine) return;
 
         var urlParams = new URLSearchParams(window.location.search);
-        var urlQuery = urlParams.get('query');
+        var urlQuery = urlParams.get('searchQuery');
         var savedQuery = readLastSearch(storageKey);
 
         if (urlQuery) {

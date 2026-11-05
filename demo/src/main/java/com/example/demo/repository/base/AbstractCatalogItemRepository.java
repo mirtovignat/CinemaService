@@ -78,28 +78,28 @@ public interface AbstractCatalogItemRepository<Entity extends AbstractCatalogIte
         SELECT item FROM #{#entityName} item
         JOIN FETCH item.movie
         WHERE item.user.id = :userId
-        AND LOWER(TRANSLATE(item.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
+        AND LOWER(TRANSLATE(item.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:searchQuery AS string), '%') ESCAPE '\\'
         AND (:hasCursor = false OR item.id > :cursorId)
         ORDER BY item.id ASC
         """)
     Slice<Entity> fetchAscending(@Param("userId") Long userId,
                                  @Param("hasCursor") boolean hasCursor,
                                  @Param("cursorId") Long cursorId,
-                                 @Param("query") String query,
+                                 @Param("searchQuery") String query,
                                  Pageable pageable);
 
     @Query("""
         SELECT item FROM #{#entityName} item
         JOIN FETCH item.movie
         WHERE item.user.id = :userId
-        AND LOWER(TRANSLATE(item.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
+        AND LOWER(TRANSLATE(item.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:searchQuery AS string), '%') ESCAPE '\\'
         AND (:hasCursor = false OR item.id < :cursorId)
         ORDER BY item.id DESC
         """)
     Slice<Entity> fetchDescending(@Param("userId") Long userId,
                                   @Param("hasCursor") boolean hasCursor,
                                   @Param("cursorId") Long cursorId,
-                                  @Param("query") String query,
+                                  @Param("searchQuery") String query,
                                   Pageable pageable);
 
     @Query("""

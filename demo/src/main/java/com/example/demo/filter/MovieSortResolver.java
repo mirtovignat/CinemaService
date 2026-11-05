@@ -39,12 +39,15 @@ public class MovieSortResolver {
             return PageRequest.of(safePage, safeSize, DEFAULT_SORT);
         }
 
-        Sort.Direction direction = (SortDirection.from(pageRequestContext.sortDirection()) == SortDirection.ASC)
-                ? Sort.Direction.ASC
-                : Sort.Direction.DESC;
+        Sort.Direction sortDirection;
+        if (SortDirection.from(pageRequestContext.sortDirection()) == SortDirection.ASC) {
+            sortDirection = Sort.Direction.ASC;
+        } else {
+            sortDirection = Sort.Direction.DESC;
+        }
 
         if ("rating".equals(field)) {
-            Sort.Order ratingOrder = new Sort.Order(direction, field);
+            Sort.Order ratingOrder = new Sort.Order(sortDirection, field);
             Sort.Order idOrder = new Sort.Order(Sort.Direction.ASC, "id");
             return PageRequest.of(safePage, safeSize, Sort.by(ratingOrder, idOrder));
         }
@@ -52,7 +55,7 @@ public class MovieSortResolver {
         return PageRequest.of(
                 safePage,
                 safeSize,
-                Sort.by(direction, field, "id")
+                Sort.by(sortDirection, field, "id")
         );
     }
 }

@@ -38,14 +38,14 @@ public interface WatchHistoryItemRepository extends JpaRepository<WatchHistoryIt
             JOIN FETCH watchHistoryItem.purchasedMovie purchasedMovie
             JOIN FETCH purchasedMovie.movie
             WHERE purchasedMovie.user.id = :userId
-            AND LOWER(TRANSLATE(purchasedMovie.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
+            AND LOWER(TRANSLATE(purchasedMovie.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:searchQuery AS string), '%') ESCAPE '\\'
             AND (:hasCursor = false OR watchHistoryItem.id > :cursorId)
             ORDER BY watchHistoryItem.id ASC
             """)
     Slice<WatchHistoryItem> fetchAscending(@Param("userId") Long userId,
                                            @Param("hasCursor") boolean hasCursor,
                                            @Param("cursorId") Long cursorId,
-                                           @Param("query") String query,
+                                           @Param("searchQuery") String query,
                                            Pageable pageable);
 
     @Query("""
@@ -54,14 +54,14 @@ public interface WatchHistoryItemRepository extends JpaRepository<WatchHistoryIt
             JOIN FETCH watchHistoryItem.purchasedMovie purchasedMovie
             JOIN FETCH purchasedMovie.movie
             WHERE purchasedMovie.user.id = :userId
-            AND LOWER(TRANSLATE(purchasedMovie.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:query AS string), '%') ESCAPE '\\'
+            AND LOWER(TRANSLATE(purchasedMovie.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:searchQuery AS string), '%') ESCAPE '\\'
             AND (:hasCursor = false OR watchHistoryItem.id < :cursorId)
             ORDER BY watchHistoryItem.id DESC
             """)
     Slice<WatchHistoryItem> fetchDescending(@Param("userId") Long userId,
                                             @Param("hasCursor") boolean hasCursor,
                                             @Param("cursorId") Long cursorId,
-                                            @Param("query") String query,
+                                            @Param("searchQuery") String query,
                                             Pageable pageable);
 
     @Query("""

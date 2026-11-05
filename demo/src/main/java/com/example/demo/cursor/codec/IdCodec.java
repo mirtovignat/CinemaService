@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class IdCodec {
+
     public String encode(Long id) {
         if (id == null) {
             throw BusinessException.of(ErrorCode.INVALID_CURSOR);

@@ -21,9 +21,23 @@ public class ReviewViewAssembler {
         }
         User author = ratedMovie.getUser();
 
+        Long movieId;
+        if (ratedMovie.getMovie() != null) {
+            movieId = ratedMovie.getMovie().getId();
+        } else {
+            movieId = null;
+        }
+
+        String username;
+        if (author != null) {
+            username = author.getUsername();
+        } else {
+            username = null;
+        }
+
         return ReviewViewDTO.builder()
-                .movieId(ratedMovie.getMovie() != null ? ratedMovie.getMovie().getId() : null)
-                .username(author != null ? author.getUsername() : null)
+                .movieId(movieId)
+                .username(username)
                 .ratingValue(ratingMapper.normalizeRating(ratedMovie.getRatingValue()))
                 .reviewText(ratedMovie.getReview())
                 .addedAt(dateTimeMapper.toUtcIso(ratedMovie.getAddedAt()))

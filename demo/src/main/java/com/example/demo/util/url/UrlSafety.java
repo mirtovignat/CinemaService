@@ -40,6 +40,9 @@ public final class UrlSafety {
     }
 
     public static String resolveFallbackLocalPath(String path, String fallbackPath) {
-        return isSafeLocalPath(path) ? path : fallbackPath;
+        if (isSafeLocalPath(path)) {
+            return path;
+        }
+        return fallbackPath;
     }
 }

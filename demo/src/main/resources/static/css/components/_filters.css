@@ -127,7 +127,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
-    margin-bottom: 0.9rem;
+    margin-bottom: 1rem;
     text-align: left;
     position: relative;
 }
@@ -155,6 +155,7 @@
     display: flex;
     gap: 0.75rem;
     width: 100%;
+    align-items: flex-start;
 }
 
 .filter-row > * {
@@ -795,29 +796,16 @@ input[type="date"]:focus {
 
 .filter-field-error {
     position: absolute;
-    left: 2px;
-    right: 2px;
-    bottom: -14px;
-    font-size: 0.72rem;
+    left: 0;
+    top: 100%;
+    margin-top: 2px;
+    font-size: 0.6rem; /* Сильно уменьшаем размер, чтобы влезло в одну строку */
     line-height: 1.15;
     color: #f87171;
     pointer-events: none;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    margin: 0;
-    padding: 0;
-    z-index: 5;
-}
-
-.amount-input-with-stepper,
-.filter-input-with-clear {
-    position: relative;
-}
-
-.amount-input-with-stepper > .filter-field-error,
-.filter-input-with-clear > .filter-field-error {
-    bottom: -18px;
+    white-space: nowrap; /* Запрещаем перенос строк */
+    overflow: visible; /* Разрешаем тексту выходить за границы блока */
+    z-index: 10;
 }
 
 .filter-group.has-error .filter-input,

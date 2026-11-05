@@ -1,6 +1,6 @@
 package com.example.demo.mapper.entity;
 
-import com.example.demo.dto.base.UserStatus;
+import com.example.demo.dto.UserStatus;
 import com.example.demo.dto.catalog.CartItemViewDTO;
 import com.example.demo.mapper.util.DurationMapper;
 import com.example.demo.model.entity.CartItem;

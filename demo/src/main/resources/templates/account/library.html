@@ -39,7 +39,7 @@
                  data-cursor-template="libraryCardTemplate"
                  th:attr="data-cursor-next=${libraryPageResponse.cursorPageResponse().nextCursor()},
                           data-cursor-has-more=${libraryPageResponse.cursorPageResponse().hasMore()},
-                          data-cursor-sort=${libraryPageResponse.cursorPageResponse().sort()},
+                          data-cursor-sort=${libraryPageResponse.cursorPageResponse().sortDirection()},
                           data-cursor-query=${libraryPageResponse.query()}">
 
                 <div th:each="item : ${libraryPageResponse.cursorPageResponse().items()}"

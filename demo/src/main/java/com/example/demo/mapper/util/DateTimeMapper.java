@@ -11,6 +11,9 @@ public class DateTimeMapper {
 
     @Named("localDateTimeToIso")
     public String toUtcIso(LocalDateTime value) {
-        return value == null ? null : value.toInstant(ZoneOffset.UTC).toString();
+        if (value == null) {
+            return null;
+        }
+        return value.toInstant(ZoneOffset.UTC).toString();
     }
 }

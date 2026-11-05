@@ -1,9 +1,6 @@
 package com.example.demo.mapper.util;
 
-
-
 import org.mapstruct.Named;
-
 
 public final class NameMapper {
 
@@ -24,7 +21,10 @@ public final class NameMapper {
             return "";
         }
         String[] parts = fullName.trim().split("\\s+");
-        return parts.length > 0 ? parts[0] : "";
+        if (parts.length > 0) {
+            return parts[0];
+        }
+        return "";
     }
 
     @Named("extractName")
@@ -33,7 +33,10 @@ public final class NameMapper {
             return "";
         }
         String[] parts = fullName.trim().split("\\s+");
-        return parts.length > 1 ? parts[1] : "";
+        if (parts.length > 1) {
+            return parts[1];
+        }
+        return "";
     }
 
     @Named("extractPatronymic")
@@ -42,6 +45,9 @@ public final class NameMapper {
             return "";
         }
         String[] parts = fullName.trim().split("\\s+");
-        return parts.length > 2 ? parts[2] : "";
+        if (parts.length > 2) {
+            return parts[2];
+        }
+        return "";
     }
 }

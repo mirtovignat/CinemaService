@@ -28,8 +28,7 @@ public class RecommendationCursorService
                                        MovieRepository movieRepository,
                                        MovieMapper movieMapper,
                                        @Value("${app.recommendations.cursorPageResponse-size:8}") int pageSize) {
-        super(
-                cursorCodec,
+        super(cursorCodec,
                 pageSize,
                 movie -> recommendationKeyCodec.encode(movie.getRating(), movie.getId()),
                 movies -> movies.stream()
@@ -54,8 +53,8 @@ public class RecommendationCursorService
         Long cursorIdentifier = null;
         if (hasCursor) {
             RecommendationCursorKey recommendationCursorKey = recommendationKeyCodec.decode(cursorValue);
-            cursorRating = recommendationCursorKey.rating();
-            cursorIdentifier = recommendationCursorKey.identifier();
+            cursorRating = recommendationCursorKey.movieRating();
+            cursorIdentifier = recommendationCursorKey.movieId();
         }
 
         return movieRepository.findRecommendedMoviesSliceKeyset(

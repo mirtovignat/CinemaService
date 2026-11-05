@@ -34,9 +34,9 @@ public class PurchasedMovie extends AbstractCatalogItem {
         if (getUser() != null && !getUser().isSaveHistory()) {
             return null;
         }
-        WatchHistoryItem item = WatchHistoryItem.of(this, time);
-        watchedHistory.add(item);
-        return item;
+        WatchHistoryItem watchHistoryItem = WatchHistoryItem.of(this, time);
+        watchedHistory.add(watchHistoryItem);
+        return watchHistoryItem;
     }
 
     public void clearHistory() {

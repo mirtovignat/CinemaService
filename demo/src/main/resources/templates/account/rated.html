@@ -39,7 +39,7 @@
                  data-cursor-template="ratedItemTemplate"
                  th:attr="data-cursor-next=${ratedHistoryPageResponse.cursorPageResponse().nextCursor()},
                           data-cursor-has-more=${ratedHistoryPageResponse.cursorPageResponse().hasMore()},
-                          data-cursor-sort=${ratedHistoryPageResponse.cursorPageResponse().sort()},
+                          data-cursor-sort=${ratedHistoryPageResponse.cursorPageResponse().sortDirection()},
                           data-cursor-query=${ratedHistoryPageResponse.query()}">
 
                 <div th:each="item : ${ratedHistoryPageResponse.cursorPageResponse().items()}"

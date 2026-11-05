@@ -1,12 +1,9 @@
 package com.example.demo.mapper.util;
 
-
-
 import org.mapstruct.Named;
 
 import java.time.LocalDate;
 import java.time.Period;
-
 
 public final class AgeMapper {
 

@@ -71,7 +71,12 @@ public class WalletController {
         String message = messageUtils.getSuccess(SuccessCode.TOPPED_UP);
         redirectAttributes.addFlashAttribute("successMessage", message);
 
-        String targetPath = NavigationUtils.isSafeLocalPath(from) ? from : "/personal-account";
+        String targetPath;
+        if (NavigationUtils.isSafeLocalPath(from)) {
+            targetPath = from;
+        } else {
+            targetPath = "/personal-account";
+        }
         return "redirect:" + targetPath;
     }
 }

@@ -1,12 +1,9 @@
 package com.example.demo.mapper.util;
 
-
-
 import org.mapstruct.Named;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
-
 
 @Component
 public class DurationMapper {
@@ -24,10 +21,16 @@ public class DurationMapper {
     }
 
     public Long toSeconds(Duration duration) {
-        return duration != null ? duration.getSeconds() : null;
+        if (duration == null) {
+            return null;
+        }
+        return duration.getSeconds();
     }
 
     public Duration toDuration(Long seconds) {
-        return seconds != null ? Duration.ofSeconds(seconds) : null;
+        if (seconds == null) {
+            return null;
+        }
+        return Duration.ofSeconds(seconds);
     }
 }

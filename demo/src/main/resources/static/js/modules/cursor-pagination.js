@@ -350,12 +350,12 @@
             ensureTail();
 
             var params = new URLSearchParams();
-            params.set('sort', state.sort);
+            params.set('sortDirection', state.sort);
             if (state.nextCursor) params.set('cursor', state.nextCursor);
 
             var query = container.getAttribute('data-cursor-query');
             if (query && query.trim() !== '') {
-                params.set('query', query);
+                params.set('searchQuery', query);
             }
 
             return fetch(state.endpoint + '?' + params.toString(), {

@@ -1,6 +1,6 @@
 package com.example.demo.service.movie;
 
-import com.example.demo.dto.base.UserStatus;
+import com.example.demo.dto.UserStatus;
 import com.example.demo.dto.movie.MovieUserStatus;
 import com.example.demo.service.linked_collection.UserStatusResolver;
 import lombok.AllArgsConstructor;
@@ -22,14 +22,13 @@ public class MovieUserStatusBatchLoader {
         if (movieIds == null || movieIds.isEmpty() || userId == null) {
             return Map.of();
         }
+        Map<Long, UserStatus> userStatuses = userStatusResolver.loadAllUserStatuses(userId, movieIds);
+        Map<Long, MovieUserStatus> movieUserStatuses = new HashMap<>(movieIds.size());
 
-        Map<Long, UserStatus> statuses = userStatusResolver.loadAllUserStatuses(userId, movieIds);
-
-        Map<Long, MovieUserStatus> result = new HashMap<>(movieIds.size());
         for (Long movieId : movieIds) {
-            UserStatus userStatus = statuses.getOrDefault(movieId, UserStatus.EMPTY);
-            result.put(movieId, MovieUserStatus.from(userStatus));
+            UserStatus userStatus = userStatuses.getOrDefault(movieId, UserStatus.EMPTY);
+            movieUserStatuses.put(movieId, MovieUserStatus.from(userStatus));
         }
-        return result;
+        return movieUserStatuses;
     }
 }

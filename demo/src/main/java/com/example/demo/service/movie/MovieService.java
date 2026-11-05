@@ -13,8 +13,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 public class MovieService {
@@ -64,10 +66,13 @@ public class MovieService {
 
         MovieDetailsViewDTO movieDetailsViewDTO = movieMapper.toDetails(movie, ratingsCount);
 
-        MovieUserStatus movieUserStatus = (userId != null)
-                ? movieUserStatusBatchLoader.loadForMovies(List.of(movieId), userId)
-                .getOrDefault(movieId, MovieUserStatus.EMPTY)
-                : MovieUserStatus.EMPTY;
+        MovieUserStatus movieUserStatus;
+        if (userId != null) {
+            movieUserStatus = movieUserStatusBatchLoader.loadForMovies(List.of(movieId), userId)
+                    .getOrDefault(movieId, MovieUserStatus.EMPTY);
+        } else {
+            movieUserStatus = MovieUserStatus.EMPTY;
+        }
 
         return MovieForUser.<MovieDetailsViewDTO>builder()
                 .movie(movieDetailsViewDTO)
@@ -93,9 +98,13 @@ public class MovieService {
 
         List<Long> movieIds = moviePage.getContent().stream().map(Movie::getId).toList();
         Map<Long, Long> reviewCountsByMovieId = movieReviewCountService.countsByMovieIds(movieIds);
-        Map<Long, MovieUserStatus> movieUserStatusesByMovieId = (userId != null)
-                ? movieUserStatusBatchLoader.loadForMovies(movieIds, userId)
-                : Map.of();
+
+        Map<Long, MovieUserStatus> movieUserStatusesByMovieId;
+        if (userId != null) {
+            movieUserStatusesByMovieId = movieUserStatusBatchLoader.loadForMovies(movieIds, userId);
+        } else {
+            movieUserStatusesByMovieId = Map.of();
+        }
 
         return moviePage.map(movie -> MovieForUser.<MovieCardViewDTO>builder()
                 .movie(movieMapper.toCard(movie, reviewCountsByMovieId.getOrDefault(movie.getId(), 0L)))
@@ -105,5 +114,13 @@ public class MovieService {
 
     public Movie getMovie(Long movieId) {
         return movieRepository.findByIdOrThrow(movieId);
+    }
+
+    @Transactional(readOnly = true)
+    public Set<Long> collectExcludedMovieIds(Long userId) {
+        if (userId == null) {
+            return new LinkedHashSet<>();
+        }
+        return new LinkedHashSet<>(movieRepository.findExcludedMovieIdsByUserId(userId));
     }
 }

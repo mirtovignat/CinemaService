@@ -14,11 +14,11 @@
             <label for="catalogSearchInput" class="visually-hidden">Поиск по началу названия</label>
             <input type="text"
                    id="catalogSearchInput"
-                   name="title"
+                   name="searchQuery"
                    autocomplete="off"
                    placeholder="Поиск по началу названия..."
                    maxlength="100"
-                   th:value="${title != null ? title : ''}"
+                   th:value="${searchQuery != null ? searchQuery : ''}"
                    data-catalog-search-input>
 
             <button type="button"

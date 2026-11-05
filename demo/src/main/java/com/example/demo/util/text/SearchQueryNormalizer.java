@@ -14,7 +14,10 @@ public final class SearchQueryNormalizer {
             return Optional.empty();
         }
         String trimmedValue = rawValue.trim().toLowerCase(Locale.ROOT).replace('ё', 'е');
-        return trimmedValue.isBlank() ? Optional.empty() : Optional.of(trimmedValue);
+        if (trimmedValue.isBlank()) {
+            return Optional.empty();
+        }
+        return Optional.of(trimmedValue);
     }
 
     public static String normalizeOrEmpty(String rawValue) {

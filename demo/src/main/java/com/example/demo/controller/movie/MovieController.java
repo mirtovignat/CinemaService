@@ -1,12 +1,12 @@
 package com.example.demo.controller.movie;
 
-import com.example.demo.cursor.CursorPageRequest;
 import com.example.demo.cursor.SortDirection;
 import com.example.demo.cursor.context.RecommendationCursorContext;
 import com.example.demo.dto.movie.MovieCardViewDTO;
 import com.example.demo.dto.movie.MovieDetailsViewDTO;
 import com.example.demo.dto.movie.MovieForUser;
 import com.example.demo.dto.movie.MovieSearchDTO;
+import com.example.demo.dto.request.CursorPageRequest;
 import com.example.demo.dto.response.CursorPageResponse;
 import com.example.demo.dto.response.GenreMoviesPageResponse;
 import com.example.demo.dto.response.MoviesPageResponse;
@@ -15,7 +15,6 @@ import com.example.demo.filter.MovieFilterFacade;
 import com.example.demo.filter.MovieFilterValidator;
 import com.example.demo.filter.PageRequestContext;
 import com.example.demo.service.cursor.RecommendationCursorService;
-import com.example.demo.service.movie.MovieRecommendationService;
 import com.example.demo.service.movie.MovieService;
 import com.example.demo.web.resolver.CurrentUserId;
 import com.example.demo.web.resolver.MovieSingleResultResolver;
@@ -29,16 +28,13 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Controller
 @AllArgsConstructor
 public class MovieController {
 
     private final MovieService movieService;
-    private final MovieRecommendationService movieRecommendationService;
     private final MovieFilterFacade movieFilterFacade;
     private final RecommendationCursorService recommendationCursorService;
     private final MovieSingleResultResolver movieSingleResultResolver;
@@ -106,7 +102,14 @@ public class MovieController {
             @ModelAttribute CursorPageRequest cursorPageRequest,
             @CurrentUserId(required = false) Long userId
     ) {
-        Set<Long> excludedMovieIds = movieRecommendationService.collectExcludedMovieIds(userId);
+        Set<Long> excludedMovieIds = movieService.collectExcludedMovieIds(userId);
+
+        Collection<Long> excludedIdsOrNull;
+        if (excludedMovieIds.isEmpty()) {
+            excludedIdsOrNull = null;
+        } else {
+            excludedIdsOrNull = excludedMovieIds;
+        }
 
         return recommendationCursorService.page(
                 cursorPageRequest.cursor(),
@@ -114,7 +117,7 @@ public class MovieController {
                 null,
                 RecommendationCursorContext.builder()
                         .userId(userId)
-                        .excludedMovieIds(excludedMovieIds.isEmpty() ? null : excludedMovieIds)
+                        .excludedMovieIds(excludedIdsOrNull)
                         .build()
         );
     }
@@ -134,7 +137,9 @@ public class MovieController {
     @ResponseBody
     public ResponseEntity<Map<String, Object>> getMovieRating(@PathVariable Long id) {
         BigDecimal rating = movieService.getMovieRating(id);
-        return ResponseEntity.ok(Map.of("rating", rating != null ? rating : "-"));
+        Object ratingValue;
+        ratingValue = Objects.requireNonNullElse(rating, "-");
+        return ResponseEntity.ok(Map.of("rating", ratingValue));
     }
 
     @GetMapping("/movies/suggestions")

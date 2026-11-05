@@ -42,7 +42,7 @@
                  data-group-history
                  th:attr="data-cursor-next=${watchedPageResponse.cursorPageResponse() != null ? watchedPageResponse.cursorPageResponse().nextCursor() : null},
                           data-cursor-has-more=${watchedPageResponse.cursorPageResponse() != null ? watchedPageResponse.cursorPageResponse().hasMore() : false},
-                          data-cursor-sort=${watchedPageResponse.cursorPageResponse() != null ? watchedPageResponse.cursorPageResponse().sort() : 'desc'},
+                          data-cursor-sort=${watchedPageResponse.cursorPageResponse() != null ? watchedPageResponse.cursorPageResponse().sortDirection() : 'desc'},
                           data-cursor-query=${watchedPageResponse.query()},
                           data-highlight-history-id=${watchedPageResponse.highlightHistoryId()}">
 

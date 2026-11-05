@@ -13,7 +13,12 @@ public class RecommendationKeyCodec {
 
     public String encode(BigDecimal rating, Long id) {
         Objects.requireNonNull(id);
-        String ratingPart = rating != null ? rating.toPlainString() : "null";
+        String ratingPart;
+        if (rating != null) {
+            ratingPart = rating.toPlainString();
+        } else {
+            ratingPart = "null";
+        }
         return ratingPart + "_" + id;
     }
 
@@ -23,29 +28,29 @@ public class RecommendationKeyCodec {
             throw BusinessException.of(ErrorCode.INVALID_CURSOR);
         }
 
-        String ratingPart = cursorValue.substring(0, separatorIndex);
-        String identifierPart = cursorValue.substring(separatorIndex + 1);
+        String movieRatingPart = cursorValue.substring(0, separatorIndex);
+        String movieIdPart = cursorValue.substring(separatorIndex + 1);
 
         BigDecimal rating;
-        if ("null".equals(ratingPart)) {
+        if ("null".equals(movieRatingPart)) {
             rating = null;
         } else {
             try {
-                rating = new BigDecimal(ratingPart);
+                rating = new BigDecimal(movieRatingPart);
             } catch (NumberFormatException numberFormatException) {
                 throw BusinessException.of(ErrorCode.INVALID_CURSOR);
             }
         }
-        long identifier;
+        long movieId;
         try {
-            identifier = Long.parseLong(identifierPart);
+            movieId = Long.parseLong(movieIdPart);
         } catch (NumberFormatException numberFormatException) {
             throw BusinessException.of(ErrorCode.INVALID_CURSOR);
         }
 
         return RecommendationCursorKey.builder()
-                .rating(rating)
-                .identifier(identifier)
+                .movieRating(rating)
+                .movieId(movieId)
                 .build();
     }
 }

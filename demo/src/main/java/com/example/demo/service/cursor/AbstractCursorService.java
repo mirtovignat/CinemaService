@@ -29,9 +29,12 @@ public abstract class AbstractCursorService<EntityType, DataType, ContextType>
                                              String query,
                                              ContextType contextType) {
 
-        String cursorValue = StringUtils.hasText(rawCursor)
-                ? cursorCodec.decode(rawCursor).value()
-                : null;
+        String cursorValue;
+        if (StringUtils.hasText(rawCursor)) {
+            cursorValue = cursorCodec.decode(rawCursor).value();
+        } else {
+            cursorValue = null;
+        }
 
         String normalizedQuery = CursorUtils.normalizeQuery(query);
 
@@ -46,9 +49,12 @@ public abstract class AbstractCursorService<EntityType, DataType, ContextType>
         List<EntityType> rawContent = slice.getContent();
         boolean hasMore = rawContent.size() > defaultPageSize;
 
-        List<EntityType> pageContent = hasMore
-                ? rawContent.subList(0, defaultPageSize)
-                : rawContent;
+        List<EntityType> pageContent;
+        if (hasMore) {
+            pageContent = rawContent.subList(0, defaultPageSize);
+        } else {
+            pageContent = rawContent;
+        }
 
         String nextCursor = null;
         if (hasMore && !pageContent.isEmpty()) {
@@ -61,7 +67,7 @@ public abstract class AbstractCursorService<EntityType, DataType, ContextType>
                 .items(contentMapper.apply(pageContent))
                 .hasMore(hasMore)
                 .nextCursor(nextCursor)
-                .sort(sortDirection.lowercase())
+                .sortDirection(sortDirection.lowercase())
                 .build();
     }
 

@@ -1,6 +1,6 @@
 package com.example.demo.dto.movie;
 
-import com.example.demo.dto.base.UserStatus;
+import com.example.demo.dto.UserStatus;
 import lombok.Builder;
 
 @Builder

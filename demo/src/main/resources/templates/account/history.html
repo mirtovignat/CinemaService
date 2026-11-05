@@ -39,7 +39,7 @@
                  data-cursor-template="historyItemTemplate"
                  th:attr="data-cursor-next=${historyPageResponse.cursorPageResponse().nextCursor()},
                           data-cursor-has-more=${historyPageResponse.cursorPageResponse().hasMore()},
-                          data-cursor-sort=${historyPageResponse.cursorPageResponse().sort()},
+                          data-cursor-sort=${historyPageResponse.cursorPageResponse().sortDirection()},
                           data-cursor-query=${historyPageResponse.query()}">
 
                 <div th:each="item : ${historyPageResponse.cursorPageResponse().items()}"

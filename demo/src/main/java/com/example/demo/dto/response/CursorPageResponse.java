@@ -9,6 +9,6 @@ public record CursorPageResponse<Item>(
         List<Item> items,
         boolean hasMore,
         String nextCursor,
-        String sort
+        String sortDirection
 ) {
 }

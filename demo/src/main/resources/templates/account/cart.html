@@ -59,7 +59,7 @@
              data-cursor-template="cartCardTemplate"
              th:attr="data-cursor-next=${cartPageResponse.cursorPageResponse().nextCursor()},
                       data-cursor-has-more=${cartPageResponse.cursorPageResponse().hasMore()},
-                      data-cursor-sort=${cartPageResponse.cursorPageResponse().sort()},
+                      data-cursor-sort=${cartPageResponse.cursorPageResponse().sortDirection()},
                       data-cursor-query=${cartPageResponse.query()}">
 
             <div class="media-card cart-card"

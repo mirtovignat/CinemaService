@@ -38,7 +38,12 @@ public abstract class AbstractUserCursorService<EntityType, DataType>
                                            UserCursorContext userCursorContext) {
         Long userId = userCursorContext.userId();
         boolean hasCursor = cursorValue != null;
-        Long cursorId = hasCursor ? idCodec.decode(cursorValue) : null;
+        Long cursorId;
+        if (hasCursor) {
+            cursorId = idCodec.decode(cursorValue);
+        } else {
+            cursorId = null;
+        }
 
         return switch (sortDirection) {
             case ASC -> ascFetcher.fetch(userId, hasCursor, cursorId, query, pageRequest);

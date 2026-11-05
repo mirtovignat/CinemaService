@@ -1,5 +1,6 @@
 package com.example.demo.cursor;
 
+import com.example.demo.dto.request.CursorPageRequest;
 import com.example.demo.util.text.SearchQueryNormalizer;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
@@ -14,14 +15,14 @@ public final class CursorUtils {
         return cursor != null && !cursor.isBlank();
     }
 
-    public static <T> Slice<T> buildLimitedSlice(List<T> rows, int pageSize) {
-        boolean hasMore = rows.size() > pageSize;
+    public static <Item> Slice<Item> buildLimitedSlice(List<Item> fetchedItems, int pageSize) {
+        boolean hasMore = fetchedItems.size() > pageSize;
 
-        List<T> content;
+        List<Item> content;
         if (hasMore) {
-            content = rows.subList(0, pageSize);
+            content = fetchedItems.subList(0, pageSize);
         } else {
-            content = rows;
+            content = fetchedItems;
         }
 
         return new SliceImpl<>(
