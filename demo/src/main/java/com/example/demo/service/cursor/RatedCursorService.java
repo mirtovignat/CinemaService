@@ -34,7 +34,7 @@ public class RatedCursorService extends AbstractUserCursorService<RatedMovie, Ra
     }
 
     @Override
-    public List<String> findTitlesStartingWith(Long userId, String query, Pageable pageable) {
-        return ratedMovieRepository.findTitlesStartingWith(userId, query, pageable);
+    public List<String> findTitlesStartingWith(Long userId, String searchQuery, Pageable pageable) {
+        return ratedMovieRepository.findTitlesStartingWith(userId, searchQuery, pageable);
     }
 }

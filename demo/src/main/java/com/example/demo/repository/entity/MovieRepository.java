@@ -71,7 +71,7 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
             SELECT director
             FROM movies
             WHERE director IS NOT NULL
-              AND LOWER(TRANSLATE(director, 'ёЁ', 'еЕ')) LIKE LOWER(CONCAT(:prefix, '%')) ESCAPE '\\'
+              AND LOWER(TRANSLATE(director, 'ёЁ', 'еЕ')) LIKE LOWER(CONCAT(:searchQuery, '%')) ESCAPE '\\'
               AND (
                   :hasCursor = false
                   OR LOWER(TRANSLATE(director, 'ёЁ', 'еЕ')) > LOWER(TRANSLATE(:cursor, 'ёЁ', 'еЕ'))
@@ -81,7 +81,7 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
             LIMIT :limit
             """, nativeQuery = true)
     List<String> fetchDirectorsKeyset(
-            @Param("prefix") String prefix,
+            @Param("searchQuery") String searchQuery,
             @Param("hasCursor") boolean hasCursor,
             @Param("cursor") String cursor,
             @Param("limit") int limit
@@ -115,14 +115,14 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
     @Query(value = """
             SELECT genre
             FROM movies
-            WHERE LOWER(TRANSLATE(genre, 'ёЁ', 'еЕ')) LIKE LOWER(CONCAT(:prefix, '%')) ESCAPE '\\'
+            WHERE LOWER(TRANSLATE(genre, 'ёЁ', 'еЕ')) LIKE LOWER(CONCAT(:searchQuery, '%')) ESCAPE '\\'
               AND (:hasCursor = false OR LOWER(TRANSLATE(genre, 'ёЁ', 'еЕ')) > LOWER(TRANSLATE(:cursor, 'ёЁ', 'еЕ')))
             GROUP BY genre
             ORDER BY LOWER(TRANSLATE(genre, 'ёЁ', 'еЕ')) ASC
             LIMIT :limit
             """, nativeQuery = true)
     List<String> fetchGenresKeyset(
-            @Param("prefix") String prefix,
+            @Param("searchQuery") String searchQuery,
             @Param("hasCursor") boolean hasCursor,
             @Param("cursor") String cursor,
             @Param("limit") int limit

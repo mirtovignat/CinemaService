@@ -35,7 +35,7 @@ public class WatchedHistoryCursorService extends AbstractUserCursorService<Watch
         this.watchHistoryItemRepository = watchHistoryItemRepository;
     }
 
-    public List<WatchedSuggestionProjection> findGroupedWatchedSuggestionsStartingWith(Long userId, String query, Pageable pageable) {
-        return watchHistoryItemRepository.findGroupedWatchedSuggestionsStartingWith(userId, query, pageable);
+    public List<WatchedSuggestionProjection> findGroupedWatchedSuggestionsStartingWith(Long userId, String searchQuery, Pageable pageable) {
+        return watchHistoryItemRepository.findGroupedWatchedSuggestionsStartingWith(userId, searchQuery, pageable);
     }
 }

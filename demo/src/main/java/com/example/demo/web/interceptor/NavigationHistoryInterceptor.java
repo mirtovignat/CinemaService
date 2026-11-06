@@ -33,7 +33,8 @@ public class NavigationHistoryInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        if ("XMLHttpRequest".equalsIgnoreCase(httpServletRequest.getHeader("X-Requested-With"))) {
+        String fetchMode = httpServletRequest.getHeader("Sec-Fetch-Mode");
+        if (fetchMode != null && !"navigate".equalsIgnoreCase(fetchMode)) {
             return true;
         }
 

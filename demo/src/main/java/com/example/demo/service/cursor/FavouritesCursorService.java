@@ -36,7 +36,7 @@ public class FavouritesCursorService extends AbstractUserCursorService<Favourite
     }
 
     @Override
-    public List<String> findTitlesStartingWith(Long userId, String query, Pageable pageable) {
-        return favouriteMovieRepository.findTitlesStartingWith(userId, query, pageable);
+    public List<String> findTitlesStartingWith(Long userId, String searchQuery, Pageable pageable) {
+        return favouriteMovieRepository.findTitlesStartingWith(userId, searchQuery, pageable);
     }
 }

@@ -45,7 +45,7 @@ public interface WatchHistoryItemRepository extends JpaRepository<WatchHistoryIt
     Slice<WatchHistoryItem> fetchAscending(@Param("userId") Long userId,
                                            @Param("hasCursor") boolean hasCursor,
                                            @Param("cursorId") Long cursorId,
-                                           @Param("searchQuery") String query,
+                                           @Param("searchQuery") String searchQuery,
                                            Pageable pageable);
 
     @Query("""
@@ -61,7 +61,7 @@ public interface WatchHistoryItemRepository extends JpaRepository<WatchHistoryIt
     Slice<WatchHistoryItem> fetchDescending(@Param("userId") Long userId,
                                             @Param("hasCursor") boolean hasCursor,
                                             @Param("cursorId") Long cursorId,
-                                            @Param("searchQuery") String query,
+                                            @Param("searchQuery") String searchQuery,
                                             Pageable pageable);
 
     @Query("""
@@ -72,12 +72,12 @@ public interface WatchHistoryItemRepository extends JpaRepository<WatchHistoryIt
             FROM WatchHistoryItem watchHistoryItem
             JOIN watchHistoryItem.purchasedMovie purchasedMovie
             WHERE purchasedMovie.user.id = :userId
-            AND LOWER(TRANSLATE(purchasedMovie.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:prefix AS string), '%') ESCAPE '\\'
+            AND LOWER(TRANSLATE(purchasedMovie.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:searchQuery AS string), '%') ESCAPE '\\'
             GROUP BY purchasedMovie.movie.id, purchasedMovie.movie.title
             ORDER BY MAX(watchHistoryItem.watchedAt) DESC, purchasedMovie.movie.id ASC
             """)
     List<WatchedSuggestionProjection> findGroupedWatchedSuggestionsStartingWith(
             @Param("userId") Long userId,
-            @Param("prefix") String prefix,
+            @Param("searchQuery") String searchQuery,
             Pageable pageable);
 }

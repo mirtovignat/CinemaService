@@ -23,13 +23,13 @@ public class SuggestionService {
 
     public <T> List<T> suggest(
             Long userId,
-            String query,
+            String searchQuery,
             SuggestionFetcher<T> fetcher) {
         if (userId == null) {
             return List.of();
         }
 
-        Optional<String> normalizedQuery = SearchQueryNormalizer.normalizeOptional(query);
+        Optional<String> normalizedQuery = SearchQueryNormalizer.normalizeOptional(searchQuery);
         if (normalizedQuery.isEmpty()) {
             return List.of();
         }

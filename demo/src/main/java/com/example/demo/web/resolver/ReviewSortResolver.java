@@ -26,7 +26,7 @@ public class ReviewSortResolver {
                                            HttpServletResponse httpServletResponse) {
         SortDirection resolvedSortDirection = resolve(reviewsQueryDTO, sortCookie);
 
-        if (isExplicit(reviewsQueryDTO.sortDirection()) || isExplicit(reviewsQueryDTO.sortDirection())) {
+        if (isExplicit(reviewsQueryDTO.sortDirection())) {
             writeCookie(httpServletResponse, resolvedSortDirection);
         }
         return resolvedSortDirection;

@@ -22,11 +22,11 @@ public interface RatedMovieRepository extends AbstractCatalogItemRepository<Rate
     @Query("""
             SELECT DISTINCT ratedMovie.movie.title FROM RatedMovie ratedMovie
             WHERE ratedMovie.user.id = :userId
-            AND LOWER(TRANSLATE(ratedMovie.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:prefix AS string), '%') ESCAPE '\\'
+            AND LOWER(TRANSLATE(ratedMovie.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:searchQuery AS string), '%') ESCAPE '\\'
             ORDER BY ratedMovie.movie.title ASC
             """)
     List<String> findTitlesStartingWith(@Param("userId") Long userId,
-                                        @Param("prefix") String prefix,
+                                        @Param("searchQuery") String searchQuery,
                                         Pageable pageable);
 
     @Query("""

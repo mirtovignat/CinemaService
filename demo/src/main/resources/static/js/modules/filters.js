@@ -833,18 +833,15 @@
         var all = getAllCheckboxValues(name);
         if (all.length === 0) return null;
 
-        // Если выбрано больше половины — отправляем EXCLUDE
         if (checked.length > all.length / 2) {
             var checkedSet = new Set(checked);
             var excluded = all.filter(function (v) { return !checkedSet.has(v); });
             if (excluded.length === 0) {
-                // Выбраны абсолютно все — фильтр не нужен, показываем всё
                 return null;
             }
             return { mode: 'exclude', values: excluded };
         }
 
-        // Иначе — INCLUDE
         return { mode: 'include', values: checked };
     }
 

@@ -34,7 +34,7 @@ public class LibraryCursorService extends AbstractUserCursorService<PurchasedMov
     }
 
     @Override
-    public List<String> findTitlesStartingWith(Long userId, String query, Pageable pageable) {
-        return purchasedMovieRepository.findTitlesStartingWith(userId, query, pageable);
+    public List<String> findTitlesStartingWith(Long userId, String searchQuery, Pageable pageable) {
+        return purchasedMovieRepository.findTitlesStartingWith(userId, searchQuery, pageable);
     }
 }

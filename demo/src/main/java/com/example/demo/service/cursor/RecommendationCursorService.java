@@ -43,7 +43,7 @@ public class RecommendationCursorService
     @Override
     protected Slice<Movie> fetchSlice(String cursorValue,
                                       SortDirection sortDirection,
-                                      String query,
+                                      String searchQuery,
                                       PageRequest pageRequest,
                                       RecommendationCursorContext recommendationCursorContext) {
 

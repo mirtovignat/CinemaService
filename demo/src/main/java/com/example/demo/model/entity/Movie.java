@@ -68,22 +68,22 @@ public class Movie extends IdentifiableEntity {
     private String director;
 
     @Builder.Default
-    @BatchSize(size = 20)
+    @BatchSize(size = 35)
     @OneToMany(mappedBy = "movie", fetch = FetchType.LAZY)
     private Set<CartItem> cartItems = new LinkedHashSet<>();
 
     @Builder.Default
-    @BatchSize(size = 20)
+    @BatchSize(size = 35)
     @OneToMany(mappedBy = "movie", fetch = FetchType.LAZY)
     private Set<PurchasedMovie> purchases = new LinkedHashSet<>();
 
     @Builder.Default
-    @BatchSize(size = 20)
+    @BatchSize(size = 35)
     @OneToMany(mappedBy = "movie", fetch = FetchType.LAZY)
     private Set<FavouriteMovie> favourites = new LinkedHashSet<>();
 
     @Builder.Default
-    @BatchSize(size = 20)
+    @BatchSize(size = 35)
     @OneToMany(mappedBy = "movie", fetch = FetchType.LAZY)
     private Set<RatedMovie> ratings = new LinkedHashSet<>();
 

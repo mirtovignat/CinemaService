@@ -8,6 +8,6 @@ public interface SliceFetcher<Entity> {
     Slice<Entity> fetch(Long userId,
                         boolean hasCursor,
                         Long cursorId,
-                        String query,
+                        String searchQuery,
                         Pageable pageable);
 }

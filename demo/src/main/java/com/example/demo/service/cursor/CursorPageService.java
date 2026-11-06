@@ -7,6 +7,6 @@ public interface CursorPageService<Context, Data> {
 
     CursorPageResponse<Data> page(String rawCursor,
                                   SortDirection sortDirection,
-                                  String query,
+                                  String searchQuery,
                                   Context context);
 }

@@ -42,10 +42,7 @@ public class PurchasedController {
             SessionUser sessionUser,
             HttpServletRequest httpServletRequest,
             HttpServletResponse httpServletResponse) {
-        BigDecimal newBalance = purchasedService.purchase(
-                id,
-                sessionUser.id()
-        );
+        BigDecimal newBalance = purchasedService.purchase(id, sessionUser.id());
         return respond(
                 sessionUser,
                 newBalance,

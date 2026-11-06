@@ -36,7 +36,7 @@ public class CartCursorService extends AbstractUserCursorService<CartItem, CartI
     }
 
     @Override
-    public List<String> findTitlesStartingWith(Long userId, String query, Pageable pageable) {
-        return cartItemRepository.findTitlesStartingWith(userId, query, pageable);
+    public List<String> findTitlesStartingWith(Long userId, String searchQuery, Pageable pageable) {
+        return cartItemRepository.findTitlesStartingWith(userId, searchQuery, pageable);
     }
 }

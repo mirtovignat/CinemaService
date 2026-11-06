@@ -28,7 +28,6 @@ public abstract class AbstractCursorService<EntityType, DataType, ContextType>
                                              SortDirection sortDirection,
                                              String query,
                                              ContextType contextType) {
-
         String cursorValue;
         if (StringUtils.hasText(rawCursor)) {
             cursorValue = cursorCodec.decode(rawCursor).value();

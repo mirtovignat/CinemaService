@@ -99,16 +99,16 @@ public interface AbstractCatalogItemRepository<Entity extends AbstractCatalogIte
     Slice<Entity> fetchDescending(@Param("userId") Long userId,
                                   @Param("hasCursor") boolean hasCursor,
                                   @Param("cursorId") Long cursorId,
-                                  @Param("searchQuery") String query,
+                                  @Param("searchQuery") String searchQuery,
                                   Pageable pageable);
 
     @Query("""
             SELECT item.movie.title FROM #{#entityName} item
             WHERE item.user.id = :userId
-            AND LOWER(TRANSLATE(item.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:prefix AS string), '%') ESCAPE '\\'
+            AND LOWER(TRANSLATE(item.movie.title, 'ёЁ', 'еЕ')) LIKE CONCAT(CAST(:searchQuery AS string), '%') ESCAPE '\\'
             ORDER BY item.movie.title ASC
             """)
     List<String> findTitlesStartingWith(@Param("userId") Long userId,
-                                        @Param("prefix") String prefix,
+                                        @Param("searchQuery") String searchQuery,
                                         Pageable pageable);
 }
