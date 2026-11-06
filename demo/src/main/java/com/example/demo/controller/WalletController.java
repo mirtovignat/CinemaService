@@ -8,10 +8,8 @@ import com.example.demo.service.user.UserCommandService;
 import com.example.demo.service.user.UserQueryService;
 import com.example.demo.util.MessageUtils;
 import com.example.demo.web.resolver.CurrentUserId;
-import com.example.demo.web.security.SessionAuthenticator;
+import com.example.demo.web.security.CurrentUserService;
 import com.example.demo.web.util.NavigationUtils;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -31,7 +29,7 @@ public class WalletController {
     private final UserQueryService userQueryService;
     private final UserCommandService userCommandService;
     private final MessageUtils messageUtils;
-    private final SessionAuthenticator sessionAuthenticator;
+    private final CurrentUserService currentUserService;
 
     @GetMapping("/top-up")
     public String getTopUpForm(@CurrentUserId Long userId, Model model) {
@@ -53,8 +51,6 @@ public class WalletController {
                         BindingResult bindingResult,
                         @RequestParam(value = "from", required = false) String from,
                         SessionUser sessionUser,
-                        HttpServletRequest httpServletRequest,
-                        HttpServletResponse httpServletResponse,
                         RedirectAttributes redirectAttributes,
                         Model model) {
         Long userId = sessionUser.id();
@@ -63,11 +59,7 @@ public class WalletController {
             return "account/top-up";
         }
         BigDecimal newBalance = userCommandService.saveTopUp(topUpFormDTO.amount(), userId);
-        sessionAuthenticator.updateSessionUser(
-                sessionUser.withBalance(newBalance),
-                httpServletRequest,
-                httpServletResponse
-        );
+        currentUserService.updateBalance(newBalance);
         String message = messageUtils.getSuccess(SuccessCode.TOPPED_UP);
         redirectAttributes.addFlashAttribute("successMessage", message);
 

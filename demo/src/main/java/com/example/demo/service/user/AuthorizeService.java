@@ -54,7 +54,7 @@ public class AuthorizeService {
         try {
             User savedUser = userRepository.saveAndFlush(preparedUser);
             return SessionUser.from(savedUser);
-        } catch (DataIntegrityViolationException exception) {
+        } catch (DataIntegrityViolationException dataIntegrityViolationException) {
             throw BusinessException.of(ErrorCode.ALREADY_REGISTERED);
         }
     }

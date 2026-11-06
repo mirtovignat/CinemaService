@@ -19,8 +19,8 @@ public class MovieRangesSnapshotMapper {
         return MovieRangesSnapshot.builder()
                 .price(Range.of(projection.getMinPrice(), projection.getMaxPrice()))
                 .duration(Range.of(
-                        durationMapper.toSeconds(projection.getMinDuration()),
-                        durationMapper.toSeconds(projection.getMaxDuration())))
+                        durationMapper.durationToSeconds(projection.getMinDuration()),
+                        durationMapper.durationToSeconds(projection.getMaxDuration())))
                 .releaseDate(Range.of(
                         projection.getMinReleaseDate(),
                         projection.getMaxReleaseDate()))

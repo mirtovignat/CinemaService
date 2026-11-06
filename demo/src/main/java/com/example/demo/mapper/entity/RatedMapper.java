@@ -7,13 +7,9 @@ import com.example.demo.mapper.util.RatingMapper;
 import com.example.demo.model.entity.RatedMovie;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.springframework.beans.factory.annotation.Autowired;
 
 @Mapper(componentModel = "spring", uses = {RatingMapper.class, DateTimeMapper.class})
-public abstract class RatedMapper {
-
-    @Autowired
-    protected RatingMapper ratingMapper;
+public interface RatedMapper {
 
     @Mapping(target = "id", source = "movie.id")
     @Mapping(target = "title", source = "movie.title")
@@ -24,9 +20,9 @@ public abstract class RatedMapper {
     @Mapping(target = "ratingValue", source = "ratingValue", qualifiedByName = "normalizeRating")
     @Mapping(target = "review", source = "review")
     @Mapping(target = "addedAt", source = "addedAt", qualifiedByName = "localDateTimeToIso")
-    public abstract RatedMovieViewDTO toOwnerView(RatedMovie ratedMovie);
+    RatedMovieViewDTO toOwnerView(RatedMovie ratedMovie);
 
     @Mapping(target = "id", source = "movie.id")
     @Mapping(target = "rating", source = "ratingValue", qualifiedByName = "normalizeRating")
-    public abstract RatedMovieFormDTO toFormView(RatedMovie ratedMovie);
+    RatedMovieFormDTO toFormView(RatedMovie ratedMovie);
 }

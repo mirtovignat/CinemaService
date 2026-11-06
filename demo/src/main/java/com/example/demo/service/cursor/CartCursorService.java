@@ -1,5 +1,6 @@
 package com.example.demo.service.cursor;
 
+import com.example.demo.config.properties.CatalogProperties;
 import com.example.demo.cursor.UserStatusMapperHelper;
 import com.example.demo.cursor.codec.CursorCodec;
 import com.example.demo.cursor.codec.IdCodec;
@@ -7,7 +8,6 @@ import com.example.demo.dto.catalog.CartItemViewDTO;
 import com.example.demo.mapper.entity.CartItemMapper;
 import com.example.demo.model.entity.CartItem;
 import com.example.demo.repository.entity.CartItemRepository;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -24,10 +24,10 @@ public class CartCursorService extends AbstractUserCursorService<CartItem, CartI
                              CartItemRepository cartItemRepository,
                              UserStatusMapperHelper userStatusMapperHelper,
                              CartItemMapper cartItemMapper,
-                             @Value("${app.catalog.cursorPageResponse-size:20}") int defaultPageSize) {
+                             CatalogProperties catalogProperties) {
         super(cursorCodec,
                 idCodec,
-                defaultPageSize,
+                catalogProperties.cursorPageResponseSize(),
                 cartItem -> idCodec.encode(cartItem.getId()),
                 cartItems -> userStatusMapperHelper.mapWithStatuses(cartItems, cartItemMapper::toOwnerView),
                 cartItemRepository::fetchAscending,

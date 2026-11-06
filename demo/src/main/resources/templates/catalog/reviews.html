@@ -34,8 +34,16 @@
 
             <div class="reviews-header-right">
                 <div class="sort-toggle-group" id="sortToggleGroup">
-                    <button type="button" class="sort-option" data-order="desc" data-action="sort-toggle">Сначала новые</button>
-                    <button type="button" class="sort-option" data-order="asc" data-action="sort-toggle">Сначала старые</button>
+                    <a th:href="@{/rated/{id}/reviews(id=${reviewsPageResponse.movieId}, sortDirection='desc')}"
+                       class="sort-option"
+                       th:classappend="${reviewsPageResponse.cursorPageResponse.sortDirection() == 'desc'} ? 'active' : ''">
+                        Сначала новые
+                    </a>
+                    <a th:href="@{/rated/{id}/reviews(id=${reviewsPageResponse.movieId}, sortDirection='asc')}"
+                       class="sort-option"
+                       th:classappend="${reviewsPageResponse.cursorPageResponse.sortDirection() == 'asc'} ? 'active' : ''">
+                        Сначала старые
+                    </a>
                 </div>
 
                 <div class="movie-rating-summary">
@@ -252,7 +260,6 @@
     </div>
 </template>
 
-<script th:src="@{/js/modules/sort-toggle.js}" defer></script>
 <script th:src="@{/js/modules/date-formatter.js}" defer></script>
 <script th:src="@{/js/pages/page-reviews.js}" defer></script>
 <script th:src="@{/js/main.js}" defer></script>

@@ -1,20 +1,18 @@
 package com.example.demo.service.cursor;
 
+import com.example.demo.config.properties.SuggestionsProperties;
 import com.example.demo.util.text.SearchQueryNormalizer;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@AllArgsConstructor
 public class SuggestionService {
 
-    private final int suggestionsLimit;
-
-    public SuggestionService(@Value("${app.suggestions.dropdown-limit:10}") int suggestionsLimit) {
-        this.suggestionsLimit = suggestionsLimit;
-    }
+    private final SuggestionsProperties suggestionsProperties;
 
     @FunctionalInterface
     public interface SuggestionFetcher<T> {
@@ -34,6 +32,6 @@ public class SuggestionService {
             return List.of();
         }
 
-        return fetcher.fetch(userId, normalizedQuery.get(), suggestionsLimit);
+        return fetcher.fetch(userId, normalizedQuery.get(), suggestionsProperties.dropdownLimit());
     }
 }

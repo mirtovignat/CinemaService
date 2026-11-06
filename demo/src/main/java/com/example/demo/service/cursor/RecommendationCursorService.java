@@ -1,5 +1,6 @@
 package com.example.demo.service.cursor;
 
+import com.example.demo.config.properties.RecommendationsProperties;
 import com.example.demo.cursor.RecommendationCursorKey;
 import com.example.demo.cursor.SortDirection;
 import com.example.demo.cursor.codec.CursorCodec;
@@ -9,7 +10,6 @@ import com.example.demo.dto.movie.MovieCardViewDTO;
 import com.example.demo.mapper.entity.MovieMapper;
 import com.example.demo.model.entity.Movie;
 import com.example.demo.repository.entity.MovieRepository;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -27,9 +27,9 @@ public class RecommendationCursorService
                                        RecommendationKeyCodec recommendationKeyCodec,
                                        MovieRepository movieRepository,
                                        MovieMapper movieMapper,
-                                       @Value("${app.recommendations.cursorPageResponse-size:8}") int pageSize) {
+                                       RecommendationsProperties recommendationsProperties) {
         super(cursorCodec,
-                pageSize,
+                recommendationsProperties.cursorPageResponseSize(),
                 movie -> recommendationKeyCodec.encode(movie.getRating(), movie.getId()),
                 movies -> movies.stream()
                         .map(movie -> movieMapper.toCard(movie, 0L))

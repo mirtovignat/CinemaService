@@ -7,15 +7,11 @@ import jakarta.validation.constraints.DecimalMin;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.BatchSize;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -69,6 +65,16 @@ public class Movie extends IdentifiableEntity {
 
     @Builder.Default
     @BatchSize(size = 35)
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "movie_actors",
+            joinColumns = @JoinColumn(name = "movie_id"),
+            inverseJoinColumns = @JoinColumn(name = "actor_id")
+    )
+    private Set<Actor> actors = new LinkedHashSet<>();
+
+    @Builder.Default
+    @BatchSize(size = 35)
     @OneToMany(mappedBy = "movie", fetch = FetchType.LAZY)
     private Set<CartItem> cartItems = new LinkedHashSet<>();
 
@@ -86,8 +92,4 @@ public class Movie extends IdentifiableEntity {
     @BatchSize(size = 35)
     @OneToMany(mappedBy = "movie", fetch = FetchType.LAZY)
     private Set<RatedMovie> ratings = new LinkedHashSet<>();
-
-    @Column(name = "actors", columnDefinition = "text[]")
-    @JdbcTypeCode(SqlTypes.ARRAY)
-    private List<String> actors = new ArrayList<>();
 }

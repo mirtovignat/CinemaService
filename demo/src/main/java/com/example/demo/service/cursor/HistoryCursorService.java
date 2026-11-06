@@ -1,12 +1,12 @@
 package com.example.demo.service.cursor;
 
+import com.example.demo.config.properties.CatalogProperties;
 import com.example.demo.cursor.codec.CursorCodec;
 import com.example.demo.cursor.codec.IdCodec;
 import com.example.demo.dto.catalog.HistoricalMovieViewDTO;
 import com.example.demo.mapper.entity.PurchasedMapper;
 import com.example.demo.model.entity.PurchasedMovie;
 import com.example.demo.repository.entity.PurchasedMovieRepository;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -22,10 +22,10 @@ public class HistoryCursorService extends AbstractUserCursorService<PurchasedMov
                                 IdCodec idCodec,
                                 PurchasedMovieRepository purchasedMovieRepository,
                                 PurchasedMapper purchasedMapper,
-                                @Value("${app.catalog.cursorPageResponse-size:20}") int defaultPageSize) {
+                                CatalogProperties catalogProperties) {
         super(cursorCodec,
                 idCodec,
-                defaultPageSize,
+                catalogProperties.cursorPageResponseSize(),
                 purchasedMovie -> idCodec.encode(purchasedMovie.getId()),
                 purchasedMovies -> purchasedMovies.stream().map(purchasedMapper::toOwnerViewFromHistorical).toList(),
                 purchasedMovieRepository::fetchAscending,

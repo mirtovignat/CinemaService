@@ -14,11 +14,9 @@ import com.example.demo.service.user.UserCommandService;
 import com.example.demo.service.user.UserQueryService;
 import com.example.demo.util.MessageUtils;
 import com.example.demo.web.resolver.CurrentUserId;
-import com.example.demo.web.security.SessionAuthenticator;
+import com.example.demo.web.security.CurrentUserService;
 import com.example.demo.web.util.ApiResponseFactory;
 import com.example.demo.web.util.NavigationUtils;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -36,7 +34,7 @@ public class PersonalAccountController {
     private final UserCommandService userCommandService;
     private final UserQueryService userQueryService;
     private final MessageUtils messageUtils;
-    private final SessionAuthenticator sessionAuthenticator;
+    private final CurrentUserService currentUserService;
     private final ApiResponseFactory apiResponseFactory;
 
     @GetMapping("/personal-account")
@@ -64,9 +62,7 @@ public class PersonalAccountController {
     @ResponseBody
     public ResponseEntity<ApiResponse<UpdateFieldResponse>> updateField(
             @Valid @RequestBody ProfileFieldUpdateDTO profileFieldUpdateDTO,
-            SessionUser sessionUser,
-            HttpServletRequest httpServletRequest,
-            HttpServletResponse httpServletResponse
+            SessionUser sessionUser
     ) {
         Long userId = sessionUser.id();
         ProfileFieldUpdateDTO validatedProfileFieldUpdateDTO =
@@ -76,7 +72,7 @@ public class PersonalAccountController {
         SessionUser updatedSessionUser = sessionUser;
         if (validatedProfileFieldUpdateDTO.identifier() == Identifier.USERNAME) {
             updatedSessionUser = sessionUser.withUsername(validatedProfileFieldUpdateDTO.field());
-            sessionAuthenticator.updateSessionUser(updatedSessionUser, httpServletRequest, httpServletResponse);
+            currentUserService.updateUsername(updatedSessionUser.username());
         }
         UserForOwnerViewDTO userForOwnerViewDTO = userQueryService.getUserForOwner(userId);
         UpdateFieldResponse updateFieldResponse = UpdateFieldResponse.of(userForOwnerViewDTO, updatedSessionUser);

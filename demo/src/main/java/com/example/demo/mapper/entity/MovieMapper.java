@@ -3,12 +3,13 @@ package com.example.demo.mapper.entity;
 import com.example.demo.dto.movie.MovieCardViewDTO;
 import com.example.demo.dto.movie.MovieDetailsViewDTO;
 import com.example.demo.dto.movie.MovieSearchDTO;
+import com.example.demo.mapper.util.ActorsMapper;
 import com.example.demo.mapper.util.DurationMapper;
 import com.example.demo.model.entity.Movie;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring", uses = {DurationMapper.class})
+@Mapper(componentModel = "spring", uses = {DurationMapper.class, ActorsMapper.class})
 public interface MovieMapper {
 
     @Mapping(target = "formattedDuration",
@@ -23,6 +24,9 @@ public interface MovieMapper {
             qualifiedByName = "durationToString")
     @Mapping(target = "currencyCode", ignore = true)
     @Mapping(target = "ratingsCount", source = "ratingsCount")
+    @Mapping(target = "actors",
+            source = "movie.actors",
+            qualifiedByName = "actorsToNames")
     MovieDetailsViewDTO toDetails(Movie movie, long ratingsCount);
 
     MovieSearchDTO toMovieSearch(Movie movie);

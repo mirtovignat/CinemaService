@@ -1,5 +1,6 @@
 package com.example.demo.web.interceptor;
 
+import com.example.demo.web.util.RefererUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -7,7 +8,6 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import java.net.URI;
 import java.util.Set;
 
 @Component
@@ -49,11 +49,7 @@ public class NavigationHistoryInterceptor implements HandlerInterceptor {
         }
 
         String refererHeader = httpServletRequest.getHeader("Referer");
-        if (refererHeader == null || refererHeader.isBlank()) {
-            return true;
-        }
-
-        String refererPath = extractInternalPath(refererHeader, httpServletRequest);
+        String refererPath = RefererUtils.extractInternalPath(refererHeader, httpServletRequest);
         if (refererPath == null) {
             return true;
         }
@@ -64,8 +60,7 @@ public class NavigationHistoryInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        if (refererPath.equals(BACK_PATH)
-                || refererPath.startsWith(BACK_PATH + "?")) {
+        if (refererPath.equals(BACK_PATH) || refererPath.startsWith(BACK_PATH + "?")) {
             return true;
         }
 
@@ -87,34 +82,5 @@ public class NavigationHistoryInterceptor implements HandlerInterceptor {
             return path;
         }
         return path + "?" + query;
-    }
-
-    private String extractInternalPath(String referer, HttpServletRequest httpServletRequest) {
-        try {
-            URI refererUri = URI.create(referer);
-            String refererHost = refererUri.getHost();
-            if (refererHost == null) {
-                return null;
-            }
-
-            if (!refererHost.equalsIgnoreCase(httpServletRequest.getServerName())) {
-                return null;
-            }
-
-            int refererPort = refererUri.getPort();
-            int serverPort = httpServletRequest.getServerPort();
-            if (refererPort != -1 && refererPort != serverPort) {
-                return null;
-            }
-
-            String refererPath = refererUri.getRawPath();
-            if (refererPath == null || refererPath.isBlank()) {
-                return null;
-            }
-
-            return buildPathWithQuery(refererPath, refererUri.getRawQuery());
-        } catch (IllegalArgumentException illegalArgumentException) {
-            return null;
-        }
     }
 }

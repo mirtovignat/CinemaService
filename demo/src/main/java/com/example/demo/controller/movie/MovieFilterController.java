@@ -47,6 +47,13 @@ public class MovieFilterController {
         return ResponseEntity.ok(toResponse(slice));
     }
 
+    @GetMapping("/actors/search")
+    public ResponseEntity<CursorPageResponse<String>> searchActors(
+            @ModelAttribute CursorPageRequest cursorPageRequest) {
+        Slice<String> slice = movieFilterMetaService.searchActors(cursorPageRequest);
+        return ResponseEntity.ok(toResponse(slice));
+    }
+
     private CursorPageResponse<String> toResponse(Slice<String> slice) {
         List<String> items = slice.getContent();
         boolean hasMore = slice.hasNext();

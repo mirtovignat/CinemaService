@@ -797,8 +797,10 @@
         loadFilterMeta().then(function () {
             setupInfiniteList('directorsDropdown', 'directors', '/filters/directors/search', displayDirectorName);
             setupInfiniteList('genresDropdown', 'genres', '/filters/genres/search', null);
+            setupInfiniteList('actorsDropdown', 'actors', '/filters/actors/search', null);  // ← ДОБАВИТЬ
             setupSelectAllCheckbox('directorsDropdown', 'directors');
             setupSelectAllCheckbox('genresDropdown', 'genres');
+            setupSelectAllCheckbox('actorsDropdown', 'actors');  // ← ДОБАВИТЬ
         });
     }
 
@@ -911,12 +913,9 @@
             }
         }
 
-        var actorsInput = document.getElementById('actorsInput');
-        if (actorsInput && actorsInput.value.trim() !== '') {
-            var actorsList = actorsInput.value.split(/[,;]+/).map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 0; });
-            if (actorsList.length > 0) {
-                result.actors = actorsList;
-            }
+        var actorPick = pickFilterList('actors');
+        if (actorPick && actorPick.mode === 'include') {
+            result.actors = actorPick.values;
         }
 
         var sort = getCurrentSortSelection();

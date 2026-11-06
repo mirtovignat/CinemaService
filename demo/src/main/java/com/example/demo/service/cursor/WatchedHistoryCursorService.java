@@ -1,5 +1,6 @@
 package com.example.demo.service.cursor;
 
+import com.example.demo.config.properties.CatalogProperties;
 import com.example.demo.cursor.codec.CursorCodec;
 import com.example.demo.cursor.codec.IdCodec;
 import com.example.demo.dto.catalog.LibrarianMovieViewDTO;
@@ -7,7 +8,6 @@ import com.example.demo.mapper.entity.PurchasedMapper;
 import com.example.demo.model.base.WatchHistoryItem;
 import com.example.demo.repository.base.WatchHistoryItemRepository;
 import com.example.demo.repository.projection.WatchedSuggestionProjection;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -22,10 +22,10 @@ public class WatchedHistoryCursorService extends AbstractUserCursorService<Watch
                                        IdCodec idCodec,
                                        WatchHistoryItemRepository watchHistoryItemRepository,
                                        PurchasedMapper purchasedMapper,
-                                       @Value("${app.catalog.cursorPageResponse-size:20}") int defaultPageSize) {
+                                       CatalogProperties catalogProperties) {
         super(cursorCodec,
                 idCodec,
-                defaultPageSize,
+                catalogProperties.cursorPageResponseSize(),
                 watchHistoryItem -> idCodec.encode(watchHistoryItem.getId()),
                 watchHistoryItems -> watchHistoryItems.stream()
                         .map(purchasedMapper::toLibrarianViewFromHistoryItem)

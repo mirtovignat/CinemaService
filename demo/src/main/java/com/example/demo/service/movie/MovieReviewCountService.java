@@ -1,6 +1,7 @@
 package com.example.demo.service.movie;
 
 import com.example.demo.repository.entity.RatedMovieRepository;
+import com.example.demo.repository.projection.MovieReviewCountProjection;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,8 +29,8 @@ public class MovieReviewCountService {
 
         Map<Long, Long> reviewCountsByMovieId = new HashMap<>(movieIds.size());
 
-        for (var projection : ratedMovieRepository.countByMovieIds(movieIds)) {
-            reviewCountsByMovieId.put(projection.getMovieId(), projection.getTotal());
+        for (MovieReviewCountProjection movieReviewCountProjection : ratedMovieRepository.countByMovieIds(movieIds)) {
+            reviewCountsByMovieId.put(movieReviewCountProjection.getMovieId(), movieReviewCountProjection.getTotal());
         }
 
         for (Long movieId : movieIds) {

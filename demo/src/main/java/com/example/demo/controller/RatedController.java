@@ -17,10 +17,8 @@ import com.example.demo.service.cursor.ReviewCursorService;
 import com.example.demo.service.movie.MovieService;
 import com.example.demo.util.MessageUtils;
 import com.example.demo.web.resolver.CurrentUserId;
-import com.example.demo.web.resolver.ReviewSortResolver;
-import com.example.demo.web.security.CurrentUserProvider;
+import com.example.demo.web.security.CurrentUserService;
 import com.example.demo.web.util.ApiResponseFactory;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -39,27 +37,16 @@ public class RatedController {
     private final ReviewCursorService reviewCursorService;
     private final MovieService movieService;
     private final MessageUtils messageUtils;
-    private final ReviewSortResolver reviewSortResolver;
     private final ApiResponseFactory apiResponseFactory;
-    private final CurrentUserProvider currentUserProvider;
+    private final CurrentUserService currentUserService;
 
     @GetMapping("/{id}/reviews")
     public String getReviews(@PathVariable Long id,
                              @ModelAttribute ReviewsQueryDTO reviewsQueryDTO,
                              @CurrentUserId(required = false) Long userId,
-                             @CookieValue(
-                                     value = ReviewSortResolver.SORT_COOKIE_NAME,
-                                     required = false
-                             )
-                             String sortCookie,
-                             HttpServletResponse httpServletResponse,
                              Model model) {
 
-        SortDirection resolvedSortDirection = reviewSortResolver.resolveAndPersist(
-                reviewsQueryDTO,
-                sortCookie,
-                httpServletResponse
-        );
+        SortDirection resolvedSortDirection = SortDirection.from(reviewsQueryDTO.sortDirection());
 
         CursorPageResponse<ReviewViewDTO> cursorPageResponse =
                 reviewCursorService.page(
@@ -75,7 +62,7 @@ public class RatedController {
 
         String currentUsername;
         if (userId != null) {
-            currentUsername = currentUserProvider.getSessionUser().username();
+            currentUsername = currentUserService.get().username();
         } else {
             currentUsername = null;
         }
@@ -105,13 +92,8 @@ public class RatedController {
     @ResponseBody
     public CursorPageResponse<ReviewViewDTO> getReviewsMore(@PathVariable Long id,
                                                             @ModelAttribute ReviewsQueryDTO reviewsQueryDTO,
-                                                            @CurrentUserId(required = false) Long userId,
-                                                            @CookieValue(
-                                                                    value = ReviewSortResolver.SORT_COOKIE_NAME,
-                                                                    required = false
-                                                            )
-                                                            String sortCookie) {
-        SortDirection resolvedSortDirection = reviewSortResolver.resolve(reviewsQueryDTO, sortCookie);
+                                                            @CurrentUserId(required = false) Long userId) {
+        SortDirection resolvedSortDirection = SortDirection.from(reviewsQueryDTO.sortDirection());
 
         return reviewCursorService.page(
                 reviewsQueryDTO.cursor(),

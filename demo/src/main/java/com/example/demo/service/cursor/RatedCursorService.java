@@ -1,12 +1,12 @@
 package com.example.demo.service.cursor;
 
+import com.example.demo.config.properties.CatalogProperties;
 import com.example.demo.cursor.codec.CursorCodec;
 import com.example.demo.cursor.codec.IdCodec;
 import com.example.demo.dto.catalog.RatedMovieViewDTO;
 import com.example.demo.mapper.entity.RatedMapper;
 import com.example.demo.model.entity.RatedMovie;
 import com.example.demo.repository.entity.RatedMovieRepository;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -22,10 +22,10 @@ public class RatedCursorService extends AbstractUserCursorService<RatedMovie, Ra
                               IdCodec idCodec,
                               RatedMovieRepository ratedMovieRepository,
                               RatedMapper ratedMapper,
-                              @Value("${app.catalog.cursorPageResponse-size:20}") int defaultPageSize) {
+                              CatalogProperties catalogProperties) {
         super(cursorCodec,
                 idCodec,
-                defaultPageSize,
+                catalogProperties.cursorPageResponseSize(),
                 ratedMovie -> idCodec.encode(ratedMovie.getId()),
                 ratedMovies -> ratedMovies.stream().map(ratedMapper::toOwnerView).toList(),
                 ratedMovieRepository::fetchAscending,

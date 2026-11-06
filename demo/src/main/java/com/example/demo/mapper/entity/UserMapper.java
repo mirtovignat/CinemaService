@@ -12,25 +12,24 @@ import org.mapstruct.Mapping;
 
 import java.math.BigDecimal;
 
-@Mapper(componentModel = "spring",
-        imports = {NameMapper.class, AgeMapper.class})
-public abstract class UserMapper {
+@Mapper(componentModel = "spring", uses = {AgeMapper.class, NameMapper.class})
+public interface UserMapper {
 
-    @Mapping(target = "surname",    expression = "java(NameMapper.extractSurname(user.getFullName()))")
-    @Mapping(target = "name",       expression = "java(NameMapper.extractName(user.getFullName()))")
-    @Mapping(target = "patronymic", expression = "java(NameMapper.extractPatronymic(user.getFullName()))")
-    @Mapping(target = "age",        expression = "java(AgeMapper.calculateAge(user.getBirthDate()))")
-    public abstract UserForOwnerViewDTO toOwnerView(User user);
+    @Mapping(target = "surname",    source = "fullName", qualifiedByName = "extractSurname")
+    @Mapping(target = "name",       source = "fullName", qualifiedByName = "extractName")
+    @Mapping(target = "patronymic", source = "fullName", qualifiedByName = "extractPatronymic")
+    @Mapping(target = "age",        source = "birthDate", qualifiedByName = "calculateAge")
+    UserForOwnerViewDTO toOwnerView(User user);
 
-    @Mapping(target = "surname",    expression = "java(NameMapper.extractSurname(user.getFullName()))")
-    @Mapping(target = "name",       expression = "java(NameMapper.extractName(user.getFullName()))")
-    @Mapping(target = "patronymic", expression = "java(NameMapper.extractPatronymic(user.getFullName()))")
-    public abstract UserSidebarViewDTO toSidebarView(User user);
+    @Mapping(target = "surname",    source = "fullName", qualifiedByName = "extractSurname")
+    @Mapping(target = "name",       source = "fullName", qualifiedByName = "extractName")
+    @Mapping(target = "patronymic", source = "fullName", qualifiedByName = "extractPatronymic")
+    UserSidebarViewDTO toSidebarView(User user);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "deletableState", ignore = true)
     @Mapping(target = "passwordHash", ignore = true)
-    @Mapping(target = "fullName", expression = "java(NameMapper.toFullName(registerFormDTO.surname(), registerFormDTO.name(), registerFormDTO.patronymic()))")
+    @Mapping(target = "fullName", source = ".", qualifiedByName = "fullNameFromRegisterForm")
     @Mapping(target = "balance", constant = "0")
     @Mapping(target = "purchases", ignore = true)
     @Mapping(target = "favourites", ignore = true)
@@ -38,8 +37,8 @@ public abstract class UserMapper {
     @Mapping(target = "cartItems", ignore = true)
     @Mapping(target = "saveHistory", ignore = true)
     @Mapping(target = "sex", expression = "java(Boolean.TRUE.equals(registerFormDTO.sex()))")
-    public abstract User fromRegisterForm(RegisterFormDTO registerFormDTO);
+    User fromRegisterForm(RegisterFormDTO registerFormDTO);
 
     @Mapping(target = "maxBalance", source = "maxBalance")
-    public abstract WalletForOwnerViewDTO toWalletView(User user, BigDecimal maxBalance);
+    WalletForOwnerViewDTO toWalletView(User user, BigDecimal maxBalance);
 }

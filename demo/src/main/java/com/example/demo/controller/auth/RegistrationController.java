@@ -1,9 +1,10 @@
 package com.example.demo.controller.auth;
 
 import com.example.demo.dto.authorize.RegisterFormDTO;
+import com.example.demo.dto.user.AppUserDetails;
 import com.example.demo.dto.user.SessionUser;
 import com.example.demo.service.user.AuthorizeService;
-import com.example.demo.web.security.SessionAuthenticator;
+import com.example.demo.web.security.CurrentUserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -11,6 +12,9 @@ import lombok.AllArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,7 +29,8 @@ public class RegistrationController {
 
     private final AuthorizeService authorizeService;
     private final AuthenticationManager authenticationManager;
-    private final SessionAuthenticator sessionAuthenticator;
+    private final SecurityContextRepository securityContextRepository;
+    private final CurrentUserService currentUserService;
 
     @GetMapping
     public String getRegisterForm(Model model) {
@@ -36,8 +41,7 @@ public class RegistrationController {
     }
 
     @PostMapping
-    public String register(@Valid @ModelAttribute("registerForm")
-                           RegisterFormDTO registerFormDTO,
+    public String register(@Valid @ModelAttribute("registerForm") RegisterFormDTO registerFormDTO,
                            HttpServletRequest httpServletRequest,
                            HttpServletResponse httpServletResponse) {
         authorizeService.validateRegister(registerFormDTO);
@@ -48,8 +52,16 @@ public class RegistrationController {
                         registeredSessionUser.username(),
                         registerFormDTO.rawPassword())
         );
-        sessionAuthenticator.authenticateAndPersist(authentication,
-                httpServletRequest, httpServletResponse);
+
+        httpServletRequest.changeSessionId();
+        SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+        securityContext.setAuthentication(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        securityContextRepository.saveContext(securityContext, httpServletRequest, httpServletResponse);
+
+        if (authentication.getPrincipal() instanceof AppUserDetails appUserDetails) {
+            currentUserService.set(appUserDetails.sessionUser());
+        }
 
         return "redirect:/";
     }

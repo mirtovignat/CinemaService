@@ -1,9 +1,10 @@
 package com.example.demo.filter;
 
+import com.example.demo.config.properties.PaginationProperties;
 import com.example.demo.dto.movie.MovieCardViewDTO;
 import com.example.demo.dto.movie.MovieForUser;
 import com.example.demo.service.movie.MovieService;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
@@ -11,25 +12,13 @@ import org.springframework.stereotype.Component;
 import java.util.function.Function;
 
 @Component
+@AllArgsConstructor
 public class MovieFilterFacade {
 
     private final MovieService movieService;
     private final MovieSortResolver movieSortResolver;
     private final MovieFilterValidator movieFilterValidator;
-    private final int defaultPageSize;
-    private final int genreDefaultPageSize;
-
-    public MovieFilterFacade(MovieService movieService,
-                             MovieSortResolver movieSortResolver,
-                             MovieFilterValidator movieFilterValidator,
-                             @Value("${app.pagination.default-size:35}") int defaultPageSize,
-                             @Value("${app.pagination.genre-default-size:15}") int genreDefaultPageSize) {
-        this.movieService = movieService;
-        this.movieSortResolver = movieSortResolver;
-        this.movieFilterValidator = movieFilterValidator;
-        this.defaultPageSize = defaultPageSize;
-        this.genreDefaultPageSize = genreDefaultPageSize;
-    }
+    private final PaginationProperties paginationProperties;
 
     public Page<MovieForUser<MovieCardViewDTO>> filterMovies(
             MovieFilter movieFilter,
@@ -42,7 +31,7 @@ public class MovieFilterFacade {
 
         return executeWithPagination(
                 pageRequestContext,
-                defaultPageSize,
+                paginationProperties.defaultSize(),
                 pageable -> movieService.getMovies(effectiveFilter, title, pageable, userId)
         );
     }
@@ -54,7 +43,7 @@ public class MovieFilterFacade {
 
         return executeWithPagination(
                 pageRequestContext,
-                genreDefaultPageSize,
+                paginationProperties.genreDefaultSize(),
                 pageable -> movieService.getMoviesByGenre(genre, pageable, userId)
         );
     }

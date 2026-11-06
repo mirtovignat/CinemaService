@@ -13,24 +13,20 @@ public class DurationMapper {
         if (duration == null) {
             return null;
         }
-        Long seconds = toSeconds(duration);
-        Long hours = seconds / 3600;
-        Long minutes = (seconds % 3600) / 60;
-        Long secs = seconds % 60;
+        long seconds = duration.getSeconds();
+        long hours = seconds / 3600;
+        long minutes = (seconds % 3600) / 60;
+        long secs = seconds % 60;
         return String.format("%d:%02d:%02d", hours, minutes, secs);
     }
 
-    public Long toSeconds(Duration duration) {
-        if (duration == null) {
-            return null;
-        }
-        return duration.getSeconds();
+    @Named("durationToSeconds")
+    public Long durationToSeconds(Duration duration) {
+        return duration == null ? null : duration.getSeconds();
     }
 
-    public Duration toDuration(Long seconds) {
-        if (seconds == null) {
-            return null;
-        }
-        return Duration.ofSeconds(seconds);
+    @Named("secondsToDuration")
+    public Duration secondsToDuration(Long seconds) {
+        return seconds == null ? null : Duration.ofSeconds(seconds);
     }
 }

@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-
 public final class SpecificationUtils {
 
     private static final int IN_CLAUSE_CHUNK_SIZE = 500;
@@ -57,9 +56,8 @@ public final class SpecificationUtils {
         if (list.size() <= IN_CLAUSE_CHUNK_SIZE) {
             return (root, criteriaQuery, criteriaBuilder) -> root.get(fieldName).in(list);
         }
-        return (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.or(
-                chunkPredicates(root, fieldName, list)
-        );
+        return (root, criteriaQuery, criteriaBuilder) ->
+                criteriaBuilder.or(chunkedInPredicates(root, fieldName, list).toArray(Predicate[]::new));
     }
 
     public static <Entity> Specification<Entity> fieldStartsWithNormalized(
@@ -86,49 +84,12 @@ public final class SpecificationUtils {
         );
     }
 
-    public static <Entity> Specification<Entity> arrayContainsAny(
-            String fieldName,
-            Collection<String> values
-    ) {
-        if (CollectionUtils.isEmpty(values)) {
-            return unrestricted();
-        }
-        List<String> sanitized = values.stream()
-                .filter(SearchQueryNormalizer::isMeaningful)
-                .map(SearchQueryNormalizer::normalizeOrEmpty)
-                .distinct()
-                .toList();
-        if (sanitized.isEmpty()) {
-            return unrestricted();
-        }
-
-        return (root, criteriaQuery, criteriaBuilder) -> {
-            List<Predicate> predicates = new ArrayList<>();
-            for (String value : sanitized) {
-                Predicate predicate = criteriaBuilder.like(
-                        criteriaBuilder.lower(
-                                criteriaBuilder.function(
-                                        "array_to_string",
-                                        String.class,
-                                        root.get(fieldName),
-                                        criteriaBuilder.literal(",")
-                                )
-                        ),
-                        "%" + LikeEscaper.escape(value) + "%",
-                        '\\'
-                );
-                predicates.add(predicate);
-            }
-            return criteriaBuilder.or(predicates.toArray(new Predicate[0]));
-        };
-    }
-
     public static <Entity> Specification<Entity> notNullAndNotIn(
             String fieldName,
             Collection<String> values
     ) {
         if (CollectionUtils.isEmpty(values)) {
-            return (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.isNotNull(root.get(fieldName));
+            return unrestricted();
         }
         List<String> list = new ArrayList<>(values);
         if (list.size() <= IN_CLAUSE_CHUNK_SIZE) {
@@ -141,20 +102,20 @@ public final class SpecificationUtils {
         return (root, criteriaQuery, criteriaBuilder) ->
                 criteriaBuilder.and(
                         criteriaBuilder.isNotNull(root.get(fieldName)),
-                        criteriaBuilder.not(criteriaBuilder.or(chunkPredicates(root, fieldName, list)))
+                        criteriaBuilder.not(
+                                criteriaBuilder.or(chunkedInPredicates(root, fieldName, list).toArray(Predicate[]::new))
+                        )
                 );
     }
 
-    private static <Value> Predicate[] chunkPredicates(Root<?> root,
-                                                       String fieldName,
-                                                       List<Value> values) {
+    private static <Value> List<Predicate> chunkedInPredicates(Root<?> root,
+                                                               String fieldName,
+                                                               List<Value> values) {
         List<Predicate> predicates = new ArrayList<>();
         for (int index = 0; index < values.size(); index += IN_CLAUSE_CHUNK_SIZE) {
-            List<Value> chunk = values.subList(index,
-                    Math.min(index + IN_CLAUSE_CHUNK_SIZE, values.size())
-            );
+            List<Value> chunk = values.subList(index, Math.min(index + IN_CLAUSE_CHUNK_SIZE, values.size()));
             predicates.add(root.get(fieldName).in(chunk));
         }
-        return predicates.toArray(Predicate[]::new);
+        return predicates;
     }
 }

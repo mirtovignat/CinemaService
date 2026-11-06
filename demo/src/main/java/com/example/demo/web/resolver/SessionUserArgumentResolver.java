@@ -1,7 +1,7 @@
 package com.example.demo.web.resolver;
 
 import com.example.demo.dto.user.SessionUser;
-import com.example.demo.web.security.CurrentUserProvider;
+import com.example.demo.web.security.CurrentUserService;
 import lombok.AllArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.core.MethodParameter;
@@ -15,7 +15,7 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 @AllArgsConstructor
 public class SessionUserArgumentResolver implements HandlerMethodArgumentResolver {
 
-    private final CurrentUserProvider currentUserProvider;
+    private final CurrentUserService currentUserService;
 
     @Override
     public boolean supportsParameter(MethodParameter methodParameter) {
@@ -27,6 +27,6 @@ public class SessionUserArgumentResolver implements HandlerMethodArgumentResolve
                                   ModelAndViewContainer modelAndViewContainer,
                                   @NotNull NativeWebRequest nativeWebRequest,
                                   WebDataBinderFactory webDataBinderFactory) {
-        return currentUserProvider.getSessionUser();
+        return currentUserService.get();
     }
 }

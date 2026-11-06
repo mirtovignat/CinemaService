@@ -7,13 +7,9 @@ import com.example.demo.model.base.WatchHistoryItem;
 import com.example.demo.model.entity.PurchasedMovie;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.springframework.beans.factory.annotation.Autowired;
 
 @Mapper(componentModel = "spring", uses = {DateTimeMapper.class})
-public abstract class PurchasedMapper {
-
-    @Autowired
-    protected DateTimeMapper dateTimeMapper;
+public interface PurchasedMapper {
 
     @Mapping(target = "id", source = "purchasedMovie.movie.id")
     @Mapping(target = "title", source = "purchasedMovie.movie.title")
@@ -26,13 +22,13 @@ public abstract class PurchasedMapper {
     @Mapping(target = "addedAt", source = "watchedAt", qualifiedByName = "localDateTimeToIso")
     @Mapping(target = "historyItemId", source = "id")
     @Mapping(target = "director", source = "purchasedMovie.movie.director")
-    public abstract LibrarianMovieViewDTO toLibrarianViewFromHistoryItem(WatchHistoryItem watchHistoryItem);
+    LibrarianMovieViewDTO toLibrarianViewFromHistoryItem(WatchHistoryItem watchHistoryItem);
 
     @Mapping(target = "id", source = "movie.id")
     @Mapping(target = "title", source = "movie.title")
     @Mapping(target = "priceSnapshot", source = "priceSnapshot")
     @Mapping(target = "addedAt", source = "addedAt", qualifiedByName = "localDateTimeToIso")
-    public abstract HistoricalMovieViewDTO toOwnerViewFromHistorical(PurchasedMovie purchasedMovie);
+    HistoricalMovieViewDTO toOwnerViewFromHistorical(PurchasedMovie purchasedMovie);
 
     @Mapping(target = "id", source = "movie.id")
     @Mapping(target = "title", source = "movie.title")
@@ -46,5 +42,5 @@ public abstract class PurchasedMapper {
     @Mapping(target = "addedAt", source = "addedAt", qualifiedByName = "localDateTimeToIso")
     @Mapping(target = "historyItemId", ignore = true)
     @Mapping(target = "director", source = "movie.director")
-    public abstract LibrarianMovieViewDTO toOwnerViewFromLibrarian(PurchasedMovie purchasedMovie);
+    LibrarianMovieViewDTO toOwnerViewFromLibrarian(PurchasedMovie purchasedMovie);
 }

@@ -1,5 +1,6 @@
 package com.example.demo.service.cursor;
 
+import com.example.demo.config.properties.ReviewsProperties;
 import com.example.demo.cursor.SortDirection;
 import com.example.demo.cursor.codec.CursorCodec;
 import com.example.demo.cursor.codec.IdCodec;
@@ -8,7 +9,6 @@ import com.example.demo.dto.catalog.ReviewViewDTO;
 import com.example.demo.model.entity.RatedMovie;
 import com.example.demo.repository.entity.RatedMovieRepository;
 import com.example.demo.service.catalog.ReviewViewAssembler;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -24,9 +24,9 @@ public class ReviewCursorService
                                IdCodec idCodec,
                                RatedMovieRepository ratedMovieRepository,
                                ReviewViewAssembler reviewViewAssembler,
-                               @Value("${app.reviews.cursorPageResponse-size:10}") int defaultPageSize) {
+                               ReviewsProperties reviewsProperties) {
         super(cursorCodec,
-                defaultPageSize,
+                reviewsProperties.cursorPageResponseSize(),
                 ratedMovie -> idCodec.encode(ratedMovie.getId()),
                 ratedMovies -> ratedMovies.stream()
                         .map(ratedMovie -> reviewViewAssembler.assemble(ratedMovie, null))

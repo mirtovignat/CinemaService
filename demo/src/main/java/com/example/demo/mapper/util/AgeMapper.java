@@ -1,14 +1,16 @@
 package com.example.demo.mapper.util;
 
 import org.mapstruct.Named;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.Period;
 
-public final class AgeMapper {
+@Component
+public class AgeMapper {
 
     @Named("calculateAge")
-    public static int calculateAge(LocalDate birthDate) {
+    public int calculateAge(LocalDate birthDate) {
         if (birthDate == null) {
             return 0;
         }

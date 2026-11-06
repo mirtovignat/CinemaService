@@ -2,18 +2,17 @@ package com.example.demo.exception;
 
 import com.example.demo.dto.authorize.LoginFormDTO;
 import com.example.demo.dto.authorize.RegisterFormDTO;
-import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.dto.user.PasswordChangingDTO;
 import com.example.demo.dto.user.SessionUser;
 import com.example.demo.util.MessageUtils;
-import com.example.demo.util.url.UrlSafety;
-import com.example.demo.util.validation.Emptiness;
-import com.example.demo.web.security.CurrentUserProvider;
+import com.example.demo.web.security.CurrentUserService;
+import com.example.demo.web.util.RefererUtils;
 import com.example.demo.web.util.RequestUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.ui.Model;
@@ -25,7 +24,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-import java.net.URI;
 import java.util.Map;
 
 @ControllerAdvice
@@ -39,19 +37,17 @@ public class GlobalExceptionHandler {
     );
 
     private final MessageUtils messageUtils;
-    private final CurrentUserProvider currentUserProvider;
+    private final CurrentUserService currentUserService;
 
     @ExceptionHandler(ClientAbortException.class)
     public void handleClientAbortException(ClientAbortException clientAbortException) {
     }
 
     @ExceptionHandler(InsufficientAuthenticationException.class)
-    public Object handleInsufficientAuthenticationException(
-            HttpServletRequest httpServletRequest) {
+    public Object handleInsufficientAuthenticationException(HttpServletRequest httpServletRequest) {
         String errorMessage = messageUtils.getError(ErrorCode.NOT_AUTHORIZED);
         if (RequestUtils.isAjaxRequest(httpServletRequest)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(ApiResponse.error(ErrorCode.NOT_AUTHORIZED, errorMessage));
+            return buildProblemDetail(HttpStatus.UNAUTHORIZED, ErrorCode.NOT_AUTHORIZED, errorMessage);
         }
         return "redirect:/login";
     }
@@ -64,8 +60,7 @@ public class GlobalExceptionHandler {
         ErrorCode errorCode = businessException.getErrorCode();
         String errorMessage = messageUtils.getError(errorCode, businessException.getArgs());
         HttpStatus httpStatus = mapErrorCodeToHttpStatus(errorCode);
-        return buildErrorResponse(httpServletRequest, model, redirectAttributes,
-                errorCode, errorMessage, httpStatus);
+        return buildErrorResponse(httpServletRequest, model, redirectAttributes, errorCode, errorMessage, httpStatus);
     }
 
     @ExceptionHandler(IllegalStateException.class)
@@ -74,9 +69,7 @@ public class GlobalExceptionHandler {
                                               RedirectAttributes redirectAttributes) {
         ErrorCode errorCode = ErrorCode.INTERNAL_ERROR;
         String errorMessage = messageUtils.getError(errorCode);
-        HttpStatus httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
-        return buildErrorResponse(httpServletRequest, model, redirectAttributes,
-                errorCode, errorMessage, httpStatus);
+        return buildErrorResponse(httpServletRequest, model, redirectAttributes, errorCode, errorMessage, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(BindException.class)
@@ -84,17 +77,14 @@ public class GlobalExceptionHandler {
                                       HttpServletRequest httpServletRequest,
                                       Model model,
                                       RedirectAttributes redirectAttributes) {
-        return handleBindingResult(bindException.getBindingResult(),
-                httpServletRequest, model, redirectAttributes);
+        return handleBindingResult(bindException.getBindingResult(), httpServletRequest, model, redirectAttributes);
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
-    public Object handleNoResourceFoundException(HttpServletRequest httpServletRequest,
-                                                 Model model) {
+    public Object handleNoResourceFoundException(HttpServletRequest httpServletRequest, Model model) {
         if (RequestUtils.isAjaxRequest(httpServletRequest)) {
-            return ResponseEntity.notFound().build();
+            return buildProblemDetail(HttpStatus.NOT_FOUND, ErrorCode.ENTITY_NOT_FOUND, "Ресурс не найден");
         }
-
         addCommonAttributes(model);
         model.addAttribute("status", 404);
         String errorMessage = messageUtils.getError(ErrorCode.ENTITY_NOT_FOUND);
@@ -104,15 +94,11 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public Object handleGenericException(HttpServletRequest httpServletRequest,
-                                         Model model) {
+    public Object handleGenericException(HttpServletRequest httpServletRequest, Model model) {
         String errorMessage = messageUtils.getError(ErrorCode.INTERNAL_ERROR);
-
         if (RequestUtils.isAjaxRequest(httpServletRequest)) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error(ErrorCode.INTERNAL_ERROR, errorMessage));
+            return buildProblemDetail(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.INTERNAL_ERROR, errorMessage);
         }
-
         addCommonAttributes(model);
         model.addAttribute("status", 500);
         model.addAttribute("error", errorMessage);
@@ -127,8 +113,7 @@ public class GlobalExceptionHandler {
         String validationMessage = resolveFirstFieldErrorMessage(bindingResult);
 
         if (RequestUtils.isAjaxRequest(httpServletRequest)) {
-            return ResponseEntity.badRequest()
-                    .body(ApiResponse.error(ErrorCode.VALIDATION_ERROR, validationMessage));
+            return buildProblemDetail(HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR, validationMessage);
         }
 
         String formViewName = resolveFormViewName(httpServletRequest);
@@ -142,8 +127,7 @@ public class GlobalExceptionHandler {
             return formViewName;
         }
 
-        return buildErrorResponse(httpServletRequest, model, redirectAttributes,
-                ErrorCode.VALIDATION_ERROR, validationMessage, HttpStatus.BAD_REQUEST);
+        return buildErrorResponse(httpServletRequest, model, redirectAttributes, ErrorCode.VALIDATION_ERROR, validationMessage, HttpStatus.BAD_REQUEST);
     }
 
     private String resolveFirstFieldErrorMessage(BindingResult bindingResult) {
@@ -160,10 +144,8 @@ public class GlobalExceptionHandler {
                                       String errorMessage,
                                       HttpStatus httpStatus) {
         if (RequestUtils.isAjaxRequest(httpServletRequest)) {
-            return ResponseEntity.status(httpStatus)
-                    .body(ApiResponse.error(errorCode, errorMessage));
+            return buildProblemDetail(httpStatus, errorCode, errorMessage);
         }
-
         String formViewName = resolveFormViewName(httpServletRequest);
         if (formViewName != null) {
             addCommonAttributes(model);
@@ -171,59 +153,15 @@ public class GlobalExceptionHandler {
             model.addAttribute("errorMessage", errorMessage);
             return formViewName;
         }
-
         if (canUseFlashAttributes(httpServletRequest)) {
             redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
         }
-        return "redirect:" + resolveFallbackLocalPath(httpServletRequest);
+        return "redirect:" + RefererUtils.resolveFallbackLocalPath(httpServletRequest);
     }
 
     private void addCommonAttributes(Model model) {
-        SessionUser sessionUser = currentUserProvider.getSessionUser();
-        if (sessionUser == null) {
-            sessionUser = SessionUser.ANONYMOUS;
-        }
+        SessionUser sessionUser = currentUserService.get();
         model.addAttribute("sessionUser", sessionUser);
-    }
-
-    private String resolveFallbackLocalPath(HttpServletRequest httpServletRequest) {
-        String refererHeader = httpServletRequest.getHeader("Referer");
-        if (Emptiness.isBlank(refererHeader)) {
-            return "/";
-        }
-        String localPath = extractLocalPathFromReferer(refererHeader, httpServletRequest);
-        if (localPath != null) {
-            return localPath;
-        }
-        return "/";
-    }
-
-    private String extractLocalPathFromReferer(String refererHeader,
-                                               HttpServletRequest httpServletRequest) {
-        try {
-            URI refererUri = URI.create(refererHeader);
-            String refererHost = refererUri.getHost();
-            if (refererHost == null
-                    || !refererHost.equalsIgnoreCase(httpServletRequest.getServerName())) {
-                return null;
-            }
-            int refererPort = refererUri.getPort();
-            int serverPort = httpServletRequest.getServerPort();
-            if (refererPort != -1 && refererPort != serverPort) {
-                return null;
-            }
-            String refererPath = refererUri.getRawPath();
-            if (!UrlSafety.isSafeLocalPath(refererPath)) {
-                return null;
-            }
-            String refererQuery = refererUri.getRawQuery();
-            if (Emptiness.isBlank(refererQuery)) {
-                return refererPath;
-            }
-            return refererPath + "?" + refererQuery;
-        } catch (IllegalArgumentException illegalArgumentException) {
-            return null;
-        }
     }
 
     private String resolveFormViewName(HttpServletRequest httpServletRequest) {
@@ -237,8 +175,7 @@ public class GlobalExceptionHandler {
         if ("auth/login".equals(formViewName) && !model.containsAttribute("loginForm")) {
             model.addAttribute("loginForm", LoginFormDTO.builder().build());
         }
-        if ("account/change-password".equals(formViewName)
-                && !model.containsAttribute("passwordChangingDTO")) {
+        if ("account/change-password".equals(formViewName) && !model.containsAttribute("passwordChangingDTO")) {
             model.addAttribute("passwordChangingDTO", PasswordChangingDTO.builder().build());
         }
     }
@@ -255,5 +192,13 @@ public class GlobalExceptionHandler {
             case ALREADY_REGISTERED, ALREADY_TAKEN, USERNAME_TAKEN, DATA_COINCIDENCE -> HttpStatus.CONFLICT;
             default -> HttpStatus.BAD_REQUEST;
         };
+    }
+
+    private ResponseEntity<ProblemDetail> buildProblemDetail(HttpStatus httpStatus,
+                                                             ErrorCode errorCode,
+                                                             String message) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(httpStatus, message);
+        problemDetail.setTitle(errorCode.name());
+        return ResponseEntity.status(httpStatus).body(problemDetail);
     }
 }

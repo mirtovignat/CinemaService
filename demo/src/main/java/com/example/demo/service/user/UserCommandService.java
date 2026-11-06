@@ -1,5 +1,6 @@
 package com.example.demo.service.user;
 
+import com.example.demo.config.properties.WalletProperties;
 import com.example.demo.dto.authorize.Identifier;
 import com.example.demo.dto.user.PasswordChangingDTO;
 import com.example.demo.dto.user.ProfileFieldUpdateDTO;
@@ -14,16 +15,17 @@ import com.example.demo.repository.entity.UserRepository;
 import com.example.demo.util.PhoneNormalizer;
 import com.example.demo.util.text.StringSanitizer;
 import com.example.demo.util.validation.Amounts;
-import com.example.demo.util.validation.Emptiness;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.AllArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 
 @Service
+@AllArgsConstructor
 public class UserCommandService {
 
     private final UserQueryService userQueryService;
@@ -34,27 +36,7 @@ public class UserCommandService {
     private final WatchHistoryItemRepository watchHistoryItemRepository;
     private final PasswordEncoder passwordEncoder;
     private final PhoneNormalizer phoneNormalizer;
-    private final BigDecimal maxBalance;
-
-    public UserCommandService(UserQueryService userQueryService,
-                              UserRepository userRepository,
-                              CartItemRepository cartItemRepository,
-                              FavouriteMovieRepository favouriteMovieRepository,
-                              PurchasedMovieRepository purchasedMovieRepository,
-                              WatchHistoryItemRepository watchHistoryItemRepository,
-                              PasswordEncoder passwordEncoder,
-                              PhoneNormalizer phoneNormalizer,
-                              @Value("${app.wallet.max-balance:100000.00}") BigDecimal maxBalance) {
-        this.userQueryService = userQueryService;
-        this.userRepository = userRepository;
-        this.cartItemRepository = cartItemRepository;
-        this.favouriteMovieRepository = favouriteMovieRepository;
-        this.purchasedMovieRepository = purchasedMovieRepository;
-        this.watchHistoryItemRepository = watchHistoryItemRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.phoneNormalizer = phoneNormalizer;
-        this.maxBalance = maxBalance;
-    }
+    private final WalletProperties walletProperties;
 
     public ProfileFieldUpdateDTO prepareAndValidateField(ProfileFieldUpdateDTO profileFieldUpdateDTO, Long userId) {
         User user = userQueryService.getUser(userId);
@@ -113,7 +95,7 @@ public class UserCommandService {
                 case USERNAME -> userRepository.updateUsername(userId, profileFieldUpdateDTO.field());
                 case EMAIL -> userRepository.updateEmail(userId, profileFieldUpdateDTO.field());
                 case PHONE -> {
-                    if (Emptiness.isBlank(profileFieldUpdateDTO.field())) {
+                    if (!StringUtils.hasText(profileFieldUpdateDTO.field())) {
                         userRepository.deletePhone(userId);
                     } else {
                         userRepository.updatePhone(userId, profileFieldUpdateDTO.field());
@@ -121,7 +103,7 @@ public class UserCommandService {
                 }
                 default -> throw BusinessException.of(ErrorCode.VALIDATION_ERROR);
             }
-        } catch (DataIntegrityViolationException exception) {
+        } catch (DataIntegrityViolationException dataIntegrityViolationException) {
             throw BusinessException.of(ErrorCode.ALREADY_TAKEN);
         }
     }
@@ -155,7 +137,7 @@ public class UserCommandService {
                 .orElseThrow(() -> BusinessException.of(ErrorCode.USER_NOT_FOUND, "id=" + userId));
 
         BigDecimal newBalance = lockedUser.getBalance().add(amount);
-        if (newBalance.compareTo(maxBalance) > 0) {
+        if (newBalance.compareTo(walletProperties.maxBalance()) > 0) {
             throw BusinessException.of(ErrorCode.VALIDATION_ERROR);
         }
 

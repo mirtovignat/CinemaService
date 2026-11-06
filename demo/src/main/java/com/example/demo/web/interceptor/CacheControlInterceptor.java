@@ -1,6 +1,5 @@
 package com.example.demo.web.interceptor;
 
-import com.example.demo.web.util.NoCacheHeaders;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.jetbrains.annotations.NotNull;
@@ -14,7 +13,10 @@ public class CacheControlInterceptor implements HandlerInterceptor {
     public boolean preHandle(@NotNull HttpServletRequest httpServletRequest,
                              @NotNull HttpServletResponse httpServletResponse,
                              @NotNull Object handler) {
-        NoCacheHeaders.apply(httpServletResponse);
+        httpServletResponse.setHeader("Cache-Control",
+                "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0");
+        httpServletResponse.setHeader("Pragma", "no-cache");
+        httpServletResponse.setHeader("Expires", "0");
         return true;
     }
 }

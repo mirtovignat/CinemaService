@@ -5,10 +5,8 @@ import com.example.demo.dto.response.PurchasedMovieResponse;
 import com.example.demo.dto.user.SessionUser;
 import com.example.demo.exception.SuccessCode;
 import com.example.demo.service.catalog.PurchasedService;
-import com.example.demo.web.security.SessionAuthenticator;
+import com.example.demo.web.security.CurrentUserService;
 import com.example.demo.web.util.ApiResponseFactory;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -24,42 +22,23 @@ import java.math.BigDecimal;
 public class PurchasedController {
 
     private final PurchasedService purchasedService;
-    private final SessionAuthenticator sessionAuthenticator;
+    private final CurrentUserService currentUserService;
     private final ApiResponseFactory apiResponseFactory;
 
     @PostMapping("/add/bulk")
-    public ResponseEntity<ApiResponse<PurchasedMovieResponse>> buyMovies(
-            SessionUser sessionUser,
-            HttpServletRequest httpServletRequest,
-            HttpServletResponse httpServletResponse) {
+    public ResponseEntity<ApiResponse<PurchasedMovieResponse>> buyMovies(SessionUser sessionUser) {
         BigDecimal newBalance = purchasedService.purchaseBulk(sessionUser.id());
-        return respond(sessionUser, newBalance, httpServletRequest, httpServletResponse);
+        currentUserService.updateBalance(newBalance);
+        return apiResponseFactory.ok(SuccessCode.PURCHASED, PurchasedMovieResponse.of(newBalance));
     }
 
     @PostMapping("/add/{id}")
     public ResponseEntity<ApiResponse<PurchasedMovieResponse>> buyMovie(
             @PathVariable Long id,
-            SessionUser sessionUser,
-            HttpServletRequest httpServletRequest,
-            HttpServletResponse httpServletResponse) {
+            SessionUser sessionUser
+    ) {
         BigDecimal newBalance = purchasedService.purchase(id, sessionUser.id());
-        return respond(
-                sessionUser,
-                newBalance,
-                httpServletRequest,
-                httpServletResponse
-        );
-    }
-
-    private ResponseEntity<ApiResponse<PurchasedMovieResponse>> respond(SessionUser sessionUser,
-                                                                        BigDecimal newBalance,
-                                                                        HttpServletRequest httpServletRequest,
-                                                                        HttpServletResponse httpServletResponse) {
-        sessionAuthenticator.updateSessionUser(
-                sessionUser.withBalance(newBalance),
-                httpServletRequest,
-                httpServletResponse
-        );
+        currentUserService.updateBalance(newBalance);
         return apiResponseFactory.ok(SuccessCode.PURCHASED, PurchasedMovieResponse.of(newBalance));
     }
 }

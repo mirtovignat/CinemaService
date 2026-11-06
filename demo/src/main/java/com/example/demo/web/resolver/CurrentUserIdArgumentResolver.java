@@ -1,7 +1,7 @@
 package com.example.demo.web.resolver;
 
 import com.example.demo.dto.user.SessionUser;
-import com.example.demo.web.security.CurrentUserProvider;
+import com.example.demo.web.security.CurrentUserService;
 import lombok.AllArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.core.MethodParameter;
@@ -16,7 +16,7 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 @AllArgsConstructor
 public class CurrentUserIdArgumentResolver implements HandlerMethodArgumentResolver {
 
-    private final CurrentUserProvider currentUserProvider;
+    private final CurrentUserService currentUserService;
 
     @Override
     public boolean supportsParameter(MethodParameter methodParameter) {
@@ -32,7 +32,7 @@ public class CurrentUserIdArgumentResolver implements HandlerMethodArgumentResol
         CurrentUserId currentUserIdAnnotation = methodParameter.getParameterAnnotation(CurrentUserId.class);
         boolean required = currentUserIdAnnotation == null || currentUserIdAnnotation.required();
 
-        SessionUser sessionUser = currentUserProvider.getSessionUser();
+        SessionUser sessionUser = currentUserService.get();
 
         if (required && !sessionUser.isAuthenticated()) {
             throw new InsufficientAuthenticationException("Требуется аутентификация");

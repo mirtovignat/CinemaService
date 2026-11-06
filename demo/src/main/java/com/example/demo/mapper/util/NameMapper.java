@@ -1,11 +1,14 @@
 package com.example.demo.mapper.util;
 
+import com.example.demo.dto.authorize.RegisterFormDTO;
 import org.mapstruct.Named;
+import org.springframework.stereotype.Component;
 
-public final class NameMapper {
+@Component
+public class NameMapper {
 
     @Named("toFullName")
-    public static String toFullName(String surname, String name, String patronymic) {
+    public String toFullName(String surname, String name, String patronymic) {
         if (surname == null || name == null) {
             return null;
         }
@@ -15,39 +18,38 @@ public final class NameMapper {
         return surname.trim() + " " + name.trim();
     }
 
+    @Named("fullNameFromRegisterForm")
+    public String fullNameFromRegisterForm(RegisterFormDTO registerFormDTO) {
+        if (registerFormDTO == null) {
+            return null;
+        }
+        return toFullName(registerFormDTO.surname(), registerFormDTO.name(), registerFormDTO.patronymic());
+    }
+
     @Named("extractSurname")
-    public static String extractSurname(String fullName) {
+    public String extractSurname(String fullName) {
         if (fullName == null || fullName.isBlank()) {
             return "";
         }
         String[] parts = fullName.trim().split("\\s+");
-        if (parts.length > 0) {
-            return parts[0];
-        }
-        return "";
+        return parts.length > 0 ? parts[0] : "";
     }
 
     @Named("extractName")
-    public static String extractName(String fullName) {
+    public String extractName(String fullName) {
         if (fullName == null || fullName.isBlank()) {
             return "";
         }
         String[] parts = fullName.trim().split("\\s+");
-        if (parts.length > 1) {
-            return parts[1];
-        }
-        return "";
+        return parts.length > 1 ? parts[1] : "";
     }
 
     @Named("extractPatronymic")
-    public static String extractPatronymic(String fullName) {
+    public String extractPatronymic(String fullName) {
         if (fullName == null || fullName.isBlank()) {
             return "";
         }
         String[] parts = fullName.trim().split("\\s+");
-        if (parts.length > 2) {
-            return parts[2];
-        }
-        return "";
+        return parts.length > 2 ? parts[2] : "";
     }
 }
