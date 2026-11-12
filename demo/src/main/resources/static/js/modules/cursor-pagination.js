@@ -495,16 +495,13 @@
         instances.push(state);
         window.__cursorStates = instances;
 
-       var initialInterval = setInterval(function () {
-           if (!state.hasMore) {
-               clearInterval(initialInterval);
-               return;
-           }
-           if (window.ScrollMemory && window.ScrollMemory.isRestoring()) {
-               return;
-           }
-           state.checkEdge();
-       }, 150);
+        var initialInterval = setInterval(function () {
+            if (!state.hasMore) {
+                clearInterval(initialInterval);
+                return;
+            }
+            state.checkEdge();
+        }, 150);
 
         requestAnimationFrame(function () {
             requestAnimationFrame(function () {

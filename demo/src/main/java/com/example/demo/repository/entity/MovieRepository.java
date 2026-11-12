@@ -71,7 +71,7 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
             SELECT director
             FROM movies
             WHERE director IS NOT NULL
-              AND LOWER(TRANSLATE(director, 'ёЁ', 'еЕ')) LIKE CONCAT(:searchQuery, '%') ESCAPE '\\'
+              AND (' ' || LOWER(TRANSLATE(director, 'ёЁ', 'еЕ'))) LIKE :searchQuery ESCAPE '\\'
               AND LOWER(TRANSLATE(director, 'ёЁ', 'еЕ')) > :cursor
             GROUP BY LOWER(TRANSLATE(director, 'ёЁ', 'еЕ')), director
             ORDER BY LOWER(TRANSLATE(director, 'ёЁ', 'еЕ')) ASC
@@ -87,7 +87,7 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
             SELECT director
             FROM movies
             WHERE director IS NOT NULL
-              AND LOWER(TRANSLATE(director, 'ёЁ', 'еЕ')) LIKE CONCAT(:searchQuery, '%') ESCAPE '\\'
+              AND (' ' || LOWER(TRANSLATE(director, 'ёЁ', 'еЕ'))) LIKE :searchQuery ESCAPE '\\'
             GROUP BY LOWER(TRANSLATE(director, 'ёЁ', 'еЕ')), director
             ORDER BY LOWER(TRANSLATE(director, 'ёЁ', 'еЕ')) ASC
             LIMIT :limit
@@ -125,7 +125,7 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
     @Query(value = """
             SELECT genre
             FROM movies
-            WHERE LOWER(TRANSLATE(genre, 'ёЁ', 'еЕ')) LIKE CONCAT(:searchQuery, '%') ESCAPE '\\'
+            WHERE (' ' || LOWER(TRANSLATE(genre, 'ёЁ', 'еЕ'))) LIKE :searchQuery ESCAPE '\\'
               AND LOWER(TRANSLATE(genre, 'ёЁ', 'еЕ')) > :cursor
             GROUP BY LOWER(TRANSLATE(genre, 'ёЁ', 'еЕ')), genre
             ORDER BY LOWER(TRANSLATE(genre, 'ёЁ', 'еЕ')) ASC
@@ -140,7 +140,7 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
     @Query(value = """
             SELECT genre
             FROM movies
-            WHERE LOWER(TRANSLATE(genre, 'ёЁ', 'еЕ')) LIKE CONCAT(:searchQuery, '%') ESCAPE '\\'
+            WHERE (' ' || LOWER(TRANSLATE(genre, 'ёЁ', 'еЕ'))) LIKE :searchQuery ESCAPE '\\'
             GROUP BY LOWER(TRANSLATE(genre, 'ёЁ', 'еЕ')), genre
             ORDER BY LOWER(TRANSLATE(genre, 'ёЁ', 'еЕ')) ASC
             LIMIT :limit

@@ -108,4 +108,4 @@ app:
   catalog:
     cursor-page-response-size: 20
   filters:
-    page-size: 50
+    page-size: 10

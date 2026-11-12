@@ -13,21 +13,21 @@ public class DirectorKeysetService extends AbstractStringKeysetService {
     private final MovieRepository movieRepository;
 
     public DirectorKeysetService(MovieRepository movieRepository,
-                                 StringKeysetPaginator paginator,
+                                 StringKeysetPaginator stringKeysetPaginator,
                                  FiltersProperties filtersProperties) {
-        super(paginator, filtersProperties.pageSize());
+        super(stringKeysetPaginator, filtersProperties.pageSize());
         this.movieRepository = movieRepository;
     }
 
     @Override
     @Transactional(readOnly = true)
-    protected List<String> fetchFirstPage(String normalizedQuery, int limit) {
-        return movieRepository.fetchDirectorsKeysetFirstPage(normalizedQuery, limit);
+    protected List<String> fetchFirstPage(String searchPattern, int limit) {
+        return movieRepository.fetchDirectorsKeysetFirstPage(searchPattern, limit);
     }
 
     @Override
     @Transactional(readOnly = true)
-    protected List<String> fetchWithCursor(String normalizedQuery, String cursor, int limit) {
-        return movieRepository.fetchDirectorsKeysetWithCursor(normalizedQuery, cursor, limit);
+    protected List<String> fetchWithCursor(String searchPattern, String cursor, int limit) {
+        return movieRepository.fetchDirectorsKeysetWithCursor(searchPattern, cursor, limit);
     }
 }

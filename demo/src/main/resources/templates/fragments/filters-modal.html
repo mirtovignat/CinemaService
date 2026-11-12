@@ -22,48 +22,35 @@
             </button>
         </div>
 
-        <form id="filterForm" accept-charset="UTF-8" onsubmit="return false;">
+        <form id="filterForm" accept-charset="UTF-8">
 
             <div class="filter-group sort-filter-group">
                 <div class="sort-filter-row">
                     <span class="sort-filter-label">Отсортировать по цене:</span>
                     <div class="sort-filter-options" role="group" aria-label="Сортировка по цене">
-                        <button type="button" class="sort-filter-btn" data-sort-key="price" data-sort-dir="asc">Возр.
-                        </button>
-                        <button type="button" class="sort-filter-btn" data-sort-key="price" data-sort-dir="desc">Убыв.
-                        </button>
+                        <button type="button" class="sort-filter-btn" data-sort-key="price" data-sort-dir="asc">Возр.</button>
+                        <button type="button" class="sort-filter-btn" data-sort-key="price" data-sort-dir="desc">Убыв.</button>
                     </div>
                 </div>
                 <div class="sort-filter-row">
                     <span class="sort-filter-label">Отсортировать по длительности:</span>
                     <div class="sort-filter-options" role="group" aria-label="Сортировка по длительности">
-                        <button type="button" class="sort-filter-btn" data-sort-key="duration" data-sort-dir="asc">
-                            Возр.
-                        </button>
-                        <button type="button" class="sort-filter-btn" data-sort-key="duration" data-sort-dir="desc">
-                            Убыв.
-                        </button>
+                        <button type="button" class="sort-filter-btn" data-sort-key="duration" data-sort-dir="asc">Возр.</button>
+                        <button type="button" class="sort-filter-btn" data-sort-key="duration" data-sort-dir="desc">Убыв.</button>
                     </div>
                 </div>
                 <div class="sort-filter-row">
                     <span class="sort-filter-label">Отсортировать по рейтингу:</span>
                     <div class="sort-filter-options" role="group" aria-label="Сортировка по рейтингу">
-                        <button type="button" class="sort-filter-btn" data-sort-key="rating" data-sort-dir="asc">Возр.
-                        </button>
-                        <button type="button" class="sort-filter-btn" data-sort-key="rating" data-sort-dir="desc">
-                            Убыв.
-                        </button>
+                        <button type="button" class="sort-filter-btn" data-sort-key="rating" data-sort-dir="asc">Возр.</button>
+                        <button type="button" class="sort-filter-btn" data-sort-key="rating" data-sort-dir="desc">Убыв.</button>
                     </div>
                 </div>
                 <div class="sort-filter-row">
                     <span class="sort-filter-label">Отсортировать по дате выхода:</span>
                     <div class="sort-filter-options" role="group" aria-label="Сортировка по дате выхода">
-                        <button type="button" class="sort-filter-btn" data-sort-key="releaseDate" data-sort-dir="asc">
-                            Возр.
-                        </button>
-                        <button type="button" class="sort-filter-btn" data-sort-key="releaseDate" data-sort-dir="desc">
-                            Убыв.
-                        </button>
+                        <button type="button" class="sort-filter-btn" data-sort-key="releaseDate" data-sort-dir="asc">Возр.</button>
+                        <button type="button" class="sort-filter-btn" data-sort-key="releaseDate" data-sort-dir="desc">Убыв.</button>
                     </div>
                 </div>
                 <input type="hidden" id="filterSortBy" name="sortBy"
@@ -204,6 +191,7 @@
                             </svg>
                         </button>
                     </div>
+                    <div class="accordion-selected" data-accordion-selected></div>
                     <div class="accordion-list" data-accordion-list></div>
                     <div class="accordion-empty" data-accordion-empty>Ничего не найдено</div>
                 </div>
@@ -213,12 +201,12 @@
                 <div class="accordion-trigger" data-target="actorsDropdown">
                     <span>Актёры</span>
                     <span class="accordion-caret" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                 stroke-linejoin="round">
-                <path d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
-            </svg>
-        </span>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <path d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
+                        </svg>
+                    </span>
                 </div>
                 <div class="accordion-dropdown" id="actorsDropdown" data-accordion-dropdown>
                     <div class="accordion-search" data-accordion-search-wrapper>
@@ -244,6 +232,7 @@
                             </svg>
                         </button>
                     </div>
+                    <div class="accordion-selected" data-accordion-selected></div>
                     <div class="accordion-list" data-accordion-list></div>
                     <div class="accordion-empty" data-accordion-empty>Ничего не найдено</div>
                 </div>
@@ -284,6 +273,7 @@
                             </svg>
                         </button>
                     </div>
+                    <div class="accordion-selected" data-accordion-selected></div>
                     <div class="accordion-list" data-accordion-list></div>
                     <div class="accordion-empty" data-accordion-empty>Ничего не найдено</div>
                 </div>

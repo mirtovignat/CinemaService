@@ -13,21 +13,21 @@ public class GenreKeysetService extends AbstractStringKeysetService {
     private final MovieRepository movieRepository;
 
     public GenreKeysetService(MovieRepository movieRepository,
-                              StringKeysetPaginator paginator,
+                              StringKeysetPaginator stringKeysetPaginator,
                               FiltersProperties filtersProperties) {
-        super(paginator, filtersProperties.pageSize());
+        super(stringKeysetPaginator, filtersProperties.pageSize());
         this.movieRepository = movieRepository;
     }
 
     @Override
     @Transactional(readOnly = true)
-    protected List<String> fetchFirstPage(String normalizedQuery, int limit) {
-        return movieRepository.fetchGenresKeysetFirstPage(normalizedQuery, limit);
+    protected List<String> fetchFirstPage(String searchPattern, int limit) {
+        return movieRepository.fetchGenresKeysetFirstPage(searchPattern, limit);
     }
 
     @Override
     @Transactional(readOnly = true)
-    protected List<String> fetchWithCursor(String normalizedQuery, String cursor, int limit) {
-        return movieRepository.fetchGenresKeysetWithCursor(normalizedQuery, cursor, limit);
+    protected List<String> fetchWithCursor(String searchPattern, String cursor, int limit) {
+        return movieRepository.fetchGenresKeysetWithCursor(searchPattern, cursor, limit);
     }
 }

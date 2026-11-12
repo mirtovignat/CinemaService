@@ -14,7 +14,19 @@ public interface ActorRepository extends JpaRepository<Actor, Long> {
     @Query(value = """
             SELECT full_name
             FROM actors
-            WHERE LOWER(TRANSLATE(full_name, 'ёЁ', 'еЕ')) LIKE CONCAT(:searchQuery, '%') ESCAPE '\\'
+            WHERE (' ' || LOWER(TRANSLATE(full_name, 'ёЁ', 'еЕ'))) LIKE :searchQuery ESCAPE '\\'
+            ORDER BY LOWER(TRANSLATE(full_name, 'ёЁ', 'еЕ')) ASC
+            LIMIT :limit
+            """, nativeQuery = true)
+    List<String> fetchActorsKeysetFirstPage(
+            @Param("searchQuery") String searchQuery,
+            @Param("limit") int limit
+    );
+
+    @Query(value = """
+            SELECT full_name
+            FROM actors
+            WHERE (' ' || LOWER(TRANSLATE(full_name, 'ёЁ', 'еЕ'))) LIKE :searchQuery ESCAPE '\\'
               AND LOWER(TRANSLATE(full_name, 'ёЁ', 'еЕ')) > :cursor
             ORDER BY LOWER(TRANSLATE(full_name, 'ёЁ', 'еЕ')) ASC
             LIMIT :limit
@@ -22,18 +34,6 @@ public interface ActorRepository extends JpaRepository<Actor, Long> {
     List<String> fetchActorsKeysetWithCursor(
             @Param("searchQuery") String searchQuery,
             @Param("cursor") String cursor,
-            @Param("limit") int limit
-    );
-
-    @Query(value = """
-            SELECT full_name
-            FROM actors
-            WHERE LOWER(TRANSLATE(full_name, 'ёЁ', 'еЕ')) LIKE CONCAT(:searchQuery, '%') ESCAPE '\\'
-            ORDER BY LOWER(TRANSLATE(full_name, 'ёЁ', 'еЕ')) ASC
-            LIMIT :limit
-            """, nativeQuery = true)
-    List<String> fetchActorsKeysetFirstPage(
-            @Param("searchQuery") String searchQuery,
             @Param("limit") int limit
     );
 }

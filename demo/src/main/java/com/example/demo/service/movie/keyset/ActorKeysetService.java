@@ -13,21 +13,21 @@ public class ActorKeysetService extends AbstractStringKeysetService {
     private final ActorRepository actorRepository;
 
     public ActorKeysetService(ActorRepository actorRepository,
-                              StringKeysetPaginator paginator,
+                              StringKeysetPaginator stringKeysetPaginator,
                               FiltersProperties filtersProperties) {
-        super(paginator, filtersProperties.pageSize());
+        super(stringKeysetPaginator, filtersProperties.pageSize());
         this.actorRepository = actorRepository;
     }
 
     @Override
     @Transactional(readOnly = true)
-    protected List<String> fetchFirstPage(String normalizedQuery, int limit) {
-        return actorRepository.fetchActorsKeysetFirstPage(normalizedQuery, limit);
+    protected List<String> fetchFirstPage(String searchPattern, int limit) {
+        return actorRepository.fetchActorsKeysetFirstPage(searchPattern, limit);
     }
 
     @Override
     @Transactional(readOnly = true)
-    protected List<String> fetchWithCursor(String normalizedQuery, String cursor, int limit) {
-        return actorRepository.fetchActorsKeysetWithCursor(normalizedQuery, cursor, limit);
+    protected List<String> fetchWithCursor(String searchPattern, String cursor, int limit) {
+        return actorRepository.fetchActorsKeysetWithCursor(searchPattern, cursor, limit);
     }
 }

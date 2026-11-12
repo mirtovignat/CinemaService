@@ -15,18 +15,19 @@ public abstract class AbstractStringKeysetService {
 
     public Slice<String> search(CursorPageRequest cursorPageRequest) {
         String normalizedQuery = CursorUtils.normalizeQuery(cursorPageRequest.searchQuery());
+        String searchPattern = "% " + normalizedQuery + "%";
 
         if (CursorUtils.hasCursor(cursorPageRequest)) {
             String cursor = paginator.decodeCursor(cursorPageRequest.cursor());
-            List<String> items = fetchWithCursor(normalizedQuery, cursor, pageSize + 1);
+            List<String> items = fetchWithCursor(searchPattern, cursor, pageSize + 1);
             return paginator.fetchCursorPage(cursorPageRequest, pageSize, items);
         }
 
-        List<String> items = fetchFirstPage(normalizedQuery, pageSize + 1);
+        List<String> items = fetchFirstPage(searchPattern, pageSize + 1);
         return paginator.fetchPage(pageSize, items);
     }
 
-    protected abstract List<String> fetchFirstPage(String normalizedQuery, int limit);
+    protected abstract List<String> fetchFirstPage(String searchPattern, int limit);
 
-    protected abstract List<String> fetchWithCursor(String normalizedQuery, String cursor, int limit);
+    protected abstract List<String> fetchWithCursor(String searchPattern, String cursor, int limit);
 }

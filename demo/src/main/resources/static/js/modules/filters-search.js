@@ -1,444 +1,239 @@
 (function () {
     'use strict';
 
-    var ELLIPSIS = '…';
+    var DEBOUNCE_MS = 250;
+    var MAX_RESULTS = 10;
 
     function normalize(value) {
-        return String(value || '')
-            .toLocaleLowerCase('ru-RU')
-            .trim()
-            .replace(/ё/g, 'е');
-    }
-
-    function normalizeTight(value) {
-        return normalize(value).replace(/[^a-zа-я0-9]/gi, '');
+        return String(value || '').toLocaleLowerCase('ru-RU').trim().replace(/ё/g, 'е');
     }
 
     function hasMeaningfulChars(value) {
         return /[a-zа-я0-9ё]/i.test(String(value || ''));
     }
 
-    function isTruncated(value) {
-        return typeof value === 'string'
-            && value.length > 0
-            && value.charAt(value.length - 1) === ELLIPSIS;
+    function getAccordionName(accordion) {
+        return accordion.getAttribute('data-accordion') || '';
     }
 
-    function stripEllipsis(value) {
-        return isTruncated(value) ? value.substring(0, value.length - 1) : value;
-    }
-
-    function capitalizeFirst(value) {
-        if (!value) return '';
-        if (value.length === 1) return value.toLocaleUpperCase('ru-RU');
-        return value.charAt(0).toLocaleUpperCase('ru-RU') + value.slice(1).toLocaleLowerCase('ru-RU');
-    }
-
-    function longestCommonPrefix(titles) {
-        if (!titles || titles.length === 0) return '';
-        if (titles.length === 1) return titles[0];
-
-        var first = titles[0];
-        var last = titles[0];
-        for (var i = 1; i < titles.length; i++) {
-            if (titles[i] < first) first = titles[i];
-            if (titles[i] > last) last = titles[i];
-        }
-
-        var len = 0;
-        var max = Math.min(first.length, last.length);
-        while (len < max && first.charAt(len) === last.charAt(len)) len++;
-        return first.substring(0, len);
-    }
-
-    function getSearchName(accordion) {
-        var dropdown = accordion.querySelector('[data-accordion-dropdown]');
-        if (!dropdown) return '';
-        var input = dropdown.querySelector('[data-accordion-search-input]');
-        if (!input) return '';
-        return input.getAttribute('data-accordion-search-name') || '';
-    }
-
-    function isDirectorAccordion(accordion) {
-        return getSearchName(accordion) === 'directors'
-            || accordion.getAttribute('data-accordion') === 'directors';
-    }
-
-    function getItems(accordion) {
-        var list = accordion.querySelector('[data-accordion-list]');
-        if (!list) return [];
-        return Array.prototype.slice.call(
-            list.querySelectorAll('.accordion-item')
-        );
-    }
-
-    function getItemDisplay(item) {
-        var span = item.querySelector('span:last-child');
-        var raw = span ? span.textContent : item.textContent;
-        return (raw || '').trim();
-    }
-
-    function getItemCheckbox(item) {
-        return item.querySelector('input[type="checkbox"]');
-    }
-
-    function getItemValue(item) {
-        var cb = getItemCheckbox(item);
-        return cb ? cb.value : '';
-    }
-
-    function getDirectorWords(display) {
-        return String(display || '')
-            .split(/\s+/)
-            .map(function (part) { return part.trim(); })
-            .filter(function (part) { return part.length > 0; });
-    }
-
-    function getSearchWords(accordion, item) {
-        var display = getItemDisplay(item);
-        if (isDirectorAccordion(accordion)) {
-            return getDirectorWords(display);
-        }
-        return display ? [display] : [];
-    }
-
-    function getItemSearchKey(accordion, item) {
-        var display = getItemDisplay(item);
-        if (isDirectorAccordion(accordion)) {
-            var idx = display.indexOf(' ');
-            if (idx === -1) return display;
-            return display.substring(0, idx).trim();
-        }
-        return display;
-    }
-
-    function getItemSortKey(accordion, item) {
-        return getItemSearchKey(accordion, item);
-    }
-
-    function queryWords(query) {
-        var q = normalize(query);
-        if (!q) return [];
-        return q
-            .split(/\s+/)
-            .map(function (part) { return normalizeTight(part); })
-            .filter(function (part) { return part.length > 0; });
-    }
-
-    function itemMatchesQuery(accordion, item, normalizedQuery) {
-        var words = queryWords(normalizedQuery);
-        if (words.length === 0) return true;
-
-        var itemWords = getSearchWords(accordion, item)
-            .map(normalizeTight)
-            .filter(function (w) { return w.length > 0; });
-
-        if (itemWords.length === 0) return false;
-
-        for (var i = 0; i < words.length; i++) {
-            var qw = words[i];
-            var matched = false;
-            for (var j = 0; j < itemWords.length; j++) {
-                if (itemWords[j].indexOf(qw) === 0) {
-                    matched = true;
-                    break;
+    function readSelectedFromUrl(name) {
+        try {
+            var params = new URLSearchParams(window.location.search);
+            var out = [];
+            params.getAll(name).forEach(function (v) {
+                if (v.indexOf(',') !== -1) {
+                    out = out.concat(v.split(','));
+                } else {
+                    out.push(v);
                 }
-            }
-            if (!matched) return false;
-        }
-        return true;
-    }
-
-    function applyFilter(accordion, query) {
-        var items = getItems(accordion);
-        var empty = accordion.querySelector('[data-accordion-empty]');
-        var visible = 0;
-
-        items.forEach(function (item) {
-            var match = itemMatchesQuery(accordion, item, query);
-            item.classList.toggle('is-hidden', !match);
-            if (match) visible++;
-        });
-
-        if (empty) {
-            var hasMeaningful = hasMeaningfulChars(query);
-            empty.classList.toggle('show', visible === 0 && hasMeaningful);
+            });
+            return out.map(function (s) { return s.trim(); }).filter(Boolean);
+        } catch (e) {
+            return [];
         }
     }
 
-    function hideAutocomplete(ui) {
-        if (!ui.typedEl || !ui.hintEl) return;
-        ui.typedEl.textContent = '';
-        ui.hintEl.textContent = '';
-        ui.wrapper.classList.remove('has-autocomplete');
-    }
-
-    function renderAutocomplete(ui, accordion, typed) {
-        if (!typed) {
-            hideAutocomplete(ui);
-            return;
+    function findExactTitle(titles, value) {
+        if (!titles || titles.length === 0) return null;
+        var normalizedValue = normalize(value);
+        if (!normalizedValue) return null;
+        for (var i = 0; i < titles.length; i++) {
+            if (normalize(titles[i]) === normalizedValue) return titles[i];
         }
-        var typedWords = queryWords(typed);
-        if (typedWords.length === 0) {
-            hideAutocomplete(ui);
-            return;
-        }
-
-        var items = getItems(accordion);
-        var matches = items.filter(function (item) {
-            return itemMatchesQuery(accordion, item, typed);
-        });
-
-        if (matches.length !== 1) {
-            hideAutocomplete(ui);
-            return;
-        }
-
-        var display = getItemDisplay(matches[0]);
-        var displayWords = getDirectorWords(display);
-
-        var used = new Array(displayWords.length).fill(false);
-        for (var i = 0; i < typedWords.length; i++) {
-            var qw = typedWords[i];
-            var found = false;
-            for (var j = 0; j < displayWords.length; j++) {
-                if (used[j]) continue;
-                var dw = normalizeTight(displayWords[j]);
-                if (dw.indexOf(qw) === 0) {
-                    used[j] = true;
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                hideAutocomplete(ui);
-                return;
-            }
-        }
-
-        var rest = '';
-        for (var k = 0; k < displayWords.length; k++) {
-            if (!used[k]) {
-                rest += (rest ? ' ' : '') + displayWords[k];
-            }
-        }
-
-        if (!rest) {
-            hideAutocomplete(ui);
-            return;
-        }
-
-        ui.typedEl.textContent = typed;
-        ui.hintEl.textContent = ' ' + rest;
-        ui.wrapper.classList.add('has-autocomplete');
-    }
-
-    function updateClear(ui) {
-        var v = ui.input.value;
-        ui.wrapper.classList.toggle('has-value', v.trim().length > 0);
-    }
-
-    function buildTruncatedQuery(accordion, clean) {
-        var cleanWords = queryWords(clean);
-        if (cleanWords.length === 0) return clean;
-
-        var items = getItems(accordion);
-        var matched = [];
-        items.forEach(function (item) {
-            if (itemMatchesQuery(accordion, item, clean)) {
-                var display = getItemDisplay(item);
-                if (display) matched.push(display);
-            }
-        });
-
-        if (matched.length === 0) return clean;
-        if (matched.length === 1) return matched[0];
-
-        var prefix = longestCommonPrefix(matched);
-        if (!prefix || prefix.length <= clean.length) return clean + ELLIPSIS;
-        return prefix + ELLIPSIS;
-    }
-
-    function selectItem(checkbox) {
-        if (!checkbox) return;
-        checkbox.checked = !checkbox.checked;
-        checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+        return null;
     }
 
     function bindOne(accordion) {
         var dropdown = accordion.querySelector('[data-accordion-dropdown]');
         if (!dropdown) return;
 
-        if (dropdown.querySelector('.infinite-scroll-sentinel')) {
-            return;
-        }
-
         var wrapper = dropdown.querySelector('[data-accordion-search-wrapper]');
         var input = dropdown.querySelector('[data-accordion-search-input]');
         var clear = dropdown.querySelector('[data-accordion-search-clear]');
-        var typedEl = dropdown.querySelector('[data-accordion-search-typed]');
-        var hintEl = dropdown.querySelector('[data-accordion-search-hint]');
+        var list = dropdown.querySelector('[data-accordion-list]');
+        var selectedBox = dropdown.querySelector('[data-accordion-selected]');
+        var empty = dropdown.querySelector('[data-accordion-empty]');
+        var triggerLabel = accordion.querySelector('.accordion-trigger > span:first-child');
 
-        if (!wrapper || !input) return;
-        if (input.dataset.accordionSearchBound === '1') return;
-        input.dataset.accordionSearchBound = '1';
+        if (!wrapper || !input || !list) return;
 
-        var ui = {
-            wrapper: wrapper,
-            input: input,
-            typedEl: typedEl,
-            hintEl: hintEl
-        };
+        // Защита от повторного биндинга
+        if (input.dataset.filtersPrefixBound === '1') return;
+        input.dataset.filtersPrefixBound = '1';
 
-        function matchesForQuery(value) {
-            var q = normalizeTight(value);
-            if (!q) return [];
-            return getItems(accordion).filter(function (item) {
-                return itemMatchesQuery(accordion, item, value);
+        var name = getAccordionName(accordion);
+        if (!name) return;
+
+        var baseLabel = triggerLabel ? triggerLabel.textContent.trim() : name;
+        var selected = new Set(readSelectedFromUrl(name));
+        var lastResults = [];
+        var lastFetchedTitles = null;
+        var debounceTimer = null;
+        var fetchToken = 0;
+
+        list.innerHTML = '';
+        if (empty) empty.classList.remove('show');
+
+        function syncClearBtn() {
+            wrapper.classList.toggle('has-value', input.value.trim().length > 0);
+        }
+
+        function updateTriggerLabel() {
+            if (!triggerLabel) return;
+            triggerLabel.textContent = selected.size > 0
+                ? baseLabel + ' (' + selected.size + ')'
+                : baseLabel;
+        }
+
+        function renderChips() {
+            if (!selectedBox) return;
+            selectedBox.innerHTML = '';
+            selected.forEach(function (value) {
+                var hidden = document.createElement('input');
+                hidden.type = 'checkbox';
+                hidden.name = name;
+                hidden.value = value;
+                hidden.checked = true;
+                hidden.style.display = 'none';
+                selectedBox.appendChild(hidden);
+
+                var chip = document.createElement('span');
+                chip.className = 'accordion-chip';
+                chip.textContent = value;
+
+                var rm = document.createElement('button');
+                rm.type = 'button';
+                rm.className = 'accordion-chip-remove';
+                rm.setAttribute('aria-label', 'Убрать');
+                rm.innerHTML = '&times;';
+                rm.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    selected.delete(value);
+                    renderChips();
+                    renderResults();
+                    updateTriggerLabel();
+                });
+                chip.appendChild(rm);
+                selectedBox.appendChild(chip);
             });
         }
 
-        function bestMatch(value) {
-            var matches = matchesForQuery(value);
-            if (matches.length === 0) return null;
-            var best = matches[0];
-            var bestDisplay = getItemDisplay(best);
-            matches.forEach(function (item) {
-                var display = getItemDisplay(item);
-                if (display.length < bestDisplay.length) {
-                    best = item;
-                    bestDisplay = display;
+        function renderResults() {
+            list.innerHTML = '';
+            var shown = 0;
+
+            if (lastResults.length === 0) {
+                if (empty) {
+                    var hasQuery = hasMeaningfulChars(input.value);
+                    empty.classList.toggle('show', hasQuery);
                 }
+                return;
+            } else {
+                if (empty) empty.classList.remove('show');
+            }
+
+            lastResults.forEach(function (value) {
+                if (selected.has(value)) return;
+                if (shown >= MAX_RESULTS) return;
+                shown++;
+
+                var item = document.createElement('div');
+                item.className = 'accordion-item--selectable';
+                item.textContent = value;
+
+                // Предотвращаем потерю фокуса при клике
+                item.addEventListener('pointerdown', function (e) {
+                    e.preventDefault();
+                });
+
+                item.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    selected.add(value);
+                    renderChips();
+                    updateTriggerLabel();
+                    input.value = '';
+                    syncClearBtn();
+                    renderResults();
+                });
+                list.appendChild(item);
             });
-            return best;
         }
 
-        function acceptAutocomplete() {
-            if (!wrapper.classList.contains('has-autocomplete')) return false;
-            var typedText = (typedEl ? typedEl.textContent : '').trim();
-            var hintText = (hintEl ? hintEl.textContent : '').trim();
-            var full = (typedText + ' ' + hintText).trim();
-            if (!full) return false;
-            input.value = full;
-            input.setSelectionRange(full.length, full.length);
-            hideAutocomplete(ui);
-            updateClear(ui);
-            applyFilter(accordion, full);
-            return true;
+        function search(query, token) {
+            if (!query) {
+                lastResults = [];
+                renderResults();
+                return;
+            }
+            var url = '/filters/' + encodeURIComponent(name) + '/search?searchQuery=' + encodeURIComponent(query);
+
+            fetch(url, {
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin',
+                cache: 'no-store'
+            })
+            .then(function (r) {
+                if (!r.ok) throw new Error('Network response was not ok');
+                return r.json();
+            })
+            .then(function (data) {
+                if (token !== fetchToken) return;
+                var items = (data && data.items) ? data.items : [];
+                lastFetchedTitles = items.map(function (v) { return String(v); });
+                lastResults = lastFetchedTitles.slice();
+                renderResults();
+            })
+            .catch(function () {
+                if (token !== fetchToken) return;
+                lastResults = [];
+                renderResults();
+            });
         }
 
         input.addEventListener('input', function () {
-            var val = input.value;
-            if (isTruncated(val)) {
-                val = stripEllipsis(val);
-                input.value = val;
-            }
+            syncClearBtn();
+            clearTimeout(debounceTimer);
 
-            hideAutocomplete(ui);
-            updateClear(ui);
+            var value = input.value;
 
-            if (val === '') {
-                applyFilter(accordion, '');
+            if (!hasMeaningfulChars(value)) {
+                lastResults = [];
+                renderResults();
                 return;
             }
 
-            if (!hasMeaningfulChars(val)) {
-                applyFilter(accordion, val);
-                return;
-            }
-
-            applyFilter(accordion, val);
-            renderAutocomplete(ui, accordion, val);
+            var token = ++fetchToken;
+            debounceTimer = setTimeout(function () { search(value, token); }, DEBOUNCE_MS);
         });
 
         input.addEventListener('keydown', function (e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
-
-                if (wrapper.classList.contains('has-autocomplete')) {
-                    acceptAutocomplete();
-                    return;
-                }
-
                 var raw = input.value.trim();
                 if (!raw) return;
-                if (!hasMeaningfulChars(raw)) {
-                    applyFilter(accordion, '');
-                    return;
+                if (!hasMeaningfulChars(raw)) return;
+
+                var exact = findExactTitle(lastFetchedTitles, raw);
+                if (exact && !selected.has(exact)) {
+                    selected.add(exact);
+                    renderChips();
+                    updateTriggerLabel();
+                    input.value = '';
+                    syncClearBtn();
+                    renderResults();
                 }
-
-                var clean = stripEllipsis(raw);
-                var normalizedInput = capitalizeFirst(clean);
-                input.value = normalizedInput;
-
-                var matches = matchesForQuery(normalizedInput);
-
-                if (matches.length === 1) {
-                    var best = bestMatch(normalizedInput);
-                    if (best) {
-                        selectItem(getItemCheckbox(best));
-                        input.value = '';
-                        applyFilter(accordion, '');
-                        updateClear(ui);
-                        hideAutocomplete(ui);
-                        return;
-                    }
-                }
-
-                if (matches.length > 1) {
-                    var truncated = buildTruncatedQuery(accordion, normalizedInput);
-                    input.value = truncated;
-                    input.setSelectionRange(truncated.length, truncated.length);
-                    applyFilter(accordion, normalizedInput);
-                } else {
-                    input.value = normalizedInput + ELLIPSIS;
-                    applyFilter(accordion, normalizedInput);
-                }
-
-                hideAutocomplete(ui);
-                updateClear(ui);
                 return;
             }
 
-            if ((e.key === 'ArrowRight' || e.key === 'Tab') &&
-                wrapper.classList.contains('has-autocomplete')) {
-                var atEnd = input.selectionStart === input.value.length
-                    && input.selectionEnd === input.value.length;
-                if (atEnd) {
-                    e.preventDefault();
-                    acceptAutocomplete();
-                    return;
-                }
-            }
-
             if (e.key === 'Escape') {
-                hideAutocomplete(ui);
-                applyFilter(accordion, '');
                 input.value = '';
-                updateClear(ui);
+                syncClearBtn();
+                lastResults = [];
+                renderResults();
                 input.blur();
             }
-        });
-
-        input.addEventListener('blur', function () {
-            setTimeout(function () {
-                if (!input.value) return;
-                if (!hasMeaningfulChars(input.value)) return;
-                var clean = stripEllipsis(input.value.trim());
-                var normalizedInput = capitalizeFirst(clean);
-                var matches = matchesForQuery(normalizedInput);
-
-                if (matches.length === 1) {
-                    input.value = getItemDisplay(matches[0]) + ELLIPSIS;
-                } else if (matches.length > 1) {
-                    input.value = buildTruncatedQuery(accordion, normalizedInput);
-                } else {
-                    input.value = normalizedInput + ELLIPSIS;
-                }
-
-                updateClear(ui);
-                hideAutocomplete(ui);
-            }, 120);
         });
 
         if (clear) {
@@ -446,9 +241,9 @@
                 e.preventDefault();
                 e.stopPropagation();
                 input.value = '';
-                hideAutocomplete(ui);
-                updateClear(ui);
-                applyFilter(accordion, '');
+                syncClearBtn();
+                lastResults = [];
+                renderResults();
                 input.focus();
             });
         }
@@ -457,8 +252,21 @@
             e.stopPropagation();
         });
 
-        applyFilter(accordion, '');
-        updateClear(ui);
+        accordion.__filtersSearchReset = function () {
+            selected.clear();
+            lastResults = [];
+            lastFetchedTitles = null;
+            renderChips();
+            renderResults();
+            updateTriggerLabel();
+            input.value = '';
+            syncClearBtn();
+        };
+
+        renderChips();
+        renderResults();
+        updateTriggerLabel();
+        syncClearBtn();
     }
 
     function init(root) {
@@ -476,9 +284,17 @@
         groups.forEach(bindOne);
     }
 
+    function resetAll() {
+        document.querySelectorAll('[data-accordion]').forEach(function (accordion) {
+            if (typeof accordion.__filtersSearchReset === 'function') {
+                accordion.__filtersSearchReset();
+            }
+        });
+    }
+
     window.FiltersSearch = {
         init: init,
-        normalize: normalize
+        reset: resetAll
     };
 
     if (document.readyState === 'loading') {

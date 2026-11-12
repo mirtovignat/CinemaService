@@ -53,6 +53,24 @@
         }
     }
 
+    function tryLoadMoreCursorContent() {
+        var container = document.querySelector('[data-cursor-container]');
+        if (!container) return false;
+        if (container.getAttribute('data-cursor-has-more') !== 'true') return false;
+
+        var states = window.__cursorStates || [];
+        for (var i = 0; i < states.length; i++) {
+            var state = states[i];
+            if (state.container === container
+                    && !state.fetching
+                    && typeof state.fetchNext === 'function') {
+                state.fetchNext();
+                return true;
+            }
+        }
+        return false;
+    }
+
     function restore() {
         var key = getKey(window.location.href);
         if (!key) return false;
@@ -84,24 +102,19 @@
 
         function checkAndScroll() {
             var currentHeight = target === window ? document.documentElement.scrollHeight : target.scrollHeight;
-            var currentScroll = target === window ? window.scrollY : target.scrollTop;
 
-            // Прокручиваем к цели
             if (target === window) {
                 window.scrollTo(0, targetY);
             } else {
                 target.scrollTop = targetY;
             }
 
-            // Проверяем, достигли ли мы цели
             var newScroll = target === window ? window.scrollY : target.scrollTop;
             if (Math.abs(newScroll - targetY) < 5) {
-                // Достигли! Выключаем флаг.
                 isRestoring = false;
                 return;
             }
 
-            // Если высота не меняется и мы не достигли цели — значит, контент закончился
             if (currentHeight === lastHeight) {
                 stableCount++;
             } else {
@@ -109,17 +122,19 @@
                 lastHeight = currentHeight;
             }
 
-            // Если высота стабильна 3 тика подряд, значит пагинация больше не грузит
             if (stableCount >= 3) {
+                if (tryLoadMoreCursorContent()) {
+                    stableCount = 0;
+                    setTimeout(checkAndScroll, 150);
+                    return;
+                }
                 isRestoring = false;
                 return;
             }
 
-            // Иначе ждем еще 100мс (пока пагинация грузит)
             setTimeout(checkAndScroll, 100);
         }
 
-        // Начинаем проверку после загрузки страницы
         if (document.readyState === 'complete') {
             setTimeout(checkAndScroll, 300);
         } else {

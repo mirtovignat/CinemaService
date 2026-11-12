@@ -5,16 +5,10 @@
     <th:block th:replace="~{fragments/head :: head}"></th:block>
     <link rel="stylesheet" th:href="@{/css/pages/_show.css}">
 </head>
-
 <body>
-
 <header th:replace="~{fragments/header :: header}"></header>
-
 <th:block th:replace="~{fragments/flash-messages :: flashMessages}"></th:block>
-
-<div id="authStatus"
-     th:data-authenticated="${sessionUser.authenticated}"
-     style="display:none;"></div>
+<div id="authStatus" th:data-authenticated="${sessionUser.authenticated}" style="display:none;"></div>
 
 <main>
     <div class="movie-details-container"
@@ -27,29 +21,20 @@
             <span>Назад</span>
         </a>
 
-        <h1 class="movie-title"
-            th:text="${movieForUser.movie.title}">
-            Название фильма
-        </h1>
+        <h1 class="movie-title" th:text="${movieForUser.movie.title}">Название фильма</h1>
 
         <div class="poster-sidebar">
-
             <div th:if="${sessionUser.authenticated and movieForUser.movieUserStatus.bought}"
-                 class="poster-wrapper"
-                 data-action="watch-movie"
+                 class="poster-wrapper" data-action="watch-movie"
                  th:data-movie-id="${movieForUser.movie.id}"
                  th:data-movie-title="${movieForUser.movie.title}"
                  th:data-poster-url="${movieForUser.movie.posterUrl}">
 
                 <img th:if="${movieForUser.movie.posterUrl != null and !movieForUser.movie.posterUrl.isEmpty()}"
-                     th:src="${movieForUser.movie.posterUrl}"
-                     class="movie-poster-img"
-                     alt="Постер"
-                     data-poster-img
-                     src=""/>
+                     th:src="${movieForUser.movie.posterUrl}" class="movie-poster-img"
+                     alt="Постер" data-poster-img src=""/>
 
-                <div class="movie-poster-placeholder"
-                     data-poster-placeholder
+                <div class="movie-poster-placeholder" data-poster-placeholder
                      th:classappend="${movieForUser.movie.posterUrl != null and !movieForUser.movie.posterUrl.isEmpty()} ? 'hidden' : ''">
                     <div class="poster-placeholder-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -75,14 +60,11 @@
                 </span>
 
                 <div class="poster-overlay">
-                    <button class="watch-btn-neon"
-                            type="button"
-                            data-action="watch-movie"
+                    <button class="watch-btn-neon" type="button" data-action="watch-movie"
                             th:data-movie-id="${movieForUser.movie.id}"
                             th:data-movie-title="${movieForUser.movie.title}"
                             th:data-poster-url="${movieForUser.movie.posterUrl}">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-                             fill="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                             <polygon points="5 3 19 12 5 21 5 3"/>
                         </svg>
                         Смотреть
@@ -90,18 +72,12 @@
                 </div>
             </div>
 
-            <div th:unless="${sessionUser.authenticated and movieForUser.movieUserStatus.bought}"
-                 class="poster-wrapper">
-
+            <div th:unless="${sessionUser.authenticated and movieForUser.movieUserStatus.bought}" class="poster-wrapper">
                 <img th:if="${movieForUser.movie.posterUrl != null and !movieForUser.movie.posterUrl.isEmpty()}"
-                     th:src="${movieForUser.movie.posterUrl}"
-                     class="movie-poster-img"
-                     alt="Постер"
-                     data-poster-img
-                     src=""/>
+                     th:src="${movieForUser.movie.posterUrl}" class="movie-poster-img"
+                     alt="Постер" data-poster-img src=""/>
 
-                <div class="movie-poster-placeholder"
-                     data-poster-placeholder
+                <div class="movie-poster-placeholder" data-poster-placeholder
                      th:classappend="${movieForUser.movie.posterUrl != null and !movieForUser.movie.posterUrl.isEmpty()} ? 'hidden' : ''">
                     <div class="poster-placeholder-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -129,11 +105,8 @@
         </div>
 
         <div class="movie-info-block">
-
             <div class="movie-meta-actions">
-
-                <button type="button"
-                        class="icon-btn favourite-btn"
+                <button type="button" class="icon-btn favourite-btn"
                         th:classappend="${movieForUser.movieUserStatus.inFavourites} ? 'active' : ''"
                         data-action="toggle-favourite"
                         th:data-movie-id="${movieForUser.movie.id}"
@@ -143,9 +116,7 @@
                     <th:block th:replace="~{fragments/icons :: icon-heart}"></th:block>
                 </button>
 
-                <button type="button"
-                        class="icon-btn rating-btn"
-                        data-action="show-rating"
+                <button type="button" class="icon-btn rating-btn" data-action="show-rating"
                         th:data-movie-id="${movieForUser.movie.id}"
                         th:data-movie-title="${movieForUser.movie.title}"
                         title="Оценить фильм">
@@ -153,8 +124,7 @@
                 </button>
 
                 <a th:href="@{/rated/{id}/reviews(id=${movieForUser.movie.id})}"
-                   class="icon-btn comment-btn"
-                   title="Отзывы и комментарии">
+                   class="icon-btn comment-btn" title="Отзывы и комментарии">
                     <th:block th:replace="~{fragments/icons :: icon-comments}"></th:block>
                     <span class="reviews-count-text"
                           th:data-movie-id="${movieForUser.movie.id}"
@@ -162,25 +132,18 @@
                         Отзывы: 0 шт.
                     </span>
                 </a>
-
             </div>
 
             <div class="info-grid">
-
                 <div class="info-item">
                     <div class="info-label">Дата выпуска</div>
                     <div class="info-value"
-                         th:text="${movieForUser.movie.releaseDate != null ? #temporals.format(movieForUser.movie.releaseDate, 'dd.MM.yyyy') : '-'}">
-                        -
-                    </div>
+                         th:text="${movieForUser.movie.releaseDate != null ? #temporals.format(movieForUser.movie.releaseDate, 'dd.MM.yyyy') : '-'}">-</div>
                 </div>
 
                 <div class="info-item">
                     <div class="info-label">Жанр</div>
-                    <div class="info-value"
-                         th:text="${movieForUser.movie.genre != null ? movieForUser.movie.genre : '-'}">
-                        -
-                    </div>
+                    <div class="info-value" th:text="${movieForUser.movie.genre != null ? movieForUser.movie.genre : '-'}">-</div>
                 </div>
 
                 <div class="info-item" th:if="${movieForUser.movie.ageRating != null}">
@@ -188,24 +151,16 @@
                     <div class="info-value" th:text="${movieForUser.movie.ageRating} + '+'">18+</div>
                 </div>
 
-                <div class="info-item"
-                     th:if="${movieForUser.movie.director != null}">
+                <div class="info-item" th:if="${movieForUser.movie.director != null}">
                     <div class="info-label">Режиссёр</div>
-                    <div class="info-value"
-                         th:text="${movieForUser.movie.director}">
-                        -
-                    </div>
+                    <div class="info-value" th:text="${movieForUser.movie.director}">-</div>
                 </div>
 
                 <div class="info-item"
                      th:if="${movieForUser.movie.formattedDuration != null and !movieForUser.movie.formattedDuration.isEmpty()}">
                     <div class="info-label">Длительность</div>
-                    <div class="info-value"
-                         th:text="${movieForUser.movie.formattedDuration}">
-                        -
-                    </div>
+                    <div class="info-value" th:text="${movieForUser.movie.formattedDuration}">-</div>
                 </div>
-
             </div>
 
             <div class="movie-cast-block"
@@ -215,35 +170,21 @@
                     В главных ролях
                 </div>
                 <div class="cast-list">
-                    <span class="cast-chip"
-                          th:each="actor : ${movieForUser.movie.actors}"
-                          th:text="${actor}">
-                        Имя актёра
-                    </span>
+                    <span class="cast-chip" th:each="actor : ${movieForUser.movie.actors}" th:text="${actor}">Имя актёра</span>
                 </div>
             </div>
 
             <div class="price-description-row">
-
                 <div class="movie-description"
                      th:if="${movieForUser.movie.description != null and !movieForUser.movie.description.isEmpty()}">
-
                     <div class="desc-label">Описание</div>
-
-                    <p class="desc-text"
-                       th:text="${movieForUser.movie.description}">
-                    </p>
-
+                    <p class="desc-text" th:text="${movieForUser.movie.description}"></p>
                 </div>
-
             </div>
 
             <div class="details-actions">
-
                 <div class="price-and-buttons">
-
-                    <div class="rating-block-bottom"
-                         th:if="${movieForUser.movie.rating != null}">
+                    <div class="rating-block-bottom" th:if="${movieForUser.movie.rating != null}">
                         <span class="rating-label-bottom">Ср. рейтинг:</span>
                         <span class="rating-value-bottom js-rating-badge-max"
                               th:data-movie-id="${movieForUser.movie.id}"
@@ -251,30 +192,20 @@
                     </div>
 
                     <div class="price-block">
-
-                        <div class="price-block-icon"
-                             aria-hidden="true">
+                        <div class="price-block-icon" aria-hidden="true">
                             <th:block th:replace="~{fragments/icons :: icon-money}"></th:block>
                         </div>
-
                         <div class="price-content">
                             <span class="price-label">Цена</span>
-                            <span class="price-amount"
-                                  th:text="${movieForUser.movie.price} + ' ₽'">
-                                0 ₽
-                            </span>
+                            <span class="price-amount" th:text="${movieForUser.movie.price} + ' ₽'">0 ₽</span>
                         </div>
-
                     </div>
 
                     <div class="action-buttons">
-
                         <th:block th:if="${sessionUser.authenticated}">
-
                             <button type="button"
                                     th:if="${!movieForUser.movieUserStatus.bought and !movieForUser.movieUserStatus.inCart}"
-                                    class="cart-button to-cart-btn-details"
-                                    data-action="add-to-cart"
+                                    class="cart-button to-cart-btn-details" data-action="add-to-cart"
                                     th:data-movie-id="${movieForUser.movie.id}"
                                     th:data-movie-title="${movieForUser.movie.title}"
                                     th:data-movie-price="${movieForUser.movie.price}">
@@ -289,8 +220,7 @@
 
                             <button type="button"
                                     th:if="${!movieForUser.movieUserStatus.bought}"
-                                    class="buy-now-btn"
-                                    data-action="buy-now"
+                                    class="buy-now-btn" data-action="buy-now"
                                     th:data-movie-id="${movieForUser.movie.id}"
                                     th:data-movie-title="${movieForUser.movie.title}"
                                     th:data-movie-price="${movieForUser.movie.price}">
@@ -302,37 +232,26 @@
                                class="bought-btn">
                                 Куплено → В коллекцию
                             </a>
-
                         </th:block>
 
                         <th:block th:unless="${sessionUser.authenticated}">
-
-                            <button type="button"
-                                    class="cart-button to-cart-btn-details"
-                                    data-action="add-to-cart"
+                            <button type="button" class="cart-button to-cart-btn-details" data-action="add-to-cart"
                                     th:data-movie-id="${movieForUser.movie.id}"
                                     th:data-movie-title="${movieForUser.movie.title}"
                                     th:data-movie-price="${movieForUser.movie.price}">
                                 В корзину
                             </button>
 
-                            <button type="button"
-                                    class="buy-now-btn"
-                                    data-action="buy-now"
+                            <button type="button" class="buy-now-btn" data-action="buy-now"
                                     th:data-movie-id="${movieForUser.movie.id}"
                                     th:data-movie-title="${movieForUser.movie.title}"
                                     th:data-movie-price="${movieForUser.movie.price}">
                                 Купить сейчас
                             </button>
-
                         </th:block>
-
                     </div>
-
                 </div>
-
             </div>
-
         </div>
     </div>
 </main>
