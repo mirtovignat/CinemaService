@@ -332,7 +332,9 @@
             state.scrollParents = findScrollParents(container);
 
             state.scrollParents.forEach(function (node) {
-                var handler = function () { state.checkEdge(); };
+                var handler = function () {
+                    state.checkEdge();
+                };
                 if (node === window) {
                     window.addEventListener('scroll', handler, { passive: true });
                 } else {
@@ -343,7 +345,9 @@
         }
 
         state.fetchNext = function () {
-            if (state.fetching || !state.hasMore) return Promise.resolve(false);
+            if (state.fetching || !state.hasMore) {
+                return Promise.resolve(false);
+            }
             state.fetching = true;
             var myToken = ++state.fetchToken;
 
@@ -365,7 +369,9 @@
                 cache: 'no-store'
             })
             .then(function (r) {
-                if (myToken !== state.fetchToken) return { aborted: true };
+                if (myToken !== state.fetchToken) return {
+                    aborted: true
+                };
                 if (r.type === 'opaqueredirect' || r.status === 0) {
                     window.location.href = '/login';
                     return Promise.reject(new Error('unauth'));
@@ -374,12 +380,18 @@
                     window.location.href = r.url;
                     return Promise.reject(new Error('redirect'));
                 }
-                if (!r.ok) throw new Error('HTTP ' + r.status);
+                if (!r.ok) {
+                    throw new Error('HTTP ' + r.status);
+                }
                 return r.json();
             })
             .then(function (response) {
-                if (myToken !== state.fetchToken) return false;
-                if (response && response.aborted) return false;
+                if (myToken !== state.fetchToken) {
+                    return false;
+                }
+                if (response && response.aborted) {
+                    return false;
+                }
 
                 var cursorPageResponse = (response && response.cursorPageResponse)
                     ? response.cursorPageResponse
@@ -391,7 +403,9 @@
                 var frag = document.createDocumentFragment();
                 items.forEach(function (item) {
                     var card = createCardFromTemplate(state.templateId, item);
-                    if (card) frag.appendChild(card);
+                    if (card){
+                        frag.appendChild(card);
+                    }
                 });
 
                 if (state.loader && state.loader.parentNode === container) {
@@ -433,7 +447,9 @@
                 return items.length > 0;
             })
             .catch(function (e) {
-                if (myToken !== state.fetchToken) return false;
+                if (myToken !== state.fetchToken){
+                    return false;
+                }
                 console.warn('[cursor-pagination] error', e);
                 state.hasMore = false;
                 return false;
@@ -452,10 +468,14 @@
             state.scrollParents.forEach(function(node) {
                 if (node === window) {
                     var dist = document.documentElement.scrollHeight - window.scrollY - window.innerHeight;
-                    if (dist < minDistance) minDistance = dist;
+                    if (dist < minDistance) {
+                        minDistance = dist;
+                    }
                 } else {
                     var dist = node.scrollHeight - node.scrollTop - node.clientHeight;
-                    if (dist < minDistance) minDistance = dist;
+                    if (dist < minDistance) {
+                        minDistance = dist;
+                    }
                 }
             });
 
@@ -474,6 +494,17 @@
 
         instances.push(state);
         window.__cursorStates = instances;
+
+       var initialInterval = setInterval(function () {
+           if (!state.hasMore) {
+               clearInterval(initialInterval);
+               return;
+           }
+           if (window.ScrollMemory && window.ScrollMemory.isRestoring()) {
+               return;
+           }
+           state.checkEdge();
+       }, 150);
 
         requestAnimationFrame(function () {
             requestAnimationFrame(function () {

@@ -1,7 +1,8 @@
 package com.example.demo.config;
 
+import com.example.demo.config.properties.SecurityProperties;
 import com.example.demo.web.AjaxAwareEntryPoint;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,31 +19,10 @@ import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 @Configuration
 @EnableWebSecurity
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class SecurityConfig {
 
-    public static final String[] PUBLIC_URLS = {
-            "/",
-            "/movies/**",
-            "/filters/**",
-            "/login",
-            "/register",
-            "/privacy-policy",
-            "/back",
-            "/css/**",
-            "/js/**",
-            "/images/**",
-            "/webjars/**",
-            "/logo.png",
-            "/favicon.png",
-            "/favicon.ico",
-            "/error",
-            "/rated/*/reviews",
-            "/rated/*/reviews/more",
-            "/rated/count/**",
-            "/recommendations"
-    };
-
+    private final SecurityProperties securityProperties;
     private final AjaxAwareEntryPoint ajaxAwareEntryPoint;
 
     @Bean
@@ -56,7 +36,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    public AuthenticationManager authenticationManager
+            (AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
@@ -67,9 +48,10 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+        String[] publicUrls = securityProperties.publicUrls();
         httpSecurity
                 .authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests
-                        .requestMatchers(PUBLIC_URLS).permitAll()
+                        .requestMatchers(publicUrls).permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(formLogin -> formLogin

@@ -50,6 +50,9 @@ public class MovieFilterController {
     @GetMapping("/actors/search")
     public ResponseEntity<CursorPageResponse<String>> searchActors(
             @ModelAttribute CursorPageRequest cursorPageRequest) {
+        System.out.println("=== searchActors: searchQuery='" + cursorPageRequest.searchQuery()
+                + "', cursor='" + cursorPageRequest.cursor()
+                + "', sortDirection='" + cursorPageRequest.sortDirection() + "'");
         Slice<String> slice = movieFilterMetaService.searchActors(cursorPageRequest);
         return ResponseEntity.ok(toResponse(slice));
     }

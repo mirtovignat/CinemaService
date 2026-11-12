@@ -26,6 +26,11 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
 
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -60,12 +65,31 @@ minio:
 
 app:
   validation:
-    username:
-      min-length: 3
-      max-length: 30
-      regex: "^[A-Za-zА-Яа-яЁё0-9_-]+$"
-    email:
-      regex: "^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+    username-min-length: 3
+    username-max-length: 30
+    username-regex: "^[A-Za-zА-Яа-яЁё0-9_-]+$"
+    email-regex: "^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+  security:
+    public-urls:
+      - /
+      - /movies/**
+      - /filters/**
+      - /login
+      - /register
+      - /privacy-policy
+      - /back
+      - /css/**
+      - /js/**
+      - /images/**
+      - /webjars/**
+      - /logo.png
+      - /favicon.png
+      - /favicon.ico
+      - /error
+      - /rated/*/reviews
+      - /rated/*/reviews/more
+      - /rated/count/**
+      - /recommendations
   wallet:
     max-balance: 100000.00
   suggestions:

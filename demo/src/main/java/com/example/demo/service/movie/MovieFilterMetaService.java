@@ -1,11 +1,12 @@
 package com.example.demo.service.movie;
 
-import com.example.demo.config.properties.FiltersProperties;
 import com.example.demo.dto.movie.range.MovieRangesSnapshot;
 import com.example.demo.dto.request.CursorPageRequest;
 import com.example.demo.mapper.util.MovieRangesSnapshotMapper;
-import com.example.demo.repository.entity.ActorRepository;
 import com.example.demo.repository.entity.MovieRepository;
+import com.example.demo.service.movie.keyset.ActorKeysetService;
+import com.example.demo.service.movie.keyset.DirectorKeysetService;
+import com.example.demo.service.movie.keyset.GenreKeysetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -18,9 +19,9 @@ import java.util.List;
 public class MovieFilterMetaService {
 
     private final MovieRepository movieRepository;
-    private final ActorRepository actorRepository;
-    private final StringKeysetPaginator stringKeysetPaginator;
-    private final FiltersProperties filtersProperties;
+    private final ActorKeysetService actorKeysetService;
+    private final DirectorKeysetService directorKeysetService;
+    private final GenreKeysetService genreKeysetService;
     private final MovieRangesSnapshotMapper movieRangesSnapshotMapper;
 
     @Transactional(readOnly = true)
@@ -30,20 +31,17 @@ public class MovieFilterMetaService {
 
     @Transactional(readOnly = true)
     public Slice<String> searchDirectors(CursorPageRequest cursorPageRequest) {
-        return stringKeysetPaginator.fetchPage(
-                cursorPageRequest, filtersProperties.pageSize(), movieRepository::fetchDirectorsKeyset);
+        return directorKeysetService.search(cursorPageRequest);
     }
 
     @Transactional(readOnly = true)
     public Slice<String> searchGenres(CursorPageRequest cursorPageRequest) {
-        return stringKeysetPaginator.fetchPage(
-                cursorPageRequest, filtersProperties.pageSize(), movieRepository::fetchGenresKeyset);
+        return genreKeysetService.search(cursorPageRequest);
     }
 
     @Transactional(readOnly = true)
     public Slice<String> searchActors(CursorPageRequest cursorPageRequest) {
-        return stringKeysetPaginator.fetchPage(
-                cursorPageRequest, filtersProperties.pageSize(), actorRepository::fetchActorsKeyset);
+        return actorKeysetService.search(cursorPageRequest);
     }
 
     @Transactional(readOnly = true)

@@ -12,7 +12,9 @@ import org.springframework.context.annotation.Configuration;
         ReviewsProperties.class,
         CatalogProperties.class,
         RecommendationsProperties.class,
-        FiltersProperties.class
+        FiltersProperties.class,
+        SecurityProperties.class,
+        ValidationProperties.class
 })
 public class AppPropertiesConfig {
 }

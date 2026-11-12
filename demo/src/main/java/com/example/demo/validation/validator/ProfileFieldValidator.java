@@ -1,12 +1,12 @@
 package com.example.demo.validation.validator;
 
+import com.example.demo.config.properties.ValidationProperties;
 import com.example.demo.dto.authorize.Identifier;
 import com.example.demo.dto.user.ProfileFieldUpdateDTO;
 import com.example.demo.util.PhoneNormalizer;
 import com.example.demo.validation.annotation.ValidProfileField;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.regex.Pattern;
@@ -17,25 +17,20 @@ public class ProfileFieldValidator
 
     private static final String FIELD_PROPERTY = "field";
 
-    private final EmailDomainPatternValidator emailDomainValidator;
+    private final EmailDomainPatternValidator emailDomainPatternValidator;
     private final PhoneNormalizer phoneNormalizer;
+    private final ValidationProperties validationProperties;
     private final Pattern emailPattern;
     private final Pattern usernamePattern;
-    private final int usernameMinLength;
-    private final int usernameMaxLength;
 
-    public ProfileFieldValidator(EmailDomainPatternValidator emailDomainValidator,
+    public ProfileFieldValidator(EmailDomainPatternValidator emailDomainPatternValidator,
                                  PhoneNormalizer phoneNormalizer,
-                                 @Value("${app.validation.username.min-length:3}") int usernameMinLength,
-                                 @Value("${app.validation.username.max-length:30}") int usernameMaxLength,
-                                 @Value("${app.validation.username.regex:^[A-Za-zА-Яа-яЁё0-9_-]+$}") String usernameRegex,
-                                 @Value("${app.validation.email.regex:^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$}") String emailRegex) {
-        this.emailDomainValidator = emailDomainValidator;
+                                 ValidationProperties validationProperties) {
+        this.emailDomainPatternValidator = emailDomainPatternValidator;
         this.phoneNormalizer = phoneNormalizer;
-        this.usernameMinLength = usernameMinLength;
-        this.usernameMaxLength = usernameMaxLength;
-        this.usernamePattern = Pattern.compile(usernameRegex);
-        this.emailPattern = Pattern.compile(emailRegex);
+        this.validationProperties = validationProperties;
+        this.usernamePattern = Pattern.compile(validationProperties.usernameRegex());
+        this.emailPattern = Pattern.compile(validationProperties.emailRegex());
     }
 
     @Override
@@ -68,7 +63,7 @@ public class ProfileFieldValidator
             return fail(constraintValidatorContext,
                     "Некорректный формат email. Допустимы только латинские буквы, цифры, _ . -");
         }
-        if (!emailDomainValidator.isValid(email, constraintValidatorContext)) {
+        if (!emailDomainPatternValidator.isValid(email, constraintValidatorContext)) {
             return fail(constraintValidatorContext,
                     "Почтовый домен не существует или не принимает почту");
         }
@@ -92,10 +87,11 @@ public class ProfileFieldValidator
         if (username.isEmpty()) {
             return fail(constraintValidatorContext, "Username не может быть пустым");
         }
-        if (username.length() < usernameMinLength || username.length() > usernameMaxLength) {
+        if (username.length() < validationProperties.usernameMinLength()
+                || username.length() > validationProperties.usernameMaxLength()) {
             return fail(constraintValidatorContext,
-                    "Username должен быть от " + usernameMinLength
-                            + " до " + usernameMaxLength + " символов");
+                    "Username должен быть от " + validationProperties.usernameMinLength()
+                            + " до " + validationProperties.usernameMaxLength() + " символов");
         }
         if (!usernamePattern.matcher(username).matches()) {
             return fail(constraintValidatorContext,

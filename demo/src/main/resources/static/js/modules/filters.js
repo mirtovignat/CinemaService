@@ -288,7 +288,7 @@
             sentinel.style.fontSize = '0.8rem';
             sentinel.style.textAlign = 'center';
 
-            var url = endpoint + '?query=' + encodeURIComponent(currentQuery);
+            var url = endpoint + '?searchQuery=' + encodeURIComponent(currentQuery);
             if (nextCursor) url += '&cursor=' + encodeURIComponent(nextCursor);
 
             fetch(url, { headers: AJAX_HEADERS })

@@ -54,4 +54,10 @@
             refreshCounts();
         }
     });
+
+    window.addEventListener('pagehide', function () {
+        if (window.ScrollMemory) {
+            window.ScrollMemory.saveCurrent();
+        }
+    });
 })();

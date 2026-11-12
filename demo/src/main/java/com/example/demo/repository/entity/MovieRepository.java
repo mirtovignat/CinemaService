@@ -71,19 +71,29 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
             SELECT director
             FROM movies
             WHERE director IS NOT NULL
-              AND LOWER(TRANSLATE(director, 'ёЁ', 'еЕ')) LIKE LOWER(CONCAT(:searchQuery, '%')) ESCAPE '\\'
-              AND (
-                  :hasCursor = false
-                  OR LOWER(TRANSLATE(director, 'ёЁ', 'еЕ')) > LOWER(TRANSLATE(:cursor, 'ёЁ', 'еЕ'))
-              )
-            GROUP BY director
+              AND LOWER(TRANSLATE(director, 'ёЁ', 'еЕ')) LIKE CONCAT(:searchQuery, '%') ESCAPE '\\'
+              AND LOWER(TRANSLATE(director, 'ёЁ', 'еЕ')) > :cursor
+            GROUP BY LOWER(TRANSLATE(director, 'ёЁ', 'еЕ')), director
             ORDER BY LOWER(TRANSLATE(director, 'ёЁ', 'еЕ')) ASC
             LIMIT :limit
             """, nativeQuery = true)
-    List<String> fetchDirectorsKeyset(
+    List<String> fetchDirectorsKeysetWithCursor(
             @Param("searchQuery") String searchQuery,
-            @Param("hasCursor") boolean hasCursor,
             @Param("cursor") String cursor,
+            @Param("limit") int limit
+    );
+
+    @Query(value = """
+            SELECT director
+            FROM movies
+            WHERE director IS NOT NULL
+              AND LOWER(TRANSLATE(director, 'ёЁ', 'еЕ')) LIKE CONCAT(:searchQuery, '%') ESCAPE '\\'
+            GROUP BY LOWER(TRANSLATE(director, 'ёЁ', 'еЕ')), director
+            ORDER BY LOWER(TRANSLATE(director, 'ёЁ', 'еЕ')) ASC
+            LIMIT :limit
+            """, nativeQuery = true)
+    List<String> fetchDirectorsKeysetFirstPage(
+            @Param("searchQuery") String searchQuery,
             @Param("limit") int limit
     );
 
@@ -115,16 +125,28 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
     @Query(value = """
             SELECT genre
             FROM movies
-            WHERE LOWER(TRANSLATE(genre, 'ёЁ', 'еЕ')) LIKE LOWER(CONCAT(:searchQuery, '%')) ESCAPE '\\'
-              AND (:hasCursor = false OR LOWER(TRANSLATE(genre, 'ёЁ', 'еЕ')) > LOWER(TRANSLATE(:cursor, 'ёЁ', 'еЕ')))
-            GROUP BY genre
+            WHERE LOWER(TRANSLATE(genre, 'ёЁ', 'еЕ')) LIKE CONCAT(:searchQuery, '%') ESCAPE '\\'
+              AND LOWER(TRANSLATE(genre, 'ёЁ', 'еЕ')) > :cursor
+            GROUP BY LOWER(TRANSLATE(genre, 'ёЁ', 'еЕ')), genre
             ORDER BY LOWER(TRANSLATE(genre, 'ёЁ', 'еЕ')) ASC
             LIMIT :limit
             """, nativeQuery = true)
-    List<String> fetchGenresKeyset(
+    List<String> fetchGenresKeysetWithCursor(
             @Param("searchQuery") String searchQuery,
-            @Param("hasCursor") boolean hasCursor,
             @Param("cursor") String cursor,
+            @Param("limit") int limit
+    );
+
+    @Query(value = """
+            SELECT genre
+            FROM movies
+            WHERE LOWER(TRANSLATE(genre, 'ёЁ', 'еЕ')) LIKE CONCAT(:searchQuery, '%') ESCAPE '\\'
+            GROUP BY LOWER(TRANSLATE(genre, 'ёЁ', 'еЕ')), genre
+            ORDER BY LOWER(TRANSLATE(genre, 'ёЁ', 'еЕ')) ASC
+            LIMIT :limit
+            """, nativeQuery = true)
+    List<String> fetchGenresKeysetFirstPage(
+            @Param("searchQuery") String searchQuery,
             @Param("limit") int limit
     );
 

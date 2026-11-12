@@ -13,6 +13,11 @@
 
     function goBack(fallbackUrl) {
         var fallback = fallbackUrl || '/';
+
+        if (window.ScrollMemory) {
+            window.ScrollMemory.saveCurrent();
+        }
+
         window.location.href = '/back?fallback=' + encodeURIComponent(fallback);
     }
 

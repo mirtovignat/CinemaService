@@ -88,6 +88,22 @@
             const btnClear = valueContainer.querySelector('.inline-edit-clear');
             const errorTextEl = valueContainer.querySelector('.inline-error-text');
 
+            const norm = (s) => (s == null ? '' : String(s)).trim();
+
+            const normalizePhone = (s) => {
+                if (typeof window.PhoneMask !== 'undefined' && typeof window.PhoneMask.normalize === 'function') {
+                    return window.PhoneMask.normalize(s);
+                }
+                return norm(s).replace(/[^\d+]/g, '');
+            };
+
+            const isUnchanged = (val) => {
+                if (isPhone) {
+                    return normalizePhone(val) === normalizePhone(originalValue);
+                }
+                return norm(val) === norm(originalValue);
+            };
+
             input.focus();
             input.setSelectionRange(input.value.length, input.value.length);
 
@@ -135,6 +151,11 @@
                         showError('Некорректный номер телефона');
                         return;
                     }
+                }
+
+                if (isUnchanged(val)) {
+                    cancelEdit();
+                    return;
                 }
 
                 clearError();

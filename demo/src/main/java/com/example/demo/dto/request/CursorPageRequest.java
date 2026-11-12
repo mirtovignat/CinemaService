@@ -1,9 +1,7 @@
 package com.example.demo.dto.request;
 
 import com.example.demo.cursor.SortDirection;
-import lombok.Builder;
 
-@Builder
 public record CursorPageRequest(
         String cursor,
         String sortDirection,
