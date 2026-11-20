@@ -2,6 +2,7 @@ package com.example.demo.filter;
 
 import com.example.demo.mapper.util.DurationMapper;
 import com.example.demo.model.entity.Movie;
+import jakarta.persistence.criteria.Join;
 import lombok.AllArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
@@ -18,41 +19,32 @@ public class MovieSpecifications {
     private final MovieFilterValidator movieFilterValidator;
 
     public Specification<Movie> byFilter(MovieFilter movieFilter) {
-        MovieFilter validatedMovieFilter = movieFilterValidator.orEmpty(movieFilter);
-
-        boolean hasDirectorsExclude = validatedMovieFilter.directorsExclude() != null
-                && !validatedMovieFilter.directorsExclude().isEmpty();
-
-        Specification<Movie> directorSpecification = hasDirectorsExclude
-                ? SpecificationUtils.notNullAndNotIn("director", validatedMovieFilter.directorsExclude())
-                : SpecificationUtils.inIfNotEmpty("director", validatedMovieFilter.directors());
-
-        boolean hasGenresExclude = validatedMovieFilter.genresExclude() != null
-                && !validatedMovieFilter.genresExclude().isEmpty();
-
-        Specification<Movie> genreSpecification = hasGenresExclude
-                ? SpecificationUtils.notNullAndNotIn("genre", validatedMovieFilter.genresExclude())
-                : SpecificationUtils.inIfNotEmpty("genre", validatedMovieFilter.genres());
+        MovieFilter validated = movieFilterValidator.orEmpty(movieFilter);
 
         return Specification.allOf(
-                SpecificationUtils.greaterThanOrEqualToIfNotNull("price", validatedMovieFilter.priceFrom()),
-                SpecificationUtils.lessThanOrEqualToIfNotNull("price", validatedMovieFilter.priceTo()),
-                SpecificationUtils.greaterThanOrEqualToIfNotNull("releaseDate", validatedMovieFilter.releaseDateFrom()),
-                SpecificationUtils.lessThanOrEqualToIfNotNull("releaseDate", validatedMovieFilter.releaseDateTo()),
-                SpecificationUtils.greaterThanOrEqualToIfNotNull(
-                        "duration",
-                        durationMapper.secondsToDuration(validatedMovieFilter.durationFrom())
-                ),
-                SpecificationUtils.lessThanOrEqualToIfNotNull(
-                        "duration",
-                        durationMapper.secondsToDuration(validatedMovieFilter.durationTo())
-                ),
-                SpecificationUtils.greaterThanOrEqualToIfNotNull("rating", validatedMovieFilter.ratingFrom()),
-                SpecificationUtils.lessThanOrEqualToIfNotNull("rating", validatedMovieFilter.ratingTo()),
-                genreSpecification,
-                directorSpecification,
-                actorsAny(validatedMovieFilter.actors())
+                SpecificationUtils.greaterThanOrEqualToIfNotNull("price", validated.priceFrom()),
+                SpecificationUtils.lessThanOrEqualToIfNotNull("price", validated.priceTo()),
+                SpecificationUtils.greaterThanOrEqualToIfNotNull("releaseDate", validated.releaseDateFrom()),
+                SpecificationUtils.lessThanOrEqualToIfNotNull("releaseDate", validated.releaseDateTo()),
+                SpecificationUtils.greaterThanOrEqualToIfNotNull("duration", durationMapper.secondsToDuration(validated.durationFrom())),
+                SpecificationUtils.lessThanOrEqualToIfNotNull("duration", durationMapper.secondsToDuration(validated.durationTo())),
+                SpecificationUtils.greaterThanOrEqualToIfNotNull("rating", validated.ratingFrom()),
+                SpecificationUtils.lessThanOrEqualToIfNotNull("rating", validated.ratingTo()),
+                buildCollectionSpecification("genre", validated.genres(), validated.genresExclude()),
+                buildCollectionSpecification("director", validated.directors(), validated.directorsExclude()),
+                actorsAny(validated.actors())
         );
+    }
+
+    private Specification<Movie> buildCollectionSpecification(
+            String fieldName,
+            Collection<String> includeValues,
+            Collection<String> excludeValues
+    ) {
+        if (!CollectionUtils.isEmpty(excludeValues)) {
+            return SpecificationUtils.notNullAndNotIn(fieldName, excludeValues);
+        }
+        return SpecificationUtils.inIfNotEmpty(fieldName, includeValues);
     }
 
     public Specification<Movie> fieldStartsWith(String fieldName, String rawSearchQuery) {
@@ -69,19 +61,22 @@ public class MovieSpecifications {
         if (CollectionUtils.isEmpty(actorNames)) {
             return Specification.unrestricted();
         }
+
         List<String> sanitized = actorNames.stream()
                 .filter(name -> name != null && !name.isBlank())
                 .map(String::trim)
                 .distinct()
                 .toList();
+
         if (sanitized.isEmpty()) {
             return Specification.unrestricted();
         }
-        return (root, query, cb) -> {
+
+        return (root, query, criteriaBuilder) -> {
             if (query != null) {
                 query.distinct(true);
             }
-            var actorsJoin = root.join("actors");
+            Join<Movie, Object> actorsJoin = root.join("actors");
             return actorsJoin.get("fullName").in(sanitized);
         };
     }

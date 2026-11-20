@@ -1,6 +1,6 @@
 package com.example.demo.service.movie.keyset;
 
-import com.example.demo.config.properties.FiltersProperties;
+import com.example.demo.configuration.properties.FiltersProperties;
 import com.example.demo.repository.entity.ActorRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

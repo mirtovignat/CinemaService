@@ -1,6 +1,6 @@
 package com.example.demo.service.cursor;
 
-import com.example.demo.config.properties.ReviewsProperties;
+import com.example.demo.configuration.properties.ReviewsProperties;
 import com.example.demo.cursor.SortDirection;
 import com.example.demo.cursor.codec.CursorCodec;
 import com.example.demo.cursor.codec.IdCodec;

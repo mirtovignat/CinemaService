@@ -28,28 +28,25 @@ public class NameMapper {
 
     @Named("extractSurname")
     public String extractSurname(String fullName) {
-        if (fullName == null || fullName.isBlank()) {
-            return "";
-        }
-        String[] parts = fullName.trim().split("\\s+");
-        return parts.length > 0 ? parts[0] : "";
+        return extractAnthroponym(fullName, 0);
     }
 
     @Named("extractName")
     public String extractName(String fullName) {
-        if (fullName == null || fullName.isBlank()) {
-            return "";
-        }
-        String[] parts = fullName.trim().split("\\s+");
-        return parts.length > 1 ? parts[1] : "";
+        return extractAnthroponym(fullName, 1);
     }
 
     @Named("extractPatronymic")
     public String extractPatronymic(String fullName) {
+       return extractAnthroponym(fullName, 2);
+    }
+
+    public String extractAnthroponym(String fullName, int anthroponymicPosition) {
         if (fullName == null || fullName.isBlank()) {
             return "";
         }
         String[] parts = fullName.trim().split("\\s+");
-        return parts.length > 2 ? parts[2] : "";
+        return parts.length > anthroponymicPosition ? parts[anthroponymicPosition] : "";
     }
+
 }

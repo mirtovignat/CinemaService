@@ -1,8 +1,8 @@
-package com.example.demo.config;
+package com.example.demo.configuration;
 
-import com.example.demo.config.properties.SecurityProperties;
+import com.example.demo.configuration.properties.SecurityProperties;
 import com.example.demo.web.AjaxAwareEntryPoint;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,8 +19,8 @@ import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
-public class SecurityConfig {
+@AllArgsConstructor
+public class SecurityConfiguration {
 
     private final SecurityProperties securityProperties;
     private final AjaxAwareEntryPoint ajaxAwareEntryPoint;
@@ -36,8 +36,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager
-            (AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 

@@ -12,18 +12,18 @@ public class MovieRangesSnapshotMapper {
 
     private final DurationMapper durationMapper;
 
-    public MovieRangesSnapshot toSnapshot(MovieRangeProjection projection) {
-        if (projection == null) {
+    public MovieRangesSnapshot toSnapshot(MovieRangeProjection movieRangeProjection) {
+        if (movieRangeProjection == null) {
             return null;
         }
         return MovieRangesSnapshot.builder()
-                .price(Range.of(projection.getMinPrice(), projection.getMaxPrice()))
+                .price(Range.of(movieRangeProjection.getMinPrice(), movieRangeProjection.getMaxPrice()))
                 .duration(Range.of(
-                        durationMapper.durationToSeconds(projection.getMinDuration()),
-                        durationMapper.durationToSeconds(projection.getMaxDuration())))
+                        durationMapper.durationToSeconds(movieRangeProjection.getMinDuration()),
+                        durationMapper.durationToSeconds(movieRangeProjection.getMaxDuration())))
                 .releaseDate(Range.of(
-                        projection.getMinReleaseDate(),
-                        projection.getMaxReleaseDate()))
+                        movieRangeProjection.getMinReleaseDate(),
+                        movieRangeProjection.getMaxReleaseDate()))
                 .build();
     }
 }

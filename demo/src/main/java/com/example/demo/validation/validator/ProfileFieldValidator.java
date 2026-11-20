@@ -1,6 +1,6 @@
 package com.example.demo.validation.validator;
 
-import com.example.demo.config.properties.ValidationProperties;
+import com.example.demo.configuration.properties.ValidationProperties;
 import com.example.demo.dto.authorize.Identifier;
 import com.example.demo.dto.user.ProfileFieldUpdateDTO;
 import com.example.demo.util.PhoneNormalizer;

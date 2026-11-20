@@ -1,6 +1,6 @@
 package com.example.demo.service.cursor;
 
-import com.example.demo.config.properties.CatalogProperties;
+import com.example.demo.configuration.properties.CatalogProperties;
 import com.example.demo.cursor.UserStatusMapperHelper;
 import com.example.demo.cursor.codec.CursorCodec;
 import com.example.demo.cursor.codec.IdCodec;

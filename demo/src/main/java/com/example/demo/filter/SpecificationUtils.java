@@ -2,6 +2,7 @@ package com.example.demo.filter;
 
 import com.example.demo.util.text.LikeEscaper;
 import com.example.demo.util.text.SearchQueryNormalizer;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import org.springframework.data.jpa.domain.Specification;
@@ -10,6 +11,7 @@ import org.springframework.util.CollectionUtils;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.BiFunction;
 
 public final class SpecificationUtils {
 
@@ -20,29 +22,27 @@ public final class SpecificationUtils {
     }
 
     public static <Entity, Value extends Comparable<? super Value>> Specification<Entity> greaterThanOrEqualToIfNotNull(
-            String fieldName,
-            Value value
+            String fieldName, Value value
     ) {
-        if (value == null) {
-            return unrestricted();
-        }
-        return (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.greaterThanOrEqualTo(
-                root.get(fieldName),
-                value
-        );
+        return comparisonIfNotNull(value,
+                (root, criteriaBuilder) -> criteriaBuilder.greaterThanOrEqualTo(root.get(fieldName), value));
     }
 
     public static <Entity, Value extends Comparable<? super Value>> Specification<Entity> lessThanOrEqualToIfNotNull(
-            String fieldName,
-            Value value
+            String fieldName, Value value
+    ) {
+        return comparisonIfNotNull(value,
+                (root, criteriaBuilder) -> criteriaBuilder.lessThanOrEqualTo(root.get(fieldName), value));
+    }
+
+    private static <Entity, Value extends Comparable<? super Value>> Specification<Entity> comparisonIfNotNull(
+            Value value,
+            BiFunction<Root<Entity>, CriteriaBuilder, Predicate> predicateBuilder
     ) {
         if (value == null) {
             return unrestricted();
         }
-        return (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.lessThanOrEqualTo(
-                root.get(fieldName),
-                value
-        );
+        return (root, query, criteriaBuilder) -> predicateBuilder.apply(root, criteriaBuilder);
     }
 
     public static <Entity, Value> Specification<Entity> inIfNotEmpty(

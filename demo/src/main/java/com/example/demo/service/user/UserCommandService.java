@@ -1,6 +1,6 @@
 package com.example.demo.service.user;
 
-import com.example.demo.config.properties.WalletProperties;
+import com.example.demo.configuration.properties.WalletProperties;
 import com.example.demo.dto.authorize.Identifier;
 import com.example.demo.dto.user.PasswordChangingDTO;
 import com.example.demo.dto.user.ProfileFieldUpdateDTO;

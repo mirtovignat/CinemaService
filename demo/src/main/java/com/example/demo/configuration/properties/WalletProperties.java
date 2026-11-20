@@ -1,4 +1,4 @@
-package com.example.demo.config.properties;
+package com.example.demo.configuration.properties;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;

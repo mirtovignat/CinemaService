@@ -1,6 +1,6 @@
 package com.example.demo.service.movie;
 
-import com.example.demo.config.properties.SuggestionsProperties;
+import com.example.demo.configuration.properties.SuggestionsProperties;
 import com.example.demo.dto.movie.*;
 import com.example.demo.filter.MovieFilter;
 import com.example.demo.filter.MovieSearchHelper;

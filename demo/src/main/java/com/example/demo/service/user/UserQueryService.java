@@ -1,6 +1,6 @@
 package com.example.demo.service.user;
 
-import com.example.demo.config.properties.WalletProperties;
+import com.example.demo.configuration.properties.WalletProperties;
 import com.example.demo.dto.response.PersonalAccountResponse;
 import com.example.demo.dto.user.UserForOwnerViewDTO;
 import com.example.demo.dto.wallet.WalletForOwnerViewDTO;

@@ -1,4 +1,4 @@
-package com.example.demo.config.properties;
+package com.example.demo.configuration.properties;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;

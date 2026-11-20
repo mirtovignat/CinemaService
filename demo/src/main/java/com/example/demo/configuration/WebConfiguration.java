@@ -1,4 +1,4 @@
-package com.example.demo.config;
+package com.example.demo.configuration;
 
 import com.example.demo.web.interceptor.CacheControlInterceptor;
 import com.example.demo.web.interceptor.NavigationHistoryInterceptor;
@@ -14,7 +14,7 @@ import java.util.List;
 
 @Configuration
 @AllArgsConstructor
-public class WebConfig implements WebMvcConfigurer {
+public class WebConfiguration implements WebMvcConfigurer {
 
     private final CacheControlInterceptor cacheControlInterceptor;
     private final NavigationHistoryInterceptor navigationHistoryInterceptor;

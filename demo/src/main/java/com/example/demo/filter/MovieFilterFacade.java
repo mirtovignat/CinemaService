@@ -1,6 +1,6 @@
 package com.example.demo.filter;
 
-import com.example.demo.config.properties.PaginationProperties;
+import com.example.demo.configuration.properties.PaginationProperties;
 import com.example.demo.dto.movie.MovieCardViewDTO;
 import com.example.demo.dto.movie.MovieForUser;
 import com.example.demo.service.movie.MovieService;

@@ -14,6 +14,7 @@ public class DateTimeMapper {
         if (value == null) {
             return null;
         }
-        return value.toInstant(ZoneOffset.UTC).toString();
+        return value.toInstant(ZoneOffset.UTC)
+                .toString();
     }
 }

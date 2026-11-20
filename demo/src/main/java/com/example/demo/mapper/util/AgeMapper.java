@@ -14,6 +14,7 @@ public class AgeMapper {
         if (birthDate == null) {
             return 0;
         }
-        return Period.between(birthDate, LocalDate.now()).getYears();
+        return Period.between(birthDate, LocalDate.now())
+                .getYears();
     }
 }

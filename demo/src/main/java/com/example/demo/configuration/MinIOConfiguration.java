@@ -1,4 +1,4 @@
-package com.example.demo.config;
+package com.example.demo.configuration;
 
 import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;
@@ -18,7 +18,7 @@ import java.nio.charset.StandardCharsets;
 @Getter
 @Slf4j
 @Configuration
-public class MinIOConfig {
+public class MinIOConfiguration {
 
     @Value("${minio.endpoint}")
     private String endpoint;

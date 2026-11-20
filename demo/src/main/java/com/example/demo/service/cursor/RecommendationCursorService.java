@@ -1,6 +1,6 @@
 package com.example.demo.service.cursor;
 
-import com.example.demo.config.properties.RecommendationsProperties;
+import com.example.demo.configuration.properties.RecommendationsProperties;
 import com.example.demo.cursor.RecommendationCursorKey;
 import com.example.demo.cursor.SortDirection;
 import com.example.demo.cursor.codec.CursorCodec;

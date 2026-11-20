@@ -1,6 +1,6 @@
 package com.example.demo.service.catalog;
 
-import com.example.demo.config.properties.RatingProperties;
+import com.example.demo.configuration.properties.RatingProperties;
 import com.example.demo.dto.catalog.RatedMovieFormDTO;
 import com.example.demo.dto.catalog.RatedMovieViewDTO;
 import com.example.demo.dto.catalog.ReviewViewDTO;

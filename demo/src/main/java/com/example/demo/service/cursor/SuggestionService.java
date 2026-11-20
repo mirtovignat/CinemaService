@@ -1,6 +1,6 @@
 package com.example.demo.service.cursor;
 
-import com.example.demo.config.properties.SuggestionsProperties;
+import com.example.demo.configuration.properties.SuggestionsProperties;
 import com.example.demo.util.text.SearchQueryNormalizer;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
